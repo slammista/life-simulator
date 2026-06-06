@@ -232,6 +232,47 @@ export interface Relationship {
   nationality: Nationality
 }
 
+// ---- Family Tree ----
+
+export type FamilyRelationToPlayer =
+  | 'mother'
+  | 'father'
+  | 'sibling'
+  | 'child'
+  | 'spouse'
+  | 'grandparent'
+
+export interface FamilyMember {
+  id: string
+  relationshipId: string | null
+  name: string
+  gender: Gender
+  birthYear: number
+  deathYear: number | null
+  relationToPlayer: FamilyRelationToPlayer
+  biological: boolean
+  familyBranch: 'maternal' | 'paternal' | 'direct'
+  notes: string[]
+}
+
+export interface FamilyLink {
+  id: string
+  fromMemberId: string
+  toMemberId: string
+  relation: 'parent_of' | 'sibling_of' | 'spouse_of'
+}
+
+export interface FamilyState {
+  familyId: string
+  dynastyName: string
+  members: FamilyMember[]
+  links: FamilyLink[]
+  favoredChildId: string | null
+  familyReputation: number
+  familyWealthTier: FamilyBackground
+  inheritedFlags: string[]
+}
+
 // ---- Children ----
 
 export interface PersonalityBigFive {
@@ -684,6 +725,9 @@ export interface GameState {
 
   // Relationships
   relationships: Relationship[]
+
+  // Family tree
+  family: FamilyState
 
   // Children
   children: Child[]

@@ -47,6 +47,21 @@ const TRAIT_LABELS: Record<NPCPersonalityTrait, string> = {
   impulsivo: 'Impulsivo',
 }
 
+const REL_TYPE_LABELS: Record<string, string> = {
+  parent: 'Genitore',
+  sibling: 'Fratello/Sorella',
+  partner: 'Partner',
+  spouse: 'Coniuge',
+  ex_partner: 'Ex partner',
+  child: 'Figlio/a',
+  friend: 'Amico/a',
+  best_friend: 'Migliore amico/a',
+  colleague: 'Collega',
+  rival: 'Rivale',
+  enemy: 'Nemico',
+  acquaintance: 'Conoscente',
+}
+
 const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: string; emoji: string }>> = {
   stranger: [
     { action: 'greet', label: 'Saluta', emoji: '👋' },
@@ -98,6 +113,7 @@ const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: string;
 
 export function RelationshipScreen() {
   const relationships = useGameStore(s => s.relationships)
+  const family = useGameStore(s => s.family)
   const meetNewPerson = useGameStore(s => s.meetNewPerson)
   const interactWithNPC = useGameStore(s => s.interactWithNPC)
 
@@ -142,6 +158,34 @@ export function RelationshipScreen() {
           + Incontra
         </button>
       </div>
+
+      {family.members.length > 0 && (
+        <div className="card" style={{ padding: 12, marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+            <div>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>
+                Albero familiare
+              </p>
+              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)', marginTop: 2 }}>
+                Casata {family.dynastyName}
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+              <span style={{ fontSize: 12, color: '#cbd5e1', padding: '4px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
+                👪 {family.members.length}
+              </span>
+              <span style={{ fontSize: 12, color: '#cbd5e1', padding: '4px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
+                ⭐ {family.familyReputation}
+              </span>
+            </div>
+          </div>
+          {family.inheritedFlags.length > 0 && (
+            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 8 }}>
+              Origine: {family.familyWealthTier.replace('_', ' ')}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Feedback */}
       {feedback && (
@@ -246,7 +290,7 @@ function RelCard({ rel, expanded, onToggle, onAction }: {
               <p style={{ fontWeight: 600, fontSize: 14 }}>{rel.name}</p>
               {rel.toxicityTag && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 99, background: 'rgba(239,68,68,0.2)', color: '#fca5a5' }}>⚠️ tossica</span>}
             </div>
-            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{rel.type} · {rel.age}y</p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{REL_TYPE_LABELS[rel.type] ?? rel.type} · {rel.age}y</p>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

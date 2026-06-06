@@ -43,6 +43,7 @@ import { ChallengeEngine } from '../services/ChallengeEngine'
 import { AchievementsEngine } from '../services/AchievementsEngine'
 import { CreditScoreEngine } from '../services/CreditScoreEngine'
 import { LivingEngine } from '../services/LivingEngine'
+import { FamilyEngine } from '../services/FamilyEngine'
 import type { Addiction, TravelMemory, Religion, Child, LivingType } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
@@ -135,6 +136,16 @@ function buildInitialState(): GameState {
     education: { currentLevel: 'none', completedLevels: [], gpa: 0, scholarships: [], clubs: [], dropOut: false, studentLoan: 0, university: null, major: null, graduationYear: null },
     career: { currentJob: null, jobHistory: [], promotions: 0, firings: 0, burnoutLevel: 0, pensionContributions: 0, licenses: [], businessOwned: null },
     relationships: [],
+    family: {
+      familyId: 'family_demo',
+      dynastyName: 'Demo',
+      members: [],
+      links: [],
+      favoredChildId: null,
+      familyReputation: 50,
+      familyWealthTier: 'middle',
+      inheritedFlags: [],
+    },
     children: [],
     pets: [],
     criminal: { crimes: [], inPrison: false, prisonSentence: 0, prisonServed: 0, parole: false, paroleDuration: 0, electronicBracelet: false, hasRecord: false },
@@ -230,6 +241,8 @@ export const useGameStore = create<FullStore>()(
         const initial = buildInitialState()
         const nation = (db.nations as Nation[]).find(n => n.id === nationId) ?? initial.nation
         const startMoney = BACKGROUND_MONEY[identity.familyBackground] ?? 1000
+        const startingFamily = FamilyEngine.createStartingFamily(identity)
+        const siblingCount = startingFamily.relationships.filter(rel => rel.type === 'sibling').length
 
         set({
           ...initial,
@@ -239,9 +252,11 @@ export const useGameStore = create<FullStore>()(
           nation,
           settings: { ...initial.settings, mode, ironMan },
           finance: { ...initial.finance, money: startMoney },
+          relationships: startingFamily.relationships,
+          family: startingFamily.family,
           eventLog: [{
             id: uid(), year: identity.birthYear, age: 0,
-            text: `${identity.name} ${identity.surname} è venuto/a al mondo in ${nation?.name ?? 'Italia'}.`,
+            text: `${identity.name} ${identity.surname} è venuto/a al mondo in ${nation?.name ?? 'Italia'} con ${startingFamily.relationships.length - siblingCount} genitori e ${siblingCount} fratelli/sorelle già registrati nell'albero familiare.`,
             emoji: '👶', category: 'life', statChanges: {},
           }],
         })
@@ -2029,6 +2044,7 @@ export const useGameStore = create<FullStore>()(
         education: state.education,
         career: state.career,
         relationships: state.relationships,
+        family: state.family,
         children: state.children,
         pets: state.pets,
         criminal: state.criminal,
