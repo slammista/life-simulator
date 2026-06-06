@@ -1,4 +1,4 @@
-import type { GameState, Relationship, Effect } from '../store/types'
+import type { Effect, GameState, NPCMood, NPCPersonalityTrait, Relationship } from '../store/types'
 
 export type DatingApp = 'tinder' | 'bumble' | 'hinge' | 'okCupid'
 
@@ -16,6 +16,7 @@ const APPS: DatingAppDef[] = [
 
 const NAMES_MALE = ['Marco', 'Luca', 'Andrea', 'Matteo', 'Lorenzo', 'Davide', 'Riccardo', 'Francesco', 'Simone', 'Roberto']
 const NAMES_FEMALE = ['Sofia', 'Chiara', 'Giulia', 'Anna', 'Elena', 'Laura', 'Valentina', 'Alice', 'Martina', 'Sara']
+const DATING_TRAITS: NPCPersonalityTrait[] = ['ambizioso', 'geloso', 'generoso', 'sensibile', 'sicuro', 'leale', 'empatico', 'impulsivo']
 
 export interface DatingResult {
   success: boolean; message: string; effects: Effect
@@ -58,6 +59,14 @@ export class DatingEngine {
 
     const attraction = Math.floor(40 + Math.random() * 50)
     const trust = Math.floor(20 + Math.random() * 30)
+    const personalityTraits = [...DATING_TRAITS]
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 2 + Math.floor(Math.random() * 2))
+    const mood: NPCMood = personalityTraits.includes('ambizioso')
+      ? 'motivato'
+      : personalityTraits.includes('geloso')
+      ? 'ansioso'
+      : 'felice'
 
     const match: Relationship = {
       id: `match_${Math.random().toString(36).slice(2)}`,
@@ -71,6 +80,8 @@ export class DatingEngine {
       love: 0, respect: 30,
       toxicityTag: Math.random() < 0.1,
       historyFlags: [`met_on_${appId}`],
+      personalityTraits,
+      mood,
       memoryLog: [],
       isAlive: true,
       nationality: state.identity.nationality,

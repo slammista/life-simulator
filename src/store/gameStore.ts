@@ -679,11 +679,10 @@ export const useGameStore = create<FullStore>()(
         const key = `meet_${state.time.year}`
         const partial = applyEffects(state, result.effects)
 
-        if (result.success) {
-          const npc = RelationshipEngine.generateNPC(context, state)
+        if (result.success && result.newRelationship) {
           set(s => ({
             ...partial,
-            relationships: [...s.relationships, npc],
+            relationships: [...s.relationships, result.newRelationship!],
             diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
             eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '👋', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
           }))

@@ -177,6 +177,28 @@ export type RelationshipStage =
   | 'partner'
   | 'spouse'
 
+export type NPCPersonalityTrait =
+  | 'introverso'
+  | 'ambizioso'
+  | 'geloso'
+  | 'generoso'
+  | 'sensibile'
+  | 'sicuro'
+  | 'avido'
+  | 'leale'
+  | 'empatico'
+  | 'impulsivo'
+
+export type NPCMood =
+  | 'neutrale'
+  | 'felice'
+  | 'triste'
+  | 'geloso'
+  | 'arrabbiato'
+  | 'nostalgico'
+  | 'ansioso'
+  | 'motivato'
+
 export interface NPCMemory {
   id: string
   category: 'romantic' | 'family' | 'friendship' | 'professional' | 'financial' | 'criminal'
@@ -203,6 +225,8 @@ export interface Relationship {
   respect: number         // 0-100
   toxicityTag: boolean
   historyFlags: string[]
+  personalityTraits: NPCPersonalityTrait[]
+  mood: NPCMood
   memoryLog: NPCMemory[]
   isAlive: boolean
   nationality: Nationality

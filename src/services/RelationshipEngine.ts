@@ -6,6 +6,8 @@ import type {
   Gender,
   Effect,
   NPCMemory,
+  NPCMood,
+  NPCPersonalityTrait,
 } from '../store/types'
 
 // ---- public types ----
@@ -44,6 +46,7 @@ export interface RelActionResult {
   newStage?: RelationshipStage
   relationshipEnded?: boolean
   memoryEntry?: Omit<NPCMemory, 'id'>
+  newRelationship?: Relationship
 }
 
 // ---- name pools ----
@@ -62,12 +65,133 @@ const STAGE_ORDER: RelationshipStage[] = [
   'stranger', 'acquaintance', 'friend', 'close_friend', 'partner', 'spouse',
 ]
 
+const PERSONALITY_TRAITS: NPCPersonalityTrait[] = [
+  'introverso',
+  'ambizioso',
+  'geloso',
+  'generoso',
+  'sensibile',
+  'sicuro',
+  'avido',
+  'leale',
+  'empatico',
+  'impulsivo',
+]
+
+const MOODS: NPCMood[] = ['neutrale', 'felice', 'triste', 'geloso', 'arrabbiato', 'nostalgico', 'ansioso', 'motivato']
+
 // ---- engine ----
 
 export class RelationshipEngine {
+  private static _randomTraits(): NPCPersonalityTrait[] {
+    const shuffled = [...PERSONALITY_TRAITS].sort(() => Math.random() - 0.5)
+    return shuffled.slice(0, 2 + Math.floor(Math.random() * 2))
+  }
+
+  private static _initialMood(traits: NPCPersonalityTrait[]): NPCMood {
+    if (traits.includes('ambizioso')) return 'motivato'
+    if (traits.includes('geloso')) return 'ansioso'
+    if (traits.includes('introverso')) return 'neutrale'
+    return MOODS[Math.floor(Math.random() * MOODS.length)]
+  }
+
+  private static _inferMood(rel: Relationship): NPCMood {
+    if (!rel.isAlive) return 'triste'
+    if (rel.jealousy >= 70) return 'geloso'
+    if (rel.trust <= 20) return 'arrabbiato'
+    if (rel.love >= 70 || rel.trust >= 80) return 'felice'
+    if (rel.memoryLog.some(mem => mem.unforgettable && mem.category === 'romantic')) return 'nostalgico'
+    if ((rel.personalityTraits ?? []).includes('ambizioso')) return 'motivato'
+    return rel.mood ?? 'neutrale'
+  }
+
+  private static _withHumanReaction(
+    rel: Relationship,
+    action: NPCAction,
+    result: RelActionResult & { updatedRel?: Partial<Relationship> }
+  ): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    if (!result.success) return result
+
+    const traits = rel.personalityTraits ?? []
+    const updatedRel: Partial<Relationship> = { ...(result.updatedRel ?? {}) }
+    const notes: string[] = []
+
+    const addTrust = (delta: number) => {
+      updatedRel.trust = Math.max(0, Math.min(100, (updatedRel.trust ?? rel.trust) + delta))
+    }
+    const addLove = (delta: number) => {
+      updatedRel.love = Math.max(0, Math.min(100, (updatedRel.love ?? rel.love) + delta))
+    }
+    const addRespect = (delta: number) => {
+      updatedRel.respect = Math.max(0, Math.min(100, (updatedRel.respect ?? rel.respect) + delta))
+    }
+    const addJealousy = (delta: number) => {
+      updatedRel.jealousy = Math.max(0, Math.min(100, (updatedRel.jealousy ?? rel.jealousy) + delta))
+    }
+
+    if (action === 'compliment') {
+      if (traits.includes('sensibile')) addLove(3)
+      if (traits.includes('introverso')) notes.push(`${rel.name} sembra un po' imbarazzato/a.`)
+      updatedRel.mood = traits.includes('introverso') ? 'ansioso' : 'felice'
+    }
+
+    if (action === 'gift') {
+      if (traits.includes('avido')) {
+        addLove(4)
+        addRespect(-2)
+        notes.push(`${rel.name} apprezza molto il valore del regalo.`)
+      }
+      if (traits.includes('generoso')) addTrust(3)
+      updatedRel.mood = 'felice'
+    }
+
+    if (action === 'hang_out') {
+      if (traits.includes('introverso')) addTrust(-2)
+      if (traits.includes('empatico')) addTrust(3)
+      if (traits.includes('ambizioso')) addRespect(2)
+      updatedRel.mood = traits.includes('introverso') ? 'neutrale' : 'felice'
+    }
+
+    if (action === 'fight' || action === 'insult') {
+      if (traits.includes('sensibile')) {
+        addTrust(-8)
+        updatedRel.mood = 'triste'
+        notes.push(`${rel.name} se la prende molto sul personale.`)
+      } else if (traits.includes('impulsivo')) {
+        addJealousy(8)
+        updatedRel.mood = 'arrabbiato'
+        notes.push(`${rel.name} reagisce d'istinto e la tensione sale.`)
+      } else {
+        updatedRel.mood = 'arrabbiato'
+      }
+    }
+
+    if (action === 'apologize') {
+      if (traits.includes('empatico') || traits.includes('generoso')) addTrust(5)
+      if (traits.includes('leale')) addRespect(2)
+      updatedRel.mood = 'neutrale'
+    }
+
+    if (action === 'cheat') {
+      if (traits.includes('geloso')) addJealousy(12)
+      if (traits.includes('leale')) addTrust(-8)
+      updatedRel.mood = 'ansioso'
+    }
+
+    const previewRel = { ...rel, ...updatedRel }
+    updatedRel.mood = updatedRel.mood ?? this._inferMood(previewRel)
+
+    return {
+      ...result,
+      message: notes.length > 0 ? `${result.message} ${notes.join(' ')}` : result.message,
+      updatedRel,
+    }
+  }
+
   static generateNPC(context: NPCContext, state: GameState): Relationship {
     const uid = () => Math.random().toString(36).slice(2, 10)
     const playerAge = state.time.age
+    const personalityTraits = this._randomTraits()
 
     // Age range based on context
     const ageOffset = context === 'school' ? [-4, 4] :
@@ -90,6 +214,9 @@ export class RelationshipEngine {
 
     // Initial stats based on context
     const baseTrust = context === 'family' ? 70 : 20 + Math.floor(Math.random() * 20)
+    const traitTrust = personalityTraits.includes('empatico') ? 8 : personalityTraits.includes('introverso') ? -4 : 0
+    const traitJealousy = personalityTraits.includes('geloso') ? 18 : personalityTraits.includes('leale') ? -6 : 0
+    const traitRespect = personalityTraits.includes('ambizioso') ? 10 : personalityTraits.includes('impulsivo') ? -4 : 0
     const attraction = context === 'dating_app'
       ? 40 + Math.floor(Math.random() * 40)
       : 10 + Math.floor(Math.random() * 30)
@@ -103,13 +230,15 @@ export class RelationshipEngine {
       emoji,
       type,
       stage: context === 'family' ? 'friend' : 'stranger',
-      trust: baseTrust,
-      jealousy: 0,
+      trust: Math.max(0, Math.min(100, baseTrust + traitTrust)),
+      jealousy: Math.max(0, Math.min(100, traitJealousy)),
       attraction,
       love: 0,
-      respect: 30 + Math.floor(Math.random() * 30),
+      respect: Math.max(0, Math.min(100, 30 + Math.floor(Math.random() * 30) + traitRespect)),
       toxicityTag: Math.random() < 0.08,
       historyFlags: [`met_via_${context}`],
+      personalityTraits,
+      mood: this._initialMood(personalityTraits),
       memoryLog: [],
       isAlive: true,
       nationality: state.identity.nationality,
@@ -144,6 +273,7 @@ export class RelationshipEngine {
       success: true,
       message: `Hai incontrato ${npc.name} (${npc.age}y) ${contextLabels[context]}.`,
       effects: { happiness: 3, socialReputation: 1 },
+      newRelationship: npc,
       memoryEntry: {
         category: 'friendship',
         description: `Hai conosciuto ${npc.name} ${contextLabels[context]}`,
@@ -168,33 +298,33 @@ export class RelationshipEngine {
 
     switch (action) {
       case 'greet':
-        return this._greet(rel, dr, state)
+        return this._withHumanReaction(rel, action, this._greet(rel, dr, state))
       case 'hang_out':
-        return this._hangOut(rel, dr, state)
+        return this._withHumanReaction(rel, action, this._hangOut(rel, dr, state))
       case 'compliment':
-        return this._compliment(rel, dr, state)
+        return this._withHumanReaction(rel, action, this._compliment(rel, dr, state))
       case 'gift':
-        return this._gift(rel, dr, state)
+        return this._withHumanReaction(rel, action, this._gift(rel, dr, state))
       case 'confess_feelings':
-        return this._confess(rel, state)
+        return this._withHumanReaction(rel, action, this._confess(rel, state))
       case 'ask_date':
-        return this._askDate(rel, state)
+        return this._withHumanReaction(rel, action, this._askDate(rel, state))
       case 'kiss':
-        return this._kiss(rel, state)
+        return this._withHumanReaction(rel, action, this._kiss(rel, state))
       case 'propose':
-        return this._propose(rel, state)
+        return this._withHumanReaction(rel, action, this._propose(rel, state))
       case 'break_up':
-        return this._breakUp(rel, state)
+        return this._withHumanReaction(rel, action, this._breakUp(rel, state))
       case 'divorce':
-        return this._divorce(rel, state)
+        return this._withHumanReaction(rel, action, this._divorce(rel, state))
       case 'cheat':
-        return this._cheat(rel, state)
+        return this._withHumanReaction(rel, action, this._cheat(rel, state))
       case 'fight':
-        return this._fight(rel, dr, state)
+        return this._withHumanReaction(rel, action, this._fight(rel, dr, state))
       case 'apologize':
-        return this._apologize(rel, state)
+        return this._withHumanReaction(rel, action, this._apologize(rel, state))
       case 'insult':
-        return this._insult(rel, state)
+        return this._withHumanReaction(rel, action, this._insult(rel, state))
       default:
         return { success: false, message: 'Azione non riconosciuta.', effects: {} }
     }
@@ -209,22 +339,27 @@ export class RelationshipEngine {
         ? 1
         : rel.stage === 'spouse' ? 1 : 3
 
-      const newTrust = Math.max(0, rel.trust - decayRate)
-      const newLove = rel.stage === 'partner' || rel.stage === 'spouse'
-        ? Math.max(0, rel.love - 1)
-        : rel.love
+        const newTrust = Math.max(0, rel.trust - decayRate)
+        const newLove = rel.stage === 'partner' || rel.stage === 'spouse'
+          ? Math.max(0, rel.love - 1)
+          : rel.love
 
       // Toxicity escalation
       const jealousyIncrease = rel.toxicityTag ? 3 : 0
 
       // Age NPC
-      return {
+      const updated = {
         ...rel,
         age: rel.age + 1,
         trust: newTrust,
         love: newLove,
         jealousy: Math.min(100, rel.jealousy + jealousyIncrease),
+        memoryLog: rel.memoryLog
+          .map(mem => mem.unforgettable ? mem : { ...mem, weight: Math.max(0, mem.weight - mem.decayFactor) })
+          .filter(mem => mem.unforgettable || mem.weight >= 0.5)
+          .slice(0, 200),
       }
+      return { ...updated, mood: this._inferMood(updated) }
     })
   }
 

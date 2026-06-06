@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import type { Relationship } from '../../store/types'
+import type { NPCMood, NPCPersonalityTrait, Relationship } from '../../store/types'
 import type { NPCContext, NPCAction } from '../../services/RelationshipEngine'
 
 const STAGE_EMOJI: Record<string, string> = {
@@ -21,6 +21,30 @@ const CONTEXT_LABELS: Record<NPCContext, string> = {
   travel: '✈️ Viaggio',
   family: '👪 Famiglia',
   random: '🎲 Caso',
+}
+
+const MOOD_LABELS: Record<NPCMood, { label: string; emoji: string; color: string }> = {
+  neutrale: { label: 'Neutrale', emoji: '😐', color: '#94a3b8' },
+  felice: { label: 'Felice', emoji: '😊', color: '#86efac' },
+  triste: { label: 'Triste', emoji: '😢', color: '#93c5fd' },
+  geloso: { label: 'Geloso', emoji: '😒', color: '#fbbf24' },
+  arrabbiato: { label: 'Arrabbiato', emoji: '😠', color: '#fca5a5' },
+  nostalgico: { label: 'Nostalgico', emoji: '🥲', color: '#c4b5fd' },
+  ansioso: { label: 'Ansioso', emoji: '😰', color: '#fdba74' },
+  motivato: { label: 'Motivato', emoji: '🔥', color: '#facc15' },
+}
+
+const TRAIT_LABELS: Record<NPCPersonalityTrait, string> = {
+  introverso: 'Introverso',
+  ambizioso: 'Ambizioso',
+  geloso: 'Geloso',
+  generoso: 'Generoso',
+  sensibile: 'Sensibile',
+  sicuro: 'Sicuro',
+  avido: 'Avido',
+  leale: 'Leale',
+  empatico: 'Empatico',
+  impulsivo: 'Impulsivo',
 }
 
 const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: string; emoji: string }>> = {
@@ -205,6 +229,8 @@ function RelCard({ rel, expanded, onToggle, onAction }: {
   onAction: (action: NPCAction) => void
 }) {
   const actions = ACTIONS_BY_STAGE[rel.stage] ?? ACTIONS_BY_STAGE.stranger
+  const mood = MOOD_LABELS[rel.mood ?? 'neutrale']
+  const traits = rel.personalityTraits ?? []
 
   return (
     <div className="card" style={{ padding: 12 }}>
@@ -224,6 +250,20 @@ function RelCard({ rel, expanded, onToggle, onAction }: {
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span
+            title={`Umore: ${mood.label}`}
+            style={{
+              fontSize: 11,
+              color: mood.color,
+              padding: '2px 7px',
+              borderRadius: 999,
+              background: 'rgba(255,255,255,0.06)',
+              border: '1px solid rgba(255,255,255,0.08)',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            {mood.emoji} {mood.label}
+          </span>
           <span style={{ fontSize: 18 }}>{STAGE_EMOJI[rel.stage] ?? '👤'}</span>
           <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{expanded ? '▲' : '▼'}</span>
         </div>
@@ -232,6 +272,26 @@ function RelCard({ rel, expanded, onToggle, onAction }: {
       {/* Expanded section */}
       {expanded && (
         <div style={{ marginTop: 12 }}>
+          {traits.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {traits.map(trait => (
+                <span
+                  key={trait}
+                  style={{
+                    fontSize: 11,
+                    color: '#cbd5e1',
+                    padding: '3px 8px',
+                    borderRadius: 999,
+                    background: 'rgba(255,255,255,0.05)',
+                    border: '1px solid rgba(255,255,255,0.08)',
+                  }}
+                >
+                  {TRAIT_LABELS[trait]}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Stat bars */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
             {[
