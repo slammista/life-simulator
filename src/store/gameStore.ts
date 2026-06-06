@@ -29,8 +29,12 @@ import { DatingEngine, type DatingApp } from '../services/DatingEngine'
 import { VehicleEngine } from '../services/VehicleEngine'
 import { ReligionEngine } from '../services/ReligionEngine'
 import { PoliticsEngine, type PoliticalRole } from '../services/PoliticsEngine'
-import type { Addiction, TravelMemory, Religion } from './types'
+import { ParentingEngine, type ParentingAction } from '../services/ParentingEngine'
+import { MilitaryEngine, type MilitaryBranch, type MissionType } from '../services/MilitaryEngine'
+import { BodyModEngine } from '../services/BodyModEngine'
+import type { Addiction, TravelMemory, Religion, Child } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
+import type { MilitaryState } from '../services/MilitaryEngine'
 
 // ---- helpers ----
 
@@ -133,6 +137,8 @@ function buildInitialState(): GameState {
     vehicle: { hasLicenseB: false, theoryPassed: false, studyHours: 0, licensePoints: 20, violations: [], ownedVehicles: [] },
     religion: { practiceLevel: 50, lastPracticeYear: 0 },
     politics: { isRegisteredVoter: false, partyMembership: null, currentRole: null, mandatesWon: 0, electionsCampaigns: 0, scandals: 0, politicalInfluence: 0, lastVotedYear: -99, corruptionLevel: 0 },
+    military: { isEnlisted: false, branch: null, rank: null, rankIndex: 0, yearsOfService: 0, missions: 0, decorations: [], ptsd: false, discharged: false, honorableDischarge: false, pensionEligible: false },
+    bodyMods: { items: [] },
     currentEvent: null,
     availableChoices: [],
     pendingEffects: null,
@@ -270,6 +276,14 @@ export const useGameStore = create<FullStore>()(
         const { effects: vehicleFx, updatedVehicles, newViolations } = VehicleEngine.annualTick(state)
         merge(vehicleFx)
 
+        // 16. Military annual tick (salary, PTSD, years of service)
+        const { effects: militaryFx, updatedMilitary: militaryTickUpdate } = MilitaryEngine.annualTick(state)
+        merge(militaryFx)
+
+        // 17. Parenting annual tick (children age, developmental events)
+        const { updatedChildren, events: parentingEvents } = ParentingEngine.annualTick(state)
+        messages.push(...parentingEvents)
+
         // 14. Random events (background micro-events without choices)
         const randomEvs = db.random_events as unknown as Array<{
           id: string; title: string; description: string; emoji: string; probability: number; effects: Effect
@@ -390,6 +404,10 @@ export const useGameStore = create<FullStore>()(
             ownedVehicles: updatedVehicles.length > 0 ? updatedVehicles : state.vehicle.ownedVehicles,
             violations: newViolations.length > 0 ? [...state.vehicle.violations, ...newViolations] : state.vehicle.violations,
           },
+          military: militaryTickUpdate && Object.keys(militaryTickUpdate).length > 0
+            ? { ...state.military, ...militaryTickUpdate }
+            : state.military,
+          children: updatedChildren.length > 0 ? updatedChildren : state.children,
           currentEvent: picked,
           availableChoices: choices,
           eventLog: [logEntry, ...state.eventLog].slice(0, 150),
@@ -989,6 +1007,148 @@ export const useGameStore = create<FullStore>()(
         return { success: true, message: result.message, effects: result.effects }
       },
 
+      // ==================== Parenting actions ====================
+      haveChild: (): ActionResult => {
+        const state = get()
+        const result = ParentingEngine.haveChild(state, false)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          children: result.newChild ? [...s.children, result.newChild] : s.children,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '👶', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        get().checkGoals()
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      adoptChild: (): ActionResult => {
+        const state = get()
+        const result = ParentingEngine.haveChild(state, true)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          children: result.newChild ? [...s.children, result.newChild] : s.children,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏠', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        get().checkGoals()
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      interactWithChild: (childId: string, action: string): ActionResult => {
+        const state = get()
+        const result = ParentingEngine.interactWithChild(childId, action as ParentingAction, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        const key = `parenting_${childId}_${action}_${state.time.year}`
+        set(s => ({
+          ...partial,
+          children: result.updatedChild
+            ? s.children.map(c => c.id === childId ? { ...c, ...result.updatedChild } as Child : c)
+            : s.children,
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '👨‍👧', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Military actions ====================
+      enlistMilitary: (branch: string): ActionResult => {
+        const state = get()
+        const result = MilitaryEngine.enlist(branch as MilitaryBranch, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          military: { ...s.military, ...(result.updatedMilitary as Partial<MilitaryState>) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🪖', category: 'career', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      goOnMission: (missionType: string): ActionResult => {
+        const state = get()
+        const result = MilitaryEngine.goOnMission(missionType as MissionType, state)
+        const partial = applyEffects(state, result.effects)
+        const key = `mission_${state.time.year}`
+        set(s => ({
+          ...partial,
+          military: result.updatedMilitary ? { ...s.military, ...(result.updatedMilitary as Partial<MilitaryState>) } : s.military,
+          health: result.died ? { ...s.health, diseases: [...s.health.diseases] } : (partial.stats ? s.health : s.health),
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.died ? '💀' : result.success ? '🎖️' : '🏥', category: 'career', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        if (result.died) get().checkMorte()
+        get().checkGoals()
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      requestMilitaryPromotion: (): ActionResult => {
+        const state = get()
+        const result = MilitaryEngine.requestPromotion(state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          military: result.updatedMilitary ? { ...s.military, ...(result.updatedMilitary as Partial<MilitaryState>) } : s.military,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.success ? '🎖️' : '❌', category: 'career', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      dischargeMilitary: (): ActionResult => {
+        const state = get()
+        const result = MilitaryEngine.discharge(state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          military: result.updatedMilitary ? { ...s.military, ...(result.updatedMilitary as Partial<MilitaryState>) } : s.military,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🎗️', category: 'career', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Body mod actions ====================
+      getTattoo: (tattooId: string): ActionResult => {
+        const state = get()
+        const result = BodyModEngine.getTattoo(tattooId, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          bodyMods: result.newItem ? { ...s.bodyMods, items: [...s.bodyMods.items, result.newItem!] } : s.bodyMods,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🎨', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      getPiercing: (piercingId: string): ActionResult => {
+        const state = get()
+        const result = BodyModEngine.getPiercing(piercingId, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          bodyMods: result.newItem ? { ...s.bodyMods, items: [...s.bodyMods.items, result.newItem!] } : s.bodyMods,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💎', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      removeTattoo: (modId: string): ActionResult => {
+        const state = get()
+        const result = BodyModEngine.removeTattoo(modId, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          bodyMods: { ...s.bodyMods, items: s.bodyMods.items.filter(m => m.id !== modId) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🔬', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
       // ==================== Vehicle actions ====================
       studyDrivingTheory: (): ActionResult => {
         const state = get()
@@ -1243,6 +1403,8 @@ export const useGameStore = create<FullStore>()(
         vehicle: state.vehicle,
         religion: state.religion,
         politics: state.politics,
+        military: state.military,
+        bodyMods: state.bodyMods,
       }),
     }
   )

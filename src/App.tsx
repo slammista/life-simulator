@@ -24,11 +24,14 @@ import { DatingScreen } from './components/screens/DatingScreen'
 import { VehicleScreen } from './components/screens/VehicleScreen'
 import { ReligionScreen } from './components/screens/ReligionScreen'
 import { PoliticsScreen } from './components/screens/PoliticsScreen'
+import ParentingScreen from './components/screens/ParentingScreen'
+import MilitaryScreen from './components/screens/MilitaryScreen'
+import BodyModScreen from './components/screens/BodyModScreen'
 
 // ---- Sub-tab types ----
-type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle'
-type PeopleSubTab = 'relationships' | 'dating'
-type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion'
+type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle' | 'military'
+type PeopleSubTab = 'relationships' | 'dating' | 'famiglia'
+type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body'
 type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'settings'
 
 function SubTabBar<T extends string>({
@@ -79,6 +82,7 @@ function App() {
             { id: 'finance',   label: 'Finanze',    emoji: '💰' },
             { id: 'social',    label: 'Social',     emoji: '📱' },
             { id: 'vehicle',   label: 'Veicoli',    emoji: '🚗' },
+            { id: 'military',  label: 'Militare',   emoji: '🪖' },
           ]}
           active={developSub}
           onChange={setDevelopSub}
@@ -89,6 +93,7 @@ function App() {
           tabs={[
             { id: 'relationships', label: 'Relazioni', emoji: '👥' },
             { id: 'dating',        label: 'Dating',    emoji: '💘' },
+            { id: 'famiglia',      label: 'Famiglia',  emoji: '👨‍👩‍👧‍👦' },
           ]}
           active={peopleSub}
           onChange={setPeopleSub}
@@ -103,6 +108,7 @@ function App() {
             { id: 'pets',       label: 'Animali',   emoji: '🐾' },
             { id: 'criminal',   label: 'Crimini',   emoji: '🚔' },
             { id: 'religion',   label: 'Fede',      emoji: '🙏' },
+            { id: 'body',       label: 'Body Mod',  emoji: '🎨' },
           ]}
           active={wellbeingSub}
           onChange={setWellbeingSub}
@@ -135,9 +141,11 @@ function App() {
         {activeTab === 'develop' && developSub === 'finance'   && <FinanceScreen />}
         {activeTab === 'develop' && developSub === 'social'    && <SocialMediaScreen />}
         {activeTab === 'develop' && developSub === 'vehicle'   && <VehicleScreen />}
+        {activeTab === 'develop' && developSub === 'military'  && <MilitaryScreen />}
 
         {activeTab === 'people' && peopleSub === 'relationships' && <RelationshipScreen />}
         {activeTab === 'people' && peopleSub === 'dating'        && <DatingScreen />}
+        {activeTab === 'people' && peopleSub === 'famiglia'      && <ParentingScreen />}
 
         {activeTab === 'wellbeing' && wellbeingSub === 'health'     && <HealthScreen />}
         {activeTab === 'wellbeing' && wellbeingSub === 'hobby'      && <HobbyScreen />}
@@ -145,6 +153,7 @@ function App() {
         {activeTab === 'wellbeing' && wellbeingSub === 'pets'       && <PetScreen />}
         {activeTab === 'wellbeing' && wellbeingSub === 'criminal'   && <CriminalScreen />}
         {activeTab === 'wellbeing' && wellbeingSub === 'religion'   && <ReligionScreen />}
+        {activeTab === 'wellbeing' && wellbeingSub === 'body'       && <BodyModScreen />}
 
         {activeTab === 'profile' && profileSub === 'goals'    && <GoalsScreen />}
         {activeTab === 'profile' && profileSub === 'travel'   && <TravelScreen />}

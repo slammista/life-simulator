@@ -539,6 +539,13 @@ export interface ReligionState {
 // (full PoliticsState lives in PoliticsEngine; re-exported here for store typing)
 export type { PoliticsState } from '../services/PoliticsEngine'
 
+// ---- Military ----
+// (full MilitaryState lives in MilitaryEngine)
+export type { MilitaryState } from '../services/MilitaryEngine'
+
+// ---- Body Mods ----
+export type { BodyMod, BodyModState } from '../services/BodyModEngine'
+
 // ---- Legacy ----
 
 export interface Legacy {
@@ -666,6 +673,12 @@ export interface GameState {
   // Politics
   politics: import('../services/PoliticsEngine').PoliticsState
 
+  // Military
+  military: import('../services/MilitaryEngine').MilitaryState
+
+  // Body modifications
+  bodyMods: import('../services/BodyModEngine').BodyModState
+
   // Events
   currentEvent: GameEvent | null
   availableChoices: Choice[]
@@ -772,6 +785,22 @@ export interface GameActions {
   proposeToPartner: (npcId: string, ringValue: number) => ActionResult
   getMarried: (npcId: string, weddingBudget: number) => ActionResult
   getDivorced: (npcId: string) => ActionResult
+
+  // Parenting actions
+  haveChild: () => ActionResult
+  adoptChild: () => ActionResult
+  interactWithChild: (childId: string, action: string) => ActionResult
+
+  // Military actions
+  enlistMilitary: (branch: string) => ActionResult
+  goOnMission: (missionType: string) => ActionResult
+  requestMilitaryPromotion: () => ActionResult
+  dischargeMilitary: () => ActionResult
+
+  // Body mod actions
+  getTattoo: (tattooId: string) => ActionResult
+  getPiercing: (piercingId: string) => ActionResult
+  removeTattoo: (modId: string) => ActionResult
 
   // Vehicle/driving actions
   studyDrivingTheory: () => ActionResult
