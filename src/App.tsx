@@ -21,12 +21,15 @@ import { SubstanceScreen } from './components/screens/SubstanceScreen'
 import { PetScreen } from './components/screens/PetScreen'
 import { TravelScreen } from './components/screens/TravelScreen'
 import { DatingScreen } from './components/screens/DatingScreen'
+import { VehicleScreen } from './components/screens/VehicleScreen'
+import { ReligionScreen } from './components/screens/ReligionScreen'
+import { PoliticsScreen } from './components/screens/PoliticsScreen'
 
 // ---- Sub-tab types ----
-type DevelopSubTab = 'career' | 'education' | 'finance' | 'social'
+type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle'
 type PeopleSubTab = 'relationships' | 'dating'
-type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets'
-type ProfileSubTab = 'goals' | 'travel' | 'settings'
+type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion'
+type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'settings'
 
 function SubTabBar<T extends string>({
   tabs, active, onChange,
@@ -75,6 +78,7 @@ function App() {
             { id: 'education', label: 'Istruzione', emoji: '📚' },
             { id: 'finance',   label: 'Finanze',    emoji: '💰' },
             { id: 'social',    label: 'Social',     emoji: '📱' },
+            { id: 'vehicle',   label: 'Veicoli',    emoji: '🚗' },
           ]}
           active={developSub}
           onChange={setDevelopSub}
@@ -98,6 +102,7 @@ function App() {
             { id: 'substances', label: 'Sostanze',  emoji: '🍺' },
             { id: 'pets',       label: 'Animali',   emoji: '🐾' },
             { id: 'criminal',   label: 'Crimini',   emoji: '🚔' },
+            { id: 'religion',   label: 'Fede',      emoji: '🙏' },
           ]}
           active={wellbeingSub}
           onChange={setWellbeingSub}
@@ -106,9 +111,10 @@ function App() {
       {activeTab === 'profile' && (
         <SubTabBar<ProfileSubTab>
           tabs={[
-            { id: 'goals',    label: 'Goals',        emoji: '🎯' },
-            { id: 'travel',   label: 'Viaggi',       emoji: '✈️' },
-            { id: 'settings', label: 'Impostazioni', emoji: '⚙️' },
+            { id: 'goals',    label: 'Goals',     emoji: '🎯' },
+            { id: 'travel',   label: 'Viaggi',    emoji: '✈️' },
+            { id: 'politics', label: 'Politica',  emoji: '🏛️' },
+            { id: 'settings', label: 'Impost.',   emoji: '⚙️' },
           ]}
           active={profileSub}
           onChange={setProfileSub}
@@ -128,6 +134,7 @@ function App() {
         {activeTab === 'develop' && developSub === 'education' && <EducationScreen />}
         {activeTab === 'develop' && developSub === 'finance'   && <FinanceScreen />}
         {activeTab === 'develop' && developSub === 'social'    && <SocialMediaScreen />}
+        {activeTab === 'develop' && developSub === 'vehicle'   && <VehicleScreen />}
 
         {activeTab === 'people' && peopleSub === 'relationships' && <RelationshipScreen />}
         {activeTab === 'people' && peopleSub === 'dating'        && <DatingScreen />}
@@ -137,9 +144,11 @@ function App() {
         {activeTab === 'wellbeing' && wellbeingSub === 'substances' && <SubstanceScreen />}
         {activeTab === 'wellbeing' && wellbeingSub === 'pets'       && <PetScreen />}
         {activeTab === 'wellbeing' && wellbeingSub === 'criminal'   && <CriminalScreen />}
+        {activeTab === 'wellbeing' && wellbeingSub === 'religion'   && <ReligionScreen />}
 
         {activeTab === 'profile' && profileSub === 'goals'    && <GoalsScreen />}
         {activeTab === 'profile' && profileSub === 'travel'   && <TravelScreen />}
+        {activeTab === 'profile' && profileSub === 'politics' && <PoliticsScreen />}
         {activeTab === 'profile' && profileSub === 'settings' && <SettingsScreen />}
       </div>
 

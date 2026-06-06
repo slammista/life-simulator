@@ -498,6 +498,47 @@ export interface InventoryItem {
   description: string
 }
 
+// ---- Vehicle ----
+
+export interface VehicleViolation {
+  year: number
+  type: string
+  fine: number
+  pointsLost: number
+}
+
+export interface OwnedVehicle {
+  id: string
+  category: 'economy' | 'medium' | 'luxury' | 'supercar' | 'moto'
+  name: string
+  emoji: string
+  purchaseYear: number
+  purchasePrice: number
+  currentValue: number
+  annualInsurance: number
+  annualMaintenance: number
+}
+
+export interface VehicleState {
+  hasLicenseB: boolean
+  theoryPassed: boolean
+  studyHours: number
+  licensePoints: number   // 0-20
+  violations: VehicleViolation[]
+  ownedVehicles: OwnedVehicle[]
+}
+
+// ---- Religion ----
+
+export interface ReligionState {
+  practiceLevel: number   // 0-100
+  lastPracticeYear: number
+}
+
+// ---- Politics ----
+// (full PoliticsState lives in PoliticsEngine; re-exported here for store typing)
+export type { PoliticsState } from '../services/PoliticsEngine'
+
 // ---- Legacy ----
 
 export interface Legacy {
@@ -616,6 +657,15 @@ export interface GameState {
   // Current nation
   nation: Nation | null
 
+  // Vehicle & driving
+  vehicle: VehicleState
+
+  // Religion
+  religion: ReligionState
+
+  // Politics
+  politics: import('../services/PoliticsEngine').PoliticsState
+
   // Events
   currentEvent: GameEvent | null
   availableChoices: Choice[]
@@ -722,6 +772,25 @@ export interface GameActions {
   proposeToPartner: (npcId: string, ringValue: number) => ActionResult
   getMarried: (npcId: string, weddingBudget: number) => ActionResult
   getDivorced: (npcId: string) => ActionResult
+
+  // Vehicle/driving actions
+  studyDrivingTheory: () => ActionResult
+  takeTheoryExam: () => ActionResult
+  takePracticalExam: () => ActionResult
+  buyVehicle: (vehicleId: string) => ActionResult
+
+  // Religion actions
+  practiceReligion: () => ActionResult
+  convertReligion: (religion: Religion) => ActionResult
+
+  // Politics actions
+  registerToVote: () => ActionResult
+  vote: (partyId: string) => ActionResult
+  joinParty: (partyId: string) => ActionResult
+  leaveParty: () => ActionResult
+  conductCampaign: () => ActionResult
+  runForOffice: (role: string) => ActionResult
+  engageInCorruption: () => ActionResult
 
   // Validation
   checkGoals: () => void

@@ -26,7 +26,11 @@ import { SubstanceEngine, type AlcoholType, type SmokeType } from '../services/S
 import { PetEngine, type AdoptMethod } from '../services/PetEngine'
 import { TravelEngine, type TravelClass } from '../services/TravelEngine'
 import { DatingEngine, type DatingApp } from '../services/DatingEngine'
-import type { Addiction, TravelMemory } from './types'
+import { VehicleEngine } from '../services/VehicleEngine'
+import { ReligionEngine } from '../services/ReligionEngine'
+import { PoliticsEngine, type PoliticalRole } from '../services/PoliticsEngine'
+import type { Addiction, TravelMemory, Religion } from './types'
+import type { PoliticsState } from '../services/PoliticsEngine'
 
 // ---- helpers ----
 
@@ -126,6 +130,9 @@ function buildInitialState(): GameState {
     travelHistory: [],
     living: { type: 'parents', location: 'Italy', monthlyCost: 0, mortgageRemaining: 0, propertyValue: 0, roommates: [] },
     nation: (db.nations as Nation[]).find(n => n.id === 'italy') ?? null,
+    vehicle: { hasLicenseB: false, theoryPassed: false, studyHours: 0, licensePoints: 20, violations: [], ownedVehicles: [] },
+    religion: { practiceLevel: 50, lastPracticeYear: 0 },
+    politics: { isRegisteredVoter: false, partyMembership: null, currentRole: null, mandatesWon: 0, electionsCampaigns: 0, scandals: 0, politicalInfluence: 0, lastVotedYear: -99, corruptionLevel: 0 },
     currentEvent: null,
     availableChoices: [],
     pendingEffects: null,
@@ -259,6 +266,10 @@ export const useGameStore = create<FullStore>()(
         const { updatedAddictions, effects: substanceFx } = SubstanceEngine.annualTick(state)
         merge(substanceFx)
 
+        // 15. Vehicle annual tick (insurance, maintenance, depreciation, violations)
+        const { effects: vehicleFx, updatedVehicles, newViolations } = VehicleEngine.annualTick(state)
+        merge(vehicleFx)
+
         // 14. Random events (background micro-events without choices)
         const randomEvs = db.random_events as unknown as Array<{
           id: string; title: string; description: string; emoji: string; probability: number; effects: Effect
@@ -374,6 +385,11 @@ export const useGameStore = create<FullStore>()(
           hobbies: updatedHobbies,
           socialMedia: updatedProfiles.length > 0 ? updatedProfiles : state.socialMedia,
           pets: updatedPets,
+          vehicle: {
+            ...state.vehicle,
+            ownedVehicles: updatedVehicles.length > 0 ? updatedVehicles : state.vehicle.ownedVehicles,
+            violations: newViolations.length > 0 ? [...state.vehicle.violations, ...newViolations] : state.vehicle.violations,
+          },
           currentEvent: picked,
           availableChoices: choices,
           eventLog: [logEntry, ...state.eventLog].slice(0, 150),
@@ -973,6 +989,176 @@ export const useGameStore = create<FullStore>()(
         return { success: true, message: result.message, effects: result.effects }
       },
 
+      // ==================== Vehicle actions ====================
+      studyDrivingTheory: (): ActionResult => {
+        const state = get()
+        const result = VehicleEngine.studyTheory(state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          vehicle: { ...s.vehicle, studyHours: Math.min(30, s.vehicle.studyHours + 10) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '📖', category: 'education', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      takeTheoryExam: (): ActionResult => {
+        const state = get()
+        const result = VehicleEngine.takeTheoryExam(state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          vehicle: result.theoryPassed ? { ...s.vehicle, theoryPassed: true } : s.vehicle,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.theoryPassed ? '🎉' : '❌', category: 'education', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      takePracticalExam: (): ActionResult => {
+        const state = get()
+        const result = VehicleEngine.takePracticalExam(state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          vehicle: result.licenseGranted ? { ...s.vehicle, hasLicenseB: true } : s.vehicle,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.licenseGranted ? '🪪' : '❌', category: 'education', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      buyVehicle: (vehicleId: string): ActionResult => {
+        const state = get()
+        const result = VehicleEngine.buyVehicle(vehicleId, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          vehicle: result.newVehicle ? { ...s.vehicle, ownedVehicles: [...s.vehicle.ownedVehicles, result.newVehicle!] } : s.vehicle,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🚗', category: 'finance', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        get().checkGoals()
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Religion actions ====================
+      practiceReligion: (): ActionResult => {
+        const state = get()
+        const result = ReligionEngine.practiceReligion(state)
+        const partial = applyEffects(state, result.effects)
+        const key = `religion_${state.time.year}`
+        set(s => ({
+          ...partial,
+          religion: { ...s.religion, practiceLevel: clamp(s.religion.practiceLevel + 5, 0, 100), lastPracticeYear: state.time.year },
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🙏', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      convertReligion: (religion: Religion): ActionResult => {
+        const state = get()
+        const result = ReligionEngine.convertReligion(religion, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          identity: { ...s.identity, religion: result.newReligion! },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '✨', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Politics actions ====================
+      registerToVote: (): ActionResult => {
+        const state = get()
+        const result = PoliticsEngine.registerToVote(state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          politics: { ...s.politics, ...result.updatedPolitics },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🗳️', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      vote: (partyId: string): ActionResult => {
+        const state = get()
+        const result = PoliticsEngine.vote(partyId, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          politics: { ...s.politics, ...result.updatedPolitics },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🗳️', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      joinParty: (partyId: string): ActionResult => {
+        const state = get()
+        const result = PoliticsEngine.joinParty(partyId, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          politics: { ...s.politics, ...result.updatedPolitics },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏛️', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      leaveParty: (): ActionResult => {
+        const state = get()
+        const result = PoliticsEngine.leaveParty(state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          politics: { ...s.politics, ...(result.updatedPolitics as Partial<PoliticsState>) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🚪', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      conductCampaign: (): ActionResult => {
+        const state = get()
+        const result = PoliticsEngine.conductCampaign(state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          politics: { ...s.politics, ...(result.updatedPolitics as Partial<PoliticsState>) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.success ? '📢' : '😔', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      runForOffice: (role: string): ActionResult => {
+        const state = get()
+        const result = PoliticsEngine.runForOffice(role as PoliticalRole, state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          politics: result.updatedPolitics ? { ...s.politics, ...(result.updatedPolitics as Partial<PoliticsState>) } : s.politics,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.success ? '🎉' : '😔', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        get().checkGoals()
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      engageInCorruption: (): ActionResult => {
+        const state = get()
+        const result = PoliticsEngine.engageInCorruption(state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          politics: result.updatedPolitics ? { ...s.politics, ...(result.updatedPolitics as Partial<PoliticsState>) } : s.politics,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.success ? '💰' : '🚔', category: 'criminal', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
       // ==================== Validation ====================
       checkGoals: () => {
         const state = get()
@@ -1054,6 +1240,9 @@ export const useGameStore = create<FullStore>()(
         inventory: state.inventory,
         eventLog: state.eventLog.slice(0, 50),
         settings: state.settings,
+        vehicle: state.vehicle,
+        religion: state.religion,
+        politics: state.politics,
       }),
     }
   )
