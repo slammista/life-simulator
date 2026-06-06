@@ -18,6 +18,7 @@ export interface FinanceActionResult {
   effects: Effect
   newInvestment?: Investment
   newAsset?: Asset
+  updatedAsset?: Asset
 }
 
 const BASE_MARKET_ASSETS: MarketAsset[] = [
@@ -40,15 +41,46 @@ const INVESTMENT_DEFS: InvestmentDef[] = [
   { id: 'GLD', name: 'Oro', emoji: '🥇', type: 'bond', minAmount: 1000, expectedReturn: 0.04, volatility: 0.12, risk: 'low', lockYears: 0 },
 ]
 
-export type AssetType = 'car_economy' | 'car_medium' | 'car_luxury' | 'apartment' | 'house' | 'villa'
+export type AssetType =
+  | 'car_economy'
+  | 'car_medium'
+  | 'car_luxury'
+  | 'apartment'
+  | 'house'
+  | 'villa'
+  | 'watch_luxury'
+  | 'designer_collection'
+  | 'art_collection'
+  | 'yacht'
+  | 'private_jet'
 
-const ASSET_DEFS: Record<AssetType, { name: string; emoji: string; price: number; maintenancePerYear: number; appreciationRate: number; type: Asset['type'] }> = {
-  car_economy:   { name: 'Auto economica',   emoji: '🚗', price: 8000,    maintenancePerYear: 700,   appreciationRate: -0.15, type: 'car' },
-  car_medium:    { name: 'Auto media',        emoji: '🚙', price: 22000,   maintenancePerYear: 1200,  appreciationRate: -0.12, type: 'car' },
-  car_luxury:    { name: 'Auto di lusso',     emoji: '🏎️', price: 70000,   maintenancePerYear: 4000,  appreciationRate: -0.10, type: 'car' },
-  apartment:     { name: 'Appartamento',      emoji: '🏠', price: 180000,  maintenancePerYear: 1800,  appreciationRate: 0.03, type: 'house' },
-  house:         { name: 'Casa',              emoji: '🏡', price: 320000,  maintenancePerYear: 3000,  appreciationRate: 0.03, type: 'house' },
-  villa:         { name: 'Villa',             emoji: '🏰', price: 800000,  maintenancePerYear: 12000, appreciationRate: 0.04, type: 'house' },
+export interface AssetDef {
+  id: AssetType
+  name: string
+  emoji: string
+  price: number
+  maintenancePerYear: number
+  appreciationRate: number
+  type: Asset['type']
+  category: NonNullable<Asset['category']>
+  statusBonus: number
+  theftRisk: number
+  insurancePerYear: number
+  minAge?: number
+}
+
+const ASSET_DEFS: Record<AssetType, AssetDef> = {
+  car_economy: { id: 'car_economy', name: 'Auto economica', emoji: '🚗', price: 8000, maintenancePerYear: 700, appreciationRate: -0.15, type: 'car', category: 'vehicle', statusBonus: 1, theftRisk: 0.01, insurancePerYear: 450, minAge: 18 },
+  car_medium: { id: 'car_medium', name: 'Auto media', emoji: '🚙', price: 22000, maintenancePerYear: 1200, appreciationRate: -0.12, type: 'car', category: 'vehicle', statusBonus: 2, theftRisk: 0.015, insurancePerYear: 850, minAge: 18 },
+  car_luxury: { id: 'car_luxury', name: 'Auto di lusso', emoji: '🏎️', price: 70000, maintenancePerYear: 4000, appreciationRate: -0.09, type: 'car', category: 'luxury', statusBonus: 7, theftRisk: 0.04, insurancePerYear: 3200, minAge: 18 },
+  apartment: { id: 'apartment', name: 'Appartamento', emoji: '🏠', price: 180000, maintenancePerYear: 1800, appreciationRate: 0.03, type: 'house', category: 'property', statusBonus: 4, theftRisk: 0.005, insurancePerYear: 900, minAge: 18 },
+  house: { id: 'house', name: 'Casa', emoji: '🏡', price: 320000, maintenancePerYear: 3000, appreciationRate: 0.03, type: 'house', category: 'property', statusBonus: 6, theftRisk: 0.006, insurancePerYear: 1400, minAge: 18 },
+  villa: { id: 'villa', name: 'Villa', emoji: '🏰', price: 800000, maintenancePerYear: 12000, appreciationRate: 0.04, type: 'house', category: 'property', statusBonus: 12, theftRisk: 0.01, insurancePerYear: 5200, minAge: 18 },
+  watch_luxury: { id: 'watch_luxury', name: 'Orologio di lusso', emoji: '⌚', price: 18000, maintenancePerYear: 300, appreciationRate: 0.04, type: 'luxury', category: 'collectible', statusBonus: 4, theftRisk: 0.06, insurancePerYear: 600, minAge: 18 },
+  designer_collection: { id: 'designer_collection', name: 'Collezione designer', emoji: '👜', price: 35000, maintenancePerYear: 900, appreciationRate: 0.02, type: 'luxury', category: 'luxury', statusBonus: 6, theftRisk: 0.05, insurancePerYear: 1200, minAge: 18 },
+  art_collection: { id: 'art_collection', name: 'Collezione d’arte', emoji: '🖼️', price: 120000, maintenancePerYear: 2500, appreciationRate: 0.07, type: 'luxury', category: 'collectible', statusBonus: 10, theftRisk: 0.035, insurancePerYear: 3500, minAge: 18 },
+  yacht: { id: 'yacht', name: 'Yacht', emoji: '🛥️', price: 950000, maintenancePerYear: 70000, appreciationRate: -0.08, type: 'luxury', category: 'watercraft', statusBonus: 18, theftRisk: 0.018, insurancePerYear: 28000, minAge: 21 },
+  private_jet: { id: 'private_jet', name: 'Jet privato', emoji: '🛩️', price: 4500000, maintenancePerYear: 260000, appreciationRate: -0.11, type: 'luxury', category: 'luxury', statusBonus: 25, theftRisk: 0.008, insurancePerYear: 90000, minAge: 25 },
 }
 
 const uid = () => Math.random().toString(36).slice(2, 10)
@@ -63,6 +95,10 @@ const SENTIMENT_IMPACT: Record<MarketSentiment, number> = {
 
 export function getAllInvestmentDefs(): InvestmentDef[] {
   return INVESTMENT_DEFS
+}
+
+export function getAllAssetDefs(): AssetDef[] {
+  return Object.values(ASSET_DEFS)
 }
 
 export class FinanceEngine {
@@ -138,6 +174,9 @@ export class FinanceEngine {
   static buyAsset(assetType: AssetType, state: GameState): FinanceActionResult {
     const def = ASSET_DEFS[assetType]
     if (!def) return { success: false, message: 'Asset non trovato.', effects: {} }
+    if (def.minAge && state.time.age < def.minAge) {
+      return { success: false, message: `Devi avere almeno ${def.minAge} anni per acquistare ${def.name}.`, effects: {} }
+    }
     if (state.finance.money < def.price * 0.20) {
       return {
         success: false,
@@ -153,24 +192,67 @@ export class FinanceEngine {
       id: uid(),
       type: def.type,
       name: def.name,
+      emoji: def.emoji,
+      category: def.category,
       value: def.price,
       purchaseValue: def.price,
       purchaseYear: state.time.year,
       maintenanceCost: def.maintenancePerYear,
+      insured: false,
+      condition: 100,
+      statusBonus: def.statusBonus,
+      theftRisk: def.theftRisk,
     }
 
     return {
       success: true,
       message: `${def.name} acquistata per €${def.price.toLocaleString('it-IT')}! ${def.emoji} ${mortgage > 0 ? `Mutuo: €${mortgage.toLocaleString('it-IT')}.` : ''}`,
-      effects: { money: -downPayment, happiness: 15, reputation: 5 },
+      effects: { money: -downPayment, happiness: Math.min(20, 8 + def.statusBonus), reputation: def.statusBonus },
       newAsset,
     }
   }
 
-  static annualTick(state: GameState): { effects: Effect; updatedInvestments: Investment[]; updatedAssets: Asset[]; updatedMarket: MarketState; marketMessages: string[] } {
+  static insureAsset(assetId: string, state: GameState): FinanceActionResult {
+    const asset = state.finance.assets.find(a => a.id === assetId)
+    if (!asset) return { success: false, message: 'Asset non trovato.', effects: {} }
+    if (asset.insured) return { success: false, message: `${asset.name} è già assicurato.`, effects: {} }
+    const def = FinanceEngine.findAssetDef(asset)
+    const yearlyCost = def?.insurancePerYear ?? Math.max(300, Math.round(asset.value * 0.015))
+    if (state.finance.money < yearlyCost) {
+      return { success: false, message: `Servono €${yearlyCost.toLocaleString('it-IT')} per assicurare ${asset.name}.`, effects: {} }
+    }
+    return {
+      success: true,
+      message: `${asset.emoji ?? '🛡️'} ${asset.name} assicurato. Premio annuo: €${yearlyCost.toLocaleString('it-IT')}.`,
+      effects: { money: -yearlyCost, happiness: 2 },
+      updatedAsset: { ...asset, insured: true },
+    }
+  }
+
+  static maintainAsset(assetId: string, state: GameState): FinanceActionResult {
+    const asset = state.finance.assets.find(a => a.id === assetId)
+    if (!asset) return { success: false, message: 'Asset non trovato.', effects: {} }
+    const currentCondition = asset.condition ?? 100
+    if (currentCondition >= 95) return { success: false, message: `${asset.name} è già in ottime condizioni.`, effects: {} }
+    const cost = Math.max(250, Math.round(asset.maintenanceCost * (1 + (100 - currentCondition) / 80)))
+    if (state.finance.money < cost) {
+      return { success: false, message: `Servono €${cost.toLocaleString('it-IT')} per la manutenzione.`, effects: {} }
+    }
+    const repairedCondition = Math.min(100, currentCondition + 28)
+    const recoveredValue = Math.round(asset.purchaseValue * ((repairedCondition - currentCondition) / 100) * 0.18)
+    return {
+      success: true,
+      message: `${asset.emoji ?? '🛠️'} Manutenzione completata su ${asset.name}. Condizione ${repairedCondition}/100.`,
+      effects: { money: -cost, happiness: 3 },
+      updatedAsset: { ...asset, condition: repairedCondition, value: asset.value + recoveredValue },
+    }
+  }
+
+  static annualTick(state: GameState): { effects: Effect; updatedInvestments: Investment[]; updatedAssets: Asset[]; updatedMarket: MarketState; marketMessages: string[]; assetMessages: string[] } {
     const effects: Effect = {}
     const updatedInvestments: Investment[] = []
     const updatedAssets: Asset[] = []
+    const assetMessages: string[] = []
     const market = FinanceEngine.ensureMarket(state.market)
     const { updatedMarket, messages } = FinanceEngine.tickMarket(market, state.time.year)
 
@@ -190,12 +272,46 @@ export class FinanceEngine {
 
     // Asset appreciation/depreciation + maintenance
     for (const asset of state.finance.assets) {
-      const defKey = Object.entries(ASSET_DEFS).find(([, d]) => d.name === asset.name)?.[0] as AssetType | undefined
-      const def = defKey ? ASSET_DEFS[defKey] : null
+      const def = FinanceEngine.findAssetDef(asset)
       const appreciation = def?.appreciationRate ?? -0.10
-      const newValue = Math.max(100, Math.round(asset.value * (1 + appreciation)))
-      effects.money = (effects.money ?? 0) - asset.maintenanceCost
-      updatedAssets.push({ ...asset, value: newValue })
+      const condition = asset.condition ?? 100
+      const conditionDecay = FinanceEngine.assetConditionDecay(asset)
+      const nextCondition = Math.max(0, condition - conditionDecay)
+      const conditionMultiplier = Math.max(0.35, 0.7 + nextCondition / 333)
+      const insuranceCost = asset.insured ? (def?.insurancePerYear ?? Math.max(300, Math.round(asset.value * 0.015))) : 0
+      const maintenancePenalty = nextCondition < 45 ? Math.round(asset.maintenanceCost * 0.5) : 0
+      const annualCost = asset.maintenanceCost + insuranceCost + maintenancePenalty
+      let newValue = Math.max(100, Math.round(asset.value * (1 + appreciation) * conditionMultiplier))
+      const theftRisk = asset.insured ? (asset.theftRisk ?? def?.theftRisk ?? 0) * 0.2 : (asset.theftRisk ?? def?.theftRisk ?? 0)
+      let theftHit = false
+
+      if (theftRisk > 0 && Math.random() < theftRisk) {
+        theftHit = true
+        if (asset.insured) {
+          const deductible = Math.round(Math.min(asset.value * 0.04, 12000))
+          effects.money = (effects.money ?? 0) - deductible
+          assetMessages.push(`🛡️ Tentato furto su ${asset.name}: assicurazione attivata, franchigia €${deductible.toLocaleString('it-IT')}.`)
+        } else {
+          const loss = Math.round(newValue * 0.35)
+          newValue = Math.max(100, newValue - loss)
+          effects.happiness = (effects.happiness ?? 0) - 8
+          assetMessages.push(`🚨 Furto/danno su ${asset.name}: valore ridotto di €${loss.toLocaleString('it-IT')}.`)
+        }
+      }
+
+      effects.money = (effects.money ?? 0) - annualCost
+      if (nextCondition < 35 && !theftHit) {
+        assetMessages.push(`🛠️ ${asset.name} è in cattive condizioni (${nextCondition}/100): manutenzione consigliata.`)
+      }
+      updatedAssets.push({
+        ...asset,
+        emoji: asset.emoji ?? def?.emoji,
+        category: asset.category ?? def?.category,
+        condition: nextCondition,
+        statusBonus: asset.statusBonus ?? def?.statusBonus,
+        theftRisk: asset.theftRisk ?? def?.theftRisk,
+        value: newValue,
+      })
     }
 
     // Mortgage payment (3% of remaining per year approx)
@@ -204,7 +320,22 @@ export class FinanceEngine {
       effects.money = (effects.money ?? 0) - interest
     }
 
-    return { effects, updatedInvestments, updatedAssets, updatedMarket, marketMessages: messages }
+    return { effects, updatedInvestments, updatedAssets, updatedMarket, marketMessages: messages, assetMessages }
+  }
+
+  private static findAssetDef(asset: Asset): AssetDef | null {
+    return Object.values(ASSET_DEFS).find(def => def.name === asset.name) ?? null
+  }
+
+  private static assetConditionDecay(asset: Asset): number {
+    switch (asset.category) {
+      case 'property': return 2
+      case 'collectible': return 1
+      case 'watercraft': return 8
+      case 'luxury': return 6
+      case 'vehicle': return 7
+      default: return asset.type === 'house' ? 2 : asset.type === 'car' ? 7 : 4
+    }
   }
 
   private static tickMarket(market: MarketState, year: number): { updatedMarket: MarketState; messages: string[] } {

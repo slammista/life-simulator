@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import { getAllInvestmentDefs, FinanceEngine } from '../../services/FinanceEngine'
+import { getAllAssetDefs, getAllInvestmentDefs, FinanceEngine } from '../../services/FinanceEngine'
 
 export function FinanceScreen() {
   const finance = useGameStore(s => s.finance)
@@ -8,6 +8,9 @@ export function FinanceScreen() {
   const state = useGameStore(s => s)
   const investMoney = useGameStore(s => s.investMoney)
   const sellInvestment = useGameStore(s => s.sellInvestment)
+  const buyAsset = useGameStore(s => s.buyAsset)
+  const insureAsset = useGameStore(s => s.insureAsset)
+  const maintainAsset = useGameStore(s => s.maintainAsset)
   const takeLoan = useGameStore(s => s.takeLoan)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
@@ -43,6 +46,21 @@ export function FinanceScreen() {
     if (r.success) setLoanAmount('')
   }
 
+  const handleBuyAsset = (id: string) => {
+    const r = buyAsset(id)
+    flash(r.message, r.success)
+  }
+
+  const handleInsureAsset = (id: string) => {
+    const r = insureAsset(id)
+    flash(r.message, r.success)
+  }
+
+  const handleMaintainAsset = (id: string) => {
+    const r = maintainAsset(id)
+    flash(r.message, r.success)
+  }
+
   const creditScore = FinanceEngine.calculateCreditScore(state)
   const creditLabel = creditScore >= 800 ? 'Eccellente' : creditScore >= 740 ? 'Molto buono' : creditScore >= 670 ? 'Buono' : creditScore >= 580 ? 'Discreto' : 'Scarso'
   const creditColor = creditScore >= 740 ? '#10b981' : creditScore >= 670 ? '#f59e0b' : creditScore >= 580 ? '#f97316' : '#ef4444'
@@ -53,6 +71,7 @@ export function FinanceScreen() {
   const totalAssets = finance.assets.reduce((s, a) => s + a.value, 0)
 
   const defs = getAllInvestmentDefs()
+  const assetDefs = getAllAssetDefs()
   const marketState = FinanceEngine.ensureMarket(market)
   const sentimentLabel = {
     crash: 'Crash',
@@ -263,31 +282,108 @@ export function FinanceScreen() {
       {/* Assets tab */}
       {tab === 'assets' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {finance.assets.length === 0 ? (
+          <div className="card" style={{ padding: 12 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 8 }}>Patrimonio materiale</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 8 }}>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Valore asset</p>
+                <p style={{ fontSize: 15, fontWeight: 800, color: '#10b981' }}>€{totalAssets.toLocaleString('it-IT')}</p>
+              </div>
+              <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 8 }}>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Costo annuo</p>
+                <p style={{ fontSize: 15, fontWeight: 800, color: '#f59e0b' }}>
+                  €{finance.assets.reduce((s, a) => s + a.maintenanceCost, 0).toLocaleString('it-IT')}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginTop: 4 }}>
+            Asset posseduti
+          </p>
+          {finance.assets.length === 0 && (
             <div className="card" style={{ padding: 24, textAlign: 'center' }}>
               <p style={{ fontSize: 22, marginBottom: 6 }}>🏠</p>
               <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Nessun asset posseduto.</p>
             </div>
-          ) : (
-            finance.assets.map(asset => (
+          )}
+          {finance.assets.map(asset => {
+            const condition = asset.condition ?? 100
+            const conditionColor = condition >= 70 ? '#86efac' : condition >= 40 ? '#fbbf24' : '#fca5a5'
+            return (
               <div key={asset.id} className="card" style={{ padding: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                  <div>
-                    <p style={{ fontWeight: 600, fontSize: 14 }}>{asset.name}</p>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontWeight: 600, fontSize: 14 }}>{asset.emoji ?? '🏦'} {asset.name}</p>
                     <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                      Acquistato {asset.purchaseYear} · Manutenzione €{asset.maintenanceCost.toLocaleString('it-IT')}/anno
+                      {asset.category ?? asset.type} · Acquistato {asset.purchaseYear} · Status +{asset.statusBonus ?? 0}
                     </p>
                   </div>
-                  <div style={{ textAlign: 'right' }}>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <p style={{ fontWeight: 700, fontSize: 14, color: '#10b981' }}>€{asset.value.toLocaleString('it-IT')}</p>
                     <p style={{ fontSize: 11, color: asset.value >= asset.purchaseValue ? '#86efac' : '#fca5a5' }}>
                       {asset.value >= asset.purchaseValue ? '+' : ''}{(((asset.value / asset.purchaseValue) - 1) * 100).toFixed(1)}%
                     </p>
                   </div>
                 </div>
+                <div style={{ marginTop: 10 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, marginBottom: 4 }}>
+                    <span style={{ color: 'var(--color-text-secondary)' }}>Condizione</span>
+                    <span style={{ color: conditionColor, fontWeight: 700 }}>{condition}/100</span>
+                  </div>
+                  <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 6, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${condition}%`, background: conditionColor }} />
+                  </div>
+                </div>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 8 }}>
+                  Manutenzione €{asset.maintenanceCost.toLocaleString('it-IT')}/anno · Furto {(100 * (asset.theftRisk ?? 0)).toFixed(1)}% · {asset.insured ? 'Assicurato' : 'Non assicurato'}
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
+                  <button onClick={() => handleInsureAsset(asset.id)} disabled={asset.insured}
+                    style={{ padding: '8px 0', borderRadius: 10, background: asset.insured ? 'rgba(255,255,255,0.04)' : 'rgba(99,102,241,0.18)', color: asset.insured ? 'var(--color-text-secondary)' : '#c4b5fd', fontSize: 12, fontWeight: 600, border: '1px solid rgba(99,102,241,0.22)', cursor: asset.insured ? 'default' : 'pointer' }}>
+                    {asset.insured ? 'Assicurato' : 'Assicura'}
+                  </button>
+                  <button onClick={() => handleMaintainAsset(asset.id)} disabled={condition >= 95}
+                    style={{ padding: '8px 0', borderRadius: 10, background: condition >= 95 ? 'rgba(255,255,255,0.04)' : 'rgba(245,158,11,0.16)', color: condition >= 95 ? 'var(--color-text-secondary)' : '#fcd34d', fontSize: 12, fontWeight: 600, border: '1px solid rgba(245,158,11,0.2)', cursor: condition >= 95 ? 'default' : 'pointer' }}>
+                    Manutenzione
+                  </button>
+                </div>
               </div>
-            ))
-          )}
+            )
+          })}
+
+          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginTop: 8 }}>
+            Catalogo acquisti
+          </p>
+          {assetDefs.map(def => {
+            const downPayment = Math.round(def.price * 0.2)
+            const canBuy = finance.money >= downPayment && (!def.minAge || state.time.age >= def.minAge)
+            return (
+              <div key={def.id} className="card" style={{ padding: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+                  <div>
+                    <p style={{ fontWeight: 600, fontSize: 13 }}>{def.emoji} {def.name}</p>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                      {def.category} · Acconto €{downPayment.toLocaleString('it-IT')} · Manut. €{def.maintenancePerYear.toLocaleString('it-IT')}/anno
+                    </p>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <p style={{ fontWeight: 800, fontSize: 13 }}>€{def.price.toLocaleString('it-IT')}</p>
+                    <p style={{ fontSize: 11, color: def.appreciationRate >= 0 ? '#86efac' : '#fca5a5' }}>
+                      {def.appreciationRate >= 0 ? '+' : ''}{(def.appreciationRate * 100).toFixed(0)}%/anno
+                    </p>
+                  </div>
+                </div>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+                  Status +{def.statusBonus} · Furto {(def.theftRisk * 100).toFixed(1)}% · Assicurazione €{def.insurancePerYear.toLocaleString('it-IT')}/anno
+                </p>
+                <button onClick={() => handleBuyAsset(def.id)} disabled={!canBuy}
+                  style={{ width: '100%', marginTop: 8, padding: '8px 0', borderRadius: 10, background: canBuy ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.04)', color: canBuy ? '#86efac' : 'var(--color-text-secondary)', fontSize: 12, fontWeight: 600, border: '1px solid rgba(16,185,129,0.22)', cursor: canBuy ? 'pointer' : 'default' }}>
+                  {canBuy ? 'Compra con acconto 20%' : def.minAge && state.time.age < def.minAge ? `Età minima ${def.minAge}` : 'Fondi insufficienti'}
+                </button>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

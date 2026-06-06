@@ -355,9 +355,10 @@ export const useGameStore = create<FullStore>()(
         if (criminalMsg) messages.push(criminalMsg)
 
         // 10. Finance annual tick (investments + assets)
-        const { effects: financeFx, updatedInvestments, updatedAssets, updatedMarket, marketMessages } = FinanceEngine.annualTick(state)
+        const { effects: financeFx, updatedInvestments, updatedAssets, updatedMarket, marketMessages, assetMessages } = FinanceEngine.annualTick(state)
         merge(financeFx)
         messages.push(...marketMessages)
+        messages.push(...assetMessages)
 
         // 11. Social media annual tick
         const { updatedProfiles, effects: socialFx } = SocialMediaEngine.annualTick(state)
@@ -1017,6 +1018,38 @@ export const useGameStore = create<FullStore>()(
           ...partial,
           finance: { ...(partial.finance ?? s.finance), assets: result.newAsset ? [...s.finance.assets, result.newAsset] : s.finance.assets },
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏠', category: 'finance', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      insureAsset: (assetId: string): ActionResult => {
+        const state = get()
+        const result = FinanceEngine.insureAsset(assetId, state)
+        if (!result.success || !result.updatedAsset) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          finance: {
+            ...(partial.finance ?? s.finance),
+            assets: s.finance.assets.map(asset => asset.id === assetId ? result.updatedAsset! : asset),
+          },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🛡️', category: 'finance', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      maintainAsset: (assetId: string): ActionResult => {
+        const state = get()
+        const result = FinanceEngine.maintainAsset(assetId, state)
+        if (!result.success || !result.updatedAsset) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          finance: {
+            ...(partial.finance ?? s.finance),
+            assets: s.finance.assets.map(asset => asset.id === assetId ? result.updatedAsset! : asset),
+          },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🛠️', category: 'finance', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message: result.message, effects: result.effects }
       },

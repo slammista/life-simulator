@@ -4976,14 +4976,14 @@ Creare un life simulator che sembri vivo, umano, imprevedibile e altamente rigio
 - NPC Agency annuale: NPC possono cambiare vita, trasferirsi, morire, sposarsi o ricucire rapporti.
 - Emotional UI System: tema visivo reattivo a salute, stress, depressione, ricchezza e felicità.
 - Polishing/bilanciamento annuale per debiti, burnout, energia, povertà e scandali.
+- Consumerism & Assets avanzato: catalogo acquisti, beni di lusso, yacht/jet, condizione, manutenzione, assicurazioni e rischio furto/danno.
 
 ## Stato stimato
 
-Gameplay GDD/V5 offline: circa 89%.
+Gameplay GDD/V5 offline: circa 91%.
 
 ## Mancante o parziale
 
-- Consumerism & Assets avanzato: yacht, beni di lusso granulari, furti, assicurazioni, manutenzione più profonda.
 - Minigames: prison escape, hacking puzzle, driving test interattivo e altri prototipi giocabili.
 - Pet Battles e sistemi animali avanzati.
 - Gacha/cosmetics/social challenges e leaderboard.
@@ -4993,10 +4993,10 @@ Gameplay GDD/V5 offline: circa 89%.
 
 ## Priorità consigliata dopo questa fase
 
-1. Consumerism & Assets avanzato.
-2. QA/polishing mobile-web e test automatici sui loop principali.
-3. Cloud save/account come prerequisito live service.
-4. Minigames mirati, solo dopo stabilizzazione del core.
+1. QA/polishing mobile-web e test automatici sui loop principali.
+2. Cloud save/account come prerequisito live service.
+3. Minigames mirati, solo dopo stabilizzazione del core.
+4. Pet Battles e loop animali avanzati.
 
 
 

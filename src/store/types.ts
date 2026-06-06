@@ -83,10 +83,16 @@ export interface Asset {
   id: string
   type: 'house' | 'car' | 'luxury' | 'business' | 'other'
   name: string
+  emoji?: string
+  category?: 'vehicle' | 'property' | 'luxury' | 'watercraft' | 'collectible'
   value: number
   purchaseValue: number
   purchaseYear: number
   maintenanceCost: number
+  insured?: boolean
+  condition?: number
+  statusBonus?: number
+  theftRisk?: number
 }
 
 // ---- Identity ----
@@ -1042,6 +1048,8 @@ export interface GameActions {
   investMoney: (defId: string, amount: number) => ActionResult
   sellInvestment: (investmentId: string) => ActionResult
   buyAsset: (assetType: string) => ActionResult
+  insureAsset: (assetId: string) => ActionResult
+  maintainAsset: (assetId: string) => ActionResult
   takeLoan: (amount: number) => ActionResult
 
   // Social media actions
