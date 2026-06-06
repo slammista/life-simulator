@@ -27,12 +27,14 @@ import { PoliticsScreen } from './components/screens/PoliticsScreen'
 import ParentingScreen from './components/screens/ParentingScreen'
 import MilitaryScreen from './components/screens/MilitaryScreen'
 import BodyModScreen from './components/screens/BodyModScreen'
+import BeautyScreen from './components/screens/BeautyScreen'
+import RetirementScreen from './components/screens/RetirementScreen'
 
 // ---- Sub-tab types ----
 type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle' | 'military'
 type PeopleSubTab = 'relationships' | 'dating' | 'famiglia'
-type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body'
-type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'settings'
+type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body' | 'beauty'
+type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'settings'
 
 function SubTabBar<T extends string>({
   tabs, active, onChange,
@@ -109,6 +111,7 @@ function App() {
             { id: 'criminal',   label: 'Crimini',   emoji: '🚔' },
             { id: 'religion',   label: 'Fede',      emoji: '🙏' },
             { id: 'body',       label: 'Body Mod',  emoji: '🎨' },
+            { id: 'beauty',     label: 'Beauty',    emoji: '💄' },
           ]}
           active={wellbeingSub}
           onChange={setWellbeingSub}
@@ -120,6 +123,7 @@ function App() {
             { id: 'goals',    label: 'Goals',     emoji: '🎯' },
             { id: 'travel',   label: 'Viaggi',    emoji: '✈️' },
             { id: 'politics', label: 'Politica',  emoji: '🏛️' },
+            { id: 'pension',  label: 'Pensione',  emoji: '🎗️' },
             { id: 'settings', label: 'Impost.',   emoji: '⚙️' },
           ]}
           active={profileSub}
@@ -154,10 +158,12 @@ function App() {
         {activeTab === 'wellbeing' && wellbeingSub === 'criminal'   && <CriminalScreen />}
         {activeTab === 'wellbeing' && wellbeingSub === 'religion'   && <ReligionScreen />}
         {activeTab === 'wellbeing' && wellbeingSub === 'body'       && <BodyModScreen />}
+        {activeTab === 'wellbeing' && wellbeingSub === 'beauty'     && <BeautyScreen />}
 
         {activeTab === 'profile' && profileSub === 'goals'    && <GoalsScreen />}
         {activeTab === 'profile' && profileSub === 'travel'   && <TravelScreen />}
         {activeTab === 'profile' && profileSub === 'politics' && <PoliticsScreen />}
+        {activeTab === 'profile' && profileSub === 'pension'  && <RetirementScreen />}
         {activeTab === 'profile' && profileSub === 'settings' && <SettingsScreen />}
       </div>
 

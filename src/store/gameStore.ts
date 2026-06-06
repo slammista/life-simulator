@@ -32,9 +32,14 @@ import { PoliticsEngine, type PoliticalRole } from '../services/PoliticsEngine'
 import { ParentingEngine, type ParentingAction } from '../services/ParentingEngine'
 import { MilitaryEngine, type MilitaryBranch, type MissionType } from '../services/MilitaryEngine'
 import { BodyModEngine } from '../services/BodyModEngine'
+import { BeautyEngine, type HairStyle, type NailsStyle, type WardrobeTier, type SkincareLevel } from '../services/BeautyEngine'
+import { RetirementEngine, type RetirementType, type SeniorLiving } from '../services/RetirementEngine'
+import { LegacyEngine } from '../services/LegacyEngine'
 import type { Addiction, TravelMemory, Religion, Child } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
+import type { BeautyState } from '../services/BeautyEngine'
+import type { RetirementState } from '../services/RetirementEngine'
 
 // ---- helpers ----
 
@@ -139,6 +144,21 @@ function buildInitialState(): GameState {
     politics: { isRegisteredVoter: false, partyMembership: null, currentRole: null, mandatesWon: 0, electionsCampaigns: 0, scandals: 0, politicalInfluence: 0, lastVotedYear: -99, corruptionLevel: 0 },
     military: { isEnlisted: false, branch: null, rank: null, rankIndex: 0, yearsOfService: 0, missions: 0, decorations: [], ptsd: false, discharged: false, honorableDischarge: false, pensionEligible: false },
     bodyMods: { items: [] },
+    beauty: {
+      hairStyle: 'none', hairLastUpdatedYear: 0,
+      nailsStyle: 'none', nailsLastUpdatedYear: 0,
+      wardrobeTier: 'none', wardrobeLastUpdatedYear: 0,
+      skincareLevel: 'none', makeupLevel: 'none',
+      hasLaserHairRemoval: false, hasBotox: false, botoxSessions: 0,
+      luxuryItems: [],
+    },
+    retirement: {
+      isRetired: false, retirementAge: null, retirementType: null,
+      monthlyPension: 0, seniorConditions: [],
+      cognitiveStatus: 'sharp', livingArrangement: 'own_home',
+      hasMadeWill: false, funeralPrePlanned: false,
+      alzheimersYear: null, alzheimersStage: 'none', volunteeringActive: false,
+    },
     currentEvent: null,
     availableChoices: [],
     pendingEffects: null,
@@ -284,6 +304,17 @@ export const useGameStore = create<FullStore>()(
         const { updatedChildren, events: parentingEvents } = ParentingEngine.annualTick(state)
         messages.push(...parentingEvents)
 
+        // 18. Beauty annual tick (aging decay, outdated wardrobe)
+        const { effects: beautyFx } = BeautyEngine.annualTick(state)
+        merge(beautyFx)
+
+        // 19. Retirement annual tick (pension, senior conditions, Alzheimer)
+        const { effects: retirementFx, updatedRetirement: retirementTickUpdate, newConditions } = RetirementEngine.annualTick(state)
+        merge(retirementFx)
+        if (newConditions.length > 0) {
+          messages.push(...newConditions.map(c => `${c.emoji} Nuova condizione: ${c.name}. Costo mensile: €${c.monthlyCost.toLocaleString()}.`))
+        }
+
         // 14. Random events (background micro-events without choices)
         const randomEvs = db.random_events as unknown as Array<{
           id: string; title: string; description: string; emoji: string; probability: number; effects: Effect
@@ -408,6 +439,13 @@ export const useGameStore = create<FullStore>()(
             ? { ...state.military, ...militaryTickUpdate }
             : state.military,
           children: updatedChildren.length > 0 ? updatedChildren : state.children,
+          retirement: {
+            ...state.retirement,
+            ...retirementTickUpdate,
+            seniorConditions: newConditions.length > 0
+              ? [...state.retirement.seniorConditions, ...newConditions]
+              : state.retirement.seniorConditions,
+          },
           currentEvent: picked,
           availableChoices: choices,
           eventLog: [logEntry, ...state.eventLog].slice(0, 150),
@@ -1149,6 +1187,224 @@ export const useGameStore = create<FullStore>()(
         return { success: true, message: result.message, effects: result.effects }
       },
 
+      // ==================== Beauty actions ====================
+      getHaircut: (style: string): ActionResult => {
+        const state = get()
+        const result = BeautyEngine.getHaircut(style as HairStyle, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        const key = `beauty_hair_${state.time.year}`
+        set(s => ({
+          ...partial,
+          beauty: { ...s.beauty, ...(result.updatedBeauty ?? {}) },
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '✂️', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      doNails: (style: string): ActionResult => {
+        const state = get()
+        const result = BeautyEngine.doNails(style as NailsStyle, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        const key = `beauty_nails_${state.time.year}`
+        set(s => ({
+          ...partial,
+          beauty: { ...s.beauty, ...(result.updatedBeauty ?? {}) },
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💅', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      upgradeWardrobe: (tier: string): ActionResult => {
+        const state = get()
+        const result = BeautyEngine.upgradeWardrobe(tier as WardrobeTier, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          beauty: { ...s.beauty, ...(result.updatedBeauty ?? {}) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '👗', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      doSkincare: (level: string): ActionResult => {
+        const state = get()
+        const result = BeautyEngine.doSkincare(level as SkincareLevel, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          beauty: { ...s.beauty, ...(result.updatedBeauty ?? {}) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🧴', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      getBotox: (): ActionResult => {
+        const state = get()
+        const result = BeautyEngine.getBotox(state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          beauty: { ...s.beauty, ...(result.updatedBeauty ?? {}) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💉', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      getLaserHairRemoval: (): ActionResult => {
+        const state = get()
+        const result = BeautyEngine.getLaserHairRemoval(state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          beauty: { ...s.beauty, ...(result.updatedBeauty ?? {}) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '⚡', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      buyLuxuryItem: (itemId: string): ActionResult => {
+        const state = get()
+        const result = BeautyEngine.buyLuxuryItem(itemId, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          beauty: result.newItem
+            ? { ...s.beauty, luxuryItems: [...s.beauty.luxuryItems, result.newItem!] }
+            : s.beauty,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💎', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Retirement actions ====================
+      retire: (type: string): ActionResult => {
+        const state = get()
+        const result = RetirementEngine.retire(type as RetirementType, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          retirement: { ...s.retirement, ...(result.updatedRetirement ?? {}) },
+          career: s.career.currentJob ? { ...s.career, currentJob: null, jobHistory: [...s.career.jobHistory] } : s.career,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🎗️', category: 'career', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      makeWill: (): ActionResult => {
+        const state = get()
+        const result = RetirementEngine.makeWill(state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          retirement: { ...s.retirement, ...(result.updatedRetirement ?? {}) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '📜', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      prePlanFuneral: (): ActionResult => {
+        const state = get()
+        const result = RetirementEngine.prePlanFuneral(state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          retirement: { ...s.retirement, ...(result.updatedRetirement ?? {}) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '⚰️', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      doVolunteering: (): ActionResult => {
+        const state = get()
+        const result = RetirementEngine.doVolunteering(state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        const key = `volunteer_${state.time.year}`
+        set(s => ({
+          ...partial,
+          retirement: { ...s.retirement, volunteeringActive: true },
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🤝', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      changeLiving: (arrangement: string): ActionResult => {
+        const state = get()
+        const result = RetirementEngine.changeLiving(arrangement as SeniorLiving, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          retirement: { ...s.retirement, ...(result.updatedRetirement ?? {}) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏠', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Legacy action ====================
+      continueAsChild: (childId: string): void => {
+        const state = get()
+        const child = state.children.find(c => c.id === childId)
+        if (!child) return
+        const score = LegacyEngine.calculateLegacyScore(state)
+        const { identity, startingMoney, bonuses } = LegacyEngine.buildChildStartingState(child, state, score)
+
+        // Start a new game as the child with inherited stats and bonuses
+        const startAge = Math.max(18, child.age)
+        const newState = {
+          isStarted: true,
+          isGameOver: false,
+          deathType: null,
+          gameOverYear: null,
+          identity,
+          time: { year: state.time.year + (startAge - child.age), month: 1, age: startAge },
+          stats: {
+            health: Math.min(100, child.health),
+            mentalHealth: 70 + bonuses.happinessBonus,
+            happiness: 60 + bonuses.happinessBonus,
+            intelligence: Math.min(100, child.intelligence + bonuses.intelligenceBonus),
+            looks: Math.min(100, child.looks + bonuses.looksBonus),
+            energy: 80,
+            karma: 0,
+            reputation: 5 + bonuses.reputationBonus,
+            socialReputation: 5 + bonuses.reputationBonus,
+          },
+          finance: {
+            money: startingMoney,
+            bankBalance: 0, debt: 0, creditScore: 650,
+            monthlyIncome: 0, monthlyExpenses: 500,
+            investments: [], assets: [],
+          },
+          relationships: state.relationships.filter(r => r.isAlive).slice(0, 3),
+          children: [],
+          legacy: state.legacy,
+          diminishingReturns: {},
+          eventLog: [{
+            id: uid(),
+            year: state.time.year + (startAge - child.age),
+            age: startAge,
+            text: `Nuova vita come ${identity.name} ${identity.surname}. Eredità da ${state.identity.name}: €${startingMoney.toLocaleString()}.`,
+            emoji: '🔄',
+            category: 'life',
+            statChanges: {},
+          }],
+        }
+        set(newState as Partial<typeof state>)
+      },
+
       // ==================== Vehicle actions ====================
       studyDrivingTheory: (): ActionResult => {
         const state = get()
@@ -1343,16 +1599,73 @@ export const useGameStore = create<FullStore>()(
         if (state.isGameOver) return
         let deathType: string | null = null
 
+        // Health-based deaths
         if (state.stats.health <= 0) {
-          deathType = state.time.age > 70 ? 'natural' : 'disease'
-        } else if (state.stats.mentalHealth <= 0) {
+          // Check overdose first
+          const hasActiveAddiction = state.health.addictions.some(a => a.level > 70)
+          if (hasActiveAddiction && Math.random() < 0.4) {
+            deathType = 'overdose'
+          } else if (state.retirement.seniorConditions.some(c => c.id === 'heart_disease') && state.time.age > 70) {
+            deathType = 'disease'
+          } else {
+            deathType = state.time.age > 70 ? 'natural' : 'disease'
+          }
+        }
+
+        // Mental health
+        if (!deathType && state.stats.mentalHealth <= 0) {
           deathType = 'suicide'
-        } else if (state.time.age >= 120) {
+        }
+
+        // Old age
+        if (!deathType && state.time.age >= 120) {
           deathType = 'natural'
         }
 
+        // Alzheimer severe — gradual death
+        if (!deathType && state.retirement.alzheimersStage === 'severe' && Math.random() < 0.3) {
+          deathType = 'natural'
+        }
+
+        // Random death by crime/murder if high criminal record and enemies
+        if (!deathType && state.criminal.hasRecord && state.criminal.crimes.length >= 3) {
+          const enemyCount = state.relationships.filter(r => r.type === 'enemy').length
+          if (enemyCount >= 2 && Math.random() < 0.03) deathType = 'murder'
+        }
+
+        // Execution: condemned prisoner
+        if (!deathType && state.criminal.inPrison && state.criminal.prisonSentence >= 20 && Math.random() < 0.01) {
+          deathType = 'execution'
+        }
+
+        // Traffic accident if own car + reckless
+        if (!deathType && state.vehicle.ownedVehicles.length > 0 && state.vehicle.licensePoints <= 5 && Math.random() < 0.02) {
+          deathType = 'accident'
+        }
+
         if (deathType) {
-          set({ isGameOver: true, deathType, gameOverYear: state.time.year, currentEvent: null })
+          // Compute legacy score on death
+          const legacyScore = LegacyEngine.calculateLegacyScore(state)
+          set({
+            isGameOver: true,
+            deathType,
+            gameOverYear: state.time.year,
+            currentEvent: null,
+            legacy: {
+              playerId: state.identity.name,
+              deathDate: `${state.time.year}`,
+              children: state.children.map(c => LegacyEngine.buildInheritanceRecord(c, state)),
+              assetsTransferred: state.finance.assets,
+              traitsInherited: [],
+              relationshipsMaintained: state.relationships.filter(r => r.isAlive),
+              memoriesPreserved: [],
+              familyTies: state.children.length > 0
+                ? Math.round(state.children.reduce((s, c) => s + c.bondWithPlayer, 0) / state.children.length)
+                : 0,
+              legacyScore: legacyScore.total,
+              ribbonsFamily: state.ribbons.filter(r => r.unlocked).map(r => r.id),
+            },
+          })
         }
       },
 
@@ -1405,6 +1718,8 @@ export const useGameStore = create<FullStore>()(
         politics: state.politics,
         military: state.military,
         bodyMods: state.bodyMods,
+        beauty: state.beauty,
+        retirement: state.retirement,
       }),
     }
   )

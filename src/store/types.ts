@@ -546,6 +546,12 @@ export type { MilitaryState } from '../services/MilitaryEngine'
 // ---- Body Mods ----
 export type { BodyMod, BodyModState } from '../services/BodyModEngine'
 
+// ---- Beauty ----
+export type { BeautyState, HairStyle, NailsStyle, WardrobeTier, SkincareLevel } from '../services/BeautyEngine'
+
+// ---- Retirement ----
+export type { RetirementState, RetirementType, SeniorLiving, SeniorCondition } from '../services/RetirementEngine'
+
 // ---- Legacy ----
 
 export interface Legacy {
@@ -679,6 +685,12 @@ export interface GameState {
   // Body modifications
   bodyMods: import('../services/BodyModEngine').BodyModState
 
+  // Beauty & personal care
+  beauty: import('../services/BeautyEngine').BeautyState
+
+  // Retirement & senior life
+  retirement: import('../services/RetirementEngine').RetirementState
+
   // Events
   currentEvent: GameEvent | null
   availableChoices: Choice[]
@@ -801,6 +813,25 @@ export interface GameActions {
   getTattoo: (tattooId: string) => ActionResult
   getPiercing: (piercingId: string) => ActionResult
   removeTattoo: (modId: string) => ActionResult
+
+  // Beauty actions
+  getHaircut: (style: string) => ActionResult
+  doNails: (style: string) => ActionResult
+  upgradeWardrobe: (tier: string) => ActionResult
+  doSkincare: (level: string) => ActionResult
+  getBotox: () => ActionResult
+  getLaserHairRemoval: () => ActionResult
+  buyLuxuryItem: (itemId: string) => ActionResult
+
+  // Retirement actions
+  retire: (type: string) => ActionResult
+  makeWill: () => ActionResult
+  prePlanFuneral: () => ActionResult
+  doVolunteering: () => ActionResult
+  changeLiving: (arrangement: string) => ActionResult
+
+  // Legacy
+  continueAsChild: (childId: string) => void
 
   // Vehicle/driving actions
   studyDrivingTheory: () => ActionResult
