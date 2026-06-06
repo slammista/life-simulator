@@ -649,6 +649,21 @@ export type { CosmeticSurgeryState, PerformedSurgery, CosmeticProcedure } from '
 // ---- Challenges ----
 export type { ChallengeEngineState, ActiveChallenge, ChallengeDefinition } from '../services/ChallengeEngine'
 
+// ---- Fame ----
+
+export type FameTier = 'unknown' | 'local' | 'rising' | 'famous' | 'celebrity' | 'icon'
+
+export interface FameState {
+  fame: number            // 0-100
+  tier: FameTier
+  fanbase: number
+  publicImage: number     // 0-100
+  scandals: number
+  verified: boolean
+  sponsorships: number
+  lastInterviewYear: number
+}
+
 // ---- Credit Score ----
 export type { CreditScoreResult, CreditTier } from '../services/CreditScoreEngine'
 
@@ -763,6 +778,9 @@ export interface GameState {
 
   // Social media
   socialMedia: SocialMediaProfile[]
+
+  // Fame
+  fame: FameState
 
   // Travel
   travelHistory: TravelMemory[]

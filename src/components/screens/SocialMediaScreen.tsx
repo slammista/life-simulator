@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { SocialMediaEngine, type SocialPlatform, type PostType } from '../../services/SocialMediaEngine'
+import { FameEngine } from '../../services/FameEngine'
+import type { FameTier } from '../../store/types'
 
 const POST_TYPES: { id: PostType; label: string; emoji: string }[] = [
   { id: 'photo', label: 'Foto', emoji: '📸' },
@@ -16,13 +18,23 @@ const STAGE_LABELS: Record<string, string> = {
   influencer: 'Influencer (100k+)', macro: 'Macro (1M+)', mega: 'Mega (10M+)',
 }
 
+const FAME_LABELS: Record<FameTier, string> = {
+  unknown: 'Sconosciuto',
+  local: 'Volto locale',
+  rising: 'In ascesa',
+  famous: 'Famoso',
+  celebrity: 'Celebrity',
+  icon: 'Icona',
+}
+
 export function SocialMediaScreen() {
-  const { socialMedia, stats, time, createSocialProfile, postContent } = useGameStore()
+  const { socialMedia, stats, time, fame: rawFame, createSocialProfile, postContent } = useGameStore()
   const [feedback, setFeedback] = useState('')
   const [selectedPlatform, setSelectedPlatform] = useState<SocialPlatform>('instagram')
   const [selectedPost, setSelectedPost] = useState<PostType>('photo')
 
   const platforms = SocialMediaEngine.getPlatforms()
+  const fame = FameEngine.ensure(rawFame)
 
   const handleCreate = () => {
     const res = createSocialProfile(selectedPlatform)
@@ -41,6 +53,37 @@ export function SocialMediaScreen() {
           {feedback}
         </div>
       )}
+
+      {/* Fame overview */}
+      <div className="card" style={{ padding: '12px 14px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, marginBottom: 10 }}>
+          <div>
+            <p style={{ fontSize: 14, fontWeight: 700 }}>🌟 Fama pubblica</p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>
+              {FAME_LABELS[fame.tier]}{fame.verified ? ' · verificato' : ''} · {fame.scandals} scandali
+            </p>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <p style={{ fontSize: 18, fontWeight: 800, color: fame.publicImage < 30 ? '#fca5a5' : '#fbbf24' }}>{fame.fame}/100</p>
+            <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>fame score</p>
+          </div>
+        </div>
+        <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden', marginBottom: 10 }}>
+          <div style={{ height: '100%', width: `${fame.fame}%`, background: fame.publicImage < 30 ? '#ef4444' : '#f59e0b', borderRadius: 4 }} />
+        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+          {[
+            { label: 'Fanbase', value: fame.fanbase >= 1000000 ? `${(fame.fanbase / 1000000).toFixed(1)}M` : fame.fanbase >= 1000 ? `${(fame.fanbase / 1000).toFixed(1)}k` : String(fame.fanbase) },
+            { label: 'Immagine', value: `${fame.publicImage}/100` },
+            { label: 'Sponsor', value: String(fame.sponsorships) },
+          ].map(item => (
+            <div key={item.label} style={{ background: 'rgba(255,255,255,0.05)', borderRadius: 8, padding: '7px 8px', textAlign: 'center' }}>
+              <div style={{ fontSize: 13, fontWeight: 700 }}>{item.value}</div>
+              <div style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>{item.label}</div>
+            </div>
+          ))}
+        </div>
+      </div>
 
       {/* My profiles */}
       {socialMedia.length > 0 && (

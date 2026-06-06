@@ -24,6 +24,8 @@ export interface SocialActionResult {
   newProfile?: SocialMediaProfile
   updatedProfile?: Partial<SocialMediaProfile>
   viralEvent?: boolean
+  followerGain?: number
+  scandal?: boolean
 }
 
 export class SocialMediaEngine {
@@ -94,7 +96,7 @@ export class SocialMediaEngine {
         : `${def.emoji} Post pubblicato su ${def.name}. +${totalGain} follower.`
 
     return {
-      success: true, message, effects, viralEvent: isViral,
+      success: true, message, effects, viralEvent: isViral, followerGain: totalGain, scandal: cancelRisk,
       updatedProfile: {
         followers: Math.max(0, newFollowers - followerLoss),
         viralScore: newViralScore,

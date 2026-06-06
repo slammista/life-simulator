@@ -45,6 +45,7 @@ import { CreditScoreEngine } from '../services/CreditScoreEngine'
 import { LivingEngine } from '../services/LivingEngine'
 import { FamilyEngine } from '../services/FamilyEngine'
 import { TraumaEngine } from '../services/TraumaEngine'
+import { FameEngine } from '../services/FameEngine'
 import type { Addiction, TravelMemory, Religion, Child, LivingType } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
@@ -158,6 +159,7 @@ function buildInitialState(): GameState {
     },
     hobbies: [],
     socialMedia: [],
+    fame: FameEngine.initialState(),
     travelHistory: [],
     living: { type: 'parents', location: 'Italy', monthlyCost: 0, mortgageRemaining: 0, propertyValue: 0, roommates: [] },
     nation: (db.nations as Nation[]).find(n => n.id === 'italy') ?? null,
@@ -347,6 +349,14 @@ export const useGameStore = create<FullStore>()(
         const { updatedProfiles, effects: socialFx } = SocialMediaEngine.annualTick(state)
         merge(socialFx)
 
+        // 11b. Fame annual tick (fanbase, sponsors, public image decay)
+        const fameTick = FameEngine.annualTick({
+          ...state,
+          socialMedia: updatedProfiles.length > 0 ? updatedProfiles : state.socialMedia,
+        })
+        merge(fameTick.effects)
+        messages.push(...fameTick.messages)
+
         // 12. Pet annual tick
         const { updatedPets, effects: petFx, deathMessages } = PetEngine.annualTick(state)
         merge(petFx)
@@ -529,6 +539,7 @@ export const useGameStore = create<FullStore>()(
           criminal: updatedCriminal,
           hobbies: updatedHobbies,
           socialMedia: updatedProfiles.length > 0 ? updatedProfiles : state.socialMedia,
+          fame: fameTick.fame,
           pets: updatedPets,
           vehicle: {
             ...state.vehicle,
@@ -1000,16 +1011,28 @@ export const useGameStore = create<FullStore>()(
         const state = get()
         const result = SocialMediaEngine.post(platform as SocialPlatform, postType as PostType, state)
         if (!result.success) return { success: false, message: result.message, effects: result.effects }
-        const partial = applyEffects(state, result.effects)
+        const fameResult = FameEngine.fromSocialPost({
+          state,
+          followerGain: result.followerGain ?? 0,
+          viralEvent: result.viralEvent,
+          scandal: result.scandal,
+        })
+        const combinedEffects: Effect = { ...result.effects }
+        for (const [key, value] of Object.entries(fameResult.effects)) {
+          combinedEffects[key] = (combinedEffects[key] ?? 0) + value
+        }
+        const partial = applyEffects(state, combinedEffects)
+        const resultMessage = fameResult.message ? `${result.message} ${fameResult.message}` : result.message
         set(s => ({
           ...partial,
           socialMedia: result.updatedProfile
             ? s.socialMedia.map(p => p.platform === platform ? { ...p, ...result.updatedProfile } : p)
             : s.socialMedia,
-          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.viralEvent ? '🚀' : '📤', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+          fame: fameResult.fame,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: resultMessage, emoji: result.scandal ? '📰' : result.viralEvent ? '🚀' : '📤', category: 'social', statChanges: combinedEffects }, ...s.eventLog].slice(0, 150),
         }))
         get().checkGoals()
-        return { success: true, message: result.message, effects: result.effects }
+        return { success: true, message: resultMessage, effects: combinedEffects }
       },
 
       // ==================== Substance actions ====================
@@ -2102,6 +2125,7 @@ export const useGameStore = create<FullStore>()(
         health: state.health,
         hobbies: state.hobbies,
         socialMedia: state.socialMedia,
+        fame: state.fame,
         travelHistory: state.travelHistory,
         living: state.living,
         nation: state.nation,
