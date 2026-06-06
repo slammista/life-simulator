@@ -561,6 +561,12 @@ export type { SexualHealthState, ContraceptionMethod, STI, STIType, SexualHealth
 // ---- World Events ----
 export type { WorldEventsState, WorldModifier, HistoricalEvent, HomeRepairEvent } from '../services/WorldEventsEngine'
 
+// ---- Cosmetic Surgery ----
+export type { CosmeticSurgeryState, PerformedSurgery, CosmeticProcedure } from '../services/CosmeticSurgeryEngine'
+
+// ---- Challenges ----
+export type { ChallengeEngineState, ActiveChallenge, ChallengeDefinition } from '../services/ChallengeEngine'
+
 // ---- Legacy ----
 
 export interface Legacy {
@@ -708,6 +714,12 @@ export interface GameState {
 
   // World events
   worldEvents: import('../services/WorldEventsEngine').WorldEventsState
+
+  // Cosmetic surgery
+  cosmeticSurgery: import('../services/CosmeticSurgeryEngine').CosmeticSurgeryState
+
+  // Challenge engine
+  challengeEngine: import('../services/ChallengeEngine').ChallengeEngineState
 
   // Events
   currentEvent: GameEvent | null
@@ -865,6 +877,13 @@ export interface GameActions {
   getSTDTest: () => ActionResult
   treatSTI: (stiType: import('../services/SexualHealthEngine').STIType) => ActionResult
   doIVF: () => ActionResult
+
+  // Cosmetic surgery actions
+  performSurgery: (procedureId: string) => ActionResult
+
+  // Challenge actions
+  acceptChallenge: (defId: string) => ActionResult
+  abandonChallenge: (defId: string) => ActionResult
 
   // Cheat actions
   cheatAddMoney: (amount: number) => void

@@ -38,6 +38,9 @@ import { LegacyEngine } from '../services/LegacyEngine'
 import { GamblingEngine, type GamblingGame, type SportBetType } from '../services/GamblingEngine'
 import { SexualHealthEngine, type ContraceptionMethod, type STIType } from '../services/SexualHealthEngine'
 import { WorldEventsEngine } from '../services/WorldEventsEngine'
+import { CosmeticSurgeryEngine } from '../services/CosmeticSurgeryEngine'
+import { ChallengeEngine } from '../services/ChallengeEngine'
+import { AchievementsEngine } from '../services/AchievementsEngine'
 import type { Addiction, TravelMemory, Religion, Child } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
@@ -176,6 +179,19 @@ function buildInitialState(): GameState {
     worldEvents: {
       triggeredEvents: [],
       activeWorldModifiers: [],
+    },
+    cosmeticSurgery: {
+      surgeries: [],
+      totalSurgeries: 0,
+      totalLooksBonus: 0,
+      hasActiveComplication: false,
+    },
+    challengeEngine: {
+      activeChallenges: [],
+      completedChallengeIds: [],
+      failedChallengeIds: [],
+      totalPoints: 0,
+      streak: 0,
     },
     currentEvent: null,
     availableChoices: [],
@@ -351,6 +367,17 @@ export const useGameStore = create<FullStore>()(
           messages.push(`${repair.emoji} ${repair.name}: riparazione urgente!`)
         }
 
+        // 23. Achievement check (ribbon auto-unlock)
+        const { newRibbons, messages: achievementMsgs } = AchievementsEngine.checkAndUnlock(state)
+        messages.push(...achievementMsgs)
+
+        // 24. Challenge progress check
+        const challengeResult = ChallengeEngine.checkChallenges(state)
+        merge(challengeResult.effects)
+        for (const ch of challengeResult.newlyCompleted) {
+          messages.push(`🏆 Challenge completata: ${ch.emoji} ${ch.name}! +${challengeResult.bonusPoints} punti`)
+        }
+
         // 14. Random events (background micro-events without choices)
         const randomEvs = db.random_events as unknown as Array<{
           id: string; title: string; description: string; emoji: string; probability: number; effects: Effect
@@ -492,6 +519,13 @@ export const useGameStore = create<FullStore>()(
             triggeredEvents: worldResult.updatedWorld.triggeredEvents ?? state.worldEvents.triggeredEvents,
             activeWorldModifiers: worldResult.updatedWorld.activeWorldModifiers ?? state.worldEvents.activeWorldModifiers,
           },
+          challengeEngine: { ...state.challengeEngine, ...challengeResult.updatedState },
+          ribbons: newRibbons.length > 0
+            ? [
+                ...state.ribbons,
+                ...newRibbons.map(def => AchievementsEngine.buildRibbonRecord(def, newYear)),
+              ]
+            : state.ribbons,
         })
 
         get().checkGoals()
@@ -1621,6 +1655,48 @@ export const useGameStore = create<FullStore>()(
         }))
       },
 
+      // ==================== Cosmetic Surgery actions ====================
+      performSurgery: (procedureId: string): ActionResult => {
+        const state = get()
+        const result = CosmeticSurgeryEngine.performSurgery(procedureId, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          cosmeticSurgery: result.updatedSurgery
+            ? { ...s.cosmeticSurgery, ...result.updatedSurgery }
+            : s.cosmeticSurgery,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💉', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        get().checkGoals()
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Challenge actions ====================
+      acceptChallenge: (defId: string): ActionResult => {
+        const state = get()
+        const result = ChallengeEngine.acceptChallenge(defId, state)
+        if (!result.success || !result.challenge) return { success: false, message: result.message, effects: {} }
+        set(s => ({
+          challengeEngine: {
+            ...s.challengeEngine,
+            activeChallenges: [...s.challengeEngine.activeChallenges, result.challenge!],
+          },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏆', category: 'life', statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: {} }
+      },
+
+      abandonChallenge: (defId: string): ActionResult => {
+        const state = get()
+        const updatedState = ChallengeEngine.abandonChallenge(defId, state)
+        set(s => ({
+          challengeEngine: { ...s.challengeEngine, ...updatedState },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `❌ Challenge abbandonata.`, emoji: '❌', category: 'life', statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: 'Challenge abbandonata.', effects: {} }
+      },
+
       // ==================== Vehicle actions ====================
       studyDrivingTheory: (): ActionResult => {
         const state = get()
@@ -1939,6 +2015,8 @@ export const useGameStore = create<FullStore>()(
         gambling: state.gambling,
         sexualHealth: state.sexualHealth,
         worldEvents: state.worldEvents,
+        cosmeticSurgery: state.cosmeticSurgery,
+        challengeEngine: state.challengeEngine,
       }),
     }
   )

@@ -31,12 +31,14 @@ import BeautyScreen from './components/screens/BeautyScreen'
 import RetirementScreen from './components/screens/RetirementScreen'
 import GamblingScreen from './components/screens/GamblingScreen'
 import SexualHealthScreen from './components/screens/SexualHealthScreen'
+import CosmeticSurgeryScreen from './components/screens/CosmeticSurgeryScreen'
+import ChallengeScreen from './components/screens/ChallengeScreen'
 
 // ---- Sub-tab types ----
 type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle' | 'military'
 type PeopleSubTab = 'relationships' | 'dating' | 'famiglia'
-type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body' | 'beauty' | 'gambling' | 'sex_health'
-type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'settings'
+type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body' | 'beauty' | 'gambling' | 'sex_health' | 'cosmetic'
+type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'challenges' | 'settings'
 
 function SubTabBar<T extends string>({
   tabs, active, onChange,
@@ -116,6 +118,7 @@ function App() {
             { id: 'beauty',      label: 'Beauty',    emoji: '💄' },
             { id: 'gambling',    label: 'Azzardo',   emoji: '🎲' },
             { id: 'sex_health',  label: 'Sess.',     emoji: '❤️' },
+            { id: 'cosmetic',    label: 'Estetica',  emoji: '💉' },
           ]}
           active={wellbeingSub}
           onChange={setWellbeingSub}
@@ -124,11 +127,12 @@ function App() {
       {activeTab === 'profile' && (
         <SubTabBar<ProfileSubTab>
           tabs={[
-            { id: 'goals',    label: 'Goals',     emoji: '🎯' },
-            { id: 'travel',   label: 'Viaggi',    emoji: '✈️' },
-            { id: 'politics', label: 'Politica',  emoji: '🏛️' },
-            { id: 'pension',  label: 'Pensione',  emoji: '🎗️' },
-            { id: 'settings', label: 'Impost.',   emoji: '⚙️' },
+            { id: 'goals',      label: 'Goals',     emoji: '🎯' },
+            { id: 'travel',     label: 'Viaggi',    emoji: '✈️' },
+            { id: 'politics',   label: 'Politica',  emoji: '🏛️' },
+            { id: 'pension',    label: 'Pensione',  emoji: '🎗️' },
+            { id: 'challenges', label: 'Sfide',     emoji: '🏆' },
+            { id: 'settings',   label: 'Impost.',   emoji: '⚙️' },
           ]}
           active={profileSub}
           onChange={setProfileSub}
@@ -165,12 +169,14 @@ function App() {
         {activeTab === 'wellbeing' && wellbeingSub === 'beauty'     && <BeautyScreen />}
         {activeTab === 'wellbeing' && wellbeingSub === 'gambling'   && <GamblingScreen />}
         {activeTab === 'wellbeing' && wellbeingSub === 'sex_health' && <SexualHealthScreen />}
+        {activeTab === 'wellbeing' && wellbeingSub === 'cosmetic'   && <CosmeticSurgeryScreen />}
 
-        {activeTab === 'profile' && profileSub === 'goals'    && <GoalsScreen />}
-        {activeTab === 'profile' && profileSub === 'travel'   && <TravelScreen />}
-        {activeTab === 'profile' && profileSub === 'politics' && <PoliticsScreen />}
-        {activeTab === 'profile' && profileSub === 'pension'  && <RetirementScreen />}
-        {activeTab === 'profile' && profileSub === 'settings' && <SettingsScreen />}
+        {activeTab === 'profile' && profileSub === 'goals'      && <GoalsScreen />}
+        {activeTab === 'profile' && profileSub === 'travel'     && <TravelScreen />}
+        {activeTab === 'profile' && profileSub === 'politics'   && <PoliticsScreen />}
+        {activeTab === 'profile' && profileSub === 'pension'    && <RetirementScreen />}
+        {activeTab === 'profile' && profileSub === 'challenges' && <ChallengeScreen />}
+        {activeTab === 'profile' && profileSub === 'settings'   && <SettingsScreen />}
       </div>
 
       {/* Age button — above bottom tabs, only on main tab */}
