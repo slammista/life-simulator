@@ -4,6 +4,7 @@ import { getAllInvestmentDefs, FinanceEngine } from '../../services/FinanceEngin
 
 export function FinanceScreen() {
   const finance = useGameStore(s => s.finance)
+  const market = useGameStore(s => s.market)
   const state = useGameStore(s => s)
   const investMoney = useGameStore(s => s.investMoney)
   const sellInvestment = useGameStore(s => s.sellInvestment)
@@ -52,6 +53,19 @@ export function FinanceScreen() {
   const totalAssets = finance.assets.reduce((s, a) => s + a.value, 0)
 
   const defs = getAllInvestmentDefs()
+  const marketState = FinanceEngine.ensureMarket(market)
+  const sentimentLabel = {
+    crash: 'Crash',
+    bear: 'Ribassista',
+    neutral: 'Neutro',
+    bull: 'Rialzista',
+    mania: 'Euforia',
+  }[marketState.sentiment]
+  const sentimentColor = marketState.sentiment === 'crash' || marketState.sentiment === 'bear'
+    ? '#ef4444'
+    : marketState.sentiment === 'bull' || marketState.sentiment === 'mania'
+      ? '#10b981'
+      : '#f59e0b'
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
@@ -148,6 +162,34 @@ export function FinanceScreen() {
       {tab === 'invest' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {/* Active investments */}
+          <div className="card" style={{ padding: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 10 }}>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700 }}>📈 Mercato</p>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                  Sentiment: <span style={{ color: sentimentColor }}>{sentimentLabel}</span>
+                </p>
+              </div>
+              <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textAlign: 'right' }}>
+                {marketState.events[0] ? `${marketState.events[0].emoji} ${marketState.events[0].title}` : 'Nessun evento macro'}
+              </p>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+              {marketState.assets.map(asset => {
+                const move = ((asset.price / Math.max(1, asset.previousPrice) - 1) * 100)
+                return (
+                  <div key={asset.symbol} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '7px 8px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, gap: 6 }}>
+                      <span>{asset.emoji} {asset.symbol}</span>
+                      <span style={{ color: move >= 0 ? '#86efac' : '#fca5a5' }}>{move >= 0 ? '+' : ''}{move.toFixed(1)}%</span>
+                    </div>
+                    <p style={{ fontSize: 12, fontWeight: 700, marginTop: 2 }}>€{asset.price.toFixed(2)}</p>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
           {finance.investments.length > 0 && (
             <div>
               <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
@@ -187,7 +229,9 @@ export function FinanceScreen() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                 <div>
                   <p style={{ fontWeight: 600, fontSize: 13 }}>{def.emoji} {def.name}</p>
-                  <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Min €{def.minAmount.toLocaleString('it-IT')} · Rischio {def.risk}</p>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                    Min €{def.minAmount.toLocaleString('it-IT')} · Rischio {def.risk} · Prezzo €{(marketState.assets.find(a => a.symbol === def.id)?.price ?? 100).toFixed(2)}
+                  </p>
                 </div>
                 <p style={{ fontWeight: 700, fontSize: 13, color: '#10b981' }}>~{(def.expectedReturn * 100).toFixed(0)}%/anno</p>
               </div>

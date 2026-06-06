@@ -44,6 +44,39 @@ export interface Investment {
   amount: number
   currentValue: number
   purchaseDate: string
+  symbol?: string
+  shares?: number
+  purchasePrice?: number
+}
+
+export type MarketSentiment = 'bear' | 'neutral' | 'bull' | 'mania' | 'crash'
+
+export interface MarketAsset {
+  symbol: string
+  name: string
+  emoji: string
+  type: Investment['type']
+  price: number
+  previousPrice: number
+  volatility: number
+  expectedReturn: number
+  risk: 'low' | 'medium' | 'high' | 'extreme'
+  sector: string
+}
+
+export interface MarketEvent {
+  id: string
+  year: number
+  title: string
+  description: string
+  emoji: string
+  impact: number          // -1 to +1
+}
+
+export interface MarketState {
+  sentiment: MarketSentiment
+  assets: MarketAsset[]
+  events: MarketEvent[]
 }
 
 export interface Asset {
@@ -808,6 +841,9 @@ export interface GameState {
 
   // Finance
   finance: FinanceState
+
+  // Stock market
+  market: MarketState
 
   // Education
   education: EducationState

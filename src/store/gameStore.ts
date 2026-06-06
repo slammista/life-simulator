@@ -137,6 +137,7 @@ function buildInitialState(): GameState {
     identity: { name: 'Giocatore', surname: 'Demo', gender: 'male', nationality: 'italy', birthYear: 2000, familyBackground: 'middle', religion: 'catholicism', sexualOrientation: 'heterosexual', emoji: '🙂' },
     stats: { health: 80, mentalHealth: 80, happiness: 70, intelligence: 50, looks: 50, energy: 80, karma: 0, reputation: 50, socialReputation: 50 },
     finance: { money: 1000, bankBalance: 0, debt: 0, creditScore: 650, monthlyIncome: 0, monthlyExpenses: 0, investments: [], assets: [] },
+    market: FinanceEngine.initialMarketState(),
     education: { currentLevel: 'none', completedLevels: [], gpa: 0, scholarships: [], clubs: [], dropOut: false, studentLoan: 0, university: null, major: null, graduationYear: null },
     career: { currentJob: null, jobHistory: [], promotions: 0, firings: 0, burnoutLevel: 0, pensionContributions: 0, licenses: [], businessOwned: null },
     relationships: [],
@@ -346,8 +347,9 @@ export const useGameStore = create<FullStore>()(
         if (criminalMsg) messages.push(criminalMsg)
 
         // 10. Finance annual tick (investments + assets)
-        const { effects: financeFx, updatedInvestments, updatedAssets } = FinanceEngine.annualTick(state)
+        const { effects: financeFx, updatedInvestments, updatedAssets, updatedMarket, marketMessages } = FinanceEngine.annualTick(state)
         merge(financeFx)
+        messages.push(...marketMessages)
 
         // 11. Social media annual tick
         const { updatedProfiles, effects: socialFx } = SocialMediaEngine.annualTick(state)
@@ -595,6 +597,7 @@ export const useGameStore = create<FullStore>()(
             ...financeWithInvestments,
             creditScore: creditResult.updatedScore,
           },
+          market: updatedMarket,
           challengeEngine: { ...state.challengeEngine, ...challengeResult.updatedState },
           dailyQuests: dailyQuestState,
           ribbons: newRibbons.length > 0
@@ -1587,6 +1590,7 @@ export const useGameStore = create<FullStore>()(
             monthlyIncome: 0, monthlyExpenses: 500,
             investments: [], assets: [],
           },
+          market: FinanceEngine.initialMarketState(),
           relationships: state.relationships.filter(r => r.isAlive).slice(0, 3),
           children: [],
           socialMedia: [],
@@ -2156,6 +2160,7 @@ export const useGameStore = create<FullStore>()(
         identity: state.identity,
         stats: state.stats,
         finance: state.finance,
+        market: state.market,
         education: state.education,
         career: state.career,
         relationships: state.relationships,
