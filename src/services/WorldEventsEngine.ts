@@ -37,6 +37,28 @@ export interface WorldModifier {
 
 export const HISTORICAL_EVENTS: HistoricalEvent[] = [
   {
+    id: 'moon_landing',
+    year: 1969, name: 'Allunaggio Apollo 11', emoji: '🌕',
+    description: 'L\'umanità mette piede sulla Luna per la prima volta. Un momento che cambia la storia e l\'ottimismo del mondo.',
+    effects: { happiness: 12, intelligence: 3, karma: 5 },
+    minAge: 0, duration: 1,
+  },
+  {
+    id: 'chernobyl',
+    year: 1986, name: 'Disastro di Chernobyl', emoji: '☢️',
+    description: 'Un\'esplosione catastrofica al reattore nucleare di Chernobyl contamina l\'Europa orientale. Migliaia di evacuati.',
+    effects: { health: -8, happiness: -20, mentalHealth: -10 },
+    minAge: 0, duration: 3,
+    nationFilter: 'ukraine',
+  },
+  {
+    id: 'chernobyl_global',
+    year: 1986, name: 'Disastro Nucleare (Chernobyl)', emoji: '☢️',
+    description: 'La nube radioattiva di Chernobyl raggiunge l\'Europa. Allarme nucleare in tutto il continente.',
+    effects: { happiness: -10, mentalHealth: -5 },
+    minAge: 0, duration: 1,
+  },
+  {
     id: 'fall_of_berlin_wall',
     year: 1989, name: 'Caduta del Muro di Berlino', emoji: '🧱',
     description: 'Il Muro di Berlino cade. L\'Europa si riunifica. Un momento storico.',

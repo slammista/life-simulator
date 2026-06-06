@@ -34,9 +34,11 @@ import SexualHealthScreen from './components/screens/SexualHealthScreen'
 import CosmeticSurgeryScreen from './components/screens/CosmeticSurgeryScreen'
 import ChallengeScreen from './components/screens/ChallengeScreen'
 import RibbonsScreen from './components/screens/RibbonsScreen'
+import LivingScreen from './components/screens/LivingScreen'
+import { AgeGate } from './components/screens/AgeGate'
 
 // ---- Sub-tab types ----
-type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle' | 'military'
+type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle' | 'military' | 'living'
 type PeopleSubTab = 'relationships' | 'dating' | 'famiglia'
 type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body' | 'beauty' | 'gambling' | 'sex_health' | 'cosmetic'
 type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'challenges' | 'ribbons' | 'settings'
@@ -66,12 +68,14 @@ function SubTabBar<T extends string>({
 
 function App() {
   const { isStarted, isGameOver } = useGameStore()
+  const [ageConfirmed, setAgeConfirmed] = useState(() => !!localStorage.getItem('age_confirmed'))
   const [activeTab, setActiveTab] = useState<Tab>('main')
   const [developSub, setDevelopSub] = useState<DevelopSubTab>('career')
   const [peopleSub, setPeopleSub] = useState<PeopleSubTab>('relationships')
   const [wellbeingSub, setWellbeingSub] = useState<WellbeingSubTab>('health')
   const [profileSub, setProfileSub] = useState<ProfileSubTab>('goals')
 
+  if (!ageConfirmed) return <AgeGate onConfirm={() => setAgeConfirmed(true)} />
   if (!isStarted) return <NewGameScreen />
   if (isGameOver) return <GameOverScreen />
 
@@ -90,6 +94,7 @@ function App() {
             { id: 'social',    label: 'Social',     emoji: '📱' },
             { id: 'vehicle',   label: 'Veicoli',    emoji: '🚗' },
             { id: 'military',  label: 'Militare',   emoji: '🪖' },
+            { id: 'living',    label: 'Abitazione', emoji: '🏠' },
           ]}
           active={developSub}
           onChange={setDevelopSub}
@@ -156,6 +161,7 @@ function App() {
         {activeTab === 'develop' && developSub === 'social'    && <SocialMediaScreen />}
         {activeTab === 'develop' && developSub === 'vehicle'   && <VehicleScreen />}
         {activeTab === 'develop' && developSub === 'military'  && <MilitaryScreen />}
+        {activeTab === 'develop' && developSub === 'living'    && <LivingScreen />}
 
         {activeTab === 'people' && peopleSub === 'relationships' && <RelationshipScreen />}
         {activeTab === 'people' && peopleSub === 'dating'        && <DatingScreen />}

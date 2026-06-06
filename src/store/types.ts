@@ -866,6 +866,10 @@ export interface GameActions {
   // Legacy
   continueAsChild: (childId: string) => void
 
+  // Living / housing actions
+  upgradeLiving: (targetType: LivingType) => ActionResult
+  buyHouseWithMortgage: (houseId: string) => ActionResult
+
   // Gambling actions
   playCasinoGame: (game: import('../services/GamblingEngine').GamblingGame, bet: number) => ActionResult
   buyLotteryTicket: () => ActionResult

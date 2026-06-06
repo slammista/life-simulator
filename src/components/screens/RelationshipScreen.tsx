@@ -275,6 +275,39 @@ function RelCard({ rel, expanded, onToggle, onAction }: {
               </button>
             ))}
           </div>
+
+          {/* NPC Memories */}
+          {rel.memoryLog && rel.memoryLog.length > 0 && (
+            <div style={{ marginTop: 12 }}>
+              <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                📖 Memorie condivise
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {rel.memoryLog.slice(0, 4).map(mem => {
+                  const catColors: Record<string, string> = {
+                    romantic: '#f43f5e', family: '#f59e0b', friendship: '#10b981',
+                    professional: '#60a5fa', financial: '#a855f7', criminal: '#ef4444',
+                  }
+                  const color = catColors[mem.category] ?? '#94a3b8'
+                  return (
+                    <div key={mem.id} style={{
+                      fontSize: 11, color: '#94a3b8', padding: '4px 8px', borderRadius: 6,
+                      background: 'rgba(255,255,255,0.03)', borderLeft: `2px solid ${color}`,
+                      display: 'flex', justifyContent: 'space-between', gap: 8,
+                    }}>
+                      <span>{mem.description}</span>
+                      <span style={{ flexShrink: 0, color: '#475569' }}>Anno {mem.year}</span>
+                    </div>
+                  )
+                })}
+                {rel.memoryLog.length > 4 && (
+                  <div style={{ fontSize: 10, color: '#475569', textAlign: 'right' }}>
+                    +{rel.memoryLog.length - 4} altre memorie
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

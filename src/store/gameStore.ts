@@ -42,7 +42,8 @@ import { CosmeticSurgeryEngine } from '../services/CosmeticSurgeryEngine'
 import { ChallengeEngine } from '../services/ChallengeEngine'
 import { AchievementsEngine } from '../services/AchievementsEngine'
 import { CreditScoreEngine } from '../services/CreditScoreEngine'
-import type { Addiction, TravelMemory, Religion, Child } from './types'
+import { LivingEngine } from '../services/LivingEngine'
+import type { Addiction, TravelMemory, Religion, Child, LivingType } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
 import type { BeautyState } from '../services/BeautyEngine'
@@ -1630,6 +1631,33 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🌸', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Living / Housing actions ====================
+      upgradeLiving: (targetType: LivingType): ActionResult => {
+        const state = get()
+        const result = LivingEngine.upgradeLiving(targetType, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          living: { ...s.living, ...(result.updatedLiving ?? {}) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏠', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      buyHouseWithMortgage: (houseId: string): ActionResult => {
+        const state = get()
+        const result = LivingEngine.buyHouse(houseId, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          living: { ...s.living, ...(result.updatedLiving ?? {}) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏡', category: 'finance', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
       },
 
       // ==================== Cheat actions ====================
