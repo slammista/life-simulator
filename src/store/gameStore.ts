@@ -21,6 +21,12 @@ import { HealthEngine } from '../services/HealthEngine'
 import { HobbyEngine } from '../services/HobbyEngine'
 import { CriminalEngine } from '../services/CriminalEngine'
 import { FinanceEngine, type AssetType } from '../services/FinanceEngine'
+import { SocialMediaEngine, type SocialPlatform, type PostType } from '../services/SocialMediaEngine'
+import { SubstanceEngine, type AlcoholType, type SmokeType } from '../services/SubstanceEngine'
+import { PetEngine, type AdoptMethod } from '../services/PetEngine'
+import { TravelEngine, type TravelClass } from '../services/TravelEngine'
+import { DatingEngine, type DatingApp } from '../services/DatingEngine'
+import type { Addiction, TravelMemory } from './types'
 
 // ---- helpers ----
 
@@ -240,7 +246,20 @@ export const useGameStore = create<FullStore>()(
         const { effects: financeFx, updatedInvestments, updatedAssets } = FinanceEngine.annualTick(state)
         merge(financeFx)
 
-        // 11. Random events (background micro-events without choices)
+        // 11. Social media annual tick
+        const { updatedProfiles, effects: socialFx } = SocialMediaEngine.annualTick(state)
+        merge(socialFx)
+
+        // 12. Pet annual tick
+        const { updatedPets, effects: petFx, deathMessages } = PetEngine.annualTick(state)
+        merge(petFx)
+        messages.push(...deathMessages)
+
+        // 13. Substance annual tick
+        const { updatedAddictions, effects: substanceFx } = SubstanceEngine.annualTick(state)
+        merge(substanceFx)
+
+        // 14. Random events (background micro-events without choices)
         const randomEvs = db.random_events as unknown as Array<{
           id: string; title: string; description: string; emoji: string; probability: number; effects: Effect
         }>
@@ -348,11 +367,13 @@ export const useGameStore = create<FullStore>()(
           finance: financeWithInvestments,
           identity: newIdentity,
           career: careerUpdate,
-          health: healthUpdate,
+          health: { ...healthUpdate, addictions: updatedAddictions },
           education: eduUpdate,
           relationships: updatedRelationships,
           criminal: updatedCriminal,
           hobbies: updatedHobbies,
+          socialMedia: updatedProfiles.length > 0 ? updatedProfiles : state.socialMedia,
+          pets: updatedPets,
           currentEvent: picked,
           availableChoices: choices,
           eventLog: [logEntry, ...state.eventLog].slice(0, 150),
@@ -733,6 +754,221 @@ export const useGameStore = create<FullStore>()(
           ...partial,
           finance: { ...(partial.finance ?? s.finance), debt: s.finance.debt + amount },
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏦', category: 'finance', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Social Media actions ====================
+      createSocialProfile: (platform: string): ActionResult => {
+        const state = get()
+        const result = SocialMediaEngine.createProfile(platform as SocialPlatform, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          socialMedia: result.newProfile ? [...s.socialMedia, result.newProfile] : s.socialMedia,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '📱', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      postContent: (platform: string, postType: string): ActionResult => {
+        const state = get()
+        const result = SocialMediaEngine.post(platform as SocialPlatform, postType as PostType, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          socialMedia: result.updatedProfile
+            ? s.socialMedia.map(p => p.platform === platform ? { ...p, ...result.updatedProfile } : p)
+            : s.socialMedia,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.viralEvent ? '🚀' : '📤', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        get().checkGoals()
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Substance actions ====================
+      drinkAlcohol: (type: string): ActionResult => {
+        const state = get()
+        const result = SubstanceEngine.drink(type as AlcoholType, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => {
+          let addictions = [...s.health.addictions]
+          if (result.updatedAddiction) {
+            const idx = addictions.findIndex(a => a.substance === result.updatedAddiction!.substance)
+            if (idx >= 0) {
+              addictions[idx] = { ...addictions[idx], level: clamp(addictions[idx].level + result.updatedAddiction.levelDelta, 0, 100) }
+            } else if (result.updatedAddiction.levelDelta > 0) {
+              const newAdd: Addiction = { substance: result.updatedAddiction.substance, level: result.updatedAddiction.levelDelta, yearStarted: s.time.year, inRehab: false }
+              addictions = [...addictions, newAdd]
+            }
+          }
+          return {
+            ...partial,
+            health: { ...s.health, addictions },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🍺', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+          }
+        })
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      smokeCigarette: (type: string): ActionResult => {
+        const state = get()
+        const result = SubstanceEngine.smoke(type as SmokeType, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => {
+          let addictions = [...s.health.addictions]
+          if (result.updatedAddiction) {
+            const idx = addictions.findIndex(a => a.substance === result.updatedAddiction!.substance)
+            if (idx >= 0) {
+              addictions[idx] = { ...addictions[idx], level: clamp(addictions[idx].level + result.updatedAddiction.levelDelta, 0, 100) }
+            } else {
+              const newAdd: Addiction = { substance: result.updatedAddiction.substance, level: result.updatedAddiction.levelDelta, yearStarted: s.time.year, inRehab: false }
+              addictions = [...addictions, newAdd]
+            }
+          }
+          return {
+            ...partial,
+            health: { ...s.health, addictions },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🚬', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+          }
+        })
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      quitSubstance: (substance: string): ActionResult => {
+        const state = get()
+        const result = SubstanceEngine.quitSubstance(substance, state)
+        const partial = applyEffects(state, result.effects)
+        set(s => {
+          let addictions = [...s.health.addictions]
+          if (result.updatedAddiction) {
+            addictions = addictions.map(a => a.substance === substance
+              ? { ...a, level: clamp(a.level + result.updatedAddiction!.levelDelta, 0, 100) }
+              : a
+            ).filter(a => a.level > 0)
+          }
+          return {
+            ...partial,
+            health: { ...s.health, addictions },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💪', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+          }
+        })
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Pet actions ====================
+      adoptPet: (petDefId: string, method: 'adopt' | 'buy'): ActionResult => {
+        const state = get()
+        const result = PetEngine.adoptPet(petDefId, method as AdoptMethod, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          pets: result.newPet ? [...s.pets, result.newPet] : s.pets,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🐾', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      careForPet: (petId: string): ActionResult => {
+        const state = get()
+        const result = PetEngine.careForPet(petId, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          pets: result.updatedPet ? s.pets.map(p => p.id === petId ? { ...p, ...result.updatedPet } : p) : s.pets,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🐾', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      vetVisit: (petId: string): ActionResult => {
+        const state = get()
+        const result = PetEngine.vetVisit(petId, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          pets: result.updatedPet ? s.pets.map(p => p.id === petId ? { ...p, ...result.updatedPet } : p) : s.pets,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏥', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Travel actions ====================
+      bookTrip: (destId: string, travelClass: 'economy' | 'business' | 'luxury'): ActionResult => {
+        const state = get()
+        const result = TravelEngine.bookTrip(destId, travelClass as TravelClass, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          travelHistory: result.newMemory ? [...s.travelHistory, result.newMemory as TravelMemory] : s.travelHistory,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '✈️', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        get().checkGoals()
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Dating/Marriage actions ====================
+      swipe: (appId: string): ActionResult => {
+        const state = get()
+        const result = DatingEngine.swipe(appId as DatingApp, state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          relationships: result.newMatch ? [...s.relationships, result.newMatch] : s.relationships,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.success ? '💫' : '👻', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      proposeToPartner: (npcId: string, ringValue: number): ActionResult => {
+        const state = get()
+        const result = DatingEngine.propose(npcId, ringValue, state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          relationships: result.updatedRelationship
+            ? s.relationships.map(r => r.id === npcId ? { ...r, ...result.updatedRelationship } : r)
+            : s.relationships,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.success ? '💍' : '💔', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      getMarried: (npcId: string, weddingBudget: number): ActionResult => {
+        const state = get()
+        const result = DatingEngine.marry(npcId, weddingBudget, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          relationships: result.updatedRelationship
+            ? s.relationships.map(r => r.id === npcId ? { ...r, ...result.updatedRelationship } : r)
+            : s.relationships,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💒', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        get().checkGoals()
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      getDivorced: (npcId: string): ActionResult => {
+        const state = get()
+        const result = DatingEngine.divorce(npcId, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          relationships: result.updatedRelationship
+            ? s.relationships.map(r => r.id === npcId ? { ...r, ...result.updatedRelationship } : r)
+            : s.relationships,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '📜', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message: result.message, effects: result.effects }
       },

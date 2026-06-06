@@ -700,6 +700,29 @@ export interface GameActions {
   buyAsset: (assetType: string) => ActionResult
   takeLoan: (amount: number) => ActionResult
 
+  // Social media actions
+  createSocialProfile: (platform: string) => ActionResult
+  postContent: (platform: string, postType: string) => ActionResult
+
+  // Substance actions
+  drinkAlcohol: (type: string) => ActionResult
+  smokeCigarette: (type: string) => ActionResult
+  quitSubstance: (substance: string) => ActionResult
+
+  // Pet actions
+  adoptPet: (petDefId: string, method: 'adopt' | 'buy') => ActionResult
+  careForPet: (petId: string) => ActionResult
+  vetVisit: (petId: string) => ActionResult
+
+  // Travel actions
+  bookTrip: (destId: string, travelClass: 'economy' | 'business' | 'luxury') => ActionResult
+
+  // Dating/Marriage actions
+  swipe: (appId: string) => ActionResult
+  proposeToPartner: (npcId: string, ringValue: number) => ActionResult
+  getMarried: (npcId: string, weddingBudget: number) => ActionResult
+  getDivorced: (npcId: string) => ActionResult
+
   // Validation
   checkGoals: () => void
   checkMorte: () => void
