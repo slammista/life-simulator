@@ -1,73 +1,282 @@
+import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
+import type { Relationship } from '../../store/types'
+import type { NPCContext, NPCAction } from '../../services/RelationshipEngine'
+
+const STAGE_EMOJI: Record<string, string> = {
+  stranger: '👤',
+  acquaintance: '👋',
+  friend: '😊',
+  close_friend: '🤝',
+  partner: '💑',
+  spouse: '💍',
+}
+
+const CONTEXT_LABELS: Record<NPCContext, string> = {
+  school: '🏫 Scuola',
+  work: '💼 Lavoro',
+  neighborhood: '🏘️ Quartiere',
+  dating_app: '📱 App dating',
+  bar: '🍺 Bar',
+  travel: '✈️ Viaggio',
+  family: '👪 Famiglia',
+  random: '🎲 Caso',
+}
+
+const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: string; emoji: string }>> = {
+  stranger: [
+    { action: 'greet', label: 'Saluta', emoji: '👋' },
+  ],
+  acquaintance: [
+    { action: 'greet', label: 'Saluta', emoji: '👋' },
+    { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
+    { action: 'compliment', label: 'Complimento', emoji: '😊' },
+    { action: 'gift', label: 'Regalo', emoji: '🎁' },
+    { action: 'confess_feelings', label: 'Confessa', emoji: '💕' },
+  ],
+  friend: [
+    { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
+    { action: 'compliment', label: 'Complimento', emoji: '😊' },
+    { action: 'gift', label: 'Regalo', emoji: '🎁' },
+    { action: 'ask_date', label: 'Appuntamento', emoji: '💑' },
+    { action: 'confess_feelings', label: 'Confessa', emoji: '💕' },
+    { action: 'fight', label: 'Litigate', emoji: '😠' },
+  ],
+  close_friend: [
+    { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
+    { action: 'gift', label: 'Regalo', emoji: '🎁' },
+    { action: 'ask_date', label: 'Appuntamento', emoji: '💑' },
+    { action: 'kiss', label: 'Bacio', emoji: '😘' },
+    { action: 'confess_feelings', label: 'Confessa', emoji: '💕' },
+    { action: 'fight', label: 'Litigate', emoji: '😠' },
+    { action: 'apologize', label: 'Chiedi scusa', emoji: '🙏' },
+  ],
+  partner: [
+    { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
+    { action: 'gift', label: 'Regalo', emoji: '🎁' },
+    { action: 'kiss', label: 'Bacio', emoji: '😘' },
+    { action: 'propose', label: 'Proposta', emoji: '💍' },
+    { action: 'cheat', label: 'Tradisci', emoji: '😈' },
+    { action: 'fight', label: 'Litigate', emoji: '😠' },
+    { action: 'apologize', label: 'Chiedi scusa', emoji: '🙏' },
+    { action: 'break_up', label: 'Lascia', emoji: '💔' },
+  ],
+  spouse: [
+    { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
+    { action: 'gift', label: 'Regalo', emoji: '🎁' },
+    { action: 'kiss', label: 'Bacio', emoji: '😘' },
+    { action: 'cheat', label: 'Tradisci', emoji: '😈' },
+    { action: 'fight', label: 'Litigate', emoji: '😠' },
+    { action: 'apologize', label: 'Chiedi scusa', emoji: '🙏' },
+    { action: 'divorce', label: 'Divorzia', emoji: '📜' },
+  ],
+}
 
 export function RelationshipScreen() {
-  const { relationships } = useGameStore()
+  const relationships = useGameStore(s => s.relationships)
+  const meetNewPerson = useGameStore(s => s.meetNewPerson)
+  const interactWithNPC = useGameStore(s => s.interactWithNPC)
 
-  const stageEmoji: Record<string, string> = {
-    stranger: '👤',
-    acquaintance: '👋',
-    friend: '😊',
-    close_friend: '🤝',
-    partner: '💑',
-    spouse: '💍',
+  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(null)
+  const [showContextPicker, setShowContextPicker] = useState(false)
+
+  const flash = (msg: string, ok: boolean) => {
+    setFeedback({ msg, ok })
+    setTimeout(() => setFeedback(null), 3500)
+  }
+
+  const handleMeet = (ctx: NPCContext) => {
+    setShowContextPicker(false)
+    const r = meetNewPerson(ctx)
+    flash(r.message, r.success)
+  }
+
+  const handleAction = (relId: string, action: NPCAction) => {
+    const r = interactWithNPC(relId, action)
+    flash(r.message, r.success)
+  }
+
+  const toggleExpand = (id: string) => setExpanded(prev => prev === id ? null : id)
+
+  const groupedRels: Record<string, Relationship[]> = {
+    Famiglia: relationships.filter(r => ['parent', 'sibling', 'child'].includes(r.type)),
+    Romantiche: relationships.filter(r => ['partner', 'spouse', 'ex_partner'].includes(r.type)),
+    Amici: relationships.filter(r => ['friend', 'best_friend', 'colleague', 'acquaintance'].includes(r.type)),
+    Altro: relationships.filter(r => ['rival', 'enemy'].includes(r.type)),
   }
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
-      <h2 style={{ fontSize: 16, marginBottom: 12, color: 'var(--color-text)' }}>❤️ Relazioni</h2>
+    <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
+      {/* Header */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>❤️ Relazioni</h2>
+        <button
+          onClick={() => setShowContextPicker(true)}
+          style={{ padding: '6px 14px', borderRadius: 12, background: 'var(--color-cta)', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
+        >
+          + Incontra
+        </button>
+      </div>
 
+      {/* Feedback */}
+      {feedback && (
+        <div style={{
+          borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
+          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+          color: feedback.ok ? '#86efac' : '#fca5a5',
+          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+        }}>
+          {feedback.msg}
+        </div>
+      )}
+
+      {/* Context picker modal */}
+      {showContextPicker && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+          onClick={() => setShowContextPicker(false)}>
+          <div style={{ background: 'var(--bg-card)', borderRadius: '20px 20px 0 0', padding: 20, width: '100%', maxWidth: 430 }}
+            onClick={e => e.stopPropagation()}>
+            <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Dove vuoi incontrare qualcuno?</p>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              {(Object.entries(CONTEXT_LABELS) as [NPCContext, string][]).map(([ctx, label]) => (
+                <button
+                  key={ctx}
+                  onClick={() => handleMeet(ctx)}
+                  style={{ padding: '10px 8px', borderRadius: 12, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--color-text)', fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setShowContextPicker(false)}
+              style={{ width: '100%', marginTop: 12, padding: '10px 0', borderRadius: 12, background: 'rgba(255,255,255,0.05)', color: 'var(--color-text-secondary)', fontSize: 14, border: 'none', cursor: 'pointer' }}
+            >
+              Annulla
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Empty state */}
       {relationships.length === 0 && (
-        <div className="card" style={{ textAlign: 'center', padding: 24 }}>
-          <p style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>
-            Nessuna relazione ancora.
-          </p>
-          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 8 }}>
-            Invecchia per incontrare nuove persone.
+        <div className="card" style={{ textAlign: 'center', padding: 28 }}>
+          <p style={{ fontSize: 24, marginBottom: 8 }}>👤</p>
+          <p style={{ fontSize: 14, color: 'var(--color-text)' }}>Nessuna relazione ancora.</p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+            Premi "+ Incontra" per conoscere qualcuno o invecchia per eventi sociali automatici.
           </p>
         </div>
       )}
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {relationships.map(rel => (
-          <div key={rel.id} className="card" style={{ padding: 12 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontSize: 24 }}>{rel.emoji}</span>
-                <div>
-                  <p style={{ fontWeight: 600, fontSize: 14 }}>{rel.name}</p>
-                  <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                    {rel.type} · {rel.age}y
-                  </p>
-                </div>
-              </div>
-              <span style={{ fontSize: 18 }}>{stageEmoji[rel.stage] ?? '👤'}</span>
-            </div>
-
-            {/* Relationship bars */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-              {[
-                { label: 'Fiducia', val: rel.trust, color: '#10b981' },
-                { label: 'Attrazione', val: rel.attraction, color: '#f59e0b' },
-                { label: 'Gelosia', val: rel.jealousy, color: '#e94560' },
-              ].map(({ label, val, color }) => (
-                <div key={label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                  <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 65, flexShrink: 0 }}>{label}</span>
-                  <div className="stat-bar" style={{ flex: 1 }}>
-                    <div className="stat-bar-fill" style={{ width: `${val}%`, backgroundColor: color }} />
-                  </div>
-                  <span style={{ fontSize: 11, width: 24, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{val}</span>
-                </div>
+      {/* Groups */}
+      {Object.entries(groupedRels).map(([groupName, rels]) => {
+        if (rels.length === 0) return null
+        return (
+          <div key={groupName} style={{ marginBottom: 16 }}>
+            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+              {groupName}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {rels.map(rel => (
+                <RelCard
+                  key={rel.id}
+                  rel={rel}
+                  expanded={expanded === rel.id}
+                  onToggle={() => toggleExpand(rel.id)}
+                  onAction={(action) => handleAction(rel.id, action)}
+                />
               ))}
             </div>
-
-            {rel.toxicityTag && (
-              <p style={{ fontSize: 11, color: 'var(--color-negative)', marginTop: 6 }}>
-                ⚠️ Relazione tossica
-              </p>
-            )}
           </div>
-        ))}
+        )
+      })}
+    </div>
+  )
+}
+
+// ---- RelCard subcomponent ----
+
+function RelCard({ rel, expanded, onToggle, onAction }: {
+  rel: Relationship
+  expanded: boolean
+  onToggle: () => void
+  onAction: (action: NPCAction) => void
+}) {
+  const actions = ACTIONS_BY_STAGE[rel.stage] ?? ACTIONS_BY_STAGE.stranger
+
+  return (
+    <div className="card" style={{ padding: 12 }}>
+      {/* Header row */}
+      <div
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+        onClick={onToggle}
+      >
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span style={{ fontSize: 26 }}>{rel.emoji}</span>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <p style={{ fontWeight: 600, fontSize: 14 }}>{rel.name}</p>
+              {rel.toxicityTag && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 99, background: 'rgba(239,68,68,0.2)', color: '#fca5a5' }}>⚠️ tossica</span>}
+            </div>
+            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{rel.type} · {rel.age}y</p>
+          </div>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 18 }}>{STAGE_EMOJI[rel.stage] ?? '👤'}</span>
+          <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{expanded ? '▲' : '▼'}</span>
+        </div>
       </div>
+
+      {/* Expanded section */}
+      {expanded && (
+        <div style={{ marginTop: 12 }}>
+          {/* Stat bars */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
+            {[
+              { label: 'Fiducia', val: rel.trust, color: '#10b981' },
+              { label: 'Amore', val: rel.love, color: '#f43f5e' },
+              { label: 'Attrazione', val: rel.attraction, color: '#f59e0b' },
+              { label: 'Rispetto', val: rel.respect, color: '#8b5cf6' },
+              { label: 'Gelosia', val: rel.jealousy, color: '#ef4444' },
+            ].map(({ label, val, color }) => (
+              <div key={label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 65, flexShrink: 0 }}>{label}</span>
+                <div className="stat-bar" style={{ flex: 1 }}>
+                  <div className="stat-bar-fill" style={{ width: `${val}%`, backgroundColor: color }} />
+                </div>
+                <span style={{ fontSize: 11, width: 24, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{val}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Action buttons */}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+            {actions.map(({ action, label, emoji }) => (
+              <button
+                key={action}
+                onClick={() => onAction(action)}
+                style={{
+                  padding: '6px 10px', borderRadius: 10, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: 'none',
+                  background: action === 'break_up' || action === 'divorce' || action === 'insult'
+                    ? 'rgba(239,68,68,0.15)'
+                    : action === 'cheat'
+                    ? 'rgba(168,85,247,0.15)'
+                    : 'rgba(255,255,255,0.07)',
+                  color: action === 'break_up' || action === 'divorce' || action === 'insult'
+                    ? '#fca5a5'
+                    : action === 'cheat'
+                    ? '#d8b4fe'
+                    : 'var(--color-text)',
+                }}
+              >
+                {emoji} {label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

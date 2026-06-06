@@ -647,6 +647,14 @@ export interface GameState {
   diminishingReturns: Record<string, number>
 }
 
+// ---- Action Result (shared) ----
+
+export interface ActionResult {
+  success: boolean
+  message: string
+  effects: Effect
+}
+
 // ---- Store Actions ----
 
 export interface GameActions {
@@ -660,6 +668,24 @@ export interface GameActions {
   caricaGioco: () => void
   resetGiorno: () => void
   newGame: (identity: PlayerIdentity, nationId: string) => void
+
+  // Career engine actions
+  applyForJob: (jobId: string) => ActionResult
+  quitJob: () => ActionResult
+  attemptPromotion: () => ActionResult
+
+  // Relationship engine actions
+  meetNewPerson: (context: import('../services/RelationshipEngine').NPCContext) => ActionResult
+  interactWithNPC: (npcId: string, action: import('../services/RelationshipEngine').NPCAction) => ActionResult
+
+  // Education engine actions
+  startEducation: (level: EducationLevel) => ActionResult
+  studyAction: () => ActionResult
+
+  // Health engine actions
+  medicalCheck: () => ActionResult
+  treatDisease: (diseaseId: string) => ActionResult
+  exercise: () => ActionResult
 
   // Validation
   checkGoals: () => void
