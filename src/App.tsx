@@ -1,41 +1,42 @@
-import { useState } from 'react'
+import { Suspense, lazy, useState } from 'react'
 import { useGameStore } from './store/gameStore'
 import { HUD } from './components/game/HUD'
 import { EventDisplay } from './components/game/EventDisplay'
 import { EventLog } from './components/game/EventLog'
 import { AgeButton } from './components/game/AgeButton'
 import { BottomTabs, type Tab } from './components/navigation/BottomTabs'
-import { CareerScreen } from './components/screens/CareerScreen'
-import { RelationshipScreen } from './components/screens/RelationshipScreen'
-import { GoalsScreen } from './components/screens/GoalsScreen'
-import { SettingsScreen } from './components/screens/SettingsScreen'
 import { NewGameScreen } from './components/screens/NewGameScreen'
 import { GameOverScreen } from './components/screens/GameOverScreen'
-import { EducationScreen } from './components/screens/EducationScreen'
-import { HealthScreen } from './components/screens/HealthScreen'
-import { HobbyScreen } from './components/screens/HobbyScreen'
-import { FinanceScreen } from './components/screens/FinanceScreen'
-import { CriminalScreen } from './components/screens/CriminalScreen'
-import { SocialMediaScreen } from './components/screens/SocialMediaScreen'
-import { SubstanceScreen } from './components/screens/SubstanceScreen'
-import { PetScreen } from './components/screens/PetScreen'
-import { TravelScreen } from './components/screens/TravelScreen'
-import { DatingScreen } from './components/screens/DatingScreen'
-import { VehicleScreen } from './components/screens/VehicleScreen'
-import { ReligionScreen } from './components/screens/ReligionScreen'
-import { PoliticsScreen } from './components/screens/PoliticsScreen'
-import ParentingScreen from './components/screens/ParentingScreen'
-import MilitaryScreen from './components/screens/MilitaryScreen'
-import BodyModScreen from './components/screens/BodyModScreen'
-import BeautyScreen from './components/screens/BeautyScreen'
-import RetirementScreen from './components/screens/RetirementScreen'
-import GamblingScreen from './components/screens/GamblingScreen'
-import SexualHealthScreen from './components/screens/SexualHealthScreen'
-import CosmeticSurgeryScreen from './components/screens/CosmeticSurgeryScreen'
-import ChallengeScreen from './components/screens/ChallengeScreen'
-import RibbonsScreen from './components/screens/RibbonsScreen'
-import LivingScreen from './components/screens/LivingScreen'
 import { AgeGate } from './components/screens/AgeGate'
+
+const CareerScreen = lazy(() => import('./components/screens/CareerScreen').then(module => ({ default: module.CareerScreen })))
+const RelationshipScreen = lazy(() => import('./components/screens/RelationshipScreen').then(module => ({ default: module.RelationshipScreen })))
+const GoalsScreen = lazy(() => import('./components/screens/GoalsScreen').then(module => ({ default: module.GoalsScreen })))
+const SettingsScreen = lazy(() => import('./components/screens/SettingsScreen').then(module => ({ default: module.SettingsScreen })))
+const EducationScreen = lazy(() => import('./components/screens/EducationScreen').then(module => ({ default: module.EducationScreen })))
+const HealthScreen = lazy(() => import('./components/screens/HealthScreen').then(module => ({ default: module.HealthScreen })))
+const HobbyScreen = lazy(() => import('./components/screens/HobbyScreen').then(module => ({ default: module.HobbyScreen })))
+const FinanceScreen = lazy(() => import('./components/screens/FinanceScreen').then(module => ({ default: module.FinanceScreen })))
+const CriminalScreen = lazy(() => import('./components/screens/CriminalScreen').then(module => ({ default: module.CriminalScreen })))
+const SocialMediaScreen = lazy(() => import('./components/screens/SocialMediaScreen').then(module => ({ default: module.SocialMediaScreen })))
+const SubstanceScreen = lazy(() => import('./components/screens/SubstanceScreen').then(module => ({ default: module.SubstanceScreen })))
+const PetScreen = lazy(() => import('./components/screens/PetScreen').then(module => ({ default: module.PetScreen })))
+const TravelScreen = lazy(() => import('./components/screens/TravelScreen').then(module => ({ default: module.TravelScreen })))
+const DatingScreen = lazy(() => import('./components/screens/DatingScreen').then(module => ({ default: module.DatingScreen })))
+const VehicleScreen = lazy(() => import('./components/screens/VehicleScreen').then(module => ({ default: module.VehicleScreen })))
+const ReligionScreen = lazy(() => import('./components/screens/ReligionScreen').then(module => ({ default: module.ReligionScreen })))
+const PoliticsScreen = lazy(() => import('./components/screens/PoliticsScreen').then(module => ({ default: module.PoliticsScreen })))
+const ParentingScreen = lazy(() => import('./components/screens/ParentingScreen'))
+const MilitaryScreen = lazy(() => import('./components/screens/MilitaryScreen'))
+const BodyModScreen = lazy(() => import('./components/screens/BodyModScreen'))
+const BeautyScreen = lazy(() => import('./components/screens/BeautyScreen'))
+const RetirementScreen = lazy(() => import('./components/screens/RetirementScreen'))
+const GamblingScreen = lazy(() => import('./components/screens/GamblingScreen'))
+const SexualHealthScreen = lazy(() => import('./components/screens/SexualHealthScreen'))
+const CosmeticSurgeryScreen = lazy(() => import('./components/screens/CosmeticSurgeryScreen'))
+const ChallengeScreen = lazy(() => import('./components/screens/ChallengeScreen'))
+const RibbonsScreen = lazy(() => import('./components/screens/RibbonsScreen'))
+const LivingScreen = lazy(() => import('./components/screens/LivingScreen'))
 
 // ---- Sub-tab types ----
 type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle' | 'military' | 'living'
@@ -66,6 +67,10 @@ function SubTabBar<T extends string>({
   )
 }
 
+function ScreenFallback() {
+  return <div className="screen-loading">Caricamento...</div>
+}
+
 function App() {
   const { isStarted, isGameOver } = useGameStore()
   const [ageConfirmed, setAgeConfirmed] = useState(() => !!localStorage.getItem('age_confirmed'))
@@ -80,7 +85,7 @@ function App() {
   if (isGameOver) return <GameOverScreen />
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', height: '100svh', overflow: 'hidden' }}>
+    <div className="app-shell">
       {/* HUD — sticky top */}
       <HUD />
 
@@ -147,45 +152,51 @@ function App() {
       )}
 
       {/* Main content area */}
-      <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column' }}>
+      <div className="app-content">
         {activeTab === 'main' && (
-          <>
-            <EventDisplay />
-            <EventLog />
-          </>
+          <div className="main-dashboard">
+            <div className="event-panel">
+              <EventDisplay />
+            </div>
+            <div className="event-log-panel">
+              <EventLog />
+            </div>
+          </div>
         )}
 
-        {activeTab === 'develop' && developSub === 'career'    && <CareerScreen />}
-        {activeTab === 'develop' && developSub === 'education' && <EducationScreen />}
-        {activeTab === 'develop' && developSub === 'finance'   && <FinanceScreen />}
-        {activeTab === 'develop' && developSub === 'social'    && <SocialMediaScreen />}
-        {activeTab === 'develop' && developSub === 'vehicle'   && <VehicleScreen />}
-        {activeTab === 'develop' && developSub === 'military'  && <MilitaryScreen />}
-        {activeTab === 'develop' && developSub === 'living'    && <LivingScreen />}
+        <Suspense fallback={<ScreenFallback />}>
+          {activeTab === 'develop' && developSub === 'career'    && <CareerScreen />}
+          {activeTab === 'develop' && developSub === 'education' && <EducationScreen />}
+          {activeTab === 'develop' && developSub === 'finance'   && <FinanceScreen />}
+          {activeTab === 'develop' && developSub === 'social'    && <SocialMediaScreen />}
+          {activeTab === 'develop' && developSub === 'vehicle'   && <VehicleScreen />}
+          {activeTab === 'develop' && developSub === 'military'  && <MilitaryScreen />}
+          {activeTab === 'develop' && developSub === 'living'    && <LivingScreen />}
 
-        {activeTab === 'people' && peopleSub === 'relationships' && <RelationshipScreen />}
-        {activeTab === 'people' && peopleSub === 'dating'        && <DatingScreen />}
-        {activeTab === 'people' && peopleSub === 'famiglia'      && <ParentingScreen />}
+          {activeTab === 'people' && peopleSub === 'relationships' && <RelationshipScreen />}
+          {activeTab === 'people' && peopleSub === 'dating'        && <DatingScreen />}
+          {activeTab === 'people' && peopleSub === 'famiglia'      && <ParentingScreen />}
 
-        {activeTab === 'wellbeing' && wellbeingSub === 'health'     && <HealthScreen />}
-        {activeTab === 'wellbeing' && wellbeingSub === 'hobby'      && <HobbyScreen />}
-        {activeTab === 'wellbeing' && wellbeingSub === 'substances' && <SubstanceScreen />}
-        {activeTab === 'wellbeing' && wellbeingSub === 'pets'       && <PetScreen />}
-        {activeTab === 'wellbeing' && wellbeingSub === 'criminal'   && <CriminalScreen />}
-        {activeTab === 'wellbeing' && wellbeingSub === 'religion'   && <ReligionScreen />}
-        {activeTab === 'wellbeing' && wellbeingSub === 'body'       && <BodyModScreen />}
-        {activeTab === 'wellbeing' && wellbeingSub === 'beauty'     && <BeautyScreen />}
-        {activeTab === 'wellbeing' && wellbeingSub === 'gambling'   && <GamblingScreen />}
-        {activeTab === 'wellbeing' && wellbeingSub === 'sex_health' && <SexualHealthScreen />}
-        {activeTab === 'wellbeing' && wellbeingSub === 'cosmetic'   && <CosmeticSurgeryScreen />}
+          {activeTab === 'wellbeing' && wellbeingSub === 'health'     && <HealthScreen />}
+          {activeTab === 'wellbeing' && wellbeingSub === 'hobby'      && <HobbyScreen />}
+          {activeTab === 'wellbeing' && wellbeingSub === 'substances' && <SubstanceScreen />}
+          {activeTab === 'wellbeing' && wellbeingSub === 'pets'       && <PetScreen />}
+          {activeTab === 'wellbeing' && wellbeingSub === 'criminal'   && <CriminalScreen />}
+          {activeTab === 'wellbeing' && wellbeingSub === 'religion'   && <ReligionScreen />}
+          {activeTab === 'wellbeing' && wellbeingSub === 'body'       && <BodyModScreen />}
+          {activeTab === 'wellbeing' && wellbeingSub === 'beauty'     && <BeautyScreen />}
+          {activeTab === 'wellbeing' && wellbeingSub === 'gambling'   && <GamblingScreen />}
+          {activeTab === 'wellbeing' && wellbeingSub === 'sex_health' && <SexualHealthScreen />}
+          {activeTab === 'wellbeing' && wellbeingSub === 'cosmetic'   && <CosmeticSurgeryScreen />}
 
-        {activeTab === 'profile' && profileSub === 'goals'      && <GoalsScreen />}
-        {activeTab === 'profile' && profileSub === 'travel'     && <TravelScreen />}
-        {activeTab === 'profile' && profileSub === 'politics'   && <PoliticsScreen />}
-        {activeTab === 'profile' && profileSub === 'pension'    && <RetirementScreen />}
-        {activeTab === 'profile' && profileSub === 'challenges' && <ChallengeScreen />}
-        {activeTab === 'profile' && profileSub === 'ribbons'    && <RibbonsScreen />}
-        {activeTab === 'profile' && profileSub === 'settings'   && <SettingsScreen />}
+          {activeTab === 'profile' && profileSub === 'goals'      && <GoalsScreen />}
+          {activeTab === 'profile' && profileSub === 'travel'     && <TravelScreen />}
+          {activeTab === 'profile' && profileSub === 'politics'   && <PoliticsScreen />}
+          {activeTab === 'profile' && profileSub === 'pension'    && <RetirementScreen />}
+          {activeTab === 'profile' && profileSub === 'challenges' && <ChallengeScreen />}
+          {activeTab === 'profile' && profileSub === 'ribbons'    && <RibbonsScreen />}
+          {activeTab === 'profile' && profileSub === 'settings'   && <SettingsScreen />}
+        </Suspense>
       </div>
 
       {/* Age button — above bottom tabs, only on main tab */}

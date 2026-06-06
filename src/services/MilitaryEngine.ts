@@ -167,7 +167,7 @@ export class MilitaryEngine {
   }
 
   static requestPromotion(state: GameState): MilitaryActionResult {
-    const { military, time } = state
+    const { military } = state
     if (!military.isEnlisted)
       return { success: false, message: 'Devi essere arruolato.', effects: {} }
     if (military.rankIndex >= MILITARY_RANKS.length - 1)

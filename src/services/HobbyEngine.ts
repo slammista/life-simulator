@@ -49,8 +49,6 @@ export function getAllHobbyDefs(): HobbyDef[] {
   return HOBBY_DEFS
 }
 
-const uid = () => Math.random().toString(36).slice(2, 10)
-
 export class HobbyEngine {
   static addHobby(hobbyId: string, state: GameState): HobbyActionResult {
     const def = getHobbyDef(hobbyId)

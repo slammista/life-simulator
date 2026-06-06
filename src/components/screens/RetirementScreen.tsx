@@ -27,7 +27,7 @@ const ALZHEIMER_LABELS: Record<string, string> = {
 }
 
 export default function RetirementScreen() {
-  const { retirement, time, stats, finance, career, health, military, children, retire, makeWill, prePlanFuneral, doVolunteering, changeLiving } = useGameStore()
+  const { retirement, time, stats, finance, health, children, retire, makeWill, prePlanFuneral, doVolunteering, changeLiving } = useGameStore()
   const state = useGameStore()
   const [tab, setTab] = useState<'stato' | 'pensione' | 'salute' | 'pianificazione'>('stato')
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)

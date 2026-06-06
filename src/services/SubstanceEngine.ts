@@ -109,7 +109,7 @@ export class SubstanceEngine {
   }
 
   static annualTick(state: GameState): { updatedAddictions: Addiction[]; effects: Effect } {
-    let effects: Effect = {}
+    const effects: Effect = {}
     const updatedAddictions = state.health.addictions.map(a => {
       // Natural decay if not using
       const decayedLevel = Math.max(0, a.level - 5)

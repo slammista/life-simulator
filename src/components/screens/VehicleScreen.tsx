@@ -20,7 +20,7 @@ const CAT_COLORS: Record<VehicleCategory, string> = {
 
 export function VehicleScreen() {
   const {
-    vehicle, finance, time, stats,
+    vehicle, finance, time,
     studyDrivingTheory, takeTheoryExam, takePracticalExam, buyVehicle,
   } = useGameStore()
 

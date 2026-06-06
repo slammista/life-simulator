@@ -202,6 +202,7 @@ export class RelationshipEngine {
 
   /** Annual decay: all relationships drift apart if not maintained */
   static annualDecay(relationships: Relationship[], state: GameState): Relationship[] {
+    void state
     return relationships.map(rel => {
       // Family decays much slower
       const decayRate = rel.type === 'parent' || rel.type === 'sibling' || rel.type === 'child'
@@ -230,6 +231,7 @@ export class RelationshipEngine {
   // ---- private actions ----
 
   private static _greet(rel: Relationship, dr: number, _state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _state
     const trustGain = Math.round(3 * dr)
     const { advanced, newStage } = this._checkStageAdvance(rel, trustGain)
     return {
@@ -273,6 +275,7 @@ export class RelationshipEngine {
   }
 
   private static _compliment(rel: Relationship, dr: number, _state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _state
     const attractionGain = Math.round(5 * dr)
     const trustGain = Math.round(3 * dr)
     return {
@@ -305,6 +308,7 @@ export class RelationshipEngine {
   }
 
   private static _confess(rel: Relationship, _state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _state
     if (rel.stage !== 'acquaintance' && rel.stage !== 'friend' && rel.stage !== 'close_friend') {
       return { success: false, message: `Non puoi confessare i tuoi sentimenti a ${rel.name} in questa fase.`, effects: {} }
     }
@@ -369,6 +373,7 @@ export class RelationshipEngine {
   }
 
   private static _kiss(rel: Relationship, _state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _state
     if (rel.stage !== 'partner' && rel.stage !== 'spouse' && rel.stage !== 'close_friend') {
       return { success: false, message: 'Non è il momento giusto.', effects: {} }
     }
@@ -439,6 +444,7 @@ export class RelationshipEngine {
   }
 
   private static _breakUp(rel: Relationship, _state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _state
     if (rel.stage !== 'partner') {
       return { success: false, message: 'Non sei in una relazione con questa persona.', effects: {} }
     }
@@ -460,6 +466,7 @@ export class RelationshipEngine {
   }
 
   private static _divorce(rel: Relationship, _state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _state
     if (rel.stage !== 'spouse') {
       return { success: false, message: 'Non sei sposato/a con questa persona.', effects: {} }
     }
@@ -530,6 +537,7 @@ export class RelationshipEngine {
   }
 
   private static _fight(rel: Relationship, dr: number, _state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _state
     const trustLoss = Math.round(10 * dr)
     return {
       success: true,
@@ -543,6 +551,7 @@ export class RelationshipEngine {
   }
 
   private static _apologize(rel: Relationship, _state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _state
     if (rel.trust > 60) {
       return { success: false, message: `${rel.name} non ha nulla da perdonarti.`, effects: {} }
     }
@@ -556,6 +565,7 @@ export class RelationshipEngine {
   }
 
   private static _insult(rel: Relationship, _state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _state
     const newTrust = Math.max(0, rel.trust - 20)
     const broken = newTrust < 10 && rel.type !== 'parent' && rel.type !== 'sibling'
     return {
@@ -575,6 +585,7 @@ export class RelationshipEngine {
     rel: Relationship,
     _trustGain: number
   ): { advanced: boolean; newStage?: RelationshipStage } {
+    void _trustGain
     const currentIdx = STAGE_ORDER.indexOf(rel.stage)
     if (currentIdx >= 3) return { advanced: false } // won't auto-advance to partner/spouse
 

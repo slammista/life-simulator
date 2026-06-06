@@ -18,11 +18,9 @@
   padding: 0;
 }
 
-html, body, #root {
+html, body {
   height: 100%;
   width: 100%;
-  max-width: 430px;
-  margin: 0 auto;
   overflow-x: hidden;
 }
 
@@ -34,13 +32,120 @@ body {
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  display: flex;
+  justify-content: center;
 }
 
 #root {
   display: flex;
   flex-direction: column;
+  width: 100%;
+  max-width: 430px;
   min-height: 100svh;
   position: relative;
+  background-color: var(--bg-primary);
+}
+
+@media (min-width: 768px) {
+  body {
+    padding: 24px;
+    align-items: center;
+  }
+
+  #root {
+    width: min(100%, 1120px);
+    max-width: 1120px;
+    height: min(100svh - 48px, 920px);
+    min-height: 0;
+    border: 1px solid var(--color-border);
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 24px 80px rgba(0, 0, 0, 0.32);
+  }
+}
+
+@media (max-width: 767px) {
+  #root {
+    max-width: none;
+  }
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.main-dashboard {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.event-panel,
+.event-log-panel {
+  min-width: 0;
+}
+
+.screen-container {
+  width: 100%;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+.screen-loading {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  min-height: 180px;
+  color: var(--color-text-secondary);
+  font-weight: 600;
+}
+
+@media (min-width: 768px) {
+  .app-shell {
+    min-height: 0;
+  }
+
+  .main-dashboard {
+    display: grid;
+    grid-template-columns: minmax(320px, 0.95fr) minmax(360px, 1.05fr);
+    gap: 16px;
+    align-items: start;
+    padding: 16px;
+  }
+
+  .event-panel .card,
+  .event-log-panel {
+    margin: 0;
+  }
+
+  .event-log-panel {
+    max-height: calc(100svh - 220px);
+    padding: 0;
+  }
+
+  .event-log-panel-inner {
+    background: var(--bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 12px;
+    padding: 16px;
+  }
+}
+
+@media (max-width: 767px) {
+  .main-dashboard {
+    flex: 1;
+  }
 }
 
 /* Scrollbar */

@@ -65,7 +65,6 @@ export class SexualHealthEngine {
       return { success: false, message: 'Stai già usando questo metodo.', effects: {} }
 
     const def = CONTRACEPTION_EFFICACY[method]
-    let cost = 0
     let oneTimeCost = 0
 
     if (method === 'iud') oneTimeCost = 400
@@ -75,7 +74,7 @@ export class SexualHealthEngine {
       oneTimeCost = 2000
     }
 
-    cost = oneTimeCost + def.monthlyCost
+    const cost = oneTimeCost + def.monthlyCost
     if (cost > 0 && state.finance.money < cost)
       return { success: false, message: `Servono €${cost} per ${def.name}.`, effects: {} }
 

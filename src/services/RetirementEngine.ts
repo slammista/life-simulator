@@ -60,7 +60,7 @@ const LIVING_COSTS: Record<SeniorLiving, number> = {
 
 export function calculatePension(state: GameState): number {
   const yearsWorked = state.career.jobHistory.length > 0
-    ? Math.min(40, state.career.jobHistory.reduce((sum, _j) => sum + 1, state.career.currentJob ? 1 : 0))
+    ? Math.min(40, state.career.jobHistory.reduce(sum => sum + 1, state.career.currentJob ? 1 : 0))
     : 0
   const avgSalary = state.career.currentJob?.salary ?? 2000
   const militaryBonus = state.military.pensionEligible ? 800 : 0
@@ -73,7 +73,7 @@ export class RetirementEngine {
     if (state.retirement.isRetired)
       return { success: false, message: 'Sei già in pensione.', effects: {} }
 
-    const { time, career, finance } = state
+    const { time, finance } = state
 
     if (type === 'early') {
       if (time.age < 55)

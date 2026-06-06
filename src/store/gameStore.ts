@@ -46,8 +46,6 @@ import { LivingEngine } from '../services/LivingEngine'
 import type { Addiction, TravelMemory, Religion, Child, LivingType } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
-import type { BeautyState } from '../services/BeautyEngine'
-import type { RetirementState } from '../services/RetirementEngine'
 
 // ---- helpers ----
 
@@ -94,7 +92,6 @@ function evaluateTrigger(condition: string, state: GameState): boolean {
       return condition.split('&&').every(c => evaluateTrigger(c.trim(), state))
     }
 
-    // eslint-disable-next-line no-new-func
     const fn = new Function(
       'age', 'year', 'money', 'health', 'happiness', 'intelligence', 'hasJob', 'hasRecord',
       `return (${condition})`
@@ -260,7 +257,7 @@ export const useGameStore = create<FullStore>()(
         const newTime = { ...state.time, age: newAge, year: newYear }
 
         // Accumulate all effects
-        let combined: Effect = {}
+        const combined: Effect = {}
         const messages: string[] = []
 
         const merge = (e: Effect) => {
@@ -311,7 +308,7 @@ export const useGameStore = create<FullStore>()(
         merge(hobbyFx)
 
         // 9. Criminal annual tick (prison sentence)
-        const { effects: criminalFx, freedThisYear, message: criminalMsg, updatedCriminal } =
+        const { effects: criminalFx, message: criminalMsg, updatedCriminal } =
           CriminalEngine.annualTick(state)
         merge(criminalFx)
         if (criminalMsg) messages.push(criminalMsg)
@@ -1918,7 +1915,9 @@ export const useGameStore = create<FullStore>()(
               get().aggiornaStats(goal.reward)
               return { ...goal, completed: true, completedYear: state.time.year }
             }
-          } catch {}
+          } catch {
+            // Invalid goal trigger conditions are ignored so a bad goal cannot break the turn loop.
+          }
           return goal
         })
         const newCompleted = updated

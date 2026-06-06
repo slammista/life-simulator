@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import { getAllCrimeDefs, CriminalEngine } from '../../services/CriminalEngine'
+import { CriminalEngine } from '../../services/CriminalEngine'
 
 const CATEGORY_EMOJI: Record<string, string> = {
   theft: '🔓',

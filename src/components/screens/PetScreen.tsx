@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import { PetEngine, PET_DEFS, type PetSpecies, type AdoptMethod } from '../../services/PetEngine'
+import { PET_DEFS, type PetSpecies, type AdoptMethod } from '../../services/PetEngine'
 
 const SPECIES_LABELS: Record<PetSpecies, string> = {
   dog: '🐕 Cane', cat: '🐱 Gatto', rabbit: '🐰 Coniglio', bird: '🦜 Uccello', fish: '🐠 Pesce', horse: '🐴 Cavallo',

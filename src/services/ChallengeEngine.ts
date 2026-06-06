@@ -265,7 +265,7 @@ export class ChallengeEngine {
     updatedState: Partial<ChallengeEngineState>
   } {
     const newlyCompleted: ActiveChallenge[] = []
-    let totalEffects: Effect = {}
+    const totalEffects: Effect = {}
     let bonusPoints = 0
 
     const updatedActive = state.challengeEngine.activeChallenges.map(active => {
@@ -314,6 +314,7 @@ export class ChallengeEngine {
   }
 
   static getChallengeProgress(defId: string, state: GameState): string {
+    void state
     const def = CHALLENGE_DEFINITIONS.find(d => d.id === defId)
     if (!def) return ''
     return def.hint

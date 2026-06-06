@@ -1,4 +1,4 @@
-import type { GameState, EducationLevel, Effect, EducationState } from '../store/types'
+import type { GameState, EducationLevel, Effect } from '../store/types'
 
 // ---- types ----
 

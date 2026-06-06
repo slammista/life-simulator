@@ -1,7 +1,7 @@
 import { useGameStore } from '../../store/gameStore'
 
 export function GoalsScreen() {
-  const { goals, completedGoals } = useGameStore()
+  const { goals } = useGameStore()
 
   const completed = goals.filter(g => g.completed)
   const active = goals.filter(g => !g.completed)

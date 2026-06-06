@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import { CosmeticSurgeryEngine, PROCEDURES } from '../../services/CosmeticSurgeryEngine'
+import { CosmeticSurgeryEngine } from '../../services/CosmeticSurgeryEngine'
 import type { CosmeticProcedure } from '../../services/CosmeticSurgeryEngine'
 
 type FilterCategory = 'all' | 'face' | 'body' | 'filler' | 'non_invasive'

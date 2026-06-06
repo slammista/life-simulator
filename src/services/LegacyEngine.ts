@@ -23,7 +23,7 @@ export interface LegacyBonuses {
 
 export class LegacyEngine {
   static calculateLegacyScore(state: GameState): LegacyScore {
-    const { finance, children, relationships, career, stats, ribbons, goals, travelHistory, hobbies, completedGoals } = state
+    const { finance, children, relationships, career, stats, ribbons, travelHistory, hobbies, completedGoals } = state
 
     // Wealth (0-200)
     const wealth = Math.min(200, Math.round(finance.money / 10000))

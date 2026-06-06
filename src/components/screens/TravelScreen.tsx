@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import { TravelEngine, TRAVEL_DESTS, type TravelClass, type TravelCategory } from '../../services/TravelEngine'
+import { TRAVEL_DESTS, type TravelClass, type TravelCategory } from '../../services/TravelEngine'
 
 const CLASS_LABELS: Record<TravelClass, string> = {
   economy: '✈️ Economica', business: '💺 Business', luxury: '🛫 Prima Classe',
