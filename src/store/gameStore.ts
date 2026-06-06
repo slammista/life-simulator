@@ -44,6 +44,7 @@ import { AchievementsEngine } from '../services/AchievementsEngine'
 import { CreditScoreEngine } from '../services/CreditScoreEngine'
 import { LivingEngine } from '../services/LivingEngine'
 import { FamilyEngine } from '../services/FamilyEngine'
+import { TraumaEngine } from '../services/TraumaEngine'
 import type { Addiction, TravelMemory, Religion, Child, LivingType } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
@@ -149,7 +150,12 @@ function buildInitialState(): GameState {
     children: [],
     pets: [],
     criminal: { crimes: [], inPrison: false, prisonSentence: 0, prisonServed: 0, parole: false, paroleDuration: 0, electronicBracelet: false, hasRecord: false },
-    health: { diseases: [], addictions: [], disabilities: [], fitnessLevel: 50, bmi: 22, lastMedicalCheck: 0, mentalDisorders: [], ptsd: false },
+    health: {
+      diseases: [], addictions: [], disabilities: [],
+      fitnessLevel: 50, bmi: 22, lastMedicalCheck: 0,
+      mentalDisorders: [], ptsd: false,
+      traumas: [], therapySessions: 0, resilience: 20,
+    },
     hobbies: [],
     socialMedia: [],
     travelHistory: [],
@@ -317,6 +323,11 @@ export const useGameStore = create<FullStore>()(
 
         // 7. Relationship decay
         const updatedRelationships = RelationshipEngine.annualDecay(state.relationships, state)
+
+        // 7b. Trauma & grief annual burden
+        const traumaTick = TraumaEngine.annualTick(state)
+        merge(traumaTick.effects)
+        messages.push(...traumaTick.messages)
 
         // 8. Hobby annual tick
         const { effects: hobbyFx, updates: hobbyUpdates } = HobbyEngine.annualTick(state)
@@ -507,7 +518,12 @@ export const useGameStore = create<FullStore>()(
           stats: newStats,
           identity: newIdentity,
           career: careerUpdate,
-          health: { ...healthUpdate, addictions: updatedAddictions },
+          health: {
+            ...healthUpdate,
+            addictions: updatedAddictions,
+            traumas: traumaTick.updatedTraumas,
+            ptsd: traumaTick.ptsd || healthUpdate.ptsd,
+          },
           education: eduUpdate,
           relationships: updatedRelationships,
           criminal: updatedCriminal,
@@ -711,8 +727,22 @@ export const useGameStore = create<FullStore>()(
         if (!rel) return { success: false, message: 'Persona non trovata.', effects: {} }
 
         const result = RelationshipEngine.interact(rel, action, state)
-        const partial = applyEffects(state, result.effects)
+        const traumaResult = TraumaEngine.fromRelationshipAction(action, rel, state)
+        const combinedEffects: Effect = { ...result.effects }
+        if (result.success || action === 'cheat') {
+          for (const [k, v] of Object.entries(traumaResult.effects)) {
+            combinedEffects[k] = (combinedEffects[k] ?? 0) + v
+          }
+        }
+        const partial = applyEffects(state, combinedEffects)
         const key = `interact_${npcId}_${state.time.year}`
+        const currentTraumas = state.health.traumas ?? []
+        const nextTraumas = (result.success || action === 'cheat') && traumaResult.trauma
+          ? [...currentTraumas, traumaResult.trauma].slice(-50)
+          : currentTraumas
+        const resultMessage = traumaResult.message && (result.success || action === 'cheat')
+          ? `${result.message} ${traumaResult.message}`
+          : result.message
 
         const updatedRel: Relationship = {
           ...rel,
@@ -725,20 +755,22 @@ export const useGameStore = create<FullStore>()(
         if (result.relationshipEnded) {
           set(s => ({
             ...partial,
+            health: { ...(partial.health ?? s.health), traumas: nextTraumas },
             relationships: s.relationships.map(r => r.id === npcId ? updatedRel : r),
             diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
-            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💔', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: resultMessage, emoji: '💔', category: 'social', statChanges: combinedEffects }, ...s.eventLog].slice(0, 150),
           }))
         } else {
           set(s => ({
             ...partial,
+            health: { ...(partial.health ?? s.health), traumas: nextTraumas },
             relationships: s.relationships.map(r => r.id === npcId ? updatedRel : r),
             diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
-            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.stageAdvanced ? '⭐' : '💬', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: resultMessage, emoji: traumaResult.trauma ? '🧠' : result.stageAdvanced ? '⭐' : '💬', category: 'social', statChanges: combinedEffects }, ...s.eventLog].slice(0, 150),
           }))
         }
         get().checkGoals()
-        return { success: result.success, message: result.message, effects: result.effects }
+        return { success: result.success, message: resultMessage, effects: combinedEffects }
       },
 
       // ==================== Education actions ====================
@@ -822,6 +854,25 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.success ? '🏋️' : '😴', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      attendTherapy: (): ActionResult => {
+        const state = get()
+        const result = TraumaEngine.attendTherapy(state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          health: {
+            ...(partial.health ?? s.health),
+            traumas: result.updatedTraumas ?? (s.health.traumas ?? []),
+            therapySessions: (s.health.therapySessions ?? 0) + 1,
+            resilience: clamp((s.health.resilience ?? 20) + (result.resilienceGain ?? 0), 0, 100),
+            ptsd: (result.updatedTraumas ?? (s.health.traumas ?? [])).some(t => !t.resolved && t.severity >= 5 && t.intensity >= 70),
+          },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🧠', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
       },
 
       // ==================== Hobby actions ====================

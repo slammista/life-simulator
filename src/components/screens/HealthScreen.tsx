@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import type { Disease } from '../../store/types'
+import type { Disease, TraumaEvent } from '../../store/types'
 
 export function HealthScreen() {
   const health = useGameStore(s => s.health)
@@ -9,6 +9,7 @@ export function HealthScreen() {
   const medicalCheck = useGameStore(s => s.medicalCheck)
   const treatDisease = useGameStore(s => s.treatDisease)
   const exercise = useGameStore(s => s.exercise)
+  const attendTherapy = useGameStore(s => s.attendTherapy)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
 
@@ -19,12 +20,16 @@ export function HealthScreen() {
 
   const handleMedical = () => { const r = medicalCheck(); flash(r.message, r.success) }
   const handleExercise = () => { const r = exercise(); flash(r.message, r.success) }
+  const handleTherapy = () => { const r = attendTherapy(); flash(r.message, r.success) }
   const handleTreat = (id: string) => { const r = treatDisease(id); flash(r.message, r.success) }
 
   const severityColor = (s: number) =>
     s >= 4 ? '#ef4444' : s >= 3 ? '#f97316' : s >= 2 ? '#eab308' : '#10b981'
 
   const fitnessLabel = health.fitnessLevel >= 80 ? 'Atleta' : health.fitnessLevel >= 60 ? 'In forma' : health.fitnessLevel >= 40 ? 'Sedentario' : health.fitnessLevel >= 20 ? 'Scarsa' : 'Pessima'
+  const traumas = health.traumas ?? []
+  const therapySessions = health.therapySessions ?? 0
+  const resilience = health.resilience ?? 20
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
@@ -72,6 +77,51 @@ export function HealthScreen() {
           style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', fontSize: 13, fontWeight: 600, border: '1px solid rgba(99,102,241,0.25)', cursor: 'pointer' }}>
           🏥 Visita medica{nation?.healthcarePublic ? ' (gratis)' : ' (€120)'}
         </button>
+        <button onClick={handleTherapy}
+          style={{ gridColumn: '1 / -1', padding: '12px 0', borderRadius: 14, background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', fontSize: 13, fontWeight: 600, border: '1px solid rgba(139,92,246,0.25)', cursor: 'pointer' }}>
+          🧠 Terapia{nation?.healthcarePublic ? ' (€40)' : ' (€180)'}
+        </button>
+      </div>
+
+      {/* Trauma & resilience */}
+      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+        Trauma e resilienza
+      </p>
+      <div className="card" style={{ padding: 12, marginBottom: 14 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 8 }}>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 600 }}>Resilienza</p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+              {therapySessions} sessioni terapia · {health.ptsd ? 'PTSD attivo' : 'Nessun PTSD'}
+            </p>
+          </div>
+          <p style={{ fontSize: 16, fontWeight: 700, color: '#c4b5fd' }}>{resilience}/100</p>
+        </div>
+        <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
+          <div style={{ height: '100%', width: `${resilience}%`, background: '#8b5cf6', borderRadius: 4 }} />
+        </div>
+        {traumas.length > 0 && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
+            {traumas.slice(-4).reverse().map((trauma: TraumaEvent) => (
+              <div key={trauma.id} style={{
+                padding: '8px 10px',
+                borderRadius: 10,
+                background: trauma.resolved ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
+                border: `1px solid ${trauma.resolved ? 'rgba(34,197,94,0.18)' : 'rgba(239,68,68,0.18)'}`,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                  <p style={{ fontSize: 12, fontWeight: 600 }}>{trauma.description}</p>
+                  <span style={{ fontSize: 11, color: trauma.resolved ? '#86efac' : '#fca5a5', flexShrink: 0 }}>
+                    {trauma.resolved ? 'Risolto' : `${trauma.intensity}%`}
+                  </span>
+                </div>
+                <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 3 }}>
+                  {trauma.type} · severità {trauma.severity}/5 · {trauma.year}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Diseases */}

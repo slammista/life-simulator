@@ -371,6 +371,23 @@ export interface HealthState {
   lastMedicalCheck: number
   mentalDisorders: string[]
   ptsd: boolean
+  traumas: TraumaEvent[]
+  therapySessions: number
+  resilience: number      // 0-100, reduces future trauma impact
+}
+
+export type TraumaType = 'grief' | 'divorce' | 'betrayal' | 'bankruptcy' | 'illness' | 'violence' | 'imprisonment'
+
+export interface TraumaEvent {
+  id: string
+  type: TraumaType
+  source: string
+  description: string
+  year: number
+  severity: number        // 1-5
+  intensity: number       // 0-100 current emotional load
+  triggers: string[]
+  resolved: boolean
 }
 
 // ---- Hobbies & Skills ----
@@ -862,6 +879,7 @@ export interface GameActions {
   medicalCheck: () => ActionResult
   treatDisease: (diseaseId: string) => ActionResult
   exercise: () => ActionResult
+  attendTherapy: () => ActionResult
 
   // Hobby engine actions
   addHobby: (hobbyId: string) => ActionResult
