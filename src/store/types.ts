@@ -552,6 +552,15 @@ export type { BeautyState, HairStyle, NailsStyle, WardrobeTier, SkincareLevel } 
 // ---- Retirement ----
 export type { RetirementState, RetirementType, SeniorLiving, SeniorCondition } from '../services/RetirementEngine'
 
+// ---- Gambling ----
+export type { GamblingState, GamblingGame, GamblingResult, SportBetType } from '../services/GamblingEngine'
+
+// ---- Sexual Health ----
+export type { SexualHealthState, ContraceptionMethod, STI, STIType, SexualHealthResult } from '../services/SexualHealthEngine'
+
+// ---- World Events ----
+export type { WorldEventsState, WorldModifier, HistoricalEvent, HomeRepairEvent } from '../services/WorldEventsEngine'
+
 // ---- Legacy ----
 
 export interface Legacy {
@@ -690,6 +699,15 @@ export interface GameState {
 
   // Retirement & senior life
   retirement: import('../services/RetirementEngine').RetirementState
+
+  // Gambling
+  gambling: import('../services/GamblingEngine').GamblingState
+
+  // Sexual health
+  sexualHealth: import('../services/SexualHealthEngine').SexualHealthState
+
+  // World events
+  worldEvents: import('../services/WorldEventsEngine').WorldEventsState
 
   // Events
   currentEvent: GameEvent | null
@@ -832,6 +850,27 @@ export interface GameActions {
 
   // Legacy
   continueAsChild: (childId: string) => void
+
+  // Gambling actions
+  playCasinoGame: (game: import('../services/GamblingEngine').GamblingGame, bet: number) => ActionResult
+  buyLotteryTicket: () => ActionResult
+  buyScratchCard: () => ActionResult
+  placeSportsBet: (sport: import('../services/GamblingEngine').SportBetType, bet: number) => ActionResult
+
+  // Sexual health actions
+  setContraception: (method: import('../services/SexualHealthEngine').ContraceptionMethod) => ActionResult
+  haveSex: (partnerHasSTI?: boolean) => ActionResult
+  takePregnancyTest: () => ActionResult
+  getAbortion: () => ActionResult
+  getSTDTest: () => ActionResult
+  treatSTI: (stiType: import('../services/SexualHealthEngine').STIType) => ActionResult
+  doIVF: () => ActionResult
+
+  // Cheat actions
+  cheatAddMoney: (amount: number) => void
+  cheatSetMaxStats: () => void
+  cheatSetImmortal: () => void
+  cheatSkipToAge: (targetAge: number) => void
 
   // Vehicle/driving actions
   studyDrivingTheory: () => ActionResult

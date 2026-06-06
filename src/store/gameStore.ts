@@ -35,6 +35,9 @@ import { BodyModEngine } from '../services/BodyModEngine'
 import { BeautyEngine, type HairStyle, type NailsStyle, type WardrobeTier, type SkincareLevel } from '../services/BeautyEngine'
 import { RetirementEngine, type RetirementType, type SeniorLiving } from '../services/RetirementEngine'
 import { LegacyEngine } from '../services/LegacyEngine'
+import { GamblingEngine, type GamblingGame, type SportBetType } from '../services/GamblingEngine'
+import { SexualHealthEngine, type ContraceptionMethod, type STIType } from '../services/SexualHealthEngine'
+import { WorldEventsEngine } from '../services/WorldEventsEngine'
 import type { Addiction, TravelMemory, Religion, Child } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
@@ -158,6 +161,21 @@ function buildInitialState(): GameState {
       cognitiveStatus: 'sharp', livingArrangement: 'own_home',
       hasMadeWill: false, funeralPrePlanned: false,
       alzheimersYear: null, alzheimersStage: 'none', volunteeringActive: false,
+    },
+    gambling: {
+      totalWon: 0, totalLost: 0, gamesPlayed: 0,
+      addictionLevel: 0, lastPlayedYear: 0,
+      casinoBlacklisted: false, biggestWin: 0, jackpotWon: false,
+    },
+    sexualHealth: {
+      isPregnant: false, pregnancyTrimester: 0, pregnancyPartnerName: null,
+      contraceptionMethod: 'none', activeSTIs: [],
+      sexualPartnersCount: 0, virginityLost: false,
+      lastSTDTestYear: 0, isInfertile: false, ivfAttempts: 0,
+    },
+    worldEvents: {
+      triggeredEvents: [],
+      activeWorldModifiers: [],
     },
     currentEvent: null,
     availableChoices: [],
@@ -315,6 +333,24 @@ export const useGameStore = create<FullStore>()(
           messages.push(...newConditions.map(c => `${c.emoji} Nuova condizione: ${c.name}. Costo mensile: €${c.monthlyCost.toLocaleString()}.`))
         }
 
+        // 20. Gambling annual tick (addiction toll)
+        const { effects: gamblingFx, updatedGambling: gamblingTickUpdate } = GamblingEngine.annualTick(state)
+        merge(gamblingFx)
+
+        // 21. Sexual health annual tick (pregnancy progression, STI costs)
+        const { effects: sexFx, updatedSexualHealth: sexTickUpdate } = SexualHealthEngine.annualTick(state)
+        merge(sexFx)
+
+        // 22. World events annual tick (historical events, home repairs)
+        const worldResult = WorldEventsEngine.annualTick(state)
+        merge(worldResult.effects)
+        for (const ev of worldResult.triggeredHistorical) {
+          messages.push(`${ev.emoji} ${ev.name}: ${ev.description}`)
+        }
+        for (const repair of worldResult.homeRepairs) {
+          messages.push(`${repair.emoji} ${repair.name}: riparazione urgente!`)
+        }
+
         // 14. Random events (background micro-events without choices)
         const randomEvs = db.random_events as unknown as Array<{
           id: string; title: string; description: string; emoji: string; probability: number; effects: Effect
@@ -450,6 +486,12 @@ export const useGameStore = create<FullStore>()(
           availableChoices: choices,
           eventLog: [logEntry, ...state.eventLog].slice(0, 150),
           diminishingReturns: {}, // reset annual counters
+          gambling: Object.keys(gamblingTickUpdate).length > 0 ? { ...state.gambling, ...gamblingTickUpdate } : state.gambling,
+          sexualHealth: Object.keys(sexTickUpdate).length > 0 ? { ...state.sexualHealth, ...sexTickUpdate } : state.sexualHealth,
+          worldEvents: {
+            triggeredEvents: worldResult.updatedWorld.triggeredEvents ?? state.worldEvents.triggeredEvents,
+            activeWorldModifiers: worldResult.updatedWorld.activeWorldModifiers ?? state.worldEvents.activeWorldModifiers,
+          },
         })
 
         get().checkGoals()
@@ -1405,6 +1447,180 @@ export const useGameStore = create<FullStore>()(
         set(newState as Partial<typeof state>)
       },
 
+      // ==================== Gambling actions ====================
+      playCasinoGame: (game: GamblingGame, bet: number): ActionResult => {
+        const state = get()
+        const result = GamblingEngine.playCasinoGame(game, bet, state)
+        if (!result.success && result.won === 0 && result.lost === 0 && !result.effects.money) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          gambling: { ...s.gambling, ...result.updatedGambling },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🎰', category: 'gambling', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      buyLotteryTicket: (): ActionResult => {
+        const state = get()
+        const result = GamblingEngine.buyLotteryTicket(state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          gambling: { ...s.gambling, ...result.updatedGambling },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🎟️', category: 'gambling', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      buyScratchCard: (): ActionResult => {
+        const state = get()
+        const result = GamblingEngine.buyScratchCard(state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          gambling: { ...s.gambling, ...result.updatedGambling },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '📄', category: 'gambling', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      placeSportsBet: (sport: SportBetType, bet: number): ActionResult => {
+        const state = get()
+        const result = GamblingEngine.placeSportsBet(sport, bet, state)
+        if (!result.success && result.won === 0 && result.lost === 0) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          gambling: { ...s.gambling, ...result.updatedGambling },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '⚽', category: 'gambling', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Sexual health actions ====================
+      setContraception: (method: ContraceptionMethod): ActionResult => {
+        const state = get()
+        const result = SexualHealthEngine.setContraception(method, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          sexualHealth: { ...s.sexualHealth, ...result.updatedSexualHealth },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🩺', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      haveSex: (partnerHasSTI = false): ActionResult => {
+        const state = get()
+        const result = SexualHealthEngine.haveSex(state, partnerHasSTI)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          sexualHealth: { ...s.sexualHealth, ...result.updatedSexualHealth },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💕', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      takePregnancyTest: (): ActionResult => {
+        const state = get()
+        const result = SexualHealthEngine.takePregnancyTest(state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🤰', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      getAbortion: (): ActionResult => {
+        const state = get()
+        const result = SexualHealthEngine.getAbortion(state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          sexualHealth: { ...s.sexualHealth, ...result.updatedSexualHealth },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏥', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      getSTDTest: (): ActionResult => {
+        const state = get()
+        const result = SexualHealthEngine.getSTDTest(state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          sexualHealth: { ...s.sexualHealth, ...result.updatedSexualHealth },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🔬', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      treatSTI: (stiType: STIType): ActionResult => {
+        const state = get()
+        const result = SexualHealthEngine.treatSTI(stiType, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          sexualHealth: { ...s.sexualHealth, ...result.updatedSexualHealth },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💊', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      doIVF: (): ActionResult => {
+        const state = get()
+        const result = SexualHealthEngine.doIVF(state)
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          sexualHealth: { ...s.sexualHealth, ...result.updatedSexualHealth },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🌸', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Cheat actions ====================
+      cheatAddMoney: (amount: number) => {
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money + amount },
+          settings: { ...s.settings, mode: 'god' },
+          eventLog: [{ id: uid(), year: get().time.year, age: get().time.age, text: `💰 [CHEAT] +€${amount.toLocaleString()} aggiunti.`, emoji: '💰', category: 'cheat', statChanges: { money: amount } }, ...s.eventLog].slice(0, 150),
+        }))
+      },
+
+      cheatSetMaxStats: () => {
+        set(s => ({
+          stats: { health: 100, mentalHealth: 100, happiness: 100, intelligence: 100, looks: 100, energy: 100, karma: 100, reputation: 100, socialReputation: 100 },
+          settings: { ...s.settings, mode: 'god' },
+          eventLog: [{ id: uid(), year: get().time.year, age: get().time.age, text: '⚡ [CHEAT] Tutte le statistiche al massimo.', emoji: '⚡', category: 'cheat', statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+      },
+
+      cheatSetImmortal: () => {
+        set(s => ({
+          stats: { ...s.stats, health: 100 },
+          settings: { ...s.settings, mode: 'god' },
+          eventLog: [{ id: uid(), year: get().time.year, age: get().time.age, text: '☠️ [CHEAT] Modalità immortale attivata. Salute sempre al 100%.', emoji: '☠️', category: 'cheat', statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+      },
+
+      cheatSkipToAge: (targetAge: number) => {
+        const state = get()
+        if (targetAge <= state.time.age) return
+        const yearsToSkip = targetAge - state.time.age
+        set(s => ({
+          time: { ...s.time, age: targetAge, year: s.time.year + yearsToSkip },
+          settings: { ...s.settings, mode: 'god' },
+          eventLog: [{ id: uid(), year: state.time.year + yearsToSkip, age: targetAge, text: `⏩ [CHEAT] Saltato a ${targetAge} anni.`, emoji: '⏩', category: 'cheat', statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+      },
+
       // ==================== Vehicle actions ====================
       studyDrivingTheory: (): ActionResult => {
         const state = get()
@@ -1720,6 +1936,9 @@ export const useGameStore = create<FullStore>()(
         bodyMods: state.bodyMods,
         beauty: state.beauty,
         retirement: state.retirement,
+        gambling: state.gambling,
+        sexualHealth: state.sexualHealth,
+        worldEvents: state.worldEvents,
       }),
     }
   )

@@ -29,11 +29,13 @@ import MilitaryScreen from './components/screens/MilitaryScreen'
 import BodyModScreen from './components/screens/BodyModScreen'
 import BeautyScreen from './components/screens/BeautyScreen'
 import RetirementScreen from './components/screens/RetirementScreen'
+import GamblingScreen from './components/screens/GamblingScreen'
+import SexualHealthScreen from './components/screens/SexualHealthScreen'
 
 // ---- Sub-tab types ----
 type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle' | 'military'
 type PeopleSubTab = 'relationships' | 'dating' | 'famiglia'
-type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body' | 'beauty'
+type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body' | 'beauty' | 'gambling' | 'sex_health'
 type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'settings'
 
 function SubTabBar<T extends string>({
@@ -110,8 +112,10 @@ function App() {
             { id: 'pets',       label: 'Animali',   emoji: '🐾' },
             { id: 'criminal',   label: 'Crimini',   emoji: '🚔' },
             { id: 'religion',   label: 'Fede',      emoji: '🙏' },
-            { id: 'body',       label: 'Body Mod',  emoji: '🎨' },
-            { id: 'beauty',     label: 'Beauty',    emoji: '💄' },
+            { id: 'body',        label: 'Body Mod',  emoji: '🎨' },
+            { id: 'beauty',      label: 'Beauty',    emoji: '💄' },
+            { id: 'gambling',    label: 'Azzardo',   emoji: '🎲' },
+            { id: 'sex_health',  label: 'Sess.',     emoji: '❤️' },
           ]}
           active={wellbeingSub}
           onChange={setWellbeingSub}
@@ -159,6 +163,8 @@ function App() {
         {activeTab === 'wellbeing' && wellbeingSub === 'religion'   && <ReligionScreen />}
         {activeTab === 'wellbeing' && wellbeingSub === 'body'       && <BodyModScreen />}
         {activeTab === 'wellbeing' && wellbeingSub === 'beauty'     && <BeautyScreen />}
+        {activeTab === 'wellbeing' && wellbeingSub === 'gambling'   && <GamblingScreen />}
+        {activeTab === 'wellbeing' && wellbeingSub === 'sex_health' && <SexualHealthScreen />}
 
         {activeTab === 'profile' && profileSub === 'goals'    && <GoalsScreen />}
         {activeTab === 'profile' && profileSub === 'travel'   && <TravelScreen />}
