@@ -1,4 +1,5 @@
 import { useGameStore } from '../../store/gameStore'
+import { EmotionalUIEngine } from '../../services/EmotionalUIEngine'
 
 const statConfig = [
   { key: 'health', label: 'Salute', emoji: '❤️', color: '#e94560' },
@@ -8,7 +9,9 @@ const statConfig = [
 ]
 
 export function HUD() {
-  const { stats, finance, time, identity } = useGameStore()
+  const store = useGameStore()
+  const { stats, finance, time, identity } = store
+  const emotion = EmotionalUIEngine.derive(store)
 
   return (
     <div className="hud flex-col gap-1" style={{ height: 'auto', padding: '8px 12px' }}>
@@ -20,6 +23,11 @@ export function HUD() {
         </span>
         <span style={{ fontSize: 13, fontWeight: 600, color: '#10b981' }}>
           €{finance.money.toLocaleString('it-IT')}
+        </span>
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 6 }}>
+        <span className="emotion-badge">
+          {emotion.label} · {emotion.intensity}/100
         </span>
       </div>
 

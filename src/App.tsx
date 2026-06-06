@@ -8,6 +8,7 @@ import { BottomTabs, type Tab } from './components/navigation/BottomTabs'
 import { NewGameScreen } from './components/screens/NewGameScreen'
 import { GameOverScreen } from './components/screens/GameOverScreen'
 import { AgeGate } from './components/screens/AgeGate'
+import { EmotionalUIEngine } from './services/EmotionalUIEngine'
 
 const CareerScreen = lazy(() => import('./components/screens/CareerScreen').then(module => ({ default: module.CareerScreen })))
 const RelationshipScreen = lazy(() => import('./components/screens/RelationshipScreen').then(module => ({ default: module.RelationshipScreen })))
@@ -73,7 +74,8 @@ function ScreenFallback() {
 }
 
 function App() {
-  const { isStarted, isGameOver } = useGameStore()
+  const store = useGameStore()
+  const { isStarted, isGameOver } = store
   const [ageConfirmed, setAgeConfirmed] = useState(() => !!localStorage.getItem('age_confirmed'))
   const [activeTab, setActiveTab] = useState<Tab>('main')
   const [developSub, setDevelopSub] = useState<DevelopSubTab>('career')
@@ -85,8 +87,10 @@ function App() {
   if (!isStarted) return <NewGameScreen />
   if (isGameOver) return <GameOverScreen />
 
+  const emotionalUI = EmotionalUIEngine.derive(store)
+
   return (
-    <div className="app-shell">
+    <div className={`app-shell ${emotionalUI.className}`} data-emotion={emotionalUI.state}>
       {/* HUD — sticky top */}
       <HUD />
 

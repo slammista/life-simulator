@@ -757,6 +757,33 @@ export interface DailyQuestState {
   totalClaimed: number
 }
 
+// ---- NPC Agency ----
+
+export type NPCAgencyEventType =
+  | 'married'
+  | 'child_born'
+  | 'moved_away'
+  | 'career_change'
+  | 'reconciled'
+  | 'relationship_broke'
+  | 'death'
+
+export interface NPCAgencyEvent {
+  id: string
+  npcId: string
+  npcName: string
+  type: NPCAgencyEventType
+  year: number
+  age: number
+  description: string
+  effects: Effect
+}
+
+export interface NPCAgencyState {
+  events: NPCAgencyEvent[]
+  totalEvents: number
+}
+
 // ---- Credit Score ----
 export type { CreditScoreResult, CreditTier } from '../services/CreditScoreEngine'
 
@@ -928,6 +955,9 @@ export interface GameState {
 
   // Daily quests
   dailyQuests: DailyQuestState
+
+  // Autonomous NPC life simulation
+  npcAgency: NPCAgencyState
 
   // Events
   currentEvent: GameEvent | null

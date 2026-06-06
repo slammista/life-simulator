@@ -99,6 +99,19 @@ export class CausalityEngine {
       }
     })
 
+    const npcAgencyEntries = (state.npcAgency?.events ?? []).map(event => ({
+      id: `npc_agency_${event.id}`,
+      year: event.year,
+      age: event.age,
+      title: event.npcName,
+      description: event.description,
+      emoji: event.type === 'death' ? '🕯️' : event.type === 'married' ? '💍' : event.type === 'child_born' ? '👶' : '👤',
+      category: 'relationship' as const,
+      weight: event.type === 'death' ? 70 : event.type === 'relationship_broke' ? 45 : 25,
+      effects: event.effects,
+      consequences: ['Vita autonoma NPC', ...consequencesFromEffects(event.effects)],
+    }))
+
     const legacyEntry = state.legacy ? [{
       id: 'legacy_current',
       year: Number(state.legacy.deathDate) || state.time.year,
@@ -112,7 +125,7 @@ export class CausalityEngine {
       consequences: ['Influenza la generazione successiva'],
     }] : []
 
-    return [...logEntries, ...traumaEntries, ...chaosEntries, ...investmentEntries, ...legacyEntry]
+    return [...logEntries, ...traumaEntries, ...chaosEntries, ...investmentEntries, ...npcAgencyEntries, ...legacyEntry]
       .sort((a, b) => b.year - a.year || b.weight - a.weight)
       .slice(0, 120)
   }

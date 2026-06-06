@@ -48,6 +48,8 @@ import { TraumaEngine } from '../services/TraumaEngine'
 import { FameEngine } from '../services/FameEngine'
 import { ChaosEngine } from '../services/ChaosEngine'
 import { DailyQuestEngine } from '../services/DailyQuestEngine'
+import { NPCAgencyEngine } from '../services/NPCAgencyEngine'
+import { BalanceEngine } from '../services/BalanceEngine'
 import type { Addiction, TravelMemory, Religion, Child, LivingType } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
@@ -216,6 +218,7 @@ function buildInitialState(): GameState {
       streak: 0,
     },
     dailyQuests: DailyQuestEngine.initialState(),
+    npcAgency: NPCAgencyEngine.initialState(),
     currentEvent: null,
     availableChoices: [],
     pendingEffects: null,
@@ -331,6 +334,11 @@ export const useGameStore = create<FullStore>()(
         // 7. Relationship decay
         const updatedRelationships = RelationshipEngine.annualDecay(state.relationships, state)
 
+        // 7a. Autonomous NPC agency
+        const npcAgencyTick = NPCAgencyEngine.annualTick(state, updatedRelationships)
+        merge(npcAgencyTick.effects)
+        messages.push(...npcAgencyTick.messages)
+
         // 7b. Trauma & grief annual burden
         const traumaTick = TraumaEngine.annualTick(state)
         merge(traumaTick.effects)
@@ -421,6 +429,11 @@ export const useGameStore = create<FullStore>()(
         // 23b. Credit score annual update
         const creditResult = CreditScoreEngine.annualTick(state)
         const dailyQuestState = DailyQuestEngine.ensure(state.dailyQuests)
+
+        // 23c. Polishing/balance pass
+        const balanceTick = BalanceEngine.annualTick(state)
+        merge(balanceTick.effects)
+        messages.push(...balanceTick.messages)
 
         // 23. Achievement check (ribbon auto-unlock)
         const { newRibbons, messages: achievementMsgs } = AchievementsEngine.checkAndUnlock(state)
@@ -559,7 +572,8 @@ export const useGameStore = create<FullStore>()(
             ptsd: traumaTick.ptsd || healthUpdate.ptsd,
           },
           education: eduUpdate,
-          relationships: updatedRelationships,
+          relationships: npcAgencyTick.relationships,
+          npcAgency: npcAgencyTick.agency,
           criminal: updatedCriminal,
           hobbies: updatedHobbies,
           socialMedia: updatedProfiles.length > 0 ? updatedProfiles : state.socialMedia,
@@ -1597,6 +1611,7 @@ export const useGameStore = create<FullStore>()(
           fame: FameEngine.initialState(),
           chaos: ChaosEngine.initialState(),
           dailyQuests: DailyQuestEngine.initialState(),
+          npcAgency: NPCAgencyEngine.initialState(),
           legacy: state.legacy,
           diminishingReturns: {},
           eventLog: [{
@@ -2195,6 +2210,7 @@ export const useGameStore = create<FullStore>()(
         cosmeticSurgery: state.cosmeticSurgery,
         challengeEngine: state.challengeEngine,
         dailyQuests: state.dailyQuests,
+        npcAgency: state.npcAgency,
       }),
     }
   )

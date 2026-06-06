@@ -4958,6 +4958,46 @@ get().aggiornaStats(...)
 Obiettivo finale:
 Creare un life simulator che sembri vivo, umano, imprevedibile e altamente rigiocabile.
 
+---
+
+# Stato Implementazione Codex — 2026-06-06
+
+## Sistemi V5 implementati nel codice
+
+- Stabilizzazione responsive web/mobile e code splitting.
+- FamilyEngine con famiglia iniziale, parentela persistente e albero familiare.
+- NPC personality, mood, memory log, reaction engine e chain reactions.
+- Trauma & Grief System con terapia, resilienza, PTSD e traumi persistenti.
+- Fame System con fanbase, verified, scandali, sponsor e decadimento annuale.
+- Extreme Chaos Engine con eventi rari ad alto impatto e integrazione trauma/fama.
+- Daily Quests + streak system nella schermata Sfide.
+- Stock Market System con sentiment, prezzi, crash/boom e portafoglio rivalutato.
+- Causality Timeline consultabile da Profilo.
+- NPC Agency annuale: NPC possono cambiare vita, trasferirsi, morire, sposarsi o ricucire rapporti.
+- Emotional UI System: tema visivo reattivo a salute, stress, depressione, ricchezza e felicità.
+- Polishing/bilanciamento annuale per debiti, burnout, energia, povertà e scandali.
+
+## Stato stimato
+
+Gameplay GDD/V5 offline: circa 89%.
+
+## Mancante o parziale
+
+- Consumerism & Assets avanzato: yacht, beni di lusso granulari, furti, assicurazioni, manutenzione più profonda.
+- Minigames: prison escape, hacking puzzle, driving test interattivo e altri prototipi giocabili.
+- Pet Battles e sistemi animali avanzati.
+- Gacha/cosmetics/social challenges e leaderboard.
+- LiveOps reale con remote config/eventi server-side.
+- Cloud save, account, analytics, privacy/compliance e moderazione contenuti community.
+- Playtest sistematico, bilanciamento numerico e QA mobile/store.
+
+## Priorità consigliata dopo questa fase
+
+1. Consumerism & Assets avanzato.
+2. QA/polishing mobile-web e test automatici sui loop principali.
+3. Cloud save/account come prerequisito live service.
+4. Minigames mirati, solo dopo stabilizzazione del core.
+
 
 
 # 🎮 V5 — EMERGENT LIFE UPDATE
