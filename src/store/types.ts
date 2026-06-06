@@ -687,6 +687,19 @@ export interface GameActions {
   treatDisease: (diseaseId: string) => ActionResult
   exercise: () => ActionResult
 
+  // Hobby engine actions
+  addHobby: (hobbyId: string) => ActionResult
+  practiceHobby: (hobbyId: string) => ActionResult
+
+  // Criminal engine actions
+  commitCrime: (crimeId: string) => ActionResult
+
+  // Finance engine actions
+  investMoney: (defId: string, amount: number) => ActionResult
+  sellInvestment: (investmentId: string) => ActionResult
+  buyAsset: (assetType: string) => ActionResult
+  takeLoan: (amount: number) => ActionResult
+
   // Validation
   checkGoals: () => void
   checkMorte: () => void

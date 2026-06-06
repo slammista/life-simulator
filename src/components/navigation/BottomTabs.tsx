@@ -1,4 +1,4 @@
-type Tab = 'main' | 'career' | 'relations' | 'goals' | 'settings'
+export type Tab = 'main' | 'develop' | 'people' | 'wellbeing' | 'profile'
 
 interface Props {
   active: Tab
@@ -6,11 +6,11 @@ interface Props {
 }
 
 const tabs: { id: Tab; emoji: string; label: string }[] = [
-  { id: 'main', emoji: '🏠', label: 'Vita' },
-  { id: 'career', emoji: '💼', label: 'Carriera' },
-  { id: 'relations', emoji: '❤️', label: 'Relazioni' },
-  { id: 'goals', emoji: '🎯', label: 'Goals' },
-  { id: 'settings', emoji: '⚙️', label: 'Impostazioni' },
+  { id: 'main',      emoji: '🏠', label: 'Vita' },
+  { id: 'develop',   emoji: '📚', label: 'Sviluppo' },
+  { id: 'people',    emoji: '❤️', label: 'Persone' },
+  { id: 'wellbeing', emoji: '💊', label: 'Benessere' },
+  { id: 'profile',   emoji: '⚙️', label: 'Profilo' },
 ]
 
 export function BottomTabs({ active, onChange }: Props) {

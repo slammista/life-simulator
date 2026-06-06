@@ -18,6 +18,9 @@ import { CareerEngine } from '../services/CareerEngine'
 import { RelationshipEngine, type NPCContext, type NPCAction } from '../services/RelationshipEngine'
 import { EducationEngine } from '../services/EducationEngine'
 import { HealthEngine } from '../services/HealthEngine'
+import { HobbyEngine } from '../services/HobbyEngine'
+import { CriminalEngine } from '../services/CriminalEngine'
+import { FinanceEngine, type AssetType } from '../services/FinanceEngine'
 
 // ---- helpers ----
 
@@ -223,7 +226,21 @@ export const useGameStore = create<FullStore>()(
         // 7. Relationship decay
         const updatedRelationships = RelationshipEngine.annualDecay(state.relationships, state)
 
-        // 8. Random events (background micro-events without choices)
+        // 8. Hobby annual tick
+        const { effects: hobbyFx, updates: hobbyUpdates } = HobbyEngine.annualTick(state)
+        merge(hobbyFx)
+
+        // 9. Criminal annual tick (prison sentence)
+        const { effects: criminalFx, freedThisYear, message: criminalMsg, updatedCriminal } =
+          CriminalEngine.annualTick(state)
+        merge(criminalFx)
+        if (criminalMsg) messages.push(criminalMsg)
+
+        // 10. Finance annual tick (investments + assets)
+        const { effects: financeFx, updatedInvestments, updatedAssets } = FinanceEngine.annualTick(state)
+        merge(financeFx)
+
+        // 11. Random events (background micro-events without choices)
         const randomEvs = db.random_events as unknown as Array<{
           id: string; title: string; description: string; emoji: string; probability: number; effects: Effect
         }>
@@ -233,7 +250,7 @@ export const useGameStore = create<FullStore>()(
           }
         }
 
-        // 9. Pick main event (with choices)
+        // 12. Pick main event (with choices)
         const allEvents = db.events as unknown as GameEvent[]
         const eligible = allEvents.filter(ev => {
           if (ev.minAge > newAge || ev.maxAge < newAge) return false
@@ -307,15 +324,35 @@ export const useGameStore = create<FullStore>()(
         const newStats = (partial.stats ?? state.stats)
         const newIdentity = { ...state.identity, emoji: getPlayerEmoji({ ...state, stats: newStats, time: newTime }) }
 
+        // Update hobbies skill
+        const updatedHobbies = state.hobbies.map(h => {
+          const upd = hobbyUpdates.find(u => u.id === h.id)
+          if (!upd) return h
+          return {
+            ...h,
+            skillLevel: clamp(h.skillLevel + upd.skillDelta, 0, 100),
+            monthlyIncome: upd.income,
+          }
+        })
+
+        const baseFinance = partial.finance ?? state.finance
+        const financeWithInvestments = {
+          ...baseFinance,
+          investments: updatedInvestments.length > 0 ? updatedInvestments : baseFinance.investments,
+          assets: updatedAssets.length > 0 ? updatedAssets : baseFinance.assets,
+        }
+
         set({
           time: newTime,
           stats: newStats,
-          finance: partial.finance ?? state.finance,
+          finance: financeWithInvestments,
           identity: newIdentity,
           career: careerUpdate,
           health: healthUpdate,
           education: eduUpdate,
           relationships: updatedRelationships,
+          criminal: updatedCriminal,
+          hobbies: updatedHobbies,
           currentEvent: picked,
           availableChoices: choices,
           eventLog: [logEntry, ...state.eventLog].slice(0, 150),
@@ -591,6 +628,113 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.success ? '🏋️' : '😴', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Hobby actions ====================
+      addHobby: (hobbyId: string): ActionResult => {
+        const state = get()
+        const result = HobbyEngine.addHobby(hobbyId, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          hobbies: result.newHobby ? [...s.hobbies, result.newHobby] : s.hobbies,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🎯', category: 'hobby', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      practiceHobby: (hobbyId: string): ActionResult => {
+        const state = get()
+        const result = HobbyEngine.practiceHobby(hobbyId, state)
+        const partial = applyEffects(state, result.effects)
+        const key = `hobby_${hobbyId}_${state.time.year}`
+        const gain = result.skillGain ?? 0
+        set(s => ({
+          ...partial,
+          hobbies: s.hobbies.map(h => h.id === hobbyId ? { ...h, skillLevel: clamp(h.skillLevel + gain, 0, 100) } : h),
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.success ? '🎯' : '😴', category: 'hobby', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Criminal actions ====================
+      commitCrime: (crimeId: string): ActionResult => {
+        const state = get()
+        const result = CriminalEngine.commitCrime(crimeId, state)
+        const partial = applyEffects(state, result.effects)
+
+        set(s => ({
+          ...partial,
+          criminal: result.arrested ? {
+            ...s.criminal,
+            inPrison: true,
+            prisonSentence: result.crimeRecord?.sentence ?? 0,
+            prisonServed: 0,
+            hasRecord: true,
+            crimes: result.crimeRecord ? [...s.criminal.crimes, result.crimeRecord] : s.criminal.crimes,
+          } : {
+            ...s.criminal,
+            crimes: result.crimeRecord ? [...s.criminal.crimes, result.crimeRecord] : s.criminal.crimes,
+          },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.arrested ? '🚔' : result.success ? '😈' : '❌', category: 'criminal', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        get().checkGoals()
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Finance actions ====================
+      investMoney: (defId: string, amount: number): ActionResult => {
+        const state = get()
+        const result = FinanceEngine.invest(defId, amount, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          finance: { ...((partial.finance ?? s.finance)), investments: result.newInvestment ? [...(partial.finance ?? s.finance).investments, result.newInvestment] : (partial.finance ?? s.finance).investments },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '📈', category: 'finance', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      sellInvestment: (investmentId: string): ActionResult => {
+        const state = get()
+        const result = FinanceEngine.sellInvestment(investmentId, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          finance: { ...(partial.finance ?? s.finance), investments: s.finance.investments.filter(i => i.id !== investmentId) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💰', category: 'finance', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      buyAsset: (assetType: string): ActionResult => {
+        const state = get()
+        const result = FinanceEngine.buyAsset(assetType as AssetType, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          finance: { ...(partial.finance ?? s.finance), assets: result.newAsset ? [...s.finance.assets, result.newAsset] : s.finance.assets },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏠', category: 'finance', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      takeLoan: (amount: number): ActionResult => {
+        const state = get()
+        const result = FinanceEngine.takeLoan(amount, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          finance: { ...(partial.finance ?? s.finance), debt: s.finance.debt + amount },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏦', category: 'finance', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
       },
 
       // ==================== Validation ====================

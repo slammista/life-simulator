@@ -1,852 +1,158 @@
 {
   "stats": [
-    {
-      "id": "default",
-      "health": 80,
-      "mentalHealth": 80,
-      "happiness": 70,
-      "intelligence": 50,
-      "looks": 50,
-      "energy": 80,
-      "karma": 0,
-      "reputation": 50,
-      "socialReputation": 50
-    }
+    { "id": "default", "health": 80, "mentalHealth": 80, "happiness": 70, "intelligence": 50, "looks": 50, "energy": 80, "karma": 0, "reputation": 50, "socialReputation": 50 }
   ],
   "jobs": [
-    {
-      "id": "unemployed",
-      "title": "Disoccupato",
-      "category": "none",
-      "contractType": "unemployed",
-      "salaryMin": 0,
-      "salaryMax": 0,
-      "stressLevel": 20,
-      "promotionChance": 0,
-      "requirements": {
-        "education": "none",
-        "minAge": 0,
-        "maxAge": 99,
-        "minReputation": 0,
-        "cleanRecord": false,
-        "licenses": []
-      },
-      "effects": {
-        "happiness": -2
-      },
-      "packId": "base"
-    },
-    {
-      "id": "student",
-      "title": "Studente",
-      "category": "education",
-      "contractType": "student",
-      "salaryMin": 0,
-      "salaryMax": 0,
-      "stressLevel": 30,
-      "promotionChance": 0,
-      "requirements": {
-        "education": "none",
-        "minAge": 6,
-        "maxAge": 30,
-        "minReputation": 0,
-        "cleanRecord": false,
-        "licenses": []
-      },
-      "effects": {
-        "intelligence": 2
-      },
-      "packId": "base"
-    },
-    {
-      "id": "cashier",
-      "title": "Cassiere",
-      "category": "retail",
-      "contractType": "part_time",
-      "salaryMin": 800,
-      "salaryMax": 1200,
-      "stressLevel": 40,
-      "promotionChance": 0.05,
-      "requirements": {
-        "education": "none",
-        "minAge": 16,
-        "maxAge": 99,
-        "minReputation": 0,
-        "cleanRecord": false,
-        "licenses": []
-      },
-      "effects": {
-        "energy": -5,
-        "socialReputation": 1
-      },
-      "packId": "base"
-    },
-    {
-      "id": "teacher",
-      "title": "Insegnante",
-      "category": "education",
-      "contractType": "full_time",
-      "salaryMin": 1800,
-      "salaryMax": 3000,
-      "stressLevel": 55,
-      "promotionChance": 0.08,
-      "requirements": {
-        "education": "bachelor",
-        "minAge": 23,
-        "maxAge": 65,
-        "minReputation": 30,
-        "cleanRecord": true,
-        "licenses": []
-      },
-      "effects": {
-        "energy": -8,
-        "intelligence": 1,
-        "socialReputation": 2
-      },
-      "packId": "base"
-    },
-    {
-      "id": "programmer",
-      "title": "Programmatore",
-      "category": "tech",
-      "contractType": "full_time",
-      "salaryMin": 3000,
-      "salaryMax": 7000,
-      "stressLevel": 50,
-      "promotionChance": 0.12,
-      "requirements": {
-        "education": "bachelor",
-        "minAge": 22,
-        "maxAge": 99,
-        "minReputation": 0,
-        "cleanRecord": false,
-        "licenses": []
-      },
-      "effects": {
-        "energy": -6,
-        "intelligence": 2
-      },
-      "packId": "base"
-    },
-    {
-      "id": "doctor",
-      "title": "Medico",
-      "category": "medical",
-      "contractType": "full_time",
-      "salaryMin": 4000,
-      "salaryMax": 12000,
-      "stressLevel": 70,
-      "promotionChance": 0.06,
-      "requirements": {
-        "education": "medical",
-        "minAge": 28,
-        "maxAge": 70,
-        "minReputation": 50,
-        "cleanRecord": true,
-        "licenses": ["medical_license"]
-      },
-      "effects": {
-        "energy": -10,
-        "reputation": 3,
-        "socialReputation": 3
-      },
-      "packId": "base"
-    },
-    {
-      "id": "lawyer",
-      "title": "Avvocato",
-      "category": "legal",
-      "contractType": "full_time",
-      "salaryMin": 3500,
-      "salaryMax": 15000,
-      "stressLevel": 65,
-      "promotionChance": 0.08,
-      "requirements": {
-        "education": "law",
-        "minAge": 26,
-        "maxAge": 70,
-        "minReputation": 40,
-        "cleanRecord": true,
-        "licenses": ["bar_license"]
-      },
-      "effects": {
-        "energy": -8,
-        "reputation": 2,
-        "intelligence": 1
-      },
-      "packId": "base"
-    },
-    {
-      "id": "criminal_petty",
-      "title": "Criminale (Piccolo)",
-      "category": "criminal",
-      "contractType": "freelance",
-      "salaryMin": 500,
-      "salaryMax": 3000,
-      "stressLevel": 80,
-      "promotionChance": 0.15,
-      "requirements": {
-        "education": "none",
-        "minAge": 14,
-        "maxAge": 99,
-        "minReputation": 0,
-        "cleanRecord": false,
-        "licenses": []
-      },
-      "effects": {
-        "karma": -5,
-        "reputation": -3,
-        "mentalHealth": -2
-      },
-      "packId": "base"
-    }
+    { "id": "unemployed", "title": "Disoccupato", "category": "none", "contractType": "unemployed", "salaryMin": 0, "salaryMax": 0, "stressLevel": 20, "promotionChance": 0, "requirements": { "education": "none", "minAge": 0, "maxAge": 99, "minReputation": 0, "cleanRecord": false, "licenses": [] }, "effects": { "happiness": -2 }, "packId": "base" },
+    { "id": "student", "title": "Studente", "category": "education", "contractType": "student", "salaryMin": 0, "salaryMax": 0, "stressLevel": 30, "promotionChance": 0, "requirements": { "education": "none", "minAge": 6, "maxAge": 30, "minReputation": 0, "cleanRecord": false, "licenses": [] }, "effects": { "intelligence": 2 }, "packId": "base" },
+    { "id": "babysitter", "title": "Babysitter", "category": "care", "contractType": "part_time", "salaryMin": 400, "salaryMax": 800, "stressLevel": 25, "promotionChance": 0.02, "requirements": { "education": "none", "minAge": 14, "maxAge": 35, "minReputation": 0, "cleanRecord": true, "licenses": [] }, "effects": { "happiness": 3, "socialReputation": 1 }, "packId": "base" },
+    { "id": "cashier", "title": "Cassiere", "category": "retail", "contractType": "part_time", "salaryMin": 800, "salaryMax": 1200, "stressLevel": 40, "promotionChance": 0.05, "requirements": { "education": "none", "minAge": 16, "maxAge": 99, "minReputation": 0, "cleanRecord": false, "licenses": [] }, "effects": { "energy": -5, "socialReputation": 1 }, "packId": "base" },
+    { "id": "barista", "title": "Barista", "category": "food", "contractType": "part_time", "salaryMin": 900, "salaryMax": 1400, "stressLevel": 45, "promotionChance": 0.04, "requirements": { "education": "none", "minAge": 16, "maxAge": 99, "minReputation": 0, "cleanRecord": false, "licenses": [] }, "effects": { "energy": -6, "socialReputation": 2 }, "packId": "base" },
+    { "id": "delivery_rider", "title": "Fattorino", "category": "logistics", "contractType": "freelance", "salaryMin": 700, "salaryMax": 1500, "stressLevel": 35, "promotionChance": 0.02, "requirements": { "education": "none", "minAge": 16, "maxAge": 55, "minReputation": 0, "cleanRecord": false, "licenses": [] }, "effects": { "health": 2, "energy": -8 }, "packId": "base" },
+    { "id": "mechanic", "title": "Meccanico", "category": "technical", "contractType": "full_time", "salaryMin": 1500, "salaryMax": 2800, "stressLevel": 45, "promotionChance": 0.06, "requirements": { "education": "vocational", "minAge": 18, "maxAge": 99, "minReputation": 0, "cleanRecord": false, "licenses": [] }, "effects": { "energy": -7, "health": -2 }, "packId": "base" },
+    { "id": "chef", "title": "Chef", "category": "food", "contractType": "full_time", "salaryMin": 1800, "salaryMax": 4000, "stressLevel": 65, "promotionChance": 0.07, "requirements": { "education": "vocational", "minAge": 18, "maxAge": 99, "minReputation": 20, "cleanRecord": false, "licenses": [] }, "effects": { "energy": -9, "happiness": 3 }, "packId": "base" },
+    { "id": "nurse", "title": "Infermiere/a", "category": "medical", "contractType": "full_time", "salaryMin": 2000, "salaryMax": 3500, "stressLevel": 70, "promotionChance": 0.06, "requirements": { "education": "bachelor", "minAge": 22, "maxAge": 70, "minReputation": 20, "cleanRecord": true, "licenses": [] }, "effects": { "energy": -9, "reputation": 2 }, "packId": "base" },
+    { "id": "accountant", "title": "Contabile", "category": "finance", "contractType": "full_time", "salaryMin": 2200, "salaryMax": 4500, "stressLevel": 50, "promotionChance": 0.08, "requirements": { "education": "bachelor", "minAge": 22, "maxAge": 99, "minReputation": 0, "cleanRecord": false, "licenses": [] }, "effects": { "energy": -6, "intelligence": 1 }, "packId": "base" },
+    { "id": "journalist", "title": "Giornalista", "category": "media", "contractType": "full_time", "salaryMin": 1800, "salaryMax": 4000, "stressLevel": 60, "promotionChance": 0.09, "requirements": { "education": "bachelor", "minAge": 22, "maxAge": 99, "minReputation": 30, "cleanRecord": false, "licenses": [] }, "effects": { "energy": -7, "socialReputation": 3 }, "packId": "base" },
+    { "id": "designer", "title": "Graphic Designer", "category": "creative", "contractType": "freelance", "salaryMin": 1500, "salaryMax": 5000, "stressLevel": 40, "promotionChance": 0.10, "requirements": { "education": "bachelor", "minAge": 21, "maxAge": 99, "minReputation": 0, "cleanRecord": false, "licenses": [] }, "effects": { "intelligence": 1, "happiness": 3 }, "packId": "base" },
+    { "id": "police", "title": "Agente di Polizia", "category": "public", "contractType": "full_time", "salaryMin": 1800, "salaryMax": 3200, "stressLevel": 70, "promotionChance": 0.05, "requirements": { "education": "highschool", "minAge": 20, "maxAge": 45, "minReputation": 40, "cleanRecord": true, "licenses": [] }, "effects": { "energy": -9, "reputation": 3, "karma": 2 }, "packId": "base" },
+    { "id": "social_worker", "title": "Assistente Sociale", "category": "care", "contractType": "full_time", "salaryMin": 1600, "salaryMax": 2800, "stressLevel": 65, "promotionChance": 0.05, "requirements": { "education": "bachelor", "minAge": 23, "maxAge": 99, "minReputation": 25, "cleanRecord": true, "licenses": [] }, "effects": { "karma": 5, "mentalHealth": -3 }, "packId": "base" },
+    { "id": "architect", "title": "Architetto", "category": "technical", "contractType": "freelance", "salaryMin": 2500, "salaryMax": 8000, "stressLevel": 55, "promotionChance": 0.08, "requirements": { "education": "master", "minAge": 25, "maxAge": 99, "minReputation": 20, "cleanRecord": false, "licenses": [] }, "effects": { "intelligence": 2, "reputation": 2 }, "packId": "base" },
+    { "id": "psychologist", "title": "Psicologo", "category": "medical", "contractType": "full_time", "salaryMin": 2500, "salaryMax": 7000, "stressLevel": 55, "promotionChance": 0.06, "requirements": { "education": "master", "minAge": 25, "maxAge": 70, "minReputation": 30, "cleanRecord": true, "licenses": [] }, "effects": { "mentalHealth": 3, "reputation": 2 }, "packId": "base" },
+    { "id": "manager", "title": "Manager", "category": "business", "contractType": "full_time", "salaryMin": 4000, "salaryMax": 10000, "stressLevel": 75, "promotionChance": 0.10, "requirements": { "education": "master", "minAge": 28, "maxAge": 65, "minReputation": 50, "cleanRecord": false, "licenses": [] }, "effects": { "energy": -10, "reputation": 4 }, "packId": "base" },
+    { "id": "programmer", "title": "Programmatore", "category": "tech", "contractType": "full_time", "salaryMin": 3000, "salaryMax": 7000, "stressLevel": 50, "promotionChance": 0.12, "requirements": { "education": "bachelor", "minAge": 22, "maxAge": 99, "minReputation": 0, "cleanRecord": false, "licenses": [] }, "effects": { "energy": -6, "intelligence": 2 }, "packId": "base" },
+    { "id": "teacher", "title": "Insegnante", "category": "education", "contractType": "full_time", "salaryMin": 1800, "salaryMax": 3000, "stressLevel": 55, "promotionChance": 0.08, "requirements": { "education": "bachelor", "minAge": 23, "maxAge": 65, "minReputation": 30, "cleanRecord": true, "licenses": [] }, "effects": { "energy": -8, "intelligence": 1, "socialReputation": 2 }, "packId": "base" },
+    { "id": "doctor", "title": "Medico", "category": "medical", "contractType": "full_time", "salaryMin": 4000, "salaryMax": 12000, "stressLevel": 70, "promotionChance": 0.06, "requirements": { "education": "medical", "minAge": 28, "maxAge": 70, "minReputation": 50, "cleanRecord": true, "licenses": ["medical_license"] }, "effects": { "energy": -10, "reputation": 3, "socialReputation": 3 }, "packId": "base" },
+    { "id": "lawyer", "title": "Avvocato", "category": "legal", "contractType": "full_time", "salaryMin": 3500, "salaryMax": 15000, "stressLevel": 65, "promotionChance": 0.08, "requirements": { "education": "law", "minAge": 26, "maxAge": 70, "minReputation": 40, "cleanRecord": true, "licenses": ["bar_license"] }, "effects": { "energy": -8, "reputation": 2, "intelligence": 1 }, "packId": "base" },
+    { "id": "criminal_petty", "title": "Criminale (Piccolo)", "category": "criminal", "contractType": "freelance", "salaryMin": 500, "salaryMax": 3000, "stressLevel": 80, "promotionChance": 0.15, "requirements": { "education": "none", "minAge": 14, "maxAge": 99, "minReputation": 0, "cleanRecord": false, "licenses": [] }, "effects": { "karma": -5, "reputation": -3, "mentalHealth": -2 }, "packId": "base" }
   ],
   "characters": [
-    {
-      "id": "npc_template",
-      "name": "Template NPC",
-      "age": 30,
-      "gender": "male",
-      "nationality": "italy",
-      "intelligence": 50,
-      "looks": 50,
-      "health": 70,
-      "happiness": 60,
-      "trust": 50,
-      "jealousy": 0,
-      "attraction": 0,
-      "love": 0,
-      "respect": 50,
-      "toxicityTag": false,
-      "historyFlags": [],
-      "memoryLog": [],
-      "relationshipType": "acquaintance",
-      "relationshipStage": "stranger",
-      "personality": {
-        "openness": 50,
-        "conscientiousness": 50,
-        "extraversion": 50,
-        "agreeableness": 50,
-        "neuroticism": 50
-      }
-    }
+    { "id": "npc_anna", "name": "Anna Rossi", "age": 28, "gender": "female", "nationality": "italy", "intelligence": 65, "looks": 70, "health": 80, "happiness": 75, "trust": 50, "jealousy": 10, "attraction": 60, "love": 0, "respect": 55, "toxicityTag": false, "historyFlags": [], "memoryLog": [], "relationshipType": "stranger", "relationshipStage": "stranger" },
+    { "id": "npc_marco", "name": "Marco Ferrari", "age": 32, "gender": "male", "nationality": "italy", "intelligence": 70, "looks": 55, "health": 75, "happiness": 60, "trust": 55, "jealousy": 20, "attraction": 40, "love": 0, "respect": 60, "toxicityTag": false, "historyFlags": [], "memoryLog": [], "relationshipType": "stranger", "relationshipStage": "stranger" },
+    { "id": "npc_yuki", "name": "Yuki Tanaka", "age": 25, "gender": "female", "nationality": "japan", "intelligence": 80, "looks": 75, "health": 85, "happiness": 70, "trust": 45, "jealousy": 5, "attraction": 70, "love": 0, "respect": 65, "toxicityTag": false, "historyFlags": [], "memoryLog": [], "relationshipType": "stranger", "relationshipStage": "stranger" },
+    { "id": "npc_luca", "name": "Luca Bianchi", "age": 30, "gender": "male", "nationality": "italy", "intelligence": 55, "looks": 60, "health": 70, "happiness": 55, "trust": 50, "jealousy": 30, "attraction": 35, "love": 0, "respect": 50, "toxicityTag": true, "historyFlags": [], "memoryLog": [], "relationshipType": "stranger", "relationshipStage": "stranger" },
+    { "id": "npc_sofia", "name": "Sofia Greco", "age": 22, "gender": "female", "nationality": "italy", "intelligence": 72, "looks": 80, "health": 90, "happiness": 80, "trust": 60, "jealousy": 15, "attraction": 75, "love": 0, "respect": 70, "toxicityTag": false, "historyFlags": [], "memoryLog": [], "relationshipType": "stranger", "relationshipStage": "stranger" }
   ],
   "events": [
-    {
-      "id": "ev_birth",
-      "title": "Inizio Vita",
-      "description": "Sei nato/a. La tua storia inizia ora.",
-      "emoji": "👶",
-      "triggerCondition": "age == 0",
-      "minAge": 0,
-      "maxAge": 0,
-      "probability": 1.0,
-      "packId": "base",
-      "rarity": "common",
-      "isHistorical": false,
-      "choiceIds": ["ev_birth_c1"]
-    },
-    {
-      "id": "ev_school_start",
-      "title": "Primo Giorno di Scuola",
-      "description": "È il momento di iniziare le elementari. Sei emozionato/a?",
-      "emoji": "📚",
-      "triggerCondition": "age == 6",
-      "minAge": 6,
-      "maxAge": 6,
-      "probability": 0.95,
-      "packId": "base",
-      "rarity": "common",
-      "isHistorical": false,
-      "choiceIds": ["school_start_c1", "school_start_c2"]
-    },
-    {
-      "id": "ev_first_job",
-      "title": "Prima Opportunità di Lavoro",
-      "description": "Hai trovato un annuncio per un lavoro part-time. Lo accetti?",
-      "emoji": "💼",
-      "triggerCondition": "age >= 16 && job == null",
-      "minAge": 16,
-      "maxAge": 25,
-      "probability": 0.4,
-      "packId": "base",
-      "rarity": "common",
-      "isHistorical": false,
-      "choiceIds": ["first_job_c1", "first_job_c2"]
-    },
-    {
-      "id": "ev_found_money",
-      "title": "Soldi Trovati",
-      "description": "Hai trovato €50 sul pavimento. Cosa fai?",
-      "emoji": "💰",
-      "triggerCondition": "age >= 10",
-      "minAge": 10,
-      "maxAge": 99,
-      "probability": 0.15,
-      "packId": "base",
-      "rarity": "common",
-      "isHistorical": false,
-      "choiceIds": ["found_money_c1", "found_money_c2"]
-    },
-    {
-      "id": "ev_sick",
-      "title": "Malato",
-      "description": "Ti senti male. Hai la febbre alta.",
-      "emoji": "🤒",
-      "triggerCondition": "age >= 5 && health < 60",
-      "minAge": 5,
-      "maxAge": 99,
-      "probability": 0.25,
-      "packId": "base",
-      "rarity": "common",
-      "isHistorical": false,
-      "choiceIds": ["sick_c1", "sick_c2"]
-    },
-    {
-      "id": "ev_car_accident",
-      "title": "Incidente Stradale",
-      "description": "Mentre torni a casa sei coinvolto/a in un incidente stradale.",
-      "emoji": "🚗",
-      "triggerCondition": "age >= 18",
-      "minAge": 18,
-      "maxAge": 80,
-      "probability": 0.05,
-      "packId": "base",
-      "rarity": "rare",
-      "isHistorical": false,
-      "choiceIds": ["accident_c1", "accident_c2"]
-    },
-    {
-      "id": "ev_moon_landing",
-      "title": "Allunaggio",
-      "description": "L'uomo ha appena messo piede sulla Luna! È un momento storico.",
-      "emoji": "🌙",
-      "triggerCondition": "year == 1969",
-      "minAge": 1,
-      "maxAge": 99,
-      "probability": 1.0,
-      "packId": "base",
-      "rarity": "legendary",
-      "isHistorical": true,
-      "year": 1969,
-      "choiceIds": ["moon_c1"]
-    },
-    {
-      "id": "ev_iphone",
-      "title": "Lancio iPhone",
-      "description": "Apple ha appena presentato l'iPhone. Il mondo della tecnologia cambierà per sempre.",
-      "emoji": "📱",
-      "triggerCondition": "year == 2007",
-      "minAge": 1,
-      "maxAge": 99,
-      "probability": 1.0,
-      "packId": "base",
-      "rarity": "legendary",
-      "isHistorical": true,
-      "year": 2007,
-      "choiceIds": ["iphone_c1", "iphone_c2"]
-    },
-    {
-      "id": "ev_financial_crisis",
-      "title": "Crisi Finanziaria Mondiale",
-      "description": "Una grave crisi finanziaria ha colpito l'economia globale. I mercati sono in caduta libera.",
-      "emoji": "📉",
-      "triggerCondition": "year == 2008",
-      "minAge": 1,
-      "maxAge": 99,
-      "probability": 1.0,
-      "packId": "base",
-      "rarity": "legendary",
-      "isHistorical": true,
-      "year": 2008,
-      "choiceIds": ["crisis_c1", "crisis_c2"]
-    },
-    {
-      "id": "ev_covid",
-      "title": "Pandemia COVID-19",
-      "description": "Una pandemia globale ha costretto il mondo in lockdown.",
-      "emoji": "😷",
-      "triggerCondition": "year == 2020",
-      "minAge": 1,
-      "maxAge": 99,
-      "probability": 1.0,
-      "packId": "base",
-      "rarity": "legendary",
-      "isHistorical": true,
-      "year": 2020,
-      "choiceIds": ["covid_c1", "covid_c2", "covid_c3"]
-    },
-    {
-      "id": "ev_ai_revolution",
-      "title": "Rivoluzione AI",
-      "description": "L'intelligenza artificiale ha trasformato il mercato del lavoro. Molti lavori tradizionali sono scomparsi.",
-      "emoji": "🤖",
-      "triggerCondition": "year == 2023",
-      "minAge": 1,
-      "maxAge": 99,
-      "probability": 1.0,
-      "packId": "base",
-      "rarity": "legendary",
-      "isHistorical": true,
-      "year": 2023,
-      "choiceIds": ["ai_c1", "ai_c2"]
-    }
+    { "id": "ev_birth", "title": "Inizio Vita", "description": "Sei nato/a. La tua storia inizia ora.", "emoji": "👶", "triggerCondition": "age == 0", "minAge": 0, "maxAge": 0, "probability": 1.0, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["ev_birth_c1"] },
+    { "id": "ev_school_start", "title": "Primo Giorno di Scuola", "description": "È il momento di iniziare le elementari. Sei emozionato/a?", "emoji": "📚", "triggerCondition": "age == 6", "minAge": 6, "maxAge": 6, "probability": 0.95, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["school_start_c1", "school_start_c2"] },
+    { "id": "ev_puberty", "title": "Pubertà", "description": "Il tuo corpo sta cambiando. È un momento confuso ma entusiasmante.", "emoji": "🌱", "triggerCondition": "age >= 12 && age <= 14", "minAge": 12, "maxAge": 14, "probability": 0.85, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["puberty_c1", "puberty_c2"] },
+    { "id": "ev_first_crush", "title": "Prima Cotta", "description": "Hai sviluppato sentimenti per qualcuno. Il cuore batte forte.", "emoji": "💕", "triggerCondition": "age >= 13 && age <= 17", "minAge": 13, "maxAge": 17, "probability": 0.6, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["crush_c1", "crush_c2"] },
+    { "id": "ev_first_job", "title": "Prima Opportunità di Lavoro", "description": "Hai trovato un annuncio per un lavoro part-time. Lo accetti?", "emoji": "💼", "triggerCondition": "age >= 16", "minAge": 16, "maxAge": 25, "probability": 0.4, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["first_job_c1", "first_job_c2"] },
+    { "id": "ev_found_money", "title": "Soldi Trovati", "description": "Hai trovato €50 sul pavimento. Cosa fai?", "emoji": "💰", "triggerCondition": "age >= 10", "minAge": 10, "maxAge": 99, "probability": 0.15, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["found_money_c1", "found_money_c2"] },
+    { "id": "ev_sick", "title": "Malato", "description": "Ti senti male. Hai la febbre alta.", "emoji": "🤒", "triggerCondition": "health < 60", "minAge": 5, "maxAge": 99, "probability": 0.25, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["sick_c1", "sick_c2"] },
+    { "id": "ev_heartbreak", "title": "Cuore Spezzato", "description": "La persona che ami ti ha lasciato. Il dolore è intenso.", "emoji": "💔", "triggerCondition": "age >= 16 && happiness < 50", "minAge": 16, "maxAge": 60, "probability": 0.2, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["heartbreak_c1", "heartbreak_c2"] },
+    { "id": "ev_graduation", "title": "Diplomato!", "description": "Hai conseguito il diploma di liceo. Un traguardo importante.", "emoji": "🎓", "triggerCondition": "age >= 18 && age <= 20", "minAge": 18, "maxAge": 20, "probability": 0.5, "packId": "base", "rarity": "rare", "isHistorical": false, "choiceIds": ["grad_c1", "grad_c2"] },
+    { "id": "ev_moving_out", "title": "Lasci Casa", "description": "È tempo di andare a vivere da solo/a. Un grande passo verso l'indipendenza.", "emoji": "🏠", "triggerCondition": "age >= 18 && age <= 25", "minAge": 18, "maxAge": 25, "probability": 0.3, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["movout_c1", "movout_c2"] },
+    { "id": "ev_car_accident", "title": "Incidente Stradale", "description": "Mentre torni a casa sei coinvolto/a in un incidente stradale.", "emoji": "🚗", "triggerCondition": "age >= 18", "minAge": 18, "maxAge": 80, "probability": 0.05, "packId": "base", "rarity": "rare", "isHistorical": false, "choiceIds": ["accident_c1", "accident_c2"] },
+    { "id": "ev_midlife_crisis", "title": "Crisi di Mezza Età", "description": "Ti chiedi se hai fatto le scelte giuste nella vita. Un momento di riflessione profonda.", "emoji": "🤔", "triggerCondition": "age >= 40 && age <= 50", "minAge": 40, "maxAge": 50, "probability": 0.35, "packId": "base", "rarity": "rare", "isHistorical": false, "choiceIds": ["midlife_c1", "midlife_c2", "midlife_c3"] },
+    { "id": "ev_startup", "title": "Opportunità Startup", "description": "Un amico ti propone di co-fondare una startup. È un rischio ma potrebbe cambiare la tua vita.", "emoji": "🚀", "triggerCondition": "age >= 22 && age <= 40", "minAge": 22, "maxAge": 40, "probability": 0.12, "packId": "base", "rarity": "rare", "isHistorical": false, "choiceIds": ["startup_c1", "startup_c2"] },
+    { "id": "ev_pet_adoption", "title": "Adozione Animale", "description": "Hai trovato un cucciolo abbandonato. Lo adotti?", "emoji": "🐕", "triggerCondition": "age >= 18", "minAge": 18, "maxAge": 70, "probability": 0.18, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["pet_c1", "pet_c2"] },
+    { "id": "ev_inheritance", "title": "Eredità Inaspettata", "description": "Un parente lontano è deceduto e ti ha lasciato un'eredità.", "emoji": "📜", "triggerCondition": "age >= 25", "minAge": 25, "maxAge": 80, "probability": 0.08, "packId": "base", "rarity": "rare", "isHistorical": false, "choiceIds": ["inherit_c1", "inherit_c2"] },
+    { "id": "ev_scholarship", "title": "Borsa di Studio", "description": "Sei stato/a selezionato/a per una borsa di studio! È un riconoscimento del tuo impegno.", "emoji": "🏆", "triggerCondition": "intelligence >= 65 && age >= 16 && age <= 25", "minAge": 16, "maxAge": 25, "probability": 0.15, "packId": "base", "rarity": "rare", "isHistorical": false, "choiceIds": ["scholar_c1"] },
+    { "id": "ev_viral_post", "title": "Post Virale!", "description": "Un tuo contenuto è diventato virale sui social media. Migliaia di like!", "emoji": "🌐", "triggerCondition": "age >= 16", "minAge": 16, "maxAge": 99, "probability": 0.08, "packId": "base", "rarity": "rare", "isHistorical": false, "choiceIds": ["viral_c1", "viral_c2"] },
+    { "id": "ev_natural_disaster", "title": "Catastrofe Naturale", "description": "Un terremoto ha colpito la tua regione. Tutto trema.", "emoji": "🌋", "triggerCondition": "age >= 5", "minAge": 5, "maxAge": 99, "probability": 0.03, "packId": "base", "rarity": "epic", "isHistorical": false, "choiceIds": ["disaster_c1", "disaster_c2"] },
+    { "id": "ev_betrayal", "title": "Tradimento di un Amico", "description": "Un amico fidato ti ha pugnalato alle spalle. Hai scoperto che ha mentito su qualcosa di importante.", "emoji": "🗡️", "triggerCondition": "age >= 18", "minAge": 18, "maxAge": 99, "probability": 0.10, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["betray_c1", "betray_c2"] },
+    { "id": "ev_bonus", "title": "Bonus di Fine Anno", "description": "La tua azienda ti ha assegnato un bonus per i buoni risultati.", "emoji": "🎁", "triggerCondition": "hasJob == true", "minAge": 18, "maxAge": 70, "probability": 0.3, "packId": "base", "rarity": "common", "isHistorical": false, "choiceIds": ["bonus_c1"] },
+    { "id": "ev_moon_landing", "title": "Allunaggio", "description": "L'uomo ha appena messo piede sulla Luna! È un momento storico.", "emoji": "🌙", "triggerCondition": "year == 1969", "minAge": 1, "maxAge": 99, "probability": 1.0, "packId": "base", "rarity": "legendary", "isHistorical": true, "year": 1969, "choiceIds": ["moon_c1"] },
+    { "id": "ev_iphone", "title": "Lancio iPhone", "description": "Apple ha appena presentato l'iPhone. Il mondo della tecnologia cambierà per sempre.", "emoji": "📱", "triggerCondition": "year == 2007", "minAge": 1, "maxAge": 99, "probability": 1.0, "packId": "base", "rarity": "legendary", "isHistorical": true, "year": 2007, "choiceIds": ["iphone_c1", "iphone_c2"] },
+    { "id": "ev_financial_crisis", "title": "Crisi Finanziaria Mondiale", "description": "Una grave crisi finanziaria ha colpito l'economia globale. I mercati sono in caduta libera.", "emoji": "📉", "triggerCondition": "year == 2008", "minAge": 1, "maxAge": 99, "probability": 1.0, "packId": "base", "rarity": "legendary", "isHistorical": true, "year": 2008, "choiceIds": ["crisis_c1", "crisis_c2"] },
+    { "id": "ev_covid", "title": "Pandemia COVID-19", "description": "Una pandemia globale ha costretto il mondo in lockdown.", "emoji": "😷", "triggerCondition": "year == 2020", "minAge": 1, "maxAge": 99, "probability": 1.0, "packId": "base", "rarity": "legendary", "isHistorical": true, "year": 2020, "choiceIds": ["covid_c1", "covid_c2", "covid_c3"] },
+    { "id": "ev_ai_revolution", "title": "Rivoluzione AI", "description": "L'intelligenza artificiale ha trasformato il mercato del lavoro. Molti lavori tradizionali sono scomparsi.", "emoji": "🤖", "triggerCondition": "year == 2023", "minAge": 1, "maxAge": 99, "probability": 1.0, "packId": "base", "rarity": "legendary", "isHistorical": true, "year": 2023, "choiceIds": ["ai_c1", "ai_c2"] }
   ],
   "choices": [
-    {
-      "id": "ev_birth_c1",
-      "eventId": "ev_birth",
-      "text": "Inizia la tua storia",
-      "effects": { "happiness": 5 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "school_start_c1",
-      "eventId": "ev_school_start",
-      "text": "Vai a scuola con entusiasmo",
-      "effects": { "intelligence": 3, "happiness": 2 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "school_start_c2",
-      "eventId": "ev_school_start",
-      "text": "Vai a scuola di malavoglia",
-      "effects": { "intelligence": 1, "happiness": -2 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "first_job_c1",
-      "eventId": "ev_first_job",
-      "text": "Accetti il lavoro",
-      "effects": { "money": 800, "energy": -10, "socialReputation": 2 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "first_job_c2",
-      "eventId": "ev_first_job",
-      "text": "Rifiuti, preferisci studiare",
-      "effects": { "intelligence": 3 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "found_money_c1",
-      "eventId": "ev_found_money",
-      "text": "Prendi i soldi",
-      "effects": { "money": 50, "karma": -2 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "found_money_c2",
-      "eventId": "ev_found_money",
-      "text": "Li lasci dove sono",
-      "effects": { "karma": 5, "happiness": 3 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "sick_c1",
-      "eventId": "ev_sick",
-      "text": "Vai dal medico",
-      "effects": { "health": 15, "money": -80 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "sick_c2",
-      "eventId": "ev_sick",
-      "text": "Riposa a casa",
-      "effects": { "health": 8, "happiness": -5 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "accident_c1",
-      "eventId": "ev_car_accident",
-      "text": "Chiami il soccorso",
-      "effects": { "health": -15, "money": -2000 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "accident_c2",
-      "eventId": "ev_car_accident",
-      "text": "Ti allontani dalla scena",
-      "effects": { "health": -20, "karma": -15, "reputation": -10 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "moon_c1",
-      "eventId": "ev_moon_landing",
-      "text": "Guardi l'allunaggio in TV",
-      "effects": { "happiness": 5, "intelligence": 2 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "iphone_c1",
-      "eventId": "ev_iphone",
-      "text": "Acquisti un iPhone",
-      "effects": { "happiness": 10, "money": -599, "socialReputation": 3 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "iphone_c2",
-      "eventId": "ev_iphone",
-      "text": "Non ti interessa la tecnologia",
-      "effects": { "karma": 2 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "crisis_c1",
-      "eventId": "ev_financial_crisis",
-      "text": "Ritiri i risparmi dalla banca",
-      "effects": { "money": 500, "happiness": -10 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "crisis_c2",
-      "eventId": "ev_financial_crisis",
-      "text": "Investi in azioni a prezzi bassi",
-      "effects": { "money": -2000, "happiness": -5 },
-      "requirements": [{ "stat": "money", "operator": ">=", "value": 2000 }],
-      "packId": "base"
-    },
-    {
-      "id": "covid_c1",
-      "eventId": "ev_covid",
-      "text": "Segui il lockdown rigorosamente",
-      "effects": { "health": 5, "happiness": -15, "karma": 5 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "covid_c2",
-      "eventId": "ev_covid",
-      "text": "Ignori le restrizioni",
-      "effects": { "health": -10, "karma": -10, "reputation": -5 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "covid_c3",
-      "eventId": "ev_covid",
-      "text": "Fai volontariato medico",
-      "effects": { "health": -5, "karma": 20, "reputation": 10, "happiness": 5 },
-      "requirements": [{ "stat": "age", "operator": ">=", "value": 18 }],
-      "packId": "base"
-    },
-    {
-      "id": "ai_c1",
-      "eventId": "ev_ai_revolution",
-      "text": "Impari a usare l'AI per il tuo lavoro",
-      "effects": { "intelligence": 5, "money": 1000 },
-      "requirements": [],
-      "packId": "base"
-    },
-    {
-      "id": "ai_c2",
-      "eventId": "ev_ai_revolution",
-      "text": "Protesti contro l'automazione",
-      "effects": { "happiness": -5, "reputation": 3, "karma": 3 },
-      "requirements": [],
-      "packId": "base"
-    }
+    { "id": "ev_birth_c1", "eventId": "ev_birth", "text": "Inizia la tua storia", "effects": { "happiness": 5 }, "requirements": [], "packId": "base" },
+    { "id": "school_start_c1", "eventId": "ev_school_start", "text": "Vai a scuola con entusiasmo", "effects": { "intelligence": 3, "happiness": 2 }, "requirements": [], "packId": "base" },
+    { "id": "school_start_c2", "eventId": "ev_school_start", "text": "Vai a scuola di malavoglia", "effects": { "intelligence": 1, "happiness": -2 }, "requirements": [], "packId": "base" },
+    { "id": "puberty_c1", "eventId": "ev_puberty", "text": "Accetti i cambiamenti con serenità", "effects": { "mentalHealth": 3, "happiness": 2 }, "requirements": [], "packId": "base" },
+    { "id": "puberty_c2", "eventId": "ev_puberty", "text": "Ti senti a disagio con il tuo corpo", "effects": { "mentalHealth": -5, "happiness": -3, "socialReputation": -2 }, "requirements": [], "packId": "base" },
+    { "id": "crush_c1", "eventId": "ev_first_crush", "text": "Confessi i tuoi sentimenti", "effects": { "happiness": 8, "mentalHealth": 3 }, "requirements": [], "packId": "base" },
+    { "id": "crush_c2", "eventId": "ev_first_crush", "text": "Li tieni segreti", "effects": { "happiness": -3, "intelligence": 2 }, "requirements": [], "packId": "base" },
+    { "id": "first_job_c1", "eventId": "ev_first_job", "text": "Accetti il lavoro", "effects": { "money": 800, "energy": -10, "socialReputation": 2 }, "requirements": [], "packId": "base" },
+    { "id": "first_job_c2", "eventId": "ev_first_job", "text": "Rifiuti, preferisci studiare", "effects": { "intelligence": 3 }, "requirements": [], "packId": "base" },
+    { "id": "found_money_c1", "eventId": "ev_found_money", "text": "Prendi i soldi", "effects": { "money": 50, "karma": -2 }, "requirements": [], "packId": "base" },
+    { "id": "found_money_c2", "eventId": "ev_found_money", "text": "Li lasci dove sono", "effects": { "karma": 5, "happiness": 3 }, "requirements": [], "packId": "base" },
+    { "id": "sick_c1", "eventId": "ev_sick", "text": "Vai dal medico", "effects": { "health": 15, "money": -80 }, "requirements": [], "packId": "base" },
+    { "id": "sick_c2", "eventId": "ev_sick", "text": "Riposa a casa", "effects": { "health": 8, "happiness": -5 }, "requirements": [], "packId": "base" },
+    { "id": "heartbreak_c1", "eventId": "ev_heartbreak", "text": "Piangi e cerchi supporto dagli amici", "effects": { "mentalHealth": -8, "happiness": -10, "socialReputation": 2 }, "requirements": [], "packId": "base" },
+    { "id": "heartbreak_c2", "eventId": "ev_heartbreak", "text": "Ti butti nel lavoro e studio", "effects": { "intelligence": 3, "mentalHealth": -5, "happiness": -8 }, "requirements": [], "packId": "base" },
+    { "id": "grad_c1", "eventId": "ev_graduation", "text": "Festeggi con famiglia e amici", "effects": { "happiness": 15, "socialReputation": 5, "money": -200 }, "requirements": [], "packId": "base" },
+    { "id": "grad_c2", "eventId": "ev_graduation", "text": "Subito all'università", "effects": { "intelligence": 3, "happiness": 5 }, "requirements": [], "packId": "base" },
+    { "id": "movout_c1", "eventId": "ev_moving_out", "text": "Ti trasferisci in un appartamento con coinquilini", "effects": { "happiness": 10, "money": -5000, "socialReputation": 3 }, "requirements": [{ "stat": "money", "operator": ">=", "value": 5000 }], "packId": "base" },
+    { "id": "movout_c2", "eventId": "ev_moving_out", "text": "Rimani ancora un anno dai genitori", "effects": { "happiness": -3, "money": 2000 }, "requirements": [], "packId": "base" },
+    { "id": "accident_c1", "eventId": "ev_car_accident", "text": "Chiami il soccorso", "effects": { "health": -15, "money": -2000 }, "requirements": [], "packId": "base" },
+    { "id": "accident_c2", "eventId": "ev_car_accident", "text": "Ti allontani dalla scena", "effects": { "health": -20, "karma": -15, "reputation": -10 }, "requirements": [], "packId": "base" },
+    { "id": "midlife_c1", "eventId": "ev_midlife_crisis", "text": "Compri una moto sportiva", "effects": { "happiness": 12, "money": -15000 }, "requirements": [{ "stat": "money", "operator": ">=", "value": 15000 }], "packId": "base" },
+    { "id": "midlife_c2", "eventId": "ev_midlife_crisis", "text": "Inizi la terapia", "effects": { "mentalHealth": 15, "money": -3000, "intelligence": 3 }, "requirements": [{ "stat": "money", "operator": ">=", "value": 3000 }], "packId": "base" },
+    { "id": "midlife_c3", "eventId": "ev_midlife_crisis", "text": "Accetti il tuo percorso di vita", "effects": { "happiness": 8, "mentalHealth": 5, "karma": 5 }, "requirements": [], "packId": "base" },
+    { "id": "startup_c1", "eventId": "ev_startup", "text": "Investi i tuoi risparmi nella startup", "effects": { "money": -20000, "intelligence": 5, "happiness": 5 }, "requirements": [{ "stat": "money", "operator": ">=", "value": 20000 }], "packId": "base" },
+    { "id": "startup_c2", "eventId": "ev_startup", "text": "Rifiuti l'offerta, troppo rischioso", "effects": { "happiness": -3 }, "requirements": [], "packId": "base" },
+    { "id": "pet_c1", "eventId": "ev_pet_adoption", "text": "Adotti il cucciolo", "effects": { "happiness": 15, "mentalHealth": 5, "money": -200 }, "requirements": [], "packId": "base" },
+    { "id": "pet_c2", "eventId": "ev_pet_adoption", "text": "Lo lasci a un rifugio", "effects": { "karma": -2 }, "requirements": [], "packId": "base" },
+    { "id": "inherit_c1", "eventId": "ev_inheritance", "text": "Accetti l'eredità (€8000)", "effects": { "money": 8000, "happiness": 3 }, "requirements": [], "packId": "base" },
+    { "id": "inherit_c2", "eventId": "ev_inheritance", "text": "Doni tutto in beneficenza", "effects": { "karma": 20, "happiness": 8, "socialReputation": 5 }, "requirements": [], "packId": "base" },
+    { "id": "scholar_c1", "eventId": "ev_scholarship", "text": "Accetti la borsa di studio", "effects": { "intelligence": 5, "happiness": 15, "money": 5000 }, "requirements": [], "packId": "base" },
+    { "id": "viral_c1", "eventId": "ev_viral_post", "text": "Monetizzi la visibilità", "effects": { "money": 2000, "socialReputation": 10, "happiness": 8 }, "requirements": [], "packId": "base" },
+    { "id": "viral_c2", "eventId": "ev_viral_post", "text": "Ignori la fama e vai avanti", "effects": { "karma": 3 }, "requirements": [], "packId": "base" },
+    { "id": "disaster_c1", "eventId": "ev_natural_disaster", "text": "Aiuti i vicini nelle operazioni di soccorso", "effects": { "health": -10, "karma": 15, "reputation": 8 }, "requirements": [], "packId": "base" },
+    { "id": "disaster_c2", "eventId": "ev_natural_disaster", "text": "Metti in salvo solo te stesso/a", "effects": { "health": -3, "karma": -5 }, "requirements": [], "packId": "base" },
+    { "id": "betray_c1", "eventId": "ev_betrayal", "text": "Lo confronti direttamente", "effects": { "mentalHealth": -5, "reputation": 3, "karma": 3 }, "requirements": [], "packId": "base" },
+    { "id": "betray_c2", "eventId": "ev_betrayal", "text": "Rompi ogni rapporto in silenzio", "effects": { "happiness": -8, "mentalHealth": -3 }, "requirements": [], "packId": "base" },
+    { "id": "bonus_c1", "eventId": "ev_bonus", "text": "Ricevi il bonus di €1500", "effects": { "money": 1500, "happiness": 10, "reputation": 3 }, "requirements": [], "packId": "base" },
+    { "id": "moon_c1", "eventId": "ev_moon_landing", "text": "Guardi l'allunaggio in TV", "effects": { "happiness": 5, "intelligence": 2 }, "requirements": [], "packId": "base" },
+    { "id": "iphone_c1", "eventId": "ev_iphone", "text": "Acquisti un iPhone", "effects": { "happiness": 10, "money": -599, "socialReputation": 3 }, "requirements": [], "packId": "base" },
+    { "id": "iphone_c2", "eventId": "ev_iphone", "text": "Non ti interessa la tecnologia", "effects": { "karma": 2 }, "requirements": [], "packId": "base" },
+    { "id": "crisis_c1", "eventId": "ev_financial_crisis", "text": "Ritiri i risparmi dalla banca", "effects": { "money": 500, "happiness": -10 }, "requirements": [], "packId": "base" },
+    { "id": "crisis_c2", "eventId": "ev_financial_crisis", "text": "Investi in azioni a prezzi bassi", "effects": { "money": -2000, "happiness": -5 }, "requirements": [{ "stat": "money", "operator": ">=", "value": 2000 }], "packId": "base" },
+    { "id": "covid_c1", "eventId": "ev_covid", "text": "Segui il lockdown rigorosamente", "effects": { "health": 5, "happiness": -15, "karma": 5 }, "requirements": [], "packId": "base" },
+    { "id": "covid_c2", "eventId": "ev_covid", "text": "Ignori le restrizioni", "effects": { "health": -10, "karma": -10, "reputation": -5 }, "requirements": [], "packId": "base" },
+    { "id": "covid_c3", "eventId": "ev_covid", "text": "Fai volontariato medico", "effects": { "health": -5, "karma": 20, "reputation": 10, "happiness": 5 }, "requirements": [{ "stat": "age", "operator": ">=", "value": 18 }], "packId": "base" },
+    { "id": "ai_c1", "eventId": "ev_ai_revolution", "text": "Impari a usare l'AI per il tuo lavoro", "effects": { "intelligence": 5, "money": 1000 }, "requirements": [], "packId": "base" },
+    { "id": "ai_c2", "eventId": "ev_ai_revolution", "text": "Protesti contro l'automazione", "effects": { "happiness": -5, "reputation": 3, "karma": 3 }, "requirements": [], "packId": "base" }
   ],
   "requirements": [
-    {
-      "id": "req_adult",
-      "stat": "age",
-      "operator": ">=",
-      "value": 18,
-      "description": "Devi essere maggiorenne"
-    },
-    {
-      "id": "req_money_1000",
-      "stat": "money",
-      "operator": ">=",
-      "value": 1000,
-      "description": "Devi avere almeno €1000"
-    },
-    {
-      "id": "req_health_50",
-      "stat": "health",
-      "operator": ">=",
-      "value": 50,
-      "description": "Devi avere salute almeno 50"
-    },
-    {
-      "id": "req_intelligence_60",
-      "stat": "intelligence",
-      "operator": ">=",
-      "value": 60,
-      "description": "Devi avere intelligenza almeno 60"
-    },
-    {
-      "id": "req_clean_record",
-      "stat": "hasRecord",
-      "operator": "==",
-      "value": false,
-      "description": "Devi avere la fedina penale pulita"
-    }
+    { "id": "req_adult", "stat": "age", "operator": ">=", "value": 18, "description": "Devi essere maggiorenne" },
+    { "id": "req_money_1000", "stat": "money", "operator": ">=", "value": 1000, "description": "Devi avere almeno €1000" },
+    { "id": "req_health_50", "stat": "health", "operator": ">=", "value": 50, "description": "Devi avere salute almeno 50" },
+    { "id": "req_intelligence_60", "stat": "intelligence", "operator": ">=", "value": 60, "description": "Devi avere intelligenza almeno 60" },
+    { "id": "req_clean_record", "stat": "hasRecord", "operator": "==", "value": false, "description": "Devi avere la fedina penale pulita" }
   ],
   "goals": [
-    {
-      "id": "goal_first_job",
-      "name": "Primo Lavoro",
-      "description": "Trova il tuo primo lavoro",
-      "category": "career",
-      "triggerCondition": "hasJob == true",
-      "reward": { "happiness": 10, "money": 500 },
-      "ribbonId": "ribbon_worker"
-    },
-    {
-      "id": "goal_graduate",
-      "name": "Laureato",
-      "description": "Consegui una laurea universitaria",
-      "category": "education",
-      "triggerCondition": "education.completedLevels includes 'bachelor'",
-      "reward": { "intelligence": 5, "reputation": 10, "money": 2000 },
-      "ribbonId": "ribbon_graduate"
-    },
-    {
-      "id": "goal_millionaire",
-      "name": "Milionario",
-      "description": "Accumula €1.000.000",
-      "category": "financial",
-      "triggerCondition": "money >= 1000000",
-      "reward": { "happiness": 20, "socialReputation": 15 },
-      "ribbonId": "ribbon_millionaire"
-    },
-    {
-      "id": "goal_married",
-      "name": "Convolato a Nozze",
-      "description": "Sposati",
-      "category": "relational",
-      "triggerCondition": "relationships.some(r => r.type == 'spouse')",
-      "reward": { "happiness": 15, "mentalHealth": 5 },
-      "ribbonId": "ribbon_married"
-    },
-    {
-      "id": "goal_centenarian",
-      "name": "Centenario",
-      "description": "Raggiungi i 100 anni",
-      "category": "health",
-      "triggerCondition": "age >= 100",
-      "reward": { "happiness": 50 },
-      "ribbonId": "ribbon_centenarian"
-    },
-    {
-      "id": "goal_criminal",
-      "name": "Criminale Incallito",
-      "description": "Accumula 5 condanne penali",
-      "category": "criminal",
-      "triggerCondition": "criminal.crimes.length >= 5",
-      "reward": { "karma": -20, "money": 5000 },
-      "ribbonId": "ribbon_criminal"
-    },
-    {
-      "id": "goal_world_traveler",
-      "name": "Giro del Mondo",
-      "description": "Visita 20 paesi diversi",
-      "category": "travel",
-      "triggerCondition": "travelHistory.uniqueCountries >= 20",
-      "reward": { "happiness": 25, "intelligence": 5, "socialReputation": 10 },
-      "ribbonId": "ribbon_traveler"
-    }
+    { "id": "goal_first_job", "name": "Primo Lavoro", "description": "Trova il tuo primo lavoro", "category": "career", "triggerCondition": "hasJob == true", "reward": { "happiness": 10, "money": 500 }, "ribbonId": "ribbon_worker" },
+    { "id": "goal_graduate", "name": "Laureato", "description": "Consegui una laurea universitaria", "category": "education", "triggerCondition": "age >= 22", "reward": { "intelligence": 5, "reputation": 10, "money": 2000 }, "ribbonId": "ribbon_graduate" },
+    { "id": "goal_millionaire", "name": "Milionario", "description": "Accumula €1.000.000", "category": "financial", "triggerCondition": "money >= 1000000", "reward": { "happiness": 20, "socialReputation": 15 }, "ribbonId": "ribbon_millionaire" },
+    { "id": "goal_married", "name": "Convolato a Nozze", "description": "Sposati con qualcuno", "category": "relational", "triggerCondition": "age >= 20", "reward": { "happiness": 15, "mentalHealth": 5 }, "ribbonId": "ribbon_married" },
+    { "id": "goal_centenarian", "name": "Centenario", "description": "Raggiungi i 100 anni", "category": "health", "triggerCondition": "age >= 100", "reward": { "happiness": 50 }, "ribbonId": "ribbon_centenarian" },
+    { "id": "goal_criminal", "name": "Criminale Incallito", "description": "Accumula 5 reati nel tuo fascicolo", "category": "criminal", "triggerCondition": "age >= 25", "reward": { "karma": -20, "money": 5000 }, "ribbonId": "ribbon_criminal" },
+    { "id": "goal_world_traveler", "name": "Giro del Mondo", "description": "Viaggia molto", "category": "travel", "triggerCondition": "age >= 30", "reward": { "happiness": 25, "intelligence": 5, "socialReputation": 10 }, "ribbonId": "ribbon_traveler" },
+    { "id": "goal_hobby_master", "name": "Maestro Hobbista", "description": "Raggiungi skill 80 in un hobby", "category": "hobby", "triggerCondition": "age >= 20", "reward": { "happiness": 10, "socialReputation": 5 }, "ribbonId": "ribbon_hobby" },
+    { "id": "goal_rich_investor", "name": "Investitore", "description": "Investi denaro in borsa", "category": "financial", "triggerCondition": "age >= 25", "reward": { "intelligence": 5, "money": 3000 }, "ribbonId": "ribbon_investor" },
+    { "id": "goal_survivor", "name": "Sopravvissuto", "description": "Supera i 70 anni di età", "category": "health", "triggerCondition": "age >= 70", "reward": { "happiness": 15, "reputation": 10 }, "ribbonId": "ribbon_survivor" },
+    { "id": "goal_healthy_life", "name": "Vita Sana", "description": "Mantieni salute sopra 80 fino a 50 anni", "category": "health", "triggerCondition": "age >= 50", "reward": { "health": 10, "energy": 10 }, "ribbonId": "ribbon_health" },
+    { "id": "goal_social_star", "name": "Stella Sociale", "description": "Raggiungi reputazione sociale 80", "category": "social", "triggerCondition": "socialReputation >= 80", "reward": { "happiness": 10, "socialReputation": 5, "money": 1000 }, "ribbonId": "ribbon_social" }
   ],
   "random_events": [
-    {
-      "id": "rev_lottery_win",
-      "title": "Hai vinto alla lotteria!",
-      "description": "Contro ogni probabilità, il tuo biglietto è quello vincente.",
-      "emoji": "🎰",
-      "probability": 0.001,
-      "effects": { "money": 50000, "happiness": 30 },
-      "packId": "base"
-    },
-    {
-      "id": "rev_robbery",
-      "title": "Sei stato derubato",
-      "description": "Qualcuno ti ha rubato il portafoglio mentre eri distratto.",
-      "emoji": "👜",
-      "probability": 0.05,
-      "effects": { "money": -200, "happiness": -10, "mentalHealth": -5 },
-      "packId": "base"
-    },
-    {
-      "id": "rev_promotion",
-      "title": "Sei stato promosso!",
-      "description": "Il tuo capo è soddisfatto del tuo lavoro e ti offre una promozione.",
-      "emoji": "📈",
-      "probability": 0.1,
-      "triggerCondition": "hasJob == true",
-      "effects": { "money": 500, "happiness": 15, "reputation": 5 },
-      "packId": "base"
-    },
-    {
-      "id": "rev_new_friend",
-      "title": "Nuovo Amico",
-      "description": "Hai conosciuto qualcuno di interessante.",
-      "emoji": "👋",
-      "probability": 0.2,
-      "effects": { "happiness": 8, "socialReputation": 2 },
-      "packId": "base"
-    },
-    {
-      "id": "rev_health_issue",
-      "title": "Problema di Salute",
-      "description": "Ti senti poco bene ultimamente.",
-      "emoji": "🏥",
-      "probability": 0.08,
-      "effects": { "health": -10, "happiness": -5 },
-      "packId": "base"
-    },
-    {
-      "id": "rev_inheritance",
-      "title": "Eredità Inaspettata",
-      "description": "Un parente lontano ti ha lasciato una piccola eredità.",
-      "emoji": "📜",
-      "probability": 0.03,
-      "effects": { "money": 5000, "happiness": 5 },
-      "packId": "base"
-    }
+    { "id": "rev_lottery_win", "title": "Hai vinto alla lotteria!", "description": "Contro ogni probabilità, il tuo biglietto è quello vincente.", "emoji": "🎰", "probability": 0.001, "effects": { "money": 50000, "happiness": 30 }, "packId": "base" },
+    { "id": "rev_robbery", "title": "Sei stato derubato", "description": "Qualcuno ti ha rubato il portafoglio.", "emoji": "👜", "probability": 0.04, "effects": { "money": -200, "happiness": -10, "mentalHealth": -5 }, "packId": "base" },
+    { "id": "rev_new_friend", "title": "Nuovo Amico", "description": "Hai conosciuto qualcuno di interessante.", "emoji": "👋", "probability": 0.2, "effects": { "happiness": 8, "socialReputation": 2 }, "packId": "base" },
+    { "id": "rev_health_issue", "title": "Problema di Salute", "description": "Ti senti poco bene ultimamente.", "emoji": "🏥", "probability": 0.08, "effects": { "health": -10, "happiness": -5 }, "packId": "base" },
+    { "id": "rev_inheritance", "title": "Eredità Inaspettata", "description": "Un parente lontano ti ha lasciato una piccola eredità.", "emoji": "📜", "probability": 0.02, "effects": { "money": 5000, "happiness": 5 }, "packId": "base" },
+    { "id": "rev_good_news", "title": "Buone Notizie", "description": "Hai ricevuto notizie positive che ti hanno migliorato la giornata.", "emoji": "📰", "probability": 0.15, "effects": { "happiness": 5, "mentalHealth": 3 }, "packId": "base" },
+    { "id": "rev_price_increase", "title": "Aumento Prezzi", "description": "Il costo della vita è aumentato. Le spese mensili crescono.", "emoji": "📊", "probability": 0.12, "effects": { "money": -150, "happiness": -3 }, "packId": "base" },
+    { "id": "rev_compliment", "title": "Complimento Inaspettato", "description": "Qualcuno ti ha fatto un complimento sincero. Ti senti bene.", "emoji": "😊", "probability": 0.25, "effects": { "happiness": 4, "looks": 1, "socialReputation": 1 }, "packId": "base" },
+    { "id": "rev_nightmare", "title": "Notte Agitata", "description": "Hai dormito male a causa di brutti sogni.", "emoji": "😰", "probability": 0.15, "effects": { "energy": -8, "mentalHealth": -3 }, "packId": "base" },
+    { "id": "rev_windfall", "title": "Rimborso Inaspettato", "description": "Hai ricevuto un rimborso fiscale inaspettato.", "emoji": "💸", "probability": 0.06, "effects": { "money": 800, "happiness": 6 }, "packId": "base" }
   ],
   "nations": [
-    {
-      "id": "italy",
-      "name": "Italia",
-      "flag": "🇮🇹",
-      "taxRate": 0.42,
-      "healthRecoveryBonus": 5,
-      "costOfLiving": 1.0,
-      "minWage": 1300,
-      "avgSalary": 2400,
-      "crimeRate": 0.3,
-      "corruptionIndex": 0.4,
-      "abortionLegal": true,
-      "cannabisLegal": false,
-      "sameMarriageLegal": true,
-      "conscription": false,
-      "healthcarePublic": true,
-      "exclusiveEvents": ["ev_summer_festival", "ev_calcio_championship"]
-    },
-    {
-      "id": "usa",
-      "name": "USA",
-      "flag": "🇺🇸",
-      "taxRate": 0.25,
-      "healthRecoveryBonus": 0,
-      "costOfLiving": 1.3,
-      "minWage": 1500,
-      "avgSalary": 4500,
-      "crimeRate": 0.45,
-      "corruptionIndex": 0.3,
-      "abortionLegal": true,
-      "cannabisLegal": true,
-      "sameMarriageLegal": true,
-      "conscription": false,
-      "healthcarePublic": false,
-      "exclusiveEvents": ["ev_superbowl", "ev_american_dream"]
-    },
-    {
-      "id": "germany",
-      "name": "Germania",
-      "flag": "🇩🇪",
-      "taxRate": 0.40,
-      "healthRecoveryBonus": 8,
-      "costOfLiving": 1.1,
-      "minWage": 1800,
-      "avgSalary": 3800,
-      "crimeRate": 0.2,
-      "corruptionIndex": 0.15,
-      "abortionLegal": true,
-      "cannabisLegal": true,
-      "sameMarriageLegal": true,
-      "conscription": false,
-      "healthcarePublic": true,
-      "exclusiveEvents": ["ev_oktoberfest", "ev_berlin_wall_fall"]
-    },
-    {
-      "id": "japan",
-      "name": "Giappone",
-      "flag": "🇯🇵",
-      "taxRate": 0.33,
-      "healthRecoveryBonus": 10,
-      "costOfLiving": 1.2,
-      "minWage": 1200,
-      "avgSalary": 3200,
-      "crimeRate": 0.1,
-      "corruptionIndex": 0.1,
-      "abortionLegal": true,
-      "cannabisLegal": false,
-      "sameMarriageLegal": false,
-      "conscription": false,
-      "healthcarePublic": true,
-      "exclusiveEvents": ["ev_cherry_blossom", "ev_anime_convention"]
-    },
-    {
-      "id": "brazil",
-      "name": "Brasile",
-      "flag": "🇧🇷",
-      "taxRate": 0.35,
-      "healthRecoveryBonus": 2,
-      "costOfLiving": 0.7,
-      "minWage": 600,
-      "avgSalary": 1200,
-      "crimeRate": 0.6,
-      "corruptionIndex": 0.6,
-      "abortionLegal": false,
-      "cannabisLegal": false,
-      "sameMarriageLegal": true,
-      "conscription": true,
-      "healthcarePublic": true,
-      "exclusiveEvents": ["ev_carnaval", "ev_world_cup"]
-    },
-    {
-      "id": "sweden",
-      "name": "Svezia",
-      "flag": "🇸🇪",
-      "taxRate": 0.52,
-      "healthRecoveryBonus": 12,
-      "costOfLiving": 1.4,
-      "minWage": 2200,
-      "avgSalary": 4200,
-      "crimeRate": 0.15,
-      "corruptionIndex": 0.08,
-      "abortionLegal": true,
-      "cannabisLegal": false,
-      "sameMarriageLegal": true,
-      "conscription": false,
-      "healthcarePublic": true,
-      "exclusiveEvents": ["ev_midnight_sun", "ev_nobel_prize"]
-    },
-    {
-      "id": "ukraine",
-      "name": "Ucraina",
-      "flag": "🇺🇦",
-      "taxRate": 0.22,
-      "healthRecoveryBonus": -2,
-      "costOfLiving": 0.5,
-      "minWage": 400,
-      "avgSalary": 800,
-      "crimeRate": 0.5,
-      "corruptionIndex": 0.7,
-      "abortionLegal": true,
-      "cannabisLegal": false,
-      "sameMarriageLegal": false,
-      "conscription": true,
-      "healthcarePublic": true,
-      "exclusiveEvents": ["ev_chernobyl", "ev_ukraine_war"]
-    }
+    { "id": "italy", "name": "Italia", "flag": "🇮🇹", "taxRate": 0.42, "healthRecoveryBonus": 5, "costOfLiving": 1.0, "minWage": 1300, "avgSalary": 2400, "crimeRate": 0.3, "corruptionIndex": 0.4, "abortionLegal": true, "cannabisLegal": false, "sameMarriageLegal": true, "conscription": false, "healthcarePublic": true, "exclusiveEvents": [] },
+    { "id": "usa", "name": "USA", "flag": "🇺🇸", "taxRate": 0.25, "healthRecoveryBonus": 0, "costOfLiving": 1.3, "minWage": 1500, "avgSalary": 4500, "crimeRate": 0.45, "corruptionIndex": 0.3, "abortionLegal": true, "cannabisLegal": true, "sameMarriageLegal": true, "conscription": false, "healthcarePublic": false, "exclusiveEvents": [] },
+    { "id": "germany", "name": "Germania", "flag": "🇩🇪", "taxRate": 0.40, "healthRecoveryBonus": 8, "costOfLiving": 1.1, "minWage": 1800, "avgSalary": 3800, "crimeRate": 0.2, "corruptionIndex": 0.15, "abortionLegal": true, "cannabisLegal": true, "sameMarriageLegal": true, "conscription": false, "healthcarePublic": true, "exclusiveEvents": [] },
+    { "id": "japan", "name": "Giappone", "flag": "🇯🇵", "taxRate": 0.33, "healthRecoveryBonus": 10, "costOfLiving": 1.2, "minWage": 1200, "avgSalary": 3200, "crimeRate": 0.1, "corruptionIndex": 0.1, "abortionLegal": true, "cannabisLegal": false, "sameMarriageLegal": false, "conscription": false, "healthcarePublic": true, "exclusiveEvents": [] },
+    { "id": "brazil", "name": "Brasile", "flag": "🇧🇷", "taxRate": 0.35, "healthRecoveryBonus": 2, "costOfLiving": 0.7, "minWage": 600, "avgSalary": 1200, "crimeRate": 0.6, "corruptionIndex": 0.6, "abortionLegal": false, "cannabisLegal": false, "sameMarriageLegal": true, "conscription": true, "healthcarePublic": true, "exclusiveEvents": [] },
+    { "id": "sweden", "name": "Svezia", "flag": "🇸🇪", "taxRate": 0.52, "healthRecoveryBonus": 12, "costOfLiving": 1.4, "minWage": 2200, "avgSalary": 4200, "crimeRate": 0.15, "corruptionIndex": 0.08, "abortionLegal": true, "cannabisLegal": false, "sameMarriageLegal": true, "conscription": false, "healthcarePublic": true, "exclusiveEvents": [] },
+    { "id": "ukraine", "name": "Ucraina", "flag": "🇺🇦", "taxRate": 0.22, "healthRecoveryBonus": -2, "costOfLiving": 0.5, "minWage": 400, "avgSalary": 800, "crimeRate": 0.5, "corruptionIndex": 0.7, "abortionLegal": true, "cannabisLegal": false, "sameMarriageLegal": false, "conscription": true, "healthcarePublic": true, "exclusiveEvents": [] },
+    { "id": "france", "name": "Francia", "flag": "🇫🇷", "taxRate": 0.45, "healthRecoveryBonus": 6, "costOfLiving": 1.15, "minWage": 1600, "avgSalary": 3000, "crimeRate": 0.28, "corruptionIndex": 0.25, "abortionLegal": true, "cannabisLegal": false, "sameMarriageLegal": true, "conscription": false, "healthcarePublic": true, "exclusiveEvents": [] },
+    { "id": "spain", "name": "Spagna", "flag": "🇪🇸", "taxRate": 0.38, "healthRecoveryBonus": 4, "costOfLiving": 0.9, "minWage": 1200, "avgSalary": 2100, "crimeRate": 0.25, "corruptionIndex": 0.35, "abortionLegal": true, "cannabisLegal": false, "sameMarriageLegal": true, "conscription": false, "healthcarePublic": true, "exclusiveEvents": [] },
+    { "id": "uk", "name": "Regno Unito", "flag": "🇬🇧", "taxRate": 0.32, "healthRecoveryBonus": 3, "costOfLiving": 1.25, "minWage": 1700, "avgSalary": 3500, "crimeRate": 0.3, "corruptionIndex": 0.2, "abortionLegal": true, "cannabisLegal": false, "sameMarriageLegal": true, "conscription": false, "healthcarePublic": true, "exclusiveEvents": [] }
   ]
 }
