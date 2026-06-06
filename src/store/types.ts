@@ -567,6 +567,9 @@ export type { CosmeticSurgeryState, PerformedSurgery, CosmeticProcedure } from '
 // ---- Challenges ----
 export type { ChallengeEngineState, ActiveChallenge, ChallengeDefinition } from '../services/ChallengeEngine'
 
+// ---- Credit Score ----
+export type { CreditScoreResult, CreditTier } from '../services/CreditScoreEngine'
+
 // ---- Legacy ----
 
 export interface Legacy {
@@ -772,7 +775,7 @@ export interface GameActions {
   salvaGioco: () => void
   caricaGioco: () => void
   resetGiorno: () => void
-  newGame: (identity: PlayerIdentity, nationId: string) => void
+  newGame: (identity: PlayerIdentity, nationId: string, mode?: import('./types').GameMode, ironMan?: boolean) => void
 
   // Career engine actions
   applyForJob: (jobId: string) => ActionResult

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import type { Gender, FamilyBackground, Religion, SexualOrientation } from '../../store/types'
+import type { Gender, FamilyBackground, Religion, SexualOrientation, GameMode } from '../../store/types'
 import db from '../../../public/db.json'
 
 export function NewGameScreen() {
@@ -13,6 +13,8 @@ export function NewGameScreen() {
   const [background, setBackground] = useState<FamilyBackground>('middle')
   const [religion, setReligion] = useState<Religion>('catholicism')
   const [orientation, setOrientation] = useState<SexualOrientation>('heterosexual')
+  const [gameMode, setGameMode] = useState<GameMode>('normal')
+  const [ironMan, setIronMan] = useState(false)
 
   const handleStart = () => {
     if (!name.trim()) return
@@ -26,7 +28,7 @@ export function NewGameScreen() {
       religion,
       sexualOrientation: orientation,
       emoji: '👶',
-    }, nationId)
+    }, nationId, gameMode, ironMan)
   }
 
   const inputStyle = {
@@ -187,6 +189,67 @@ export function NewGameScreen() {
             <option value="pansexual">Pansessuale</option>
             <option value="asexual">Asessuale</option>
           </select>
+        </div>
+
+        {/* Game Mode */}
+        <div>
+          <label style={labelStyle}>Modalità di gioco</label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {[
+              { val: 'normal', label: '🎮 Normale', desc: 'Esperienza bilanciata' },
+              { val: 'hard',   label: '💀 Difficile', desc: 'Salario -30%, declino più rapido' },
+            ].map(({ val, label, desc }) => (
+              <button
+                key={val}
+                onClick={() => setGameMode(val as GameMode)}
+                style={{
+                  ...inputStyle,
+                  textAlign: 'left',
+                  cursor: 'pointer',
+                  borderColor: gameMode === val ? (val === 'hard' ? '#f87171' : 'var(--color-cta)') : 'var(--color-border)',
+                  backgroundColor: gameMode === val ? (val === 'hard' ? 'rgba(248,113,113,0.1)' : 'rgba(233,69,96,0.1)') : 'var(--bg-secondary)',
+                  padding: '8px 12px',
+                }}
+              >
+                <div style={{ fontWeight: 600, fontSize: 13 }}>{label}</div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>{desc}</div>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Iron Man Mode */}
+        <div
+          style={{
+            padding: '12px',
+            borderRadius: 10,
+            border: `1px solid ${ironMan ? '#f87171' : 'rgba(255,255,255,0.08)'}`,
+            background: ironMan ? 'rgba(248,113,113,0.08)' : 'rgba(255,255,255,0.03)',
+            cursor: 'pointer',
+          }}
+          onClick={() => setIronMan(v => !v)}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div>
+              <div style={{ fontWeight: 700, color: ironMan ? '#f87171' : '#e2e8f0', fontSize: 14 }}>
+                ☠️ Iron Man Mode
+              </div>
+              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                Morte permanente, niente continue, declino +30%. Ribbon esclusivo.
+              </div>
+            </div>
+            <div style={{
+              width: 40, height: 22, borderRadius: 11,
+              background: ironMan ? '#f87171' : 'rgba(255,255,255,0.15)',
+              transition: 'background 0.2s', position: 'relative', flexShrink: 0,
+            }}>
+              <div style={{
+                position: 'absolute', top: 3, left: ironMan ? 21 : 3,
+                width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                transition: 'left 0.2s',
+              }} />
+            </div>
+          </div>
         </div>
       </div>
 

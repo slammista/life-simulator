@@ -88,6 +88,27 @@ export const HISTORICAL_EVENTS: HistoricalEvent[] = [
   },
 ]
 
+export interface HolidayEvent {
+  id: string
+  name: string
+  emoji: string
+  monthTrigger: number  // 1-12
+  effects: Effect
+  giftCost?: number
+  familyBonus?: number
+}
+
+export const HOLIDAY_EVENTS: HolidayEvent[] = [
+  { id: 'natale',       name: 'Natale',              emoji: '🎄', monthTrigger: 12, effects: { happiness: 15, mentalHealth: 5 }, giftCost: 300, familyBonus: 10 },
+  { id: 'capodanno',    name: 'Capodanno',            emoji: '🎆', monthTrigger: 1,  effects: { happiness: 10, karma: 2 } },
+  { id: 'pasqua',       name: 'Pasqua',               emoji: '🐣', monthTrigger: 4,  effects: { happiness: 8, karma: 3 }, giftCost: 80, familyBonus: 8 },
+  { id: 'san_valentino',name: 'San Valentino',        emoji: '❤️', monthTrigger: 2,  effects: { happiness: 12 }, giftCost: 100 },
+  { id: 'halloween',    name: 'Halloween',            emoji: '🎃', monthTrigger: 10, effects: { happiness: 8, mentalHealth: 3 } },
+  { id: 'ferragosto',   name: 'Ferragosto',           emoji: '🏖️', monthTrigger: 8,  effects: { happiness: 10, health: 3 } },
+  { id: 'festa_mamma',  name: 'Festa della Mamma',    emoji: '💐', monthTrigger: 5,  effects: { happiness: 6, karma: 3 }, giftCost: 60 },
+  { id: 'natale_eid',   name: 'Eid al-Fitr (Ramadan)',emoji: '🌙', monthTrigger: 4,  effects: { happiness: 10, karma: 8, mentalHealth: 5 } },
+]
+
 export const HOME_REPAIR_EVENTS: HomeRepairEvent[] = [
   { id: 'fridge_break',    name: 'Frigorifero rotto',         emoji: '🧊', minCost: 200,  maxCost: 600,  probability: 0.05, urgency: 'high'     },
   { id: 'washer_break',    name: 'Lavatrice rotta',           emoji: '🌀', minCost: 150,  maxCost: 400,  probability: 0.05, urgency: 'high'     },
@@ -103,6 +124,7 @@ export const HOME_REPAIR_EVENTS: HomeRepairEvent[] = [
 export interface WorldEventResult {
   triggeredHistorical: HistoricalEvent[]
   homeRepairs: HomeRepairEvent[]
+  triggeredHolidays: HolidayEvent[]
   totalRepairCost: number
   effects: Effect
   updatedWorld: Partial<WorldEventsState>
@@ -150,6 +172,38 @@ export class WorldEventsEngine {
       }
     }
 
+    // Holiday events — fire once per year based on current month
+    const triggeredHolidays: HolidayEvent[] = []
+    const currentMonth = state.time.month
+    for (const holiday of HOLIDAY_EVENTS) {
+      // Religious filter for some holidays
+      if (holiday.id === 'natale_eid' && state.identity.religion !== 'islam') continue
+
+      // Only fire for the matching month, with some randomness
+      if (Math.abs(holiday.monthTrigger - currentMonth) <= 1) {
+        triggeredHolidays.push(holiday)
+        for (const [key, val] of Object.entries(holiday.effects)) {
+          effects[key] = (effects[key] ?? 0) + (val as number)
+        }
+
+        // Gift cost deducted if has family/partner
+        if (holiday.giftCost) {
+          const hasFamily = state.relationships.some(r => r.type === 'parent' || r.type === 'sibling' || r.stage === 'spouse')
+          if (hasFamily) {
+            effects.money = (effects.money ?? 0) - holiday.giftCost
+          }
+        }
+
+        // Family bonus if family is present
+        if (holiday.familyBonus) {
+          const familyCount = state.relationships.filter(r => r.type === 'parent' || r.type === 'sibling').length + state.children.length
+          if (familyCount > 0) {
+            effects.happiness = (effects.happiness ?? 0) + holiday.familyBonus
+          }
+        }
+      }
+    }
+
     const newTriggered = [
       ...state.worldEvents.triggeredEvents,
       ...triggeredHistorical.map(e => e.id),
@@ -173,6 +227,7 @@ export class WorldEventsEngine {
     return {
       triggeredHistorical,
       homeRepairs,
+      triggeredHolidays,
       totalRepairCost,
       effects,
       updatedWorld: {

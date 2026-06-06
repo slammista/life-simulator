@@ -41,6 +41,7 @@ import { WorldEventsEngine } from '../services/WorldEventsEngine'
 import { CosmeticSurgeryEngine } from '../services/CosmeticSurgeryEngine'
 import { ChallengeEngine } from '../services/ChallengeEngine'
 import { AchievementsEngine } from '../services/AchievementsEngine'
+import { CreditScoreEngine } from '../services/CreditScoreEngine'
 import type { Addiction, TravelMemory, Religion, Child } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
@@ -227,7 +228,7 @@ export const useGameStore = create<FullStore>()(
       ...buildInitialState(),
 
       // ==================== newGame ====================
-      newGame: (identity: PlayerIdentity, nationId: string) => {
+      newGame: (identity: PlayerIdentity, nationId: string, mode = 'normal' as import('./types').GameMode, ironMan = false) => {
         const initial = buildInitialState()
         const nation = (db.nations as Nation[]).find(n => n.id === nationId) ?? initial.nation
         const startMoney = BACKGROUND_MONEY[identity.familyBackground] ?? 1000
@@ -238,6 +239,7 @@ export const useGameStore = create<FullStore>()(
           identity: { ...identity, emoji: '👶' },
           time: { year: identity.birthYear, month: 1, age: 0 },
           nation,
+          settings: { ...initial.settings, mode, ironMan },
           finance: { ...initial.finance, money: startMoney },
           eventLog: [{
             id: uid(), year: identity.birthYear, age: 0,
@@ -265,15 +267,19 @@ export const useGameStore = create<FullStore>()(
         }
 
         // 1. Natural energy/health decay
+        const ironManMultiplier = state.settings.ironMan ? 1.3 : 1.0
+        const hardModeMultiplier = state.settings.mode === 'hard' ? 1.2 : 1.0
+        const decayMult = ironManMultiplier * hardModeMultiplier
         merge({
           energy: -5,
-          health: newAge > 50 ? -(newAge - 50) * 0.3 : -1,
+          health: Math.round((newAge > 50 ? -(newAge - 50) * 0.3 : -1) * decayMult),
           happiness: state.finance.money < 500 ? -3 : 0,
         })
 
         // 2. Monthly salary (12x in one year tick)
         if (state.career.currentJob) {
-          merge({ money: state.career.currentJob.salary * 12 })
+          const salaryMultiplier = state.settings.mode === 'hard' ? 0.7 : 1.0
+          merge({ money: Math.round(state.career.currentJob.salary * 12 * salaryMultiplier) })
         }
 
         // 3. Nation effect
@@ -366,6 +372,9 @@ export const useGameStore = create<FullStore>()(
         for (const repair of worldResult.homeRepairs) {
           messages.push(`${repair.emoji} ${repair.name}: riparazione urgente!`)
         }
+
+        // 23b. Credit score annual update
+        const creditResult = CreditScoreEngine.annualTick(state)
 
         // 23. Achievement check (ribbon auto-unlock)
         const { newRibbons, messages: achievementMsgs } = AchievementsEngine.checkAndUnlock(state)
@@ -483,7 +492,6 @@ export const useGameStore = create<FullStore>()(
         set({
           time: newTime,
           stats: newStats,
-          finance: financeWithInvestments,
           identity: newIdentity,
           career: careerUpdate,
           health: { ...healthUpdate, addictions: updatedAddictions },
@@ -518,6 +526,11 @@ export const useGameStore = create<FullStore>()(
           worldEvents: {
             triggeredEvents: worldResult.updatedWorld.triggeredEvents ?? state.worldEvents.triggeredEvents,
             activeWorldModifiers: worldResult.updatedWorld.activeWorldModifiers ?? state.worldEvents.activeWorldModifiers,
+          },
+          finance: {
+            ...(partial.finance ?? state.finance),
+            ...financeWithInvestments,
+            creditScore: creditResult.updatedScore,
           },
           challengeEngine: { ...state.challengeEngine, ...challengeResult.updatedState },
           ribbons: newRibbons.length > 0

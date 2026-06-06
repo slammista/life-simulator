@@ -33,12 +33,13 @@ import GamblingScreen from './components/screens/GamblingScreen'
 import SexualHealthScreen from './components/screens/SexualHealthScreen'
 import CosmeticSurgeryScreen from './components/screens/CosmeticSurgeryScreen'
 import ChallengeScreen from './components/screens/ChallengeScreen'
+import RibbonsScreen from './components/screens/RibbonsScreen'
 
 // ---- Sub-tab types ----
 type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle' | 'military'
 type PeopleSubTab = 'relationships' | 'dating' | 'famiglia'
 type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body' | 'beauty' | 'gambling' | 'sex_health' | 'cosmetic'
-type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'challenges' | 'settings'
+type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'challenges' | 'ribbons' | 'settings'
 
 function SubTabBar<T extends string>({
   tabs, active, onChange,
@@ -132,6 +133,7 @@ function App() {
             { id: 'politics',   label: 'Politica',  emoji: '🏛️' },
             { id: 'pension',    label: 'Pensione',  emoji: '🎗️' },
             { id: 'challenges', label: 'Sfide',     emoji: '🏆' },
+            { id: 'ribbons',    label: 'Medaglie',  emoji: '🏅' },
             { id: 'settings',   label: 'Impost.',   emoji: '⚙️' },
           ]}
           active={profileSub}
@@ -176,6 +178,7 @@ function App() {
         {activeTab === 'profile' && profileSub === 'politics'   && <PoliticsScreen />}
         {activeTab === 'profile' && profileSub === 'pension'    && <RetirementScreen />}
         {activeTab === 'profile' && profileSub === 'challenges' && <ChallengeScreen />}
+        {activeTab === 'profile' && profileSub === 'ribbons'    && <RibbonsScreen />}
         {activeTab === 'profile' && profileSub === 'settings'   && <SettingsScreen />}
       </div>
 
