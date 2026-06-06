@@ -62,6 +62,15 @@ const REL_TYPE_LABELS: Record<string, string> = {
   acquaintance: 'Conoscente',
 }
 
+const CHAIN_LABELS: Record<string, { label: string; color: string }> = {
+  chain_warmth: { label: 'Legame caldo', color: '#86efac' },
+  chain_gratitude: { label: 'Gratitudine', color: '#facc15' },
+  chain_repairing: { label: 'Riparazione', color: '#93c5fd' },
+  chain_trust_decay: { label: 'Ferita aperta', color: '#fca5a5' },
+  chain_tension: { label: 'Tensione', color: '#fdba74' },
+  chain_jealousy: { label: 'Sospetto', color: '#f0abfc' },
+}
+
 const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: string; emoji: string }>> = {
   stranger: [
     { action: 'greet', label: 'Saluta', emoji: '👋' },
@@ -275,6 +284,7 @@ function RelCard({ rel, expanded, onToggle, onAction }: {
   const actions = ACTIONS_BY_STAGE[rel.stage] ?? ACTIONS_BY_STAGE.stranger
   const mood = MOOD_LABELS[rel.mood ?? 'neutrale']
   const traits = rel.personalityTraits ?? []
+  const chainFlags = rel.historyFlags.filter(flag => flag in CHAIN_LABELS)
 
   return (
     <div className="card" style={{ padding: 12 }}>
@@ -333,6 +343,29 @@ function RelCard({ rel, expanded, onToggle, onAction }: {
                   {TRAIT_LABELS[trait]}
                 </span>
               ))}
+            </div>
+          )}
+
+          {chainFlags.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+              {chainFlags.map(flag => {
+                const chain = CHAIN_LABELS[flag]
+                return (
+                  <span
+                    key={flag}
+                    style={{
+                      fontSize: 11,
+                      color: chain.color,
+                      padding: '3px 8px',
+                      borderRadius: 999,
+                      background: 'rgba(255,255,255,0.05)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                    }}
+                  >
+                    {chain.label}
+                  </span>
+                )
+              })}
             </div>
           )}
 

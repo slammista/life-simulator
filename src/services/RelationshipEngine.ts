@@ -9,6 +9,7 @@ import type {
   NPCMood,
   NPCPersonalityTrait,
 } from '../store/types'
+import { ChainReactionEngine } from './ChainReactionEngine'
 
 // ---- public types ----
 
@@ -180,11 +181,12 @@ export class RelationshipEngine {
 
     const previewRel = { ...rel, ...updatedRel }
     updatedRel.mood = updatedRel.mood ?? this._inferMood(previewRel)
+    const chainedRel = ChainReactionEngine.applyAction(rel, action, updatedRel)
 
     return {
       ...result,
       message: notes.length > 0 ? `${result.message} ${notes.join(' ')}` : result.message,
-      updatedRel,
+      updatedRel: chainedRel,
     }
   }
 
@@ -332,29 +334,40 @@ export class RelationshipEngine {
 
   /** Annual decay: all relationships drift apart if not maintained */
   static annualDecay(relationships: Relationship[], state: GameState): Relationship[] {
-    void state
     return relationships.map(rel => {
       // Family decays much slower
       const decayRate = rel.type === 'parent' || rel.type === 'sibling' || rel.type === 'child'
         ? 1
         : rel.stage === 'spouse' ? 1 : 3
 
-        const newTrust = Math.max(0, rel.trust - decayRate)
-        const newLove = rel.stage === 'partner' || rel.stage === 'spouse'
-          ? Math.max(0, rel.love - 1)
-          : rel.love
-
       // Toxicity escalation
       const jealousyIncrease = rel.toxicityTag ? 3 : 0
 
       // Age NPC
+      const chainTick = ChainReactionEngine.annualTick(rel)
+      const newLove = rel.stage === 'partner' || rel.stage === 'spouse'
+        ? Math.max(0, chainTick.relationship.love - 1)
+        : chainTick.relationship.love
+      const chainMemory = chainTick.message
+        ? [{
+            id: Math.random().toString(36).slice(2, 10),
+            category: 'friendship' as const,
+            description: chainTick.message,
+            year: state.time.year,
+            weight: 2,
+            decayFactor: 0.15,
+            unforgettable: false,
+          }]
+        : []
+
       const updated = {
         ...rel,
+        ...chainTick.relationship,
         age: rel.age + 1,
-        trust: newTrust,
+        trust: Math.max(0, chainTick.relationship.trust - decayRate),
         love: newLove,
-        jealousy: Math.min(100, rel.jealousy + jealousyIncrease),
-        memoryLog: rel.memoryLog
+        jealousy: Math.min(100, chainTick.relationship.jealousy + jealousyIncrease),
+        memoryLog: [...chainMemory, ...rel.memoryLog]
           .map(mem => mem.unforgettable ? mem : { ...mem, weight: Math.max(0, mem.weight - mem.decayFactor) })
           .filter(mem => mem.unforgettable || mem.weight >= 0.5)
           .slice(0, 200),
