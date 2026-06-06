@@ -47,6 +47,7 @@ import { FamilyEngine } from '../services/FamilyEngine'
 import { TraumaEngine } from '../services/TraumaEngine'
 import { FameEngine } from '../services/FameEngine'
 import { ChaosEngine } from '../services/ChaosEngine'
+import { DailyQuestEngine } from '../services/DailyQuestEngine'
 import type { Addiction, TravelMemory, Religion, Child, LivingType } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
@@ -213,6 +214,7 @@ function buildInitialState(): GameState {
       totalPoints: 0,
       streak: 0,
     },
+    dailyQuests: DailyQuestEngine.initialState(),
     currentEvent: null,
     availableChoices: [],
     pendingEffects: null,
@@ -416,6 +418,7 @@ export const useGameStore = create<FullStore>()(
 
         // 23b. Credit score annual update
         const creditResult = CreditScoreEngine.annualTick(state)
+        const dailyQuestState = DailyQuestEngine.ensure(state.dailyQuests)
 
         // 23. Achievement check (ribbon auto-unlock)
         const { newRibbons, messages: achievementMsgs } = AchievementsEngine.checkAndUnlock(state)
@@ -593,6 +596,7 @@ export const useGameStore = create<FullStore>()(
             creditScore: creditResult.updatedScore,
           },
           challengeEngine: { ...state.challengeEngine, ...challengeResult.updatedState },
+          dailyQuests: dailyQuestState,
           ribbons: newRibbons.length > 0
             ? [
                 ...state.ribbons,
@@ -1588,6 +1592,7 @@ export const useGameStore = create<FullStore>()(
           socialMedia: [],
           fame: FameEngine.initialState(),
           chaos: ChaosEngine.initialState(),
+          dailyQuests: DailyQuestEngine.initialState(),
           legacy: state.legacy,
           diminishingReturns: {},
           eventLog: [{
@@ -1844,6 +1849,19 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `❌ Challenge abbandonata.`, emoji: '❌', category: 'life', statChanges: {} }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message: 'Challenge abbandonata.', effects: {} }
+      },
+
+      claimDailyQuest: (questId: string): ActionResult => {
+        const state = get()
+        const result = DailyQuestEngine.claimQuest(questId, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          dailyQuests: result.dailyQuests,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `📅 ${result.message}`, emoji: '📅', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
       },
 
       // ==================== Vehicle actions ====================
@@ -2171,6 +2189,7 @@ export const useGameStore = create<FullStore>()(
         worldEvents: state.worldEvents,
         cosmeticSurgery: state.cosmeticSurgery,
         challengeEngine: state.challengeEngine,
+        dailyQuests: state.dailyQuests,
       }),
     }
   )

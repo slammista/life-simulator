@@ -693,6 +693,37 @@ export interface ChaosState {
   chaosScore: number      // 0-100, rough measure of how absurd the run became
 }
 
+// ---- Daily Quests ----
+
+export type DailyQuestType =
+  | 'age_up'
+  | 'earn_money'
+  | 'improve_health'
+  | 'social_post'
+  | 'relationship_action'
+  | 'practice_hobby'
+  | 'complete_challenge'
+
+export interface DailyQuest {
+  id: string
+  type: DailyQuestType
+  title: string
+  description: string
+  emoji: string
+  target: number
+  reward: Effect
+  claimed: boolean
+}
+
+export interface DailyQuestState {
+  currentDate: string
+  quests: DailyQuest[]
+  completedQuestIds: string[]
+  streak: number
+  lastClaimDate: string | null
+  totalClaimed: number
+}
+
 // ---- Credit Score ----
 export type { CreditScoreResult, CreditTier } from '../services/CreditScoreEngine'
 
@@ -858,6 +889,9 @@ export interface GameState {
 
   // Challenge engine
   challengeEngine: import('../services/ChallengeEngine').ChallengeEngineState
+
+  // Daily quests
+  dailyQuests: DailyQuestState
 
   // Events
   currentEvent: GameEvent | null
@@ -1027,6 +1061,7 @@ export interface GameActions {
   // Challenge actions
   acceptChallenge: (defId: string) => ActionResult
   abandonChallenge: (defId: string) => ActionResult
+  claimDailyQuest: (questId: string) => ActionResult
 
   // Cheat actions
   cheatAddMoney: (amount: number) => void

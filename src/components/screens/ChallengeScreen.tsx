@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { ChallengeEngine, CHALLENGE_DEFINITIONS } from '../../services/ChallengeEngine'
+import { DailyQuestEngine } from '../../services/DailyQuestEngine'
 import type { ChallengeDifficulty } from '../../services/ChallengeEngine'
 
-type TabId = 'available' | 'active' | 'completed'
+type TabId = 'daily' | 'available' | 'active' | 'completed'
 
 const DIFFICULTY_COLOR: Record<ChallengeDifficulty, string> = {
   easy: '#4ade80',
@@ -27,12 +28,14 @@ export default function ChallengeScreen() {
   const state = useGameStore(s => s)
   const acceptChallenge = useGameStore(s => s.acceptChallenge)
   const abandonChallenge = useGameStore(s => s.abandonChallenge)
-  const [tab, setTab] = useState<TabId>('available')
+  const claimDailyQuest = useGameStore(s => s.claimDailyQuest)
+  const [tab, setTab] = useState<TabId>('daily')
   const [lastMsg, setLastMsg] = useState('')
   const [lastSuccess, setLastSuccess] = useState(true)
 
   const challengeState = state.challengeEngine
   const available = ChallengeEngine.getAvailableChallenges(state)
+  const dailyQuests = DailyQuestEngine.ensure(state.dailyQuests)
 
   function handleAccept(defId: string) {
     const result = acceptChallenge(defId)
@@ -46,7 +49,14 @@ export default function ChallengeScreen() {
     setLastSuccess(false)
   }
 
+  function handleDailyClaim(questId: string) {
+    const result = claimDailyQuest(questId)
+    setLastMsg(result.message)
+    setLastSuccess(result.success)
+  }
+
   const tabs: { id: TabId; label: string; count: number }[] = [
+    { id: 'daily', label: 'Giornaliere', count: dailyQuests.quests.filter(q => !q.claimed).length },
     { id: 'available', label: 'Disponibili', count: available.length },
     { id: 'active', label: 'Attive', count: challengeState.activeChallenges.filter(c => !c.completed && !c.failed).length },
     { id: 'completed', label: 'Completate', count: challengeState.completedChallengeIds.length },
@@ -59,7 +69,7 @@ export default function ChallengeScreen() {
       {/* Points & streak */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 8, marginBottom: 12 }}>
         <StatBox label="Punti totali" value={challengeState.totalPoints.toLocaleString()} valueColor="#fbbf24" />
-        <StatBox label="Streak 🔥" value={challengeState.streak} valueColor="#fb923c" />
+        <StatBox label="Streak daily 🔥" value={dailyQuests.streak} valueColor="#fb923c" />
       </div>
 
       {/* Feedback message */}
@@ -91,6 +101,55 @@ export default function ChallengeScreen() {
           </button>
         ))}
       </div>
+
+      {/* DAILY */}
+      {tab === 'daily' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          <div style={cardStyle('rgba(251,146,60,0.08)', 'rgba(251,146,60,0.22)')}>
+            <div style={{ fontSize: 13, color: '#fed7aa' }}>
+              📅 Quest del giorno: {dailyQuests.currentDate} · riscattate totali {dailyQuests.totalClaimed}
+            </div>
+          </div>
+          {dailyQuests.quests.map(quest => {
+            const progress = DailyQuestEngine.progress(quest, state)
+            const pct = Math.min(100, Math.round((progress.value / Math.max(1, progress.target)) * 100))
+            return (
+              <div key={quest.id} style={cardStyle(quest.claimed ? '#4ade8015' : 'rgba(255,255,255,0.05)', quest.claimed ? '#4ade8030' : 'rgba(255,255,255,0.08)')}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 15, fontWeight: 600, color: '#e2e8f0', marginBottom: 3 }}>
+                      {quest.emoji} {quest.title}
+                    </div>
+                    <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 8 }}>{quest.description}</div>
+                    <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 6, overflow: 'hidden', marginBottom: 6 }}>
+                      <div style={{ height: '100%', width: `${pct}%`, background: progress.completed ? '#4ade80' : '#fbbf24', borderRadius: 6 }} />
+                    </div>
+                    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                      <Chip label={`${Math.min(progress.value, progress.target).toLocaleString()}/${progress.target.toLocaleString()}`} color={progress.completed ? '#4ade80' : '#fbbf24'} />
+                      {Object.entries(quest.reward).map(([key, value]) => (
+                        <Chip key={key} label={`${key} ${Number(value) > 0 ? '+' : ''}${value}`} color="#60a5fa" />
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleDailyClaim(quest.id)}
+                    disabled={!progress.completed || quest.claimed}
+                    style={{
+                      padding: '6px 12px', borderRadius: 8, border: 'none',
+                      background: quest.claimed ? 'rgba(74,222,128,0.14)' : progress.completed ? '#16a34a' : 'rgba(255,255,255,0.06)',
+                      color: quest.claimed ? '#4ade80' : progress.completed ? '#fff' : '#6b7280',
+                      cursor: (!progress.completed || quest.claimed) ? 'not-allowed' : 'pointer',
+                      fontSize: 12, fontWeight: 600, alignSelf: 'flex-start', flexShrink: 0,
+                    }}
+                  >
+                    {quest.claimed ? 'Claimed' : progress.completed ? 'Claim' : 'Bloccata'}
+                  </button>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
 
       {/* AVAILABLE */}
       {tab === 'available' && (
