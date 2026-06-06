@@ -664,6 +664,35 @@ export interface FameState {
   lastInterviewYear: number
 }
 
+// ---- Extreme Chaos ----
+
+export type ChaosEventType =
+  | 'alien_encounter'
+  | 'cult_escape'
+  | 'kidnapping'
+  | 'absurd_accident'
+  | 'serial_killer'
+  | 'millionaire_scam'
+  | 'survival_scenario'
+  | 'overnight_fame'
+
+export interface ChaosEventRecord {
+  id: string
+  type: ChaosEventType
+  year: number
+  age: number
+  title: string
+  description: string
+  severity: number        // 1-5
+  survived: boolean
+  effects: Effect
+}
+
+export interface ChaosState {
+  triggeredEvents: ChaosEventRecord[]
+  chaosScore: number      // 0-100, rough measure of how absurd the run became
+}
+
 // ---- Credit Score ----
 export type { CreditScoreResult, CreditTier } from '../services/CreditScoreEngine'
 
@@ -781,6 +810,9 @@ export interface GameState {
 
   // Fame
   fame: FameState
+
+  // Extreme chaos history
+  chaos: ChaosState
 
   // Travel
   travelHistory: TravelMemory[]

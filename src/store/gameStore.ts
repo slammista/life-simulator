@@ -46,6 +46,7 @@ import { LivingEngine } from '../services/LivingEngine'
 import { FamilyEngine } from '../services/FamilyEngine'
 import { TraumaEngine } from '../services/TraumaEngine'
 import { FameEngine } from '../services/FameEngine'
+import { ChaosEngine } from '../services/ChaosEngine'
 import type { Addiction, TravelMemory, Religion, Child, LivingType } from './types'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
@@ -160,6 +161,7 @@ function buildInitialState(): GameState {
     hobbies: [],
     socialMedia: [],
     fame: FameEngine.initialState(),
+    chaos: ChaosEngine.initialState(),
     travelHistory: [],
     living: { type: 'parents', location: 'Italy', monthlyCost: 0, mortgageRemaining: 0, propertyValue: 0, roommates: [] },
     nation: (db.nations as Nation[]).find(n => n.id === 'italy') ?? null,
@@ -407,6 +409,11 @@ export const useGameStore = create<FullStore>()(
           messages.push(`${repair.emoji} ${repair.name}: riparazione urgente!`)
         }
 
+        // 22b. Extreme chaos engine (very rare, high-impact story events)
+        const chaosTick = ChaosEngine.annualTick(state)
+        merge(chaosTick.effects)
+        messages.push(...chaosTick.messages)
+
         // 23b. Credit score annual update
         const creditResult = CreditScoreEngine.annualTick(state)
 
@@ -522,6 +529,18 @@ export const useGameStore = create<FullStore>()(
           investments: updatedInvestments.length > 0 ? updatedInvestments : baseFinance.investments,
           assets: updatedAssets.length > 0 ? updatedAssets : baseFinance.assets,
         }
+        const currentFame = FameEngine.ensure(fameTick.fame)
+        const fameWithChaos = FameEngine.ensure({
+          ...currentFame,
+          fame: currentFame.fame + chaosTick.fameDelta.fame,
+          fanbase: currentFame.fanbase + chaosTick.fameDelta.fanbase,
+          publicImage: currentFame.publicImage + chaosTick.fameDelta.publicImage,
+          scandals: currentFame.scandals + chaosTick.fameDelta.scandals,
+          verified: currentFame.verified || chaosTick.fameDelta.fame >= 10,
+        })
+        const traumaWithChaos = chaosTick.trauma
+          ? [...traumaTick.updatedTraumas, chaosTick.trauma].slice(-50)
+          : traumaTick.updatedTraumas
 
         set({
           time: newTime,
@@ -531,7 +550,7 @@ export const useGameStore = create<FullStore>()(
           health: {
             ...healthUpdate,
             addictions: updatedAddictions,
-            traumas: traumaTick.updatedTraumas,
+            traumas: traumaWithChaos,
             ptsd: traumaTick.ptsd || healthUpdate.ptsd,
           },
           education: eduUpdate,
@@ -539,7 +558,8 @@ export const useGameStore = create<FullStore>()(
           criminal: updatedCriminal,
           hobbies: updatedHobbies,
           socialMedia: updatedProfiles.length > 0 ? updatedProfiles : state.socialMedia,
-          fame: fameTick.fame,
+          fame: fameWithChaos,
+          chaos: chaosTick.chaos,
           pets: updatedPets,
           vehicle: {
             ...state.vehicle,
@@ -1565,6 +1585,9 @@ export const useGameStore = create<FullStore>()(
           },
           relationships: state.relationships.filter(r => r.isAlive).slice(0, 3),
           children: [],
+          socialMedia: [],
+          fame: FameEngine.initialState(),
+          chaos: ChaosEngine.initialState(),
           legacy: state.legacy,
           diminishingReturns: {},
           eventLog: [{
@@ -2126,6 +2149,7 @@ export const useGameStore = create<FullStore>()(
         hobbies: state.hobbies,
         socialMedia: state.socialMedia,
         fame: state.fame,
+        chaos: state.chaos,
         travelHistory: state.travelHistory,
         living: state.living,
         nation: state.nation,
