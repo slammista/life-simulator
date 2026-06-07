@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../../store/gameStore'
 import { CloudSaveService, type CloudUser } from '../../services/CloudSaveService'
+import { AdRewardButton } from '../game/AdRewardButton'
 import db from '../../../public/db.json'
 
 // ─── Cloud Save Panel ────────────────────────────────────────────
@@ -209,13 +210,15 @@ function BackupPanel() {
 // ─── Main SettingsScreen ─────────────────────────────────────────
 
 export function SettingsScreen() {
-  const { settings, nation, identity, finance, time, cheatAddMoney, cheatSetMaxStats, cheatSetImmortal, cheatSkipToAge } =
+  const { settings, nation, identity, finance, time, adRewards, claimAdReward, cheatAddMoney, cheatSetMaxStats, cheatSetImmortal, cheatSkipToAge } =
     useGameStore(useShallow(s => ({
       settings: s.settings,
       nation: s.nation,
       identity: s.identity,
       finance: s.finance,
       time: s.time,
+      adRewards: s.adRewards,
+      claimAdReward: s.claimAdReward,
       cheatAddMoney: s.cheatAddMoney,
       cheatSetMaxStats: s.cheatSetMaxStats,
       cheatSetImmortal: s.cheatSetImmortal,
@@ -242,6 +245,15 @@ export function SettingsScreen() {
 
       {/* Local Backup */}
       <BackupPanel />
+
+      {/* Rewarded Ads */}
+      <div className="card" style={{ marginBottom: 12 }}>
+        <p style={{ fontSize: 12, color: '#a78bfa', fontWeight: 600, marginBottom: 4 }}>📺 Premi Gratuiti</p>
+        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
+          Guarda un breve annuncio per ricevere un premio a sorpresa. {adRewards.totalWatched > 0 && `(${adRewards.totalWatched} totali guardati)`}
+        </p>
+        <AdRewardButton adState={adRewards} onClaim={claimAdReward} />
+      </div>
 
       {/* Nation info */}
       <div className="card" style={{ marginBottom: 12 }}>
@@ -386,7 +398,7 @@ export function SettingsScreen() {
           Stack: React 19 + TypeScript + Zustand v5 + Vite
         </p>
         <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>
-          Nazioni: {db.nations.length} · Engines attivi: 39 · Schermate: {26}
+          Nazioni: {db.nations.length} · Engines attivi: 41 · Schermate: 28
         </p>
         <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>
           Saldo: €{finance.money.toLocaleString('it-IT')} · Anno: {time.year} · Età: {time.age}

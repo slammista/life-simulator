@@ -11,6 +11,7 @@ import { GameOverScreen } from './components/screens/GameOverScreen'
 import { AgeGate } from './components/screens/AgeGate'
 import { EmotionalUIEngine } from './services/EmotionalUIEngine'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
+import { TutorialOverlay } from './components/game/TutorialOverlay'
 
 const CareerScreen = lazy(() => import('./components/screens/CareerScreen').then(module => ({ default: module.CareerScreen })))
 const RelationshipScreen = lazy(() => import('./components/screens/RelationshipScreen').then(module => ({ default: module.RelationshipScreen })))
@@ -43,12 +44,13 @@ const LivingScreen = lazy(() => import('./components/screens/LivingScreen'))
 const CausalityTimelineScreen = lazy(() => import('./components/screens/CausalityTimelineScreen'))
 const MinigamesScreen = lazy(() => import('./components/screens/MinigamesScreen').then(m => ({ default: m.MinigamesScreen })))
 const PrivacyPolicyScreen = lazy(() => import('./components/screens/PrivacyPolicyScreen').then(m => ({ default: m.PrivacyPolicyScreen })))
+const LeaderboardScreen = lazy(() => import('./components/screens/LeaderboardScreen').then(m => ({ default: m.LeaderboardScreen })))
 
 // ---- Sub-tab types ----
 type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle' | 'military' | 'living'
 type PeopleSubTab = 'relationships' | 'dating' | 'famiglia'
 type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body' | 'beauty' | 'gambling' | 'sex_health' | 'cosmetic'
-type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'challenges' | 'ribbons' | 'timeline' | 'minigames' | 'settings' | 'privacy'
+type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'challenges' | 'ribbons' | 'timeline' | 'minigames' | 'leaderboard' | 'settings' | 'privacy'
 
 function SubTabBar<T extends string>({
   tabs, active, onChange,
@@ -96,6 +98,9 @@ function App() {
 
   return (
     <div className={`app-shell ${emotionalUI.className}`} data-emotion={emotionalUI.state}>
+      {/* Tutorial — shown once on first play */}
+      <TutorialOverlay />
+
       {/* HUD — sticky top */}
       <HUD />
 
@@ -155,8 +160,9 @@ function App() {
             { id: 'challenges', label: 'Sfide',     emoji: '🏆' },
             { id: 'ribbons',    label: 'Medaglie',  emoji: '🏅' },
             { id: 'timeline',   label: 'Timeline',  emoji: '🧠' },
-            { id: 'minigames',  label: 'Giochi',    emoji: '🧩' },
-            { id: 'settings',   label: 'Impost.',   emoji: '⚙️' },
+            { id: 'minigames',    label: 'Giochi',    emoji: '🧩' },
+            { id: 'leaderboard', label: 'Classifica', emoji: '🏆' },
+            { id: 'settings',    label: 'Impost.',   emoji: '⚙️' },
             { id: 'privacy',    label: 'Privacy',   emoji: '🔒' },
           ]}
           active={profileSub}
@@ -210,9 +216,10 @@ function App() {
             {activeTab === 'profile' && profileSub === 'challenges' && <ChallengeScreen />}
             {activeTab === 'profile' && profileSub === 'ribbons'    && <RibbonsScreen />}
             {activeTab === 'profile' && profileSub === 'timeline'   && <CausalityTimelineScreen />}
-            {activeTab === 'profile' && profileSub === 'minigames'  && <MinigamesScreen />}
-            {activeTab === 'profile' && profileSub === 'settings'   && <SettingsScreen />}
-            {activeTab === 'profile' && profileSub === 'privacy'    && <PrivacyPolicyScreen />}
+            {activeTab === 'profile' && profileSub === 'minigames'    && <MinigamesScreen />}
+            {activeTab === 'profile' && profileSub === 'leaderboard' && <LeaderboardScreen />}
+            {activeTab === 'profile' && profileSub === 'settings'    && <SettingsScreen />}
+            {activeTab === 'profile' && profileSub === 'privacy'     && <PrivacyPolicyScreen />}
           </Suspense>
         </ErrorBoundary>
       </div>

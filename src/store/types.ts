@@ -1010,6 +1010,9 @@ export interface GameState {
   // Minigame stats
   minigameStats: MinigameStats
 
+  // Ad rewards (rewarded ads system)
+  adRewards: import('../services/AdRewardEngine').AdRewardState
+
   // Anti-abuse: diminishing returns tracking per action per year
   diminishingReturns: Record<string, number>
 }
@@ -1167,6 +1170,9 @@ export interface GameActions {
 
   // Minigame actions
   recordMinigameResult: (gameType: string, won: boolean) => ActionResult
+
+  // Ad reward actions
+  claimAdReward: () => { reward: import('../services/AdRewardEngine').AdReward; ok: boolean; reason?: string }
 
   // Vehicle/driving actions
   studyDrivingTheory: () => ActionResult

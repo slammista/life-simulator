@@ -25,6 +25,7 @@ import { SocialMediaEngine, type SocialPlatform, type PostType } from '../servic
 import { SubstanceEngine, type AlcoholType, type SmokeType } from '../services/SubstanceEngine'
 import { PetEngine, type AdoptMethod } from '../services/PetEngine'
 import { PetBattleEngine } from '../services/PetBattleEngine'
+import { AdRewardEngine, adRewardToEffect } from '../services/AdRewardEngine'
 import { TravelEngine, type TravelClass } from '../services/TravelEngine'
 import { DatingEngine, type DatingApp } from '../services/DatingEngine'
 import { VehicleEngine } from '../services/VehicleEngine'
@@ -237,6 +238,7 @@ function buildInitialState(): GameState {
       prisonBreakWins: 0, prisonBreakPlayed: 0,
       lastPlayed: {},
     },
+    adRewards: AdRewardEngine.initialState(),
     diminishingReturns: {},
   }
 }
@@ -1298,6 +1300,21 @@ export const useGameStore = create<FullStore>()(
         return { success: true, message: won ? 'Hai vinto!' : 'Ci riproverai!', effects: {} }
       },
 
+      claimAdReward: () => {
+        const state = get()
+        const check = AdRewardEngine.canWatch(state.adRewards)
+        if (!check.ok) return { reward: { id: '', label: '', emoji: '', description: '', effects: {} }, ok: false, reason: check.reason }
+        const { reward, newState } = AdRewardEngine.claimReward(state.adRewards)
+        const effects = adRewardToEffect(reward, state)
+        const partial = applyEffects(state, effects)
+        set(s => ({
+          ...partial,
+          adRewards: newState,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Premio annuncio: ${reward.label} — ${reward.description}`, emoji: reward.emoji, category: 'life', statChanges: effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { reward, ok: true }
+      },
+
       // ==================== Travel actions ====================
       bookTrip: (destId: string, travelClass: 'economy' | 'business' | 'luxury'): ActionResult => {
         const state = get()
@@ -1722,6 +1739,7 @@ export const useGameStore = create<FullStore>()(
           chaos: ChaosEngine.initialState(),
           dailyQuests: DailyQuestEngine.initialState(),
           npcAgency: NPCAgencyEngine.initialState(),
+          adRewards: AdRewardEngine.initialState(),
           legacy: state.legacy,
           diminishingReturns: {},
           eventLog: [{
@@ -2283,8 +2301,9 @@ export const useGameStore = create<FullStore>()(
         return {
           ...currentState,
           ...ps,
-          // Guarantee minigameStats exists even in saves from before this slice was added
+          // Guarantee new slices exist even in old saves
           minigameStats: ps.minigameStats ?? currentState.minigameStats,
+          adRewards: ps.adRewards ?? currentState.adRewards,
         }
       },
       partialize: (state) => ({
@@ -2332,6 +2351,7 @@ export const useGameStore = create<FullStore>()(
         dailyQuests: state.dailyQuests,
         npcAgency: state.npcAgency,
         minigameStats: state.minigameStats,
+        adRewards: state.adRewards,
       }),
     }
   )
