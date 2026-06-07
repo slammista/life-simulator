@@ -381,7 +381,7 @@ export function SettingsScreen() {
       {/* Version info */}
       <div className="card">
         <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 6, fontWeight: 600 }}>App</p>
-        <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Life Simulator 2D v0.9.0</p>
+        <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Life Simulator 2D v1.0.0</p>
         <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>
           Stack: React 19 + TypeScript + Zustand v5 + Vite
         </p>

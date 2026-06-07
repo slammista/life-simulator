@@ -42,12 +42,13 @@ const RibbonsScreen = lazy(() => import('./components/screens/RibbonsScreen'))
 const LivingScreen = lazy(() => import('./components/screens/LivingScreen'))
 const CausalityTimelineScreen = lazy(() => import('./components/screens/CausalityTimelineScreen'))
 const MinigamesScreen = lazy(() => import('./components/screens/MinigamesScreen').then(m => ({ default: m.MinigamesScreen })))
+const PrivacyPolicyScreen = lazy(() => import('./components/screens/PrivacyPolicyScreen').then(m => ({ default: m.PrivacyPolicyScreen })))
 
 // ---- Sub-tab types ----
 type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle' | 'military' | 'living'
 type PeopleSubTab = 'relationships' | 'dating' | 'famiglia'
 type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body' | 'beauty' | 'gambling' | 'sex_health' | 'cosmetic'
-type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'challenges' | 'ribbons' | 'timeline' | 'minigames' | 'settings'
+type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'challenges' | 'ribbons' | 'timeline' | 'minigames' | 'settings' | 'privacy'
 
 function SubTabBar<T extends string>({
   tabs, active, onChange,
@@ -156,6 +157,7 @@ function App() {
             { id: 'timeline',   label: 'Timeline',  emoji: '🧠' },
             { id: 'minigames',  label: 'Giochi',    emoji: '🧩' },
             { id: 'settings',   label: 'Impost.',   emoji: '⚙️' },
+            { id: 'privacy',    label: 'Privacy',   emoji: '🔒' },
           ]}
           active={profileSub}
           onChange={setProfileSub}
@@ -210,6 +212,7 @@ function App() {
             {activeTab === 'profile' && profileSub === 'timeline'   && <CausalityTimelineScreen />}
             {activeTab === 'profile' && profileSub === 'minigames'  && <MinigamesScreen />}
             {activeTab === 'profile' && profileSub === 'settings'   && <SettingsScreen />}
+            {activeTab === 'profile' && profileSub === 'privacy'    && <PrivacyPolicyScreen />}
           </Suspense>
         </ErrorBoundary>
       </div>
