@@ -12,6 +12,7 @@ import { AgeGate } from './components/screens/AgeGate'
 import { EmotionalUIEngine } from './services/EmotionalUIEngine'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { TutorialOverlay } from './components/game/TutorialOverlay'
+import { InstallBanner } from './components/game/InstallBanner'
 
 const CareerScreen = lazy(() => import('./components/screens/CareerScreen').then(module => ({ default: module.CareerScreen })))
 const RelationshipScreen = lazy(() => import('./components/screens/RelationshipScreen').then(module => ({ default: module.RelationshipScreen })))
@@ -229,6 +230,9 @@ function App() {
 
       {/* Bottom navigation */}
       <BottomTabs active={activeTab} onChange={setActiveTab} />
+
+      {/* PWA install prompt */}
+      <InstallBanner />
     </div>
   )
 }

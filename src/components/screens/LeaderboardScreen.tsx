@@ -48,11 +48,12 @@ export function LeaderboardScreen() {
   const [submitMsg, setSubmitMsg] = useState('')
   const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
-  const { stats, time, ribbons, identity } = useGameStore(useShallow(s => ({
+  const { stats, time, ribbons, identity, finance } = useGameStore(useShallow(s => ({
     stats: s.stats,
     time: s.time,
     ribbons: s.ribbons,
     identity: s.identity,
+    finance: s.finance,
   })))
 
   const loadCategory = useCallback(async (cat: Category) => {
@@ -83,7 +84,7 @@ export function LeaderboardScreen() {
       await CloudSaveService.uploadLeaderboard({
         username: identity.name + ' ' + identity.surname,
         longevity: time.age,
-        wealth: Math.max(0, Math.round(stats.happiness)),
+        wealth: Math.max(0, Math.round(finance.money)),
         happiness: Math.round(stats.happiness),
         karma: Math.round(stats.karma + 100),
         ribbons: ribbons.filter(r => r.unlockedYear != null).length,
@@ -157,7 +158,7 @@ export function LeaderboardScreen() {
           <div>
             <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-cta, #6366f1)' }}>
               {category === 'longevity' && `${time.age} anni`}
-              {category === 'wealth' && `€${Math.max(0, Math.round(stats.happiness)).toLocaleString('it-IT')}`}
+              {category === 'wealth' && `€${Math.max(0, Math.round(finance.money)).toLocaleString('it-IT')}`}
               {category === 'happiness' && `${Math.round(stats.happiness)}/100`}
               {category === 'karma' && `${Math.round(stats.karma + 100)} pt`}
               {category === 'ribbons' && `${ribbons.filter(r => r.unlockedYear != null).length} medaglie`}
