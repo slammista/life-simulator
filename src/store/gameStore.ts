@@ -24,6 +24,7 @@ import { FinanceEngine, type AssetType } from '../services/FinanceEngine'
 import { SocialMediaEngine, type SocialPlatform, type PostType } from '../services/SocialMediaEngine'
 import { SubstanceEngine, type AlcoholType, type SmokeType } from '../services/SubstanceEngine'
 import { PetEngine, type AdoptMethod } from '../services/PetEngine'
+import { PetBattleEngine } from '../services/PetBattleEngine'
 import { TravelEngine, type TravelClass } from '../services/TravelEngine'
 import { DatingEngine, type DatingApp } from '../services/DatingEngine'
 import { VehicleEngine } from '../services/VehicleEngine'
@@ -230,6 +231,12 @@ function buildInitialState(): GameState {
     inventory: [],
     eventLog: [],
     legacy: null,
+    minigameStats: {
+      hackingWins: 0, hackingPlayed: 0,
+      drivingWins: 0, drivingPlayed: 0,
+      prisonBreakWins: 0, prisonBreakPlayed: 0,
+      lastPlayed: {},
+    },
     diminishingReturns: {},
   }
 }
@@ -1219,6 +1226,50 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🏥', category: 'health', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Pet Battle actions ====================
+      petBattle: (petId: string): ActionResult => {
+        const state = get()
+        const result = PetBattleEngine.battle(petId, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const br = result.battleResult!
+        const partial = applyEffects(state, br.effects)
+        set(s => ({
+          ...partial,
+          pets: s.pets.map(p => p.id === petId ? { ...p, ...br.petUpdates } : p),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '⚔️', category: 'life', statChanges: br.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: br.effects }
+      },
+
+      petBreed: (pet1Id: string, pet2Id: string): ActionResult => {
+        const state = get()
+        const result = PetBattleEngine.breed(pet1Id, pet2Id, state)
+        if (!result.success) return { success: false, message: result.message, effects: {} }
+        const partial = applyEffects(state, result.effects)
+        set(s => ({
+          ...partial,
+          pets: result.newPet ? [...s.pets, result.newPet] : s.pets,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🍼', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Minigame actions ====================
+      recordMinigameResult: (gameType: string, won: boolean): ActionResult => {
+        const state = get()
+        const winsKey = `${gameType}Wins` as keyof typeof state.minigameStats
+        const playedKey = `${gameType}Played` as keyof typeof state.minigameStats
+        set(s => ({
+          minigameStats: {
+            ...s.minigameStats,
+            [winsKey]:   typeof s.minigameStats[winsKey] === 'number' ? (s.minigameStats[winsKey] as number) + (won ? 1 : 0) : 0,
+            [playedKey]: typeof s.minigameStats[playedKey] === 'number' ? (s.minigameStats[playedKey] as number) + 1 : 1,
+            lastPlayed: { ...s.minigameStats.lastPlayed, [gameType]: state.time.year },
+          },
+        }))
+        return { success: true, message: won ? 'Hai vinto!' : 'Ci riproverai!', effects: {} }
       },
 
       // ==================== Travel actions ====================
@@ -2244,6 +2295,7 @@ export const useGameStore = create<FullStore>()(
         challengeEngine: state.challengeEngine,
         dailyQuests: state.dailyQuests,
         npcAgency: state.npcAgency,
+        minigameStats: state.minigameStats,
       }),
     }
   )

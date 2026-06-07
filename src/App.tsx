@@ -41,12 +41,13 @@ const ChallengeScreen = lazy(() => import('./components/screens/ChallengeScreen'
 const RibbonsScreen = lazy(() => import('./components/screens/RibbonsScreen'))
 const LivingScreen = lazy(() => import('./components/screens/LivingScreen'))
 const CausalityTimelineScreen = lazy(() => import('./components/screens/CausalityTimelineScreen'))
+const MinigamesScreen = lazy(() => import('./components/screens/MinigamesScreen').then(m => ({ default: m.MinigamesScreen })))
 
 // ---- Sub-tab types ----
 type DevelopSubTab = 'career' | 'education' | 'finance' | 'social' | 'vehicle' | 'military' | 'living'
 type PeopleSubTab = 'relationships' | 'dating' | 'famiglia'
 type WellbeingSubTab = 'health' | 'hobby' | 'criminal' | 'substances' | 'pets' | 'religion' | 'body' | 'beauty' | 'gambling' | 'sex_health' | 'cosmetic'
-type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'challenges' | 'ribbons' | 'timeline' | 'settings'
+type ProfileSubTab = 'goals' | 'travel' | 'politics' | 'pension' | 'challenges' | 'ribbons' | 'timeline' | 'minigames' | 'settings'
 
 function SubTabBar<T extends string>({
   tabs, active, onChange,
@@ -153,6 +154,7 @@ function App() {
             { id: 'challenges', label: 'Sfide',     emoji: '🏆' },
             { id: 'ribbons',    label: 'Medaglie',  emoji: '🏅' },
             { id: 'timeline',   label: 'Timeline',  emoji: '🧠' },
+            { id: 'minigames',  label: 'Giochi',    emoji: '🧩' },
             { id: 'settings',   label: 'Impost.',   emoji: '⚙️' },
           ]}
           active={profileSub}
@@ -206,6 +208,7 @@ function App() {
             {activeTab === 'profile' && profileSub === 'challenges' && <ChallengeScreen />}
             {activeTab === 'profile' && profileSub === 'ribbons'    && <RibbonsScreen />}
             {activeTab === 'profile' && profileSub === 'timeline'   && <CausalityTimelineScreen />}
+            {activeTab === 'profile' && profileSub === 'minigames'  && <MinigamesScreen />}
             {activeTab === 'profile' && profileSub === 'settings'   && <SettingsScreen />}
           </Suspense>
         </ErrorBoundary>

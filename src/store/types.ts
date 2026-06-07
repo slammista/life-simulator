@@ -357,6 +357,21 @@ export interface Pet {
   specialAbilities: string[]
   isAlive: boolean
   acquiredYear: number
+  // Battle system (optional — defaults to 0/false if absent)
+  battleWins?: number
+  battleLosses?: number
+  isRare?: boolean
+  rarity?: 'common' | 'uncommon' | 'rare' | 'legendary'
+}
+
+export interface MinigameStats {
+  hackingWins: number
+  hackingPlayed: number
+  drivingWins: number
+  drivingPlayed: number
+  prisonBreakWins: number
+  prisonBreakPlayed: number
+  lastPlayed: Record<string, number>  // gameType → year last played
 }
 
 // ---- Criminal Record ----
@@ -992,6 +1007,9 @@ export interface GameState {
   // Legacy
   legacy: Legacy | null
 
+  // Minigame stats
+  minigameStats: MinigameStats
+
   // Anti-abuse: diminishing returns tracking per action per year
   diminishingReturns: Record<string, number>
 }
@@ -1142,6 +1160,13 @@ export interface GameActions {
   cheatSetMaxStats: () => void
   cheatSetImmortal: () => void
   cheatSkipToAge: (targetAge: number) => void
+
+  // Pet battle actions
+  petBattle: (petId: string) => ActionResult
+  petBreed: (pet1Id: string, pet2Id: string) => ActionResult
+
+  // Minigame actions
+  recordMinigameResult: (gameType: string, won: boolean) => ActionResult
 
   // Vehicle/driving actions
   studyDrivingTheory: () => ActionResult
