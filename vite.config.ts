@@ -29,22 +29,6 @@ export default defineConfig({
         start_url: '/?source=pwa',
         lang: 'it',
         categories: ['games', 'simulation', 'entertainment'],
-        screenshots: [
-          {
-            src: 'assets/screenshots/screen-main.png',
-            sizes: '390x844',
-            type: 'image/png',
-            form_factor: 'narrow',
-            label: 'Main gameplay screen',
-          },
-          {
-            src: 'assets/screenshots/screen-career.png',
-            sizes: '390x844',
-            type: 'image/png',
-            form_factor: 'narrow',
-            label: 'Career and education',
-          },
-        ],
         icons: [
           {
             src: 'assets/icons/pwa-192x192.png',
