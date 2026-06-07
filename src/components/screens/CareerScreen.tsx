@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { CareerEngine, getAllJobs, getContractLabel } from '../../services/CareerEngine'
+import { useToastStore } from '../../store/toastStore'
 
 export function CareerScreen() {
   const career = useGameStore(s => s.career)
@@ -13,8 +14,11 @@ export function CareerScreen() {
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [tab, setTab] = useState<'offers' | 'history'>('offers')
 
+  const pushToast = useToastStore(s => s.push)
+
   const flash = (msg: string, ok: boolean) => {
     setFeedback({ msg, ok })
+    pushToast(msg, ok ? '💼' : '❌', ok)
     setTimeout(() => setFeedback(null), 3000)
   }
 
@@ -33,7 +37,20 @@ export function CareerScreen() {
     flash(r.message, r.success)
   }
 
-  const availableJobs = getAllJobs().filter(j => CareerEngine.meetsRequirements(j, state))
+  const hasDiploma = state.education.completedLevels.some(l =>
+    ['highschool', 'vocational', 'bachelor', 'master', 'phd', 'mba', 'medical', 'law'].includes(l)
+  )
+  const isMinor = time.age < 18
+
+  const availableJobs = getAllJobs()
+    .filter(j => CareerEngine.meetsRequirements(j, state))
+    // minors can only access part_time and freelance; full_time blocked without diploma
+    .filter(j => {
+      if (j.contractType === 'unemployed' || j.contractType === 'student') return false
+      if (isMinor && j.contractType === 'full_time') return false
+      if (!hasDiploma && j.contractType === 'full_time' && j.requirements.minAge >= 18) return false
+      return true
+    })
 
   const burnoutColor =
     career.burnoutLevel >= 80 ? '#ef4444'
@@ -47,6 +64,13 @@ export function CareerScreen() {
         <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>💼 Carriera</h2>
         <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{time.year}</span>
       </div>
+
+      {/* Teen notice */}
+      {isMinor && (
+        <div style={{ borderRadius: 10, padding: '8px 12px', marginBottom: 12, fontSize: 12, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}>
+          👦 Minorenne — disponibili solo lavori part-time e freelance. Lavori full-time sbloccati dopo il diploma.
+        </div>
+      )}
 
       {/* Feedback */}
       {feedback && (

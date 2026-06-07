@@ -12,6 +12,7 @@ import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { TutorialOverlay } from './components/game/TutorialOverlay'
 import { InstallBanner } from './components/game/InstallBanner'
 import { ToastContainer } from './components/game/ToastNotification'
+import { VitaWidgets } from './components/game/VitaWidgets'
 import { useShallow } from 'zustand/react/shallow'
 
 // ---- Lazy screens ----
@@ -99,10 +100,15 @@ function App() {
 
   const [ageConfirmed, setAgeConfirmed] = useState(() => !!localStorage.getItem('age_confirmed'))
   const [activeTab, setActiveTab] = useState<Tab>('vita')
-  const [lavoroSub,    setLavoroSub]    = useState<LavoroSubTab>('career')
+  const [lavoroSub,    setLavoroSubRaw]    = useState<LavoroSubTab>('career')
   const [assetsSub,    setAssetsSub]    = useState<AssetsSubTab>('finance')
-  const [relazioniSub, setRelazioniSub] = useState<RelazioniSubTab>('relationships')
-  const [activitiesSub, setActivitiesSub] = useState<ActivitiesSubTab>('health')
+  const [relazioniSub, setRelazioniSubRaw] = useState<RelazioniSubTab>('relationships')
+  const [activitiesSub, setActivitiesSubRaw] = useState<ActivitiesSubTab>('health')
+
+  // Cast-safe wrappers used by VitaWidgets (which receives (sub: string) => void)
+  const setLavoroSub    = (s: string) => setLavoroSubRaw(s as LavoroSubTab)
+  const setRelazioniSub = (s: string) => setRelazioniSubRaw(s as RelazioniSubTab)
+  const setActivitiesSub = (s: string) => setActivitiesSubRaw(s as ActivitiesSubTab)
 
   const ageDisabled = isGameOver || currentEvent !== null
 
@@ -130,7 +136,7 @@ function App() {
             { id: 'pension',   label: 'Pensione',   emoji: '🎗️' },
           ]}
           active={lavoroSub}
-          onChange={setLavoroSub}
+          onChange={setLavoroSubRaw}
         />
       )}
       {activeTab === 'assets' && (
@@ -154,12 +160,13 @@ function App() {
             { id: 'pets',          label: 'Animali',   emoji: '🐾' },
           ]}
           active={relazioniSub}
-          onChange={setRelazioniSub}
+          onChange={setRelazioniSubRaw}
         />
       )}
       {activeTab === 'activities' && (
         <SubTabBar<ActivitiesSubTab>
           tabs={[
+
             { id: 'health',      label: 'Salute',    emoji: '💊' },
             { id: 'hobby',       label: 'Hobby',     emoji: '🎸' },
             { id: 'substances',  label: 'Sostanze',  emoji: '🍺' },
@@ -182,7 +189,7 @@ function App() {
             { id: 'privacy',     label: 'Privacy',   emoji: '🔒' },
           ]}
           active={activitiesSub}
-          onChange={setActivitiesSub}
+          onChange={setActivitiesSubRaw}
         />
       )}
 
@@ -190,7 +197,17 @@ function App() {
       <div className="app-content">
         {activeTab === 'vita' && (
           <div className="main-dashboard">
-            <div className="event-panel"><EventDisplay /></div>
+            <div className="event-panel">
+              <div style={{ padding: '8px 12px 0' }}>
+                <VitaWidgets
+                  setActiveTab={setActiveTab}
+                  setActivitiesSub={setActivitiesSub}
+                  setLavoroSub={setLavoroSub}
+                  setRelazioniSub={setRelazioniSub}
+                />
+              </div>
+              <EventDisplay />
+            </div>
             <div className="event-log-panel"><EventLog /></div>
           </div>
         )}

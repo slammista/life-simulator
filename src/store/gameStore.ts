@@ -547,6 +547,24 @@ export const useGameStore = create<FullStore>()(
         const newGpa = clamp(eduUpdate.gpa + eduTick.gpaDelta, 0.0, 4.0)
         eduUpdate = { ...eduUpdate, gpa: parseFloat(newGpa.toFixed(2)) }
 
+        // Auto-enrollment in mandatory schooling (Italy: elementary 6, middle 11, highschool 14)
+        if (!eduUpdate.dropOut && eduUpdate.currentLevel === 'none') {
+          const mandatory = [
+            { level: 'elementary' as const, minAge: 6,  maxAge: 10, prereq: null as string | null,   label: 'Scuola Elementare' },
+            { level: 'middle'     as const, minAge: 11, maxAge: 13, prereq: 'elementary',             label: 'Scuola Media' },
+            { level: 'highschool' as const, minAge: 14, maxAge: 18, prereq: 'middle',                 label: 'Liceo' },
+          ]
+          for (const s of mandatory) {
+            if (newAge >= s.minAge && newAge <= s.maxAge &&
+                !eduUpdate.completedLevels.includes(s.level) &&
+                (s.prereq === null || eduUpdate.completedLevels.includes(s.prereq as import('./types').EducationLevel))) {
+              eduUpdate = { ...eduUpdate, currentLevel: s.level }
+              messages.push(`📚 Inizio anno scolastico: ${s.label}.`)
+              break
+            }
+          }
+        }
+
         // Build log entry
         const eventText = picked ? `${picked.emoji} ${picked.title}` : `Hai compiuto ${newAge} anni.`
         const allMessages = messages.filter(Boolean)

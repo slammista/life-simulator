@@ -2,12 +2,18 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { SubstanceEngine, type AlcoholType, type SmokeType } from '../../services/SubstanceEngine'
 
+// Age-based access rules (conservative, safety-first)
+const MIN_AGE_SMOKE   = 13  // sigarette/vape
+const MIN_AGE_CANNABIS = 16
+const MIN_AGE_ALCOHOL  = 16
+
 export function SubstanceScreen() {
   const { stats, finance, health, time, drinkAlcohol, smokeCigarette, quitSubstance } = useGameStore()
   const [feedback, setFeedback] = useState('')
+  const age = time.age
 
   const ALCOHOL = SubstanceEngine.getAlcohol()
-  const SMOKE = SubstanceEngine.getSmoke()
+  const SMOKE   = SubstanceEngine.getSmoke()
 
   const handleDrink = (type: AlcoholType) => {
     const r = drinkAlcohol(type)
@@ -67,52 +73,78 @@ export function SubstanceScreen() {
         </div>
       )}
 
-      {/* Alcol */}
-      <div>
-        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-          🍺 Alcol
-        </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {(Object.entries(ALCOHOL) as [AlcoholType, typeof ALCOHOL[AlcoholType]][]).map(([type, def]) => (
-            <button
-              key={type}
-              className="card"
-              style={{ padding: '10px', border: 'none', cursor: 'pointer', textAlign: 'left' }}
-              onClick={() => handleDrink(type)}
-            >
-              <div style={{ fontSize: 22, marginBottom: 4 }}>{def.emoji}</div>
-              <div style={{ fontSize: 12, fontWeight: 600 }}>{def.name}</div>
-              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>€{def.cost} · +{def.effects.happiness ?? 0}😊</div>
-            </button>
-          ))}
+      {/* Blocco minori assoluto */}
+      {age < MIN_AGE_SMOKE && (
+        <div className="card" style={{ padding: '14px 16px', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)', textAlign: 'center' }}>
+          <p style={{ fontSize: 22, marginBottom: 6 }}>🔞</p>
+          <p style={{ fontSize: 13, fontWeight: 600, color: '#fca5a5' }}>Non disponibile</p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 4 }}>
+            Sei troppo giovane per accedere a questa sezione.
+          </p>
         </div>
-        {finance.money < 5 && (
-          <p style={{ fontSize: 11, color: '#fca5a5', marginTop: 4 }}>Non hai abbastanza soldi per bere.</p>
-        )}
-      </div>
+      )}
 
-      {/* Fumo */}
-      {time.age >= 18 && (
+      {/* Alcol — dai 16 anni */}
+      {age >= MIN_AGE_ALCOHOL && (
         <div>
           <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-            🚬 Fumo &amp; Sostanze
+            🍺 Alcol
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-            {(Object.entries(SMOKE) as [SmokeType, typeof SMOKE[SmokeType]][]).map(([type, def]) => (
+          {age < 18 && (
+            <div style={{ fontSize: 11, color: '#f97316', marginBottom: 8, padding: '6px 10px', background: 'rgba(249,115,22,0.1)', borderRadius: 8 }}>
+              ⚠️ Minorenne — rischio conseguenze familiari, scolastiche e legali
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {(Object.entries(ALCOHOL) as [AlcoholType, typeof ALCOHOL[AlcoholType]][]).map(([type, def]) => (
               <button
                 key={type}
                 className="card"
                 style={{ padding: '10px', border: 'none', cursor: 'pointer', textAlign: 'left' }}
-                onClick={() => handleSmoke(type)}
+                onClick={() => handleDrink(type)}
               >
                 <div style={{ fontSize: 22, marginBottom: 4 }}>{def.emoji}</div>
-                <div style={{ fontSize: 11, fontWeight: 600 }}>{def.name}</div>
-                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>€{def.cost}</div>
-                {!def.legal && (
-                  <div style={{ fontSize: 9, color: '#f97316', marginTop: 2 }}>⚠️ Illegale</div>
-                )}
+                <div style={{ fontSize: 12, fontWeight: 600 }}>{def.name}</div>
+                <div style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>€{def.cost} · +{def.effects.happiness ?? 0}😊</div>
               </button>
             ))}
+          </div>
+          {finance.money < 5 && (
+            <p style={{ fontSize: 11, color: '#fca5a5', marginTop: 4 }}>Non hai abbastanza soldi per bere.</p>
+          )}
+        </div>
+      )}
+
+      {/* Fumo/sostanze — dai 13 anni (sigarette/vape), dai 16 (cannabis) */}
+      {age >= MIN_AGE_SMOKE && (
+        <div>
+          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+            🚬 Fumo &amp; Sostanze
+          </p>
+          {age < 18 && (
+            <div style={{ fontSize: 11, color: '#f97316', marginBottom: 8, padding: '6px 10px', background: 'rgba(249,115,22,0.1)', borderRadius: 8 }}>
+              ⚠️ Minorenne — rischio sospensione scolastica, punizione genitori, conseguenze salute
+            </div>
+          )}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+            {(Object.entries(SMOKE) as [SmokeType, typeof SMOKE[SmokeType]][]).map(([type, def]) => {
+              const blocked = type === 'marijuana' && age < MIN_AGE_CANNABIS
+              return (
+                <button
+                  key={type}
+                  className="card"
+                  style={{ padding: '10px', border: 'none', cursor: blocked ? 'not-allowed' : 'pointer', textAlign: 'left', opacity: blocked ? 0.4 : 1 }}
+                  onClick={() => !blocked && handleSmoke(type)}
+                  disabled={blocked}
+                >
+                  <div style={{ fontSize: 22, marginBottom: 4 }}>{def.emoji}</div>
+                  <div style={{ fontSize: 11, fontWeight: 600 }}>{def.name}</div>
+                  <div style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>€{def.cost}</div>
+                  {blocked && <div style={{ fontSize: 9, color: '#ef4444', marginTop: 2 }}>min. {MIN_AGE_CANNABIS} anni</div>}
+                  {!def.legal && !blocked && <div style={{ fontSize: 9, color: '#f97316', marginTop: 2 }}>⚠️ Illegale</div>}
+                </button>
+              )
+            })}
           </div>
         </div>
       )}

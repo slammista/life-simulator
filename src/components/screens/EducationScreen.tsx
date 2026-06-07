@@ -18,10 +18,11 @@ const LEVEL_EMOJI: Record<EducationLevel, string> = {
   law: '⚖️',
 }
 
-const ALL_LEVELS: EducationLevel[] = [
-  'kindergarten', 'elementary', 'middle', 'highschool',
+// Mandatory levels handled automatically — only show university/post-secondary for manual enrollment
+const ENROLLABLE_LEVELS: EducationLevel[] = [
   'vocational', 'bachelor', 'master', 'phd', 'mba', 'medical', 'law',
 ]
+const ALL_LEVELS = ENROLLABLE_LEVELS
 
 export function EducationScreen() {
   const education = useGameStore(s => s.education)
@@ -131,6 +132,13 @@ export function EducationScreen() {
         </div>
       )}
 
+      {/* Auto-school notice */}
+      {['elementary', 'middle', 'highschool'].includes(education.currentLevel) && (
+        <div style={{ borderRadius: 10, padding: '8px 12px', marginBottom: 12, fontSize: 12, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', color: '#a5b4fc' }}>
+          📌 Sei automaticamente iscritto/a. La scuola obbligatoria non richiede iscrizione manuale.
+        </div>
+      )}
+
       {/* Tab switcher */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
         {(['status', 'enroll'] as const).map(t => (
@@ -139,7 +147,7 @@ export function EducationScreen() {
               background: tab === t ? 'var(--color-cta)' : 'rgba(255,255,255,0.05)',
               color: tab === t ? '#fff' : 'var(--color-text-secondary)' }}
           >
-            {t === 'status' ? '📋 Informazioni' : '📝 Iscriviti'}
+            {t === 'status' ? '📋 Informazioni' : '📝 Iscriviti (Università)'}
           </button>
         ))}
       </div>
