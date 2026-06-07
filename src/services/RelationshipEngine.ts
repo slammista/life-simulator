@@ -293,6 +293,19 @@ export class RelationshipEngine {
     action: NPCAction,
     state: GameState
   ): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    // ── Safety guards (legal & ethical) ──
+    const ROMANTIC_ACTS: NPCAction[] = ['confess_feelings', 'ask_date', 'kiss', 'propose', 'cheat', 'break_up', 'divorce']
+    const FAMILY_TYPES = ['parent', 'sibling', 'child']
+    if (FAMILY_TYPES.includes(rel.type) && ROMANTIC_ACTS.includes(action)) {
+      return { success: false, message: 'Non puoi avere un\'interazione romantica con un familiare.', effects: {} }
+    }
+    if (rel.age < 18 && ROMANTIC_ACTS.includes(action)) {
+      return { success: false, message: 'Questa persona è minorenne. Interazione non consentita.', effects: {} }
+    }
+    if (state.time.age < 16 && ROMANTIC_ACTS.includes(action)) {
+      return { success: false, message: 'Sei troppo giovane per questo tipo di interazione.', effects: {} }
+    }
+
     // Anti-abuse: diminishing returns per NPC per year
     const key = `interact_${rel.id}_${state.time.year}`
     const count = state.diminishingReturns[key] ?? 0

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import type { NPCMood, NPCPersonalityTrait, Relationship } from '../../store/types'
 import type { NPCContext, NPCAction } from '../../services/RelationshipEngine'
+import { useToastStore } from '../../store/toastStore'
 
 const STAGE_EMOJI: Record<string, string> = {
   stranger: '👤',
@@ -120,9 +121,28 @@ const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: string;
   ],
 }
 
+// Actions that are romantic or sexual in nature — never allowed with family or minors
+const ROMANTIC_ACTIONS: NPCAction[] = ['confess_feelings', 'ask_date', 'kiss', 'propose', 'cheat', 'break_up', 'divorce']
+const FAMILY_TYPES = ['parent', 'sibling', 'child']
+
+function getAllowedActions(
+  rel: Relationship,
+  playerAge: number,
+): Array<{ action: NPCAction; label: string; emoji: string }> {
+  const base = ACTIONS_BY_STAGE[rel.stage] ?? ACTIONS_BY_STAGE.stranger
+  return base.filter(({ action }) => {
+    if (FAMILY_TYPES.includes(rel.type) && ROMANTIC_ACTIONS.includes(action)) return false
+    if (rel.age < 18 && ROMANTIC_ACTIONS.includes(action)) return false
+    if (playerAge < 18 && (action === 'cheat' || action === 'divorce')) return false
+    if (playerAge < 16 && ROMANTIC_ACTIONS.includes(action)) return false
+    return true
+  })
+}
+
 export function RelationshipScreen() {
   const relationships = useGameStore(s => s.relationships)
   const family = useGameStore(s => s.family)
+  const playerAge = useGameStore(s => s.time.age)
   const meetNewPerson = useGameStore(s => s.meetNewPerson)
   const interactWithNPC = useGameStore(s => s.interactWithNPC)
 
@@ -130,8 +150,11 @@ export function RelationshipScreen() {
   const [expanded, setExpanded] = useState<string | null>(null)
   const [showContextPicker, setShowContextPicker] = useState(false)
 
+  const pushToast = useToastStore(s => s.push)
+
   const flash = (msg: string, ok: boolean) => {
     setFeedback({ msg, ok })
+    pushToast(msg, ok ? '💚' : '❌', ok)
     setTimeout(() => setFeedback(null), 3500)
   }
 
@@ -263,6 +286,7 @@ export function RelationshipScreen() {
                   expanded={expanded === rel.id}
                   onToggle={() => toggleExpand(rel.id)}
                   onAction={(action) => handleAction(rel.id, action)}
+                  playerAge={playerAge}
                 />
               ))}
             </div>
@@ -275,13 +299,14 @@ export function RelationshipScreen() {
 
 // ---- RelCard subcomponent ----
 
-function RelCard({ rel, expanded, onToggle, onAction }: {
+function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
   rel: Relationship
   expanded: boolean
   onToggle: () => void
   onAction: (action: NPCAction) => void
+  playerAge: number
 }) {
-  const actions = ACTIONS_BY_STAGE[rel.stage] ?? ACTIONS_BY_STAGE.stranger
+  const actions = getAllowedActions(rel, playerAge)
   const mood = MOOD_LABELS[rel.mood ?? 'neutrale']
   const traits = rel.personalityTraits ?? []
   const chainFlags = rel.historyFlags.filter(flag => flag in CHAIN_LABELS)
