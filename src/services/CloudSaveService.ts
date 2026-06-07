@@ -168,6 +168,38 @@ export const CloudSaveService = {
     }
   },
 
+  // Upload score to leaderboard (all categories in one call)
+  async uploadLeaderboard(payload: {
+    username: string
+    longevity?: number
+    wealth?: number
+    happiness?: number
+    karma?: number
+    ribbons?: number
+    ageReached?: number
+  }): Promise<void> {
+    const client = await getClient()
+    if (!client) return
+    const { data: { user } } = await client.auth.getUser()
+    if (!user) return
+
+    const categories = (['longevity', 'wealth', 'happiness', 'karma', 'ribbons'] as const)
+    await Promise.allSettled(
+      categories
+        .filter(cat => payload[cat] !== undefined)
+        .map(cat =>
+          client.from('leaderboard').upsert({
+            user_id: user.id,
+            username: payload.username,
+            category: cat,
+            score: payload[cat]!,
+            age_reached: payload.ageReached,
+            ribbons_count: payload.ribbons ?? 0,
+          }, { onConflict: 'user_id,category' })
+        )
+    )
+  },
+
   // Returns ISO string of last cloud save, or null
   async getCloudSaveDate(): Promise<string | null> {
     const client = await getClient()

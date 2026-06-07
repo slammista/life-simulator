@@ -306,16 +306,37 @@ export const useGameStore = create<FullStore>()(
         const ironManMultiplier = state.settings.ironMan ? 1.3 : 1.0
         const hardModeMultiplier = state.settings.mode === 'hard' ? 1.2 : 1.0
         const decayMult = ironManMultiplier * hardModeMultiplier
+        // Energy: -2/year natural decay (was -5 — too aggressive).
+        // Happiness penalty scales with poverty level and living situation.
+        const happinessPenalty = state.finance.money < 200 ? -6
+          : state.finance.money < 500 ? -3
+          : state.living.type === 'homeless' ? -5
+          : 0
         merge({
-          energy: -5,
+          energy: Math.round(-2 * decayMult),
           health: Math.round((newAge > 50 ? -(newAge - 50) * 0.3 : -1) * decayMult),
-          happiness: state.finance.money < 500 ? -3 : 0,
+          happiness: happinessPenalty,
         })
 
         // 2. Monthly salary (12x in one year tick)
         if (state.career.currentJob) {
           const salaryMultiplier = state.settings.mode === 'hard' ? 0.7 : 1.0
           merge({ money: Math.round(state.career.currentJob.salary * 12 * salaryMultiplier) })
+        }
+
+        // 2b. Hobby passive income (monthly income from monetized hobbies)
+        const hobbyIncome = state.hobbies.reduce((sum, h) => sum + (h.monthlyIncome ?? 0), 0)
+        if (hobbyIncome > 0) merge({ money: hobbyIncome * 12 })
+
+        // 2c. Living costs — rent or mortgage (monthly × 12 per year)
+        // This was previously missing, causing housing to be effectively free.
+        if (state.living.monthlyCost > 0) {
+          merge({ money: -(state.living.monthlyCost * 12) })
+          // Warn player if rent is more than 40% of annual income
+          const annualIncome = (state.career.currentJob?.salary ?? 0) * 12 + hobbyIncome * 12
+          if (annualIncome > 0 && state.living.monthlyCost * 12 > annualIncome * 0.4) {
+            merge({ mentalHealth: -2, happiness: -2 })
+          }
         }
 
         // 3. Nation effect
@@ -619,6 +640,11 @@ export const useGameStore = create<FullStore>()(
             ...financeWithInvestments,
             creditScore: creditResult.updatedScore,
           },
+          living: state.living.mortgageRemaining > 0 ? {
+            ...state.living,
+            // Reduce outstanding principal by estimated annual principal portion (~35% of payment)
+            mortgageRemaining: Math.max(0, state.living.mortgageRemaining - state.living.monthlyCost * 12 * 0.35),
+          } : state.living,
           market: updatedMarket,
           challengeEngine: { ...state.challengeEngine, ...challengeResult.updatedState },
           dailyQuests: dailyQuestState,
@@ -2251,6 +2277,16 @@ export const useGameStore = create<FullStore>()(
     {
       name: 'lifesim2d-save',
       storage: createJSONStorage(() => localStorage),
+      // Merge loaded state with current defaults to handle missing slices in old saves
+      merge: (persistedState: unknown, currentState: FullStore): FullStore => {
+        const ps = persistedState as Partial<FullStore>
+        return {
+          ...currentState,
+          ...ps,
+          // Guarantee minigameStats exists even in saves from before this slice was added
+          minigameStats: ps.minigameStats ?? currentState.minigameStats,
+        }
+      },
       partialize: (state) => ({
         isStarted: state.isStarted,
         isGameOver: state.isGameOver,

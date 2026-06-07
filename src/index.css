@@ -22,6 +22,8 @@ html, body {
   height: 100%;
   width: 100%;
   overflow-x: hidden;
+  /* Prevent bounce/overscroll on iOS */
+  overscroll-behavior: none;
 }
 
 body {
@@ -34,6 +36,18 @@ body {
   -moz-osx-font-smoothing: grayscale;
   display: flex;
   justify-content: center;
+  /* iOS safe area support for top notch */
+  padding-top: env(safe-area-inset-top, 0px);
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+}
+
+/* Smooth momentum scrolling on all scrollable areas */
+.app-content,
+[style*="overflow-y: auto"],
+[style*="overflowY: auto"] {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
 #root {
@@ -307,13 +321,14 @@ body {
   z-index: 100;
 }
 
-/* Bottom tabs */
+/* Bottom tabs — safe-area for iPhone home bar */
 .bottom-tabs {
   background: var(--bg-card);
   border-top: 1px solid var(--color-border);
-  height: 56px;
+  height: calc(56px + env(safe-area-inset-bottom, 0px));
+  padding-bottom: env(safe-area-inset-bottom, 0px);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: space-around;
   position: sticky;
   bottom: 0;
@@ -330,8 +345,12 @@ body {
   cursor: pointer;
   color: var(--color-text-secondary);
   font-size: 10px;
-  padding: 4px 12px;
+  /* Minimum 44×44 touch target per Apple HIG / WCAG 2.5.5 */
+  min-width: 44px;
+  min-height: 44px;
+  padding: 6px 10px;
   transition: color 0.15s;
+  -webkit-tap-highlight-color: transparent;
 }
 .tab-btn.active {
   color: var(--color-cta);
