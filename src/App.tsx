@@ -1,4 +1,5 @@
 import { Suspense, lazy, useState } from 'react'
+import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from './store/gameStore'
 import { HUD } from './components/game/HUD'
 import { EventDisplay } from './components/game/EventDisplay'
@@ -9,6 +10,7 @@ import { NewGameScreen } from './components/screens/NewGameScreen'
 import { GameOverScreen } from './components/screens/GameOverScreen'
 import { AgeGate } from './components/screens/AgeGate'
 import { EmotionalUIEngine } from './services/EmotionalUIEngine'
+import { ErrorBoundary } from './components/common/ErrorBoundary'
 
 const CareerScreen = lazy(() => import('./components/screens/CareerScreen').then(module => ({ default: module.CareerScreen })))
 const RelationshipScreen = lazy(() => import('./components/screens/RelationshipScreen').then(module => ({ default: module.RelationshipScreen })))
@@ -74,8 +76,11 @@ function ScreenFallback() {
 }
 
 function App() {
-  const store = useGameStore()
-  const { isStarted, isGameOver } = store
+  // Granular selectors — prevents full re-render on every state change
+  const isStarted = useGameStore(s => s.isStarted)
+  const isGameOver = useGameStore(s => s.isGameOver)
+  const emotionalUI = useGameStore(useShallow(s => EmotionalUIEngine.derive(s)))
+
   const [ageConfirmed, setAgeConfirmed] = useState(() => !!localStorage.getItem('age_confirmed'))
   const [activeTab, setActiveTab] = useState<Tab>('main')
   const [developSub, setDevelopSub] = useState<DevelopSubTab>('career')
@@ -86,8 +91,6 @@ function App() {
   if (!ageConfirmed) return <AgeGate onConfirm={() => setAgeConfirmed(true)} />
   if (!isStarted) return <NewGameScreen />
   if (isGameOver) return <GameOverScreen />
-
-  const emotionalUI = EmotionalUIEngine.derive(store)
 
   return (
     <div className={`app-shell ${emotionalUI.className}`} data-emotion={emotionalUI.state}>
@@ -170,40 +173,42 @@ function App() {
           </div>
         )}
 
-        <Suspense fallback={<ScreenFallback />}>
-          {activeTab === 'develop' && developSub === 'career'    && <CareerScreen />}
-          {activeTab === 'develop' && developSub === 'education' && <EducationScreen />}
-          {activeTab === 'develop' && developSub === 'finance'   && <FinanceScreen />}
-          {activeTab === 'develop' && developSub === 'social'    && <SocialMediaScreen />}
-          {activeTab === 'develop' && developSub === 'vehicle'   && <VehicleScreen />}
-          {activeTab === 'develop' && developSub === 'military'  && <MilitaryScreen />}
-          {activeTab === 'develop' && developSub === 'living'    && <LivingScreen />}
+        <ErrorBoundary>
+          <Suspense fallback={<ScreenFallback />}>
+            {activeTab === 'develop' && developSub === 'career'    && <CareerScreen />}
+            {activeTab === 'develop' && developSub === 'education' && <EducationScreen />}
+            {activeTab === 'develop' && developSub === 'finance'   && <FinanceScreen />}
+            {activeTab === 'develop' && developSub === 'social'    && <SocialMediaScreen />}
+            {activeTab === 'develop' && developSub === 'vehicle'   && <VehicleScreen />}
+            {activeTab === 'develop' && developSub === 'military'  && <MilitaryScreen />}
+            {activeTab === 'develop' && developSub === 'living'    && <LivingScreen />}
 
-          {activeTab === 'people' && peopleSub === 'relationships' && <RelationshipScreen />}
-          {activeTab === 'people' && peopleSub === 'dating'        && <DatingScreen />}
-          {activeTab === 'people' && peopleSub === 'famiglia'      && <ParentingScreen />}
+            {activeTab === 'people' && peopleSub === 'relationships' && <RelationshipScreen />}
+            {activeTab === 'people' && peopleSub === 'dating'        && <DatingScreen />}
+            {activeTab === 'people' && peopleSub === 'famiglia'      && <ParentingScreen />}
 
-          {activeTab === 'wellbeing' && wellbeingSub === 'health'     && <HealthScreen />}
-          {activeTab === 'wellbeing' && wellbeingSub === 'hobby'      && <HobbyScreen />}
-          {activeTab === 'wellbeing' && wellbeingSub === 'substances' && <SubstanceScreen />}
-          {activeTab === 'wellbeing' && wellbeingSub === 'pets'       && <PetScreen />}
-          {activeTab === 'wellbeing' && wellbeingSub === 'criminal'   && <CriminalScreen />}
-          {activeTab === 'wellbeing' && wellbeingSub === 'religion'   && <ReligionScreen />}
-          {activeTab === 'wellbeing' && wellbeingSub === 'body'       && <BodyModScreen />}
-          {activeTab === 'wellbeing' && wellbeingSub === 'beauty'     && <BeautyScreen />}
-          {activeTab === 'wellbeing' && wellbeingSub === 'gambling'   && <GamblingScreen />}
-          {activeTab === 'wellbeing' && wellbeingSub === 'sex_health' && <SexualHealthScreen />}
-          {activeTab === 'wellbeing' && wellbeingSub === 'cosmetic'   && <CosmeticSurgeryScreen />}
+            {activeTab === 'wellbeing' && wellbeingSub === 'health'     && <HealthScreen />}
+            {activeTab === 'wellbeing' && wellbeingSub === 'hobby'      && <HobbyScreen />}
+            {activeTab === 'wellbeing' && wellbeingSub === 'substances' && <SubstanceScreen />}
+            {activeTab === 'wellbeing' && wellbeingSub === 'pets'       && <PetScreen />}
+            {activeTab === 'wellbeing' && wellbeingSub === 'criminal'   && <CriminalScreen />}
+            {activeTab === 'wellbeing' && wellbeingSub === 'religion'   && <ReligionScreen />}
+            {activeTab === 'wellbeing' && wellbeingSub === 'body'       && <BodyModScreen />}
+            {activeTab === 'wellbeing' && wellbeingSub === 'beauty'     && <BeautyScreen />}
+            {activeTab === 'wellbeing' && wellbeingSub === 'gambling'   && <GamblingScreen />}
+            {activeTab === 'wellbeing' && wellbeingSub === 'sex_health' && <SexualHealthScreen />}
+            {activeTab === 'wellbeing' && wellbeingSub === 'cosmetic'   && <CosmeticSurgeryScreen />}
 
-          {activeTab === 'profile' && profileSub === 'goals'      && <GoalsScreen />}
-          {activeTab === 'profile' && profileSub === 'travel'     && <TravelScreen />}
-          {activeTab === 'profile' && profileSub === 'politics'   && <PoliticsScreen />}
-          {activeTab === 'profile' && profileSub === 'pension'    && <RetirementScreen />}
-          {activeTab === 'profile' && profileSub === 'challenges' && <ChallengeScreen />}
-          {activeTab === 'profile' && profileSub === 'ribbons'    && <RibbonsScreen />}
-          {activeTab === 'profile' && profileSub === 'timeline'   && <CausalityTimelineScreen />}
-          {activeTab === 'profile' && profileSub === 'settings'   && <SettingsScreen />}
-        </Suspense>
+            {activeTab === 'profile' && profileSub === 'goals'      && <GoalsScreen />}
+            {activeTab === 'profile' && profileSub === 'travel'     && <TravelScreen />}
+            {activeTab === 'profile' && profileSub === 'politics'   && <PoliticsScreen />}
+            {activeTab === 'profile' && profileSub === 'pension'    && <RetirementScreen />}
+            {activeTab === 'profile' && profileSub === 'challenges' && <ChallengeScreen />}
+            {activeTab === 'profile' && profileSub === 'ribbons'    && <RibbonsScreen />}
+            {activeTab === 'profile' && profileSub === 'timeline'   && <CausalityTimelineScreen />}
+            {activeTab === 'profile' && profileSub === 'settings'   && <SettingsScreen />}
+          </Suspense>
+        </ErrorBoundary>
       </div>
 
       {/* Age button — above bottom tabs, only on main tab */}
