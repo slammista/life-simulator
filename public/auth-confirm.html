@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Registrazione Completata — Life Simulator 2D</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      color: #eaeaea;
+      padding: 24px;
+    }
+    .card {
+      background: #16213e;
+      border: 1px solid rgba(99,102,241,0.3);
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .icon { font-size: 64px; margin-bottom: 20px; }
+    h1 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #a78bfa;
+    }
+    p {
+      font-size: 14px;
+      color: #a0a0b0;
+      line-height: 1.6;
+      margin-bottom: 32px;
+    }
+    .btn {
+      display: inline-block;
+      padding: 14px 32px;
+      background: linear-gradient(135deg, #6366f1, #a78bfa);
+      color: #fff;
+      font-size: 15px;
+      font-weight: 600;
+      border-radius: 12px;
+      text-decoration: none;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.85; }
+    .logo {
+      font-size: 12px;
+      color: #555;
+      margin-top: 28px;
+    }
+    .error {
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.3);
+      border-radius: 10px;
+      padding: 12px;
+      font-size: 13px;
+      color: #fca5a5;
+      margin-bottom: 20px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon" id="icon">✅</div>
+    <h1 id="title">Registrazione Completata!</h1>
+    <div class="error" id="error"></div>
+    <p id="subtitle">Il tuo account è stato confermato con successo.<br>Accedi ora per iniziare a giocare.</p>
+    <a href="/" class="btn" id="loginBtn">Effettua il Login →</a>
+    <p class="logo">Life Simulator 2D</p>
+  </div>
+
+  <script type="module">
+    // Process Supabase session from URL so the user is logged in when they return to the app.
+    // Supabase redirects here with #access_token=...&refresh_token=...&type=signup
+    const hash = window.location.hash.slice(1)
+    const params = new URLSearchParams(hash)
+    const type = params.get('type')
+    const accessToken = params.get('access_token')
+    const refreshToken = params.get('refresh_token')
+    const error = params.get('error_description')
+
+    if (error) {
+      document.getElementById('icon').textContent = '❌'
+      document.getElementById('title').textContent = 'Errore di Conferma'
+      document.getElementById('subtitle').textContent = 'Il link potrebbe essere scaduto. Riprova la registrazione.'
+      document.getElementById('error').style.display = 'block'
+      document.getElementById('error').textContent = decodeURIComponent(error)
+      document.getElementById('loginBtn').textContent = 'Torna al Gioco →'
+    } else if (accessToken && refreshToken) {
+      // Store session so supabase-js picks it up automatically on next app load
+      try {
+        const supabaseUrl = 'https://joxlweyrhopeqllkftrm.supabase.co'
+        const projectRef = supabaseUrl.match(/https:\/\/([^.]+)/)?.[1]
+        const storageKey = `sb-${projectRef}-auth-token`
+        const session = {
+          access_token: accessToken,
+          refresh_token: refreshToken,
+          token_type: 'bearer',
+          expires_in: parseInt(params.get('expires_in') || '3600'),
+          expires_at: Math.floor(Date.now() / 1000) + parseInt(params.get('expires_in') || '3600'),
+        }
+        localStorage.setItem(storageKey, JSON.stringify(session))
+      } catch (_) {
+        // Session will be restored via supabase on next load anyway
+      }
+    }
+
+    // If it's a password recovery type, adjust copy
+    if (type === 'recovery') {
+      document.getElementById('icon').textContent = '🔑'
+      document.getElementById('title').textContent = 'Password Recuperata'
+      document.getElementById('subtitle').textContent = 'Identità verificata. Accedi e aggiorna la tua password nelle impostazioni.'
+    }
+  </script>
+</body>
+</html>

@@ -99,7 +99,12 @@ export const CloudSaveService = {
   async signUp(email: string, password: string): Promise<CloudSaveResult> {
     const client = await getClient()
     if (!client) return { success: false, error: 'Cloud save non configurato' }
-    const { error } = await client.auth.signUp({ email, password })
+    const redirectTo = `${window.location.origin}/auth-confirm`
+    const { error } = await client.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: redirectTo },
+    })
     if (error) return { success: false, error: error.message }
     return { success: true }
   },

@@ -49,6 +49,7 @@ export function GameOverScreen() {
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'done' | 'error' | 'noauth'>('idle')
   const [extraLifeUsed, setExtraLifeUsed] = useState(false)
   const [adError, setAdError] = useState('')
+  const [shareDone, setShareDone] = useState(false)
 
   const death = deathMessages[deathType ?? 'natural'] ?? deathMessages.natural
   const goalsCount = completedGoals.length
@@ -79,6 +80,20 @@ export function GameOverScreen() {
       setSubmitState('done')
     } catch {
       setSubmitState('error')
+    }
+  }
+
+  async function handleShare() {
+    const text = `Ho vissuto ${time.age} anni su Life Simulator 2D! 🎮\n💰 €${finance.money.toLocaleString('it-IT')} | 😊 Felicità ${Math.round(stats.happiness)}/100 | 🎯 ${completedGoals.length} goals\nQuanto vivi tu? → life-simulator-2d.vercel.app`
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: 'Life Simulator 2D', text })
+        setShareDone(true)
+      } catch { /* user cancelled */ }
+    } else {
+      await navigator.clipboard.writeText(text)
+      setShareDone(true)
+      setTimeout(() => setShareDone(false), 3000)
     }
   }
 
@@ -147,6 +162,19 @@ export function GameOverScreen() {
             ))}
           </div>
         </div>
+
+        {/* Share */}
+        <button
+          onClick={handleShare}
+          style={{
+            width: '100%', padding: '10px 0', borderRadius: 10, fontSize: 13, fontWeight: 600,
+            border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', marginBottom: 16,
+            background: shareDone ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.1)',
+            color: shareDone ? '#10b981' : '#a78bfa',
+          }}
+        >
+          {shareDone ? '✅ Copiato negli appunti!' : '📤 Condividi il tuo risultato'}
+        </button>
 
         {/* Legacy */}
         <div className="card" style={{ width: '100%', marginBottom: 16 }}>

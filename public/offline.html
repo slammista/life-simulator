@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Offline — Life Simulator 2D</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #1a1a2e;
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      color: #eaeaea;
+      padding: 24px;
+      text-align: center;
+    }
+    .card {
+      background: #16213e;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 20px;
+      padding: 40px 32px;
+      max-width: 360px;
+      width: 100%;
+    }
+    .icon { font-size: 56px; margin-bottom: 20px; }
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 10px; }
+    p { font-size: 14px; color: #a0a0b0; line-height: 1.6; margin-bottom: 28px; }
+    button {
+      padding: 12px 28px;
+      background: #6366f1;
+      color: #fff;
+      font-size: 14px;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+    }
+    button:hover { opacity: 0.85; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon">📡</div>
+    <h1>Sei offline</h1>
+    <p>Nessuna connessione disponibile. Se hai già visitato il gioco, il contenuto in cache dovrebbe caricarsi automaticamente.</p>
+    <button onclick="window.location.reload()">Riprova</button>
+  </div>
+</body>
+</html>

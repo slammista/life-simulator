@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://life-simulator-2d.vercel.app/sitemap.xml
