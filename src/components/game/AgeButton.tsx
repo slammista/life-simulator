@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useCallback } from 'react'
 import { useGameStore } from '../../store/gameStore'
 
 export function AgeButton() {
@@ -7,7 +7,6 @@ export function AgeButton() {
   const disabled = isGameOver || currentEvent !== null
 
   useEffect(() => {
-    // Simple Phaser-like pulse animation via CSS when enabled
     if (!disabled && btnRef.current) {
       btnRef.current.classList.add('pulse')
     } else if (btnRef.current) {
@@ -15,12 +14,21 @@ export function AgeButton() {
     }
   }, [disabled])
 
+  const handleClick = useCallback(() => {
+    if (disabled) return
+    // Haptic feedback if supported
+    if ('vibrate' in navigator) {
+      navigator.vibrate(40)
+    }
+    handleInvecchia()
+  }, [disabled, handleInvecchia])
+
   return (
-    <div style={{ padding: '8px 12px' }}>
+    <div className="age-btn-wrap">
       <button
         ref={btnRef}
         className="btn-age"
-        onClick={handleInvecchia}
+        onClick={handleClick}
         disabled={disabled}
         style={{
           opacity: disabled ? 0.5 : 1,

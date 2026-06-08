@@ -463,99 +463,72 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
   const traits = rel.personalityTraits ?? []
   const chainFlags = rel.historyFlags.filter(flag => flag in CHAIN_LABELS)
 
+  // Determine dominant affection value for the always-visible bar
+  const affection = Math.round((rel.trust * 0.5 + rel.love * 0.35 + rel.respect * 0.15))
+  const affectionColor = affection >= 70 ? '#10b981' : affection >= 40 ? '#f59e0b' : '#f43f5e'
+
+  const isRomantic = ['partner', 'spouse'].includes(rel.type)
+  const isFamilyType = ['parent', 'sibling', 'child'].includes(rel.type)
+
   return (
-    <div className="card" style={{ padding: 12 }}>
+    <div className="card tap-scale" style={{ padding: '12px 14px' }}>
       {/* Header row */}
-      <div
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-        onClick={onToggle}
-      >
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <span style={{ fontSize: 26 }}>{rel.emoji}</span>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <p style={{ fontWeight: 600, fontSize: 14 }}>{rel.name}</p>
-              {rel.toxicityTag && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 99, background: 'rgba(239,68,68,0.2)', color: '#fca5a5' }}>⚠️ tossica</span>}
-            </div>
-            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{REL_TYPE_LABELS[rel.type] ?? rel.type} · {rel.age}y</p>
-            {/* Compact inline bars — always visible */}
-            {!expanded && (
-              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-                {[
-                  { label: '❤️', val: rel.trust,  color: '#10b981', title: `Fiducia: ${rel.trust}` },
-                  { label: '💕', val: rel.love,   color: '#f43f5e', title: `Amore: ${rel.love}` },
-                ].map(({ label, val, color, title }) => (
-                  <div key={title} style={{ display: 'flex', alignItems: 'center', gap: 3 }} title={title}>
-                    <span style={{ fontSize: 9 }}>{label}</span>
-                    <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
-                      <div style={{ height: '100%', width: `${val}%`, background: color, borderRadius: 2 }} />
-                    </div>
-                    <span style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>{val}</span>
-                  </div>
-                ))}
-              </div>
+      <div className="rel-card-header" onClick={onToggle}>
+        {/* NPC avatar circle */}
+        <div className="rel-card-avatar" style={{
+          borderColor: isRomantic ? 'rgba(244,63,94,0.4)' : isFamilyType ? 'rgba(251,191,36,0.4)' : 'rgba(124,92,255,0.25)',
+          background: isRomantic ? 'rgba(244,63,94,0.12)' : isFamilyType ? 'rgba(251,191,36,0.1)' : 'rgba(124,92,255,0.1)',
+        }}>
+          {rel.emoji}
+        </div>
+
+        {/* Identity + bars */}
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            <span style={{ fontWeight: 700, fontSize: 14 }}>{rel.name}</span>
+            <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{rel.age}y</span>
+            {rel.toxicityTag && (
+              <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 99, background: 'rgba(239,68,68,0.18)', color: '#fca5a5' }}>
+                ⚠️ tossica
+              </span>
             )}
           </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+            <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+              {REL_TYPE_LABELS[rel.type] ?? rel.type}
+            </span>
+            <span style={{ fontSize: 13 }}>{STAGE_EMOJI[rel.stage] ?? '👤'}</span>
+            {/* Mood badge */}
+            <span className="rel-mood-badge" style={{ color: mood.color }}>
+              {mood.emoji} {mood.label}
+            </span>
+          </div>
+          {/* Affection bar — always visible */}
+          <div style={{ marginTop: 6 }}>
+            <div className="rel-affection-bar">
+              <div className="rel-affection-fill" style={{ width: `${affection}%`, background: affectionColor }} />
+            </div>
+          </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span
-            title={`Umore: ${mood.label}`}
-            style={{
-              fontSize: 11,
-              color: mood.color,
-              padding: '2px 7px',
-              borderRadius: 999,
-              background: 'rgba(255,255,255,0.06)',
-              border: '1px solid rgba(255,255,255,0.08)',
-              whiteSpace: 'nowrap',
-            }}
-          >
-            {mood.emoji} {mood.label}
-          </span>
-          <span style={{ fontSize: 18 }}>{STAGE_EMOJI[rel.stage] ?? '👤'}</span>
-          <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{expanded ? '▲' : '▼'}</span>
-        </div>
+
+        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', flexShrink: 0 }}>{expanded ? '▲' : '▼'}</span>
       </div>
 
       {/* Expanded section */}
       {expanded && (
         <div style={{ marginTop: 12 }}>
-          {traits.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
+          {/* Trait + chain badges */}
+          {(traits.length > 0 || chainFlags.length > 0) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
               {traits.map(trait => (
-                <span
-                  key={trait}
-                  style={{
-                    fontSize: 11,
-                    color: '#cbd5e1',
-                    padding: '3px 8px',
-                    borderRadius: 999,
-                    background: 'rgba(255,255,255,0.05)',
-                    border: '1px solid rgba(255,255,255,0.08)',
-                  }}
-                >
+                <span key={trait} style={{ fontSize: 10, color: '#cbd5e1', padding: '2px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
                   {TRAIT_LABELS[trait]}
                 </span>
               ))}
-            </div>
-          )}
-
-          {chainFlags.length > 0 && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 12 }}>
               {chainFlags.map(flag => {
                 const chain = CHAIN_LABELS[flag]
                 return (
-                  <span
-                    key={flag}
-                    style={{
-                      fontSize: 11,
-                      color: chain.color,
-                      padding: '3px 8px',
-                      borderRadius: 999,
-                      background: 'rgba(255,255,255,0.05)',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                    }}
-                  >
+                  <span key={flag} style={{ fontSize: 10, color: chain.color, padding: '2px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.05)', border: `1px solid ${chain.color}33` }}>
                     {chain.label}
                   </span>
                 )
@@ -563,7 +536,7 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
             </div>
           )}
 
-          {/* Stat bars */}
+          {/* Detailed stat bars */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
             {[
               { label: 'Fiducia', val: rel.trust, color: '#10b981' },
@@ -573,38 +546,36 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
               { label: 'Gelosia', val: rel.jealousy, color: '#ef4444' },
             ].map(({ label, val, color }) => (
               <div key={label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 65, flexShrink: 0 }}>{label}</span>
+                <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', width: 60, flexShrink: 0 }}>{label}</span>
                 <div className="stat-bar" style={{ flex: 1 }}>
                   <div className="stat-bar-fill" style={{ width: `${val}%`, backgroundColor: color }} />
                 </div>
-                <span style={{ fontSize: 11, width: 24, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{val}</span>
+                <span style={{ fontSize: 10, width: 22, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{val}</span>
               </div>
             ))}
           </div>
 
           {/* Action buttons */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-            {actions.map(({ action, label, emoji }) => (
-              <button
-                key={action}
-                onClick={() => onAction(action)}
-                style={{
-                  padding: '6px 10px', borderRadius: 10, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: 'none',
-                  background: action === 'break_up' || action === 'divorce' || action === 'insult'
-                    ? 'rgba(239,68,68,0.15)'
-                    : action === 'cheat'
-                    ? 'rgba(168,85,247,0.15)'
-                    : 'rgba(255,255,255,0.07)',
-                  color: action === 'break_up' || action === 'divorce' || action === 'insult'
-                    ? '#fca5a5'
-                    : action === 'cheat'
-                    ? '#d8b4fe'
-                    : 'var(--color-text)',
-                }}
-              >
-                {emoji} {label}
-              </button>
-            ))}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: actions.length > 0 ? 0 : 0 }}>
+            {actions.map(({ action, label, emoji }) => {
+              const isDanger = action === 'break_up' || action === 'divorce' || action === 'insult'
+              const isDark = action === 'cheat'
+              return (
+                <button
+                  key={action}
+                  onClick={() => onAction(action)}
+                  className="tap-scale"
+                  style={{
+                    padding: '6px 11px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    border: `1px solid ${isDanger ? 'rgba(239,68,68,0.25)' : isDark ? 'rgba(168,85,247,0.25)' : 'rgba(255,255,255,0.1)'}`,
+                    background: isDanger ? 'rgba(239,68,68,0.12)' : isDark ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.07)',
+                    color: isDanger ? '#fca5a5' : isDark ? '#d8b4fe' : 'var(--color-text)',
+                  }}
+                >
+                  {emoji} {label}
+                </button>
+              )
+            })}
           </div>
 
           {/* NPC Memories */}

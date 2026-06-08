@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import '@fontsource-variable/inter';
+@import '@fontsource-variable/plus-jakarta-sans';
 
 :root {
   /* ── Backgrounds ── */
@@ -52,6 +52,18 @@
   /* ── Transitions ── */
   --transition-fast: 140ms ease;
   --transition-med:  220ms ease;
+
+  /* ── Extended tokens (PR1 design system) ── */
+  --bg-elevated:     #0F1324;
+  --surface-glass:   rgba(255, 255, 255, 0.05);
+  --accent-primary:  var(--primary);
+  --accent-success:  var(--green);
+  --accent-danger:   var(--red);
+  --accent-warning:  var(--gold);
+  --shadow-soft:     0 4px 20px rgba(0, 0, 0, 0.4);
+  --shadow-glow:     0 0 24px rgba(124, 92, 255, 0.35);
+  --motion-fast:     120ms;
+  --motion-normal:   240ms;
 }
 
 * {
@@ -70,8 +82,9 @@ html, body {
 
 body {
   background-color: var(--bg-primary);
+  background-image: radial-gradient(ellipse 80% 40% at 50% -10%, rgba(124, 92, 255, 0.14) 0%, transparent 70%);
   color: var(--color-text);
-  font-family: 'Inter Variable', 'Inter', system-ui, -apple-system, sans-serif;
+  font-family: 'Plus Jakarta Sans Variable', 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   font-size: 14px;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -349,24 +362,40 @@ body {
 }
 
 .btn-age {
-  background: var(--color-cta);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%);
   color: #fff;
   font-size: 16px;
-  font-weight: 700;
+  font-weight: 800;
   border: none;
-  border-radius: 12px;
+  border-radius: 16px;
   padding: 18px;
   cursor: pointer;
   width: 100%;
-  transition: opacity 0.15s;
+  transition: transform var(--motion-fast) ease, box-shadow var(--motion-fast) ease, opacity 0.15s;
   letter-spacing: 0.5px;
+  box-shadow: 0 4px 20px rgba(124, 92, 255, 0.45), 0 1px 0 rgba(255,255,255,0.15) inset;
+  position: relative;
+  overflow: hidden;
+}
+.btn-age::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 0%, rgba(255,255,255,0.18) 0%, transparent 65%);
+  pointer-events: none;
 }
 .btn-age:hover {
-  opacity: 0.9;
+  box-shadow: 0 6px 28px rgba(124, 92, 255, 0.6), 0 1px 0 rgba(255,255,255,0.15) inset;
+  transform: translateY(-1px);
 }
 .btn-age:active {
-  opacity: 0.8;
-  transform: scale(0.98);
+  transform: scale(0.96) translateY(0);
+  box-shadow: 0 2px 12px rgba(124, 92, 255, 0.4);
+}
+.btn-age:disabled {
+  opacity: 0.5;
+  transform: none;
+  box-shadow: none;
 }
 
 /* HUD */
@@ -381,6 +410,11 @@ body {
   top: 0;
   z-index: 100;
   box-shadow: 0 2px 24px rgba(0,0,0,0.5);
+  /* Ambient radial glow — subtle depth behind the character card */
+  background-image:
+    linear-gradient(180deg, var(--bg-elevated) 0%, var(--bg-card) 100%),
+    radial-gradient(ellipse 70% 120% at 50% -30%, rgba(124, 92, 255, 0.12) 0%, transparent 70%);
+  background-blend-mode: screen;
 }
 
 /* Bottom tabs — safe-area for iPhone home bar */
@@ -462,15 +496,15 @@ body {
 
 @keyframes pulse-cta {
   0%, 100% {
-    box-shadow: 0 4px 24px rgba(124,92,255,0.55), 0 0 0 0 rgba(124,92,255,0.4);
+    box-shadow: 0 4px 24px rgba(124,92,255,0.55), 0 0 0 0 rgba(124,92,255,0.5), 0 1px 0 rgba(255,255,255,0.15) inset;
   }
   50% {
-    box-shadow: 0 4px 24px rgba(124,92,255,0.55), 0 0 0 10px rgba(124,92,255,0);
+    box-shadow: 0 6px 32px rgba(124,92,255,0.7), 0 0 0 12px rgba(124,92,255,0), 0 1px 0 rgba(255,255,255,0.15) inset;
   }
 }
 
 .pulse {
-  animation: pulse-cta 2s infinite;
+  animation: pulse-cta 2.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -675,3 +709,101 @@ body {
 .action-card .ac-desc { font-size: 11px; color: var(--color-text-secondary); line-height: 1.4; }
 .action-card .ac-cost { font-size: 11px; color: #f59e0b; margin-top: 2px; }
 .action-card .ac-locked { font-size: 10px; color: #ef4444; margin-top: 2px; }
+
+/* ─── Stat delta floating feedback ─── */
+@keyframes statDeltaFloat {
+  0%   { opacity: 1; transform: translateY(0) scale(1); }
+  60%  { opacity: 1; transform: translateY(-18px) scale(1.1); }
+  100% { opacity: 0; transform: translateY(-30px) scale(0.9); }
+}
+.stat-delta {
+  position: absolute;
+  top: -4px;
+  right: 0;
+  font-size: 10px;
+  font-weight: 800;
+  pointer-events: none;
+  animation: statDeltaFloat 0.9s ease-out forwards;
+  white-space: nowrap;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+.stat-delta.positive { color: var(--green); }
+.stat-delta.negative { color: var(--red); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stat-delta { animation: none; opacity: 0; }
+}
+
+/* ─── Money count-up flash ─── */
+@keyframes moneyFlash {
+  0%   { transform: scale(1); }
+  30%  { transform: scale(1.15); color: var(--green); }
+  100% { transform: scale(1); }
+}
+.money-flash {
+  display: inline-block;
+  animation: moneyFlash 0.4s ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .money-flash { animation: none; }
+}
+
+/* ─── AgeButton wrapper glow ring ─── */
+.age-btn-wrap {
+  padding: 8px 12px;
+  position: relative;
+}
+.age-btn-wrap::before {
+  content: '';
+  position: absolute;
+  left: 12px; right: 12px; bottom: 2px;
+  height: 24px;
+  background: radial-gradient(ellipse 70% 100% at 50% 100%, rgba(124, 92, 255, 0.3) 0%, transparent 75%);
+  pointer-events: none;
+  border-radius: 50%;
+  filter: blur(8px);
+}
+
+/* ─── Relationship card enhancements ─── */
+.rel-card-header {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  cursor: pointer;
+}
+.rel-card-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(124,92,255,0.15);
+  border: 2px solid rgba(124,92,255,0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.rel-affection-bar {
+  height: 5px;
+  border-radius: 3px;
+  background: rgba(255,255,255,0.07);
+  overflow: hidden;
+  margin-top: 5px;
+}
+.rel-affection-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.rel-mood-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 99px;
+  font-size: 10px;
+  font-weight: 600;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(255,255,255,0.1);
+}

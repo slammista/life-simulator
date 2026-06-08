@@ -40,37 +40,65 @@ const BASE_STATS = [
 ]
 
 function formatMoney(n: number): string {
+  if (Math.abs(n) >= 1_000_000_000) return `€${(n / 1_000_000_000).toFixed(1)}B`
   if (Math.abs(n) >= 1_000_000) return `€${(n / 1_000_000).toFixed(1)}M`
   if (Math.abs(n) >= 1_000)     return `€${(n / 1_000).toFixed(0)}k`
   return `€${n.toLocaleString('it-IT')}`
 }
 
+interface StatDelta {
+  key: string
+  delta: number
+  id: number
+}
+
 export const HUD = memo(function HUD() {
   const data = useHUDData()
-  const { stats, money, bankBalance, age, year, emoji, name, surname, fame } = data
+  const { stats, money, bankBalance, age, year, name, surname, fame } = data
   const status = getStatusBadge(data)
   const showFame = fame >= 30
 
   // Flash stat value when it changes
   const prevStatsRef = useRef<Record<string, number>>({})
   const [flashKeys, setFlashKeys] = useState<Set<string>>(new Set())
+  const [deltas, setDeltas] = useState<StatDelta[]>([])
+  const deltaIdRef = useRef(0)
+
   useEffect(() => {
     const prev = prevStatsRef.current
     const changed: string[] = []
+    const newDeltas: StatDelta[] = []
     const checks: [string, number][] = [
       ['happiness', stats.happiness], ['health', stats.health],
       ['intelligence', stats.intelligence], ['looks', stats.looks], ['_fame', fame],
     ]
     for (const [k, v] of checks) {
       const rounded = Math.round(v)
-      if (prev[k] !== undefined && prev[k] !== rounded) changed.push(k)
+      if (prev[k] !== undefined && prev[k] !== rounded) {
+        changed.push(k)
+        newDeltas.push({ key: k, delta: rounded - prev[k], id: ++deltaIdRef.current })
+      }
       prev[k] = rounded
     }
     if (changed.length === 0) return
     setFlashKeys(new Set(changed))
+    setDeltas(d => [...d, ...newDeltas])
     const t = setTimeout(() => setFlashKeys(new Set()), 400)
-    return () => clearTimeout(t)
+    const t2 = setTimeout(() => setDeltas(d => d.filter(x => !newDeltas.find(n => n.id === x.id))), 950)
+    return () => { clearTimeout(t); clearTimeout(t2) }
   }, [stats.happiness, stats.health, stats.intelligence, stats.looks, fame])
+
+  // Money flash animation
+  const prevMoneyRef = useRef(money)
+  const [moneyFlash, setMoneyFlash] = useState(false)
+  useEffect(() => {
+    if (prevMoneyRef.current !== money) {
+      prevMoneyRef.current = money
+      setMoneyFlash(true)
+      const t = setTimeout(() => setMoneyFlash(false), 450)
+      return () => clearTimeout(t)
+    }
+  }, [money])
 
   const statList = showFame
     ? [...BASE_STATS, { key: '_fame', label: 'Fama', emoji: '⭐', color: '#FFB020' }]
@@ -82,18 +110,16 @@ export const HUD = memo(function HUD() {
     : wellbeing >= 40 ? '#FFB020'
     : '#FF4D6D'
 
-  const totalWealth = money + bankBalance
-
   return (
     <div className="hud flex-col gap-1" style={{ padding: '10px 14px 8px' }}>
       {/* Row 1: avatar + identity + wallet */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
         {/* Avatar with ring */}
         <div style={{
-          width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
+          width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
           overflow: 'hidden',
-          border: `2px solid ${ringColor}66`,
-          boxShadow: `0 0 12px ${ringColor}44`,
+          border: `2px solid ${ringColor}77`,
+          boxShadow: `0 0 14px ${ringColor}55`,
         }}>
           <AvatarRenderer size="sm" />
         </div>
@@ -101,7 +127,7 @@ export const HUD = memo(function HUD() {
         {/* Name + age + status */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-            <span style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {name} {surname}
             </span>
             <span style={{ fontSize: 11, color: 'var(--text-faint)', flexShrink: 0 }}>
@@ -110,7 +136,7 @@ export const HUD = memo(function HUD() {
           </div>
           <div style={{
             display: 'inline-flex', alignItems: 'center', marginTop: 2,
-            padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 10, fontWeight: 600,
+            padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 10, fontWeight: 700,
             background: `${status.color}1A`, color: status.color,
             border: `1px solid ${status.color}44`,
           }}>
@@ -118,13 +144,19 @@ export const HUD = memo(function HUD() {
           </div>
         </div>
 
-        {/* Wallet pill */}
+        {/* Wallet chip — with count-up flash */}
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0,
-          padding: '4px 10px', borderRadius: 'var(--radius-pill)',
-          background: 'rgba(24,211,158,0.1)', border: '1px solid rgba(24,211,158,0.22)',
+          padding: '5px 11px', borderRadius: 'var(--radius-pill)',
+          background: 'rgba(24,211,158,0.1)', border: '1px solid rgba(24,211,158,0.25)',
+          boxShadow: moneyFlash ? '0 0 12px rgba(24,211,158,0.4)' : 'none',
+          transition: 'box-shadow 0.3s ease',
         }}>
-          <span style={{ fontSize: 13, fontWeight: 800, color: '#18D39E', lineHeight: 1 }}>
+          <span
+            key={money}
+            className={moneyFlash ? 'money-flash' : undefined}
+            style={{ fontSize: 13, fontWeight: 800, color: '#18D39E', lineHeight: 1 }}
+          >
             {formatMoney(money)}
           </span>
           {bankBalance > 0 && (
@@ -135,15 +167,16 @@ export const HUD = memo(function HUD() {
         </div>
       </div>
 
-      {/* Stat bars */}
+      {/* Stat bars with delta overlays */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${statList.length}, 1fr)`, gap: 6 }}>
         {statList.map(({ key, emoji: statEmoji, label, color }) => {
           const val = key === '_fame' ? fame : (stats as unknown as Record<string, number>)[key] ?? 0
           const displayVal = Math.round(val)
           const isLow = displayVal < 30
           const barColor = isLow ? 'var(--red)' : color
+          const myDeltas = deltas.filter(d => d.key === key)
           return (
-            <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+            <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 3, position: 'relative' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--color-text-secondary)' }}>
                 <span>{statEmoji} {label}</span>
                 <span
@@ -160,6 +193,15 @@ export const HUD = memo(function HUD() {
                   style={{ width: `${val}%`, backgroundColor: barColor }}
                 />
               </div>
+              {/* Floating delta indicators */}
+              {myDeltas.map(d => (
+                <span
+                  key={d.id}
+                  className={`stat-delta ${d.delta > 0 ? 'positive' : 'negative'}`}
+                >
+                  {d.delta > 0 ? `+${d.delta}` : `${d.delta}`}
+                </span>
+              ))}
             </div>
           )
         })}
