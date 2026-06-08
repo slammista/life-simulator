@@ -695,22 +695,24 @@ Rendere diverse le vite in base a paese, cultura e contesto.
 - ✅ Interazioni scolastiche: Parla, Amicizia, Studia, Gossip, Litigate, Copia.
 - ✅ Reputazione scolastica (Invisibile, Popolare, Nerd, Atleta, Ribelle, etc.).
 - ✅ Studenti entrano nelle Relazioni solo dopo affinità ≥ 65.
-- ⏳ Club/sport/arti che modificano skill — struttura preparata, UI da completare.
+- ✅ Club/sport/arti che modificano skill — UI club in EducationScreen completata.
 
-## PR 4 — Skill e attività scolastiche ✅ PARZIALMENTE COMPLETATO
+## PR 4 — Skill e attività scolastiche ✅ COMPLETATO
 
 - ✅ Sistema skill leggero (PlayerSkills: socialSkill, charisma, academicSkill, atletismo, etc.).
 - ✅ Skill crescono con interazioni scuola/lavoro e attività sociali.
 - ✅ Skill visibili nel SocializeScreen.
+- ✅ Skill panel in EducationScreen con barre di progresso per tutte le 8 abilità.
+- ✅ Club scolastici: 5 club (Sport, Musicale, Accademico, Arte, Dibattito) ognuno con bonus skill specifici, UI nella scheda Info.
+- ✅ joinClub() action nel gameStore.
 - ⏳ Collegare skill esplicitamente a requisiti carriera.
-- ⏳ UI skill dedicata (es. profilo personaggio).
 
-## PR 5 — Memorie, eventi rari e timeline ⏳ DA FARE
+## PR 5 — Memorie, eventi rari e timeline ✅ COMPLETATO
 
 - ✅ Struttura LifeMemory definita nei tipi.
-- ⏳ Salvare memorie importanti automaticamente (matrimonio, laurea, primo lavoro...).
-- ⏳ Aggiungere eventi cinematici rari con overlay speciale.
-- ⏳ Migliorare cronaca vita (CausalityTimelineScreen).
+- ✅ Salvare memorie importanti automaticamente: primo lavoro, promozione, matrimonio, divorzio, nascita figlio, laurea, milestone età (18/30/40/50/65).
+- ✅ Aggiungere eventi cinematici rari con overlay speciale: epic/legendary → full-screen overlay con glow, shimmer bar, pop-in animation.
+- ✅ CausalityTimelineScreen: aggiunto tab "Ricordi" con LifeMemory[] filtrabili per categoria.
 
 ## PR 6 — Polish visuale e game feel ⏳ DA FARE
 
@@ -737,9 +739,9 @@ Queste modifiche spostano il gioco da menu simulator a vero life simulator socia
 
 ---
 
-# Stato implementazione — aggiornamento 2026-06-08
+# Stato implementazione — aggiornamento 2026-06-08 (sessione 2)
 
-## Completato in questa sessione
+## Completato nella sessione 1
 
 - **WorkSchoolEngine.ts** — nuovo motore per colleghi, compagni, socialità esterna
 - **Tipi estesi**: WorkNPC, SchoolNPC, PlayerSkills, LifeMemory, WorkReputationStatus, SchoolReputationStatus
@@ -752,18 +754,23 @@ Queste modifiche spostano il gioco da menu simulator a vero life simulator socia
 - **SocializeScreen** — nuova schermata Socializza nelle Attività (8 location, skill hints)
 - **ActivitiesNav** — aggiunta voce “Socializza” nella categoria Socialità
 - **App.tsx** — wired up SocializeScreen
-- **gameStore** — nuove azioni: `workInteract`, `schoolInteract`, `socializeOutside`; generazione automatica colleghi/compagni; tick annuale di decay affinità
+- **gameStore** — nuove azioni: `workInteract`, `schoolInteract`, `socializeOutside`
 
-## Manca ancora
+## Completato nella sessione 2
 
-- Memorie importanti auto-salvate (struttura pronta, logica da implementare)
-- Club scolastici come attività dedicata con skill growth
-- Skill collegate ai requisiti carriera
-- UI skill dedicata nel profilo
-- Timeline/cronaca vita migliorata
-- Micro-feedback visivo per stat delta
-- Event cards più narrative
-- Avatar/status visivo legato al job/reputazione
+- **Life Memories auto-save**: `makeMemory()` helper + hook in applyForJob, attemptPromotion, getMarried, getDivorced, haveChild; milestone età (18/30/40/50/65) e laurea in handleInvecchia; cap 200 entries
+- **CausalityTimelineScreen**: tab “Ricordi” con LifeMemory[] filtrabili per 8 categorie (vita, scuola, lavoro, amore, salute, crimini, finanze, successi)
+- **EducationScreen**: skills panel con barre di progresso per 8 PlayerSkills; sezione Club con 5 club joinabili (Sport, Musicale, Accademico, Arte, Dibattito) con bonus skill
+- **EventDisplay**: overlay cinematico full-screen per eventi epici/leggendari (glow, shimmer bar, pop-in animation); effetto glow sul card e barra colorata
+- **gameStore**: azione `joinClub()` con 5 club e relativi bonus skill/stat; importato `getEducationLabel`
+- **types.ts**: `joinClub` aggiunto a GameActions
+
+## Manca ancora (bassa priorità)
+
+- Collegare skill esplicitamente a requisiti carriera (label “richiede X skill”)
+- Micro-feedback visivo per stat delta migliorato (HUD già ha floating deltas)
+- Event cards più narrative (testo più storytelling nel log)
+- Avatar/status visivo legato al job/reputazione (outfit per job)
 - Personalità dinamica del giocatore (tratti che influenzano outcome)
 - Reputazione contestuale avanzata (effetti su NPC e opportunità)
 - Status sociale visivo (outfit per job/status)
