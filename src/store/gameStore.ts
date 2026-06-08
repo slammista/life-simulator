@@ -14,7 +14,7 @@ import type {
   ActionResult,
 } from './types'
 import db from '../../public/db.json'
-import { CareerEngine } from '../services/CareerEngine'
+import { CareerEngine, getAllJobs } from '../services/CareerEngine'
 import { RelationshipEngine, type NPCContext, type NPCAction } from '../services/RelationshipEngine'
 import { EducationEngine } from '../services/EducationEngine'
 import { HealthEngine } from '../services/HealthEngine'
@@ -52,6 +52,8 @@ import { ChaosEngine } from '../services/ChaosEngine'
 import { DailyQuestEngine } from '../services/DailyQuestEngine'
 import { NPCAgencyEngine } from '../services/NPCAgencyEngine'
 import { BalanceEngine } from '../services/BalanceEngine'
+import { WorkSchoolEngine, type SocialLocation } from '../services/WorkSchoolEngine'
+import type { WorkAction, SchoolAction, PlayerSkills, WorkNPC, SchoolNPC } from './types'
 import type { Addiction, TravelMemory, Religion, Child, LivingType, AvatarConfig, AvatarAccessory } from './types'
 import { getDefaultAvatar, getBarberServices, getAccessoryShop, wardrobeTierToClothesStyle, beautyHairToAvatarStyle, beautyHairToAvatarColor } from '../services/AvatarEngine'
 import type { PoliticsState } from '../services/PoliticsEngine'
@@ -143,8 +145,8 @@ function buildInitialState(): GameState {
     stats: { health: 80, mentalHealth: 80, happiness: 70, intelligence: 50, looks: 50, energy: 80, karma: 0, reputation: 50, socialReputation: 50 },
     finance: { money: 1000, bankBalance: 0, debt: 0, creditScore: 650, monthlyIncome: 0, monthlyExpenses: 0, investments: [], assets: [] },
     market: FinanceEngine.initialMarketState(),
-    education: { currentLevel: 'none', completedLevels: [], gpa: 0, scholarships: [], clubs: [], dropOut: false, studentLoan: 0, university: null, major: null, graduationYear: null },
-    career: { currentJob: null, jobHistory: [], promotions: 0, firings: 0, burnoutLevel: 0, pensionContributions: 0, licenses: [], businessOwned: null },
+    education: { currentLevel: 'none', completedLevels: [], gpa: 0, scholarships: [], clubs: [], dropOut: false, studentLoan: 0, university: null, major: null, graduationYear: null, classmates: [], schoolReputation: 'invisibile' },
+    career: { currentJob: null, jobHistory: [], promotions: 0, firings: 0, burnoutLevel: 0, pensionContributions: 0, licenses: [], businessOwned: null, colleagues: [], workReputation: 'nuovo' },
     relationships: [],
     family: {
       familyId: 'family_demo',
@@ -241,6 +243,8 @@ function buildInitialState(): GameState {
     },
     adRewards: AdRewardEngine.initialState(),
     diminishingReturns: {},
+    skills: { athleticism: 0, music: 0, acting: 0, creativity: 0, charisma: 0, discipline: 0, leadership: 0, academicSkill: 0, socialSkill: 0 },
+    lifeMemories: [],
   }
 }
 
@@ -375,24 +379,10 @@ export const useGameStore = create<FullStore>()(
         merge(traumaTick.effects)
         messages.push(...traumaTick.messages)
 
-        // 7c. Contextual NPC auto-spawn from real-life contexts
-        let autoSpawnedRelationship: import('./types').Relationship | null = null
-        const activeRels = npcAgencyTick.relationships.filter(r => r.isAlive && !['parent','sibling','child'].includes(r.type))
-        if (activeRels.length < 12) {
-          const inSchool = state.education.currentLevel !== 'none'
-          const hasJob = !!state.career.currentJob
-          const inPrison = state.criminal.inPrison
-          let spawnContext: import('../services/RelationshipEngine').NPCContext | null = null
-          if (!inPrison && inSchool && Math.random() < 0.22) spawnContext = 'school'
-          else if (!inPrison && hasJob && Math.random() < 0.18) spawnContext = 'work'
-          if (spawnContext) {
-            const spawnResult = RelationshipEngine.meetNewPerson(spawnContext, state)
-            if (spawnResult.success && spawnResult.newRelationship) {
-              autoSpawnedRelationship = spawnResult.newRelationship
-              messages.push(`👋 Hai conosciuto ${spawnResult.newRelationship.name} — ${spawnContext === 'school' ? 'a scuola' : 'al lavoro'}.`)
-            }
-          }
-        }
+        // 7c. Annual passive affection tick for colleagues/classmates
+        const updatedColleagues = WorkSchoolEngine.annualColleagueTick(state.career.colleagues ?? [])
+        const updatedClassmates = WorkSchoolEngine.annualClassmateTick(state.education.classmates ?? [])
+        const autoSpawnedRelationship: import('./types').Relationship | null = null
 
         // 8. Hobby annual tick
         const { effects: hobbyFx, updates: hobbyUpdates } = HobbyEngine.annualTick(state)
@@ -534,6 +524,7 @@ export const useGameStore = create<FullStore>()(
             currentJob: null,
             firings: careerUpdate.firings + 1,
             burnoutLevel: clamp(careerUpdate.burnoutLevel + burnoutDelta, 0, 100),
+            colleagues: [],
           }
         } else {
           careerUpdate = {
@@ -542,6 +533,13 @@ export const useGameStore = create<FullStore>()(
             pensionContributions: state.career.currentJob
               ? careerUpdate.pensionContributions + state.career.currentJob.salary * 12 * 0.03
               : careerUpdate.pensionContributions,
+            colleagues: updatedColleagues,
+            workReputation: WorkSchoolEngine.computeWorkReputation(
+              careerUpdate.workReputation,
+              careerUpdate.promotions,
+              clamp(careerUpdate.burnoutLevel + burnoutDelta, 0, 100),
+              state.criminal.hasRecord,
+            ),
           }
         }
 
@@ -565,7 +563,12 @@ export const useGameStore = create<FullStore>()(
           eduUpdate = { ...eduUpdate, dropOut: true, currentLevel: 'none' }
         }
         const newGpa = clamp(eduUpdate.gpa + eduTick.gpaDelta, 0.0, 4.0)
-        eduUpdate = { ...eduUpdate, gpa: parseFloat(newGpa.toFixed(2)) }
+        eduUpdate = {
+          ...eduUpdate,
+          gpa: parseFloat(newGpa.toFixed(2)),
+          classmates: updatedClassmates,
+          schoolReputation: WorkSchoolEngine.computeSchoolReputation(newGpa, eduUpdate.clubs, state.stats.happiness),
+        }
 
         // Auto-enrollment in mandatory schooling (Italy: elementary 6, middle 11, highschool 14)
         // School quality depends on family wealth tier
@@ -582,7 +585,13 @@ export const useGameStore = create<FullStore>()(
             if (newAge >= s.minAge && newAge <= s.maxAge &&
                 !eduUpdate.completedLevels.includes(s.level) &&
                 (s.prereq === null || eduUpdate.completedLevels.includes(s.prereq as import('./types').EducationLevel))) {
-              eduUpdate = { ...eduUpdate, currentLevel: s.level }
+              const autoClassmates = WorkSchoolEngine.generateClassmates(s.level, newAge, 4)
+              eduUpdate = {
+                ...eduUpdate,
+                currentLevel: s.level,
+                classmates: autoClassmates,
+                schoolReputation: 'invisibile',
+              }
               const schoolType = isPrivateSchool ? 'privata' : 'pubblica'
               messages.push(`📚 Inizio anno scolastico: ${s.label} (${schoolType}).`)
               // Private school gives a small extra intelligence bonus
@@ -774,12 +783,16 @@ export const useGameStore = create<FullStore>()(
 
         if (result.success && result.newJob) {
           const oldJob = state.career.currentJob
+          const newJobDef = getAllJobs().find(j => j.id === jobId)
+          const newColleagues = WorkSchoolEngine.generateColleagues(jobId, newJobDef?.category ?? 'default', 3)
           set(s => ({
             ...partial,
             career: {
               ...s.career,
               currentJob: result.newJob!,
               jobHistory: oldJob ? [...s.career.jobHistory, oldJob] : s.career.jobHistory,
+              colleagues: newColleagues,
+              workReputation: 'nuovo',
             },
             eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💼', category: 'career', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
           }))
@@ -804,6 +817,7 @@ export const useGameStore = create<FullStore>()(
               ...s.career,
               jobHistory: s.career.currentJob ? [...s.career.jobHistory, s.career.currentJob] : s.career.jobHistory,
               currentJob: null,
+              colleagues: [],
             },
             eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🚪', category: 'career', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
           }))
@@ -835,6 +849,128 @@ export const useGameStore = create<FullStore>()(
             eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '❌', category: 'career', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
           }))
         }
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Work ecosystem actions ====================
+      workInteract: (colleagueId: string, action: WorkAction): ActionResult => {
+        const state = get()
+        const colleague = state.career.colleagues.find(c => c.id === colleagueId)
+        if (!colleague) return { success: false, message: 'Collega non trovato.', effects: {} }
+
+        const result = WorkSchoolEngine.workInteract(colleague, action, state.stats.looks, state.time.year)
+        const partial = applyEffects(state, result.effects)
+
+        // Apply skill deltas
+        const sd = result.skillDeltas ?? {}
+        const newSkills: PlayerSkills = {
+          ...state.skills,
+          socialSkill:  Math.min(100, state.skills.socialSkill  + (sd.socialSkill  ?? 0)),
+          charisma:     Math.min(100, state.skills.charisma     + (sd.charisma     ?? 0)),
+          leadership:   Math.min(100, state.skills.leadership   + (sd.leadership   ?? 0)),
+        }
+
+        const updatedColleagues = state.career.colleagues.map(c =>
+          c.id === colleagueId ? result.updatedColleague : c
+        )
+
+        const newWorkRep = WorkSchoolEngine.computeWorkReputation(
+          state.career.workReputation,
+          state.career.promotions,
+          state.career.burnoutLevel,
+          state.criminal.hasRecord,
+        )
+
+        set(s => ({
+          ...partial,
+          skills: newSkills,
+          career: {
+            ...s.career,
+            colleagues: updatedColleagues,
+            workReputation: newWorkRep,
+          },
+          relationships: result.promotedRel
+            ? [...s.relationships, result.promotedRel]
+            : s.relationships,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💼', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      // ==================== School ecosystem actions ====================
+      schoolInteract: (npcId: string, action: SchoolAction): ActionResult => {
+        const state = get()
+        const npc = state.education.classmates.find(c => c.id === npcId)
+        if (!npc) return { success: false, message: 'Persona non trovata.', effects: {} }
+
+        const result = WorkSchoolEngine.schoolInteract(npc, action, state.stats.intelligence, state.time.year)
+        const partial = applyEffects(state, result.effects)
+
+        const sd = result.skillDeltas ?? {}
+        const newSkills: PlayerSkills = {
+          ...state.skills,
+          socialSkill:   Math.min(100, state.skills.socialSkill   + (sd.socialSkill   ?? 0)),
+          academicSkill: Math.min(100, state.skills.academicSkill + (sd.academicSkill ?? 0)),
+          discipline:    Math.min(100, state.skills.discipline    + (sd.discipline    ?? 0)),
+          charisma:      Math.min(100, state.skills.charisma      + (sd.charisma      ?? 0)),
+        }
+
+        const updatedClassmates = state.education.classmates.map(c =>
+          c.id === npcId ? result.updatedNPC : c
+        )
+
+        const newSchoolRep = WorkSchoolEngine.computeSchoolReputation(
+          state.education.gpa,
+          state.education.clubs,
+          state.stats.happiness,
+        )
+
+        set(s => ({
+          ...partial,
+          skills: newSkills,
+          education: {
+            ...s.education,
+            classmates: updatedClassmates,
+            schoolReputation: newSchoolRep,
+          },
+          relationships: result.promotedRel
+            ? [...s.relationships, result.promotedRel]
+            : s.relationships,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '📚', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Social activities (outside work/school) ====================
+      socializeOutside: (location: SocialLocation): ActionResult => {
+        const state = get()
+        const result = WorkSchoolEngine.socializeOutside(
+          location,
+          state.time.age,
+          state.stats.looks,
+          state.stats.happiness,
+          state.time.year,
+        )
+        const partial = applyEffects(state, result.effects)
+
+        const sd = result.skillDeltas ?? {}
+        const newSkills: PlayerSkills = {
+          ...state.skills,
+          socialSkill:  Math.min(100, state.skills.socialSkill  + (sd.socialSkill  ?? 0)),
+          athleticism:  Math.min(100, state.skills.athleticism  + (sd.athleticism  ?? 0)),
+          charisma:     Math.min(100, state.skills.charisma     + (sd.charisma     ?? 0)),
+          creativity:   Math.min(100, state.skills.creativity   + (sd.creativity   ?? 0)),
+          music:        Math.min(100, state.skills.music        + (sd.music        ?? 0)),
+        }
+
+        set(s => ({
+          ...partial,
+          skills: newSkills,
+          relationships: result.newRelationship
+            ? [...s.relationships, result.newRelationship]
+            : s.relationships,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🎉', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+        }))
         return { success: result.success, message: result.message, effects: result.effects }
       },
 
@@ -948,10 +1084,16 @@ export const useGameStore = create<FullStore>()(
         const result = EducationEngine.startEducation(level, state)
         if (!result.success) return { success: false, message: result.message, effects: {} }
 
+        const newClassmates = WorkSchoolEngine.generateClassmates(result.newLevel ?? level, state.time.age, 4)
         const partial = applyEffects(state, result.effects)
         set(s => ({
           ...partial,
-          education: { ...s.education, currentLevel: result.newLevel ?? s.education.currentLevel },
+          education: {
+            ...s.education,
+            currentLevel: result.newLevel ?? s.education.currentLevel,
+            classmates: newClassmates,
+            schoolReputation: 'invisibile',
+          },
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '📚', category: 'education', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message: result.message, effects: result.effects }

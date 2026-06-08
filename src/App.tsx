@@ -52,6 +52,7 @@ const CausalityTimelineScreen = lazy(() => import('./components/screens/Causalit
 const MinigamesScreen     = lazy(() => import('./components/screens/MinigamesScreen').then(m => ({ default: m.MinigamesScreen })))
 const PrivacyPolicyScreen = lazy(() => import('./components/screens/PrivacyPolicyScreen').then(m => ({ default: m.PrivacyPolicyScreen })))
 const LeaderboardScreen   = lazy(() => import('./components/screens/LeaderboardScreen').then(m => ({ default: m.LeaderboardScreen })))
+const SocializeScreen     = lazy(() => import('./components/screens/SocializeScreen').then(m => ({ default: m.SocializeScreen })))
 
 // ---- Sub-tab types ----
 type LavoroSubTab    = 'career' | 'education' | 'military' | 'pension'
@@ -62,6 +63,7 @@ type ActivitiesSubTab =
   | 'body' | 'beauty' | 'barber' | 'gambling' | 'sex_health' | 'cosmetic'
   | 'travel' | 'politics' | 'goals' | 'challenges' | 'ribbons'
   | 'timeline' | 'minigames' | 'leaderboard' | 'settings' | 'privacy'
+  | 'socialize'
 
 function SubTabBar<T extends string>({
   tabs, active, onChange,
@@ -242,6 +244,7 @@ function App() {
             {activeTab === 'activities' && activitiesSub === 'leaderboard' && <LeaderboardScreen />}
             {activeTab === 'activities' && activitiesSub === 'settings'    && <SettingsScreen />}
             {activeTab === 'activities' && activitiesSub === 'privacy'     && <PrivacyPolicyScreen />}
+            {activeTab === 'activities' && activitiesSub === 'socialize'   && <SocializeScreen />}
           </Suspense>
         </ErrorBoundary>
       </div>

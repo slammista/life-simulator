@@ -3,6 +3,7 @@ type ActivitiesSubTab =
   | 'body' | 'beauty' | 'barber' | 'gambling' | 'sex_health' | 'cosmetic'
   | 'travel' | 'politics' | 'goals' | 'challenges' | 'ribbons'
   | 'timeline' | 'minigames' | 'leaderboard' | 'settings' | 'privacy'
+  | 'socialize'
 
 const ITEMS: { id: ActivitiesSubTab; emoji: string; label: string }[] = [
   { id: 'health',      emoji: '💊', label: 'Salute' },
@@ -15,6 +16,7 @@ const ITEMS: { id: ActivitiesSubTab; emoji: string; label: string }[] = [
   { id: 'criminal',    emoji: '🚔', label: 'Crimini' },
   { id: 'substances',  emoji: '🍺', label: 'Sostanze' },
   { id: 'gambling',    emoji: '🎲', label: 'Azzardo' },
+  { id: 'socialize',   emoji: '🎉', label: 'Socializza' },
   { id: 'religion',    emoji: '🙏', label: 'Fede' },
   { id: 'politics',    emoji: '🏛️', label: 'Politica' },
   { id: 'travel',      emoji: '✈️', label: 'Viaggi' },
@@ -44,7 +46,7 @@ const CATEGORIES: { label: string; color: string; ids: ActivitiesSubTab[] }[] = 
   {
     label: 'Socialità',
     color: '#6366f1',
-    ids: ['religion', 'politics', 'travel'],
+    ids: ['socialize', 'religion', 'politics', 'travel'],
   },
   {
     label: 'Svago',

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { EducationEngine, getEducationLabel } from '../../services/EducationEngine'
-import type { EducationLevel } from '../../store/types'
+import type { EducationLevel, SchoolAction, SchoolNPC, SchoolReputationStatus } from '../../store/types'
 
 const LEVEL_EMOJI: Record<EducationLevel, string> = {
   none: '❌',
@@ -18,6 +18,33 @@ const LEVEL_EMOJI: Record<EducationLevel, string> = {
   law: '⚖️',
 }
 
+const SCHOOL_REP_CONFIG: Record<SchoolReputationStatus, { label: string; color: string; bg: string }> = {
+  invisibile:   { label: 'Invisibile',   color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' },
+  popolare:     { label: 'Popolare',     color: '#f472b6', bg: 'rgba(244,114,182,0.12)' },
+  nerd:         { label: 'Nerd',         color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
+  atleta:       { label: 'Atleta',       color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
+  ribelle:      { label: 'Ribelle',      color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
+  problematico: { label: 'Problematico', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+  leader:       { label: 'Leader',       color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+  artista:      { label: 'Artista',      color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
+}
+
+const SCHOOL_ACTIONS: Array<{ action: SchoolAction; label: string; emoji: string; profOnly?: boolean; studentOnly?: boolean }> = [
+  { action: 'talk',           label: 'Parla',        emoji: '💬' },
+  { action: 'befriend',       label: 'Amicizia',     emoji: '🤝' },
+  { action: 'study_together', label: 'Studia',       emoji: '📖', studentOnly: true },
+  { action: 'gossip',         label: 'Gossip',       emoji: '🗣️',  studentOnly: true },
+  { action: 'fight',          label: 'Litigate',     emoji: '😠' },
+  { action: 'copy_homework',  label: 'Copia',        emoji: '📋',  studentOnly: true },
+]
+
+const STATUS_LABELS: Record<SchoolNPC['status'], { color: string; label: string }> = {
+  neutral:  { color: '#94a3b8', label: 'Neutrale' },
+  friendly: { color: '#22c55e', label: 'Amichevole' },
+  tense:    { color: '#f59e0b', label: 'Teso' },
+  hostile:  { color: '#ef4444', label: 'Ostile' },
+}
+
 // Mandatory levels handled automatically — only show university/post-secondary for manual enrollment
 const ENROLLABLE_LEVELS: EducationLevel[] = [
   'vocational', 'bachelor', 'master', 'phd', 'mba', 'medical', 'law',
@@ -29,9 +56,11 @@ export function EducationScreen() {
   const state = useGameStore(s => s)
   const startEducation = useGameStore(s => s.startEducation)
   const studyAction = useGameStore(s => s.studyAction)
+  const schoolInteract = useGameStore(s => s.schoolInteract)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
-  const [tab, setTab] = useState<'status' | 'enroll'>('status')
+  const [tab, setTab] = useState<'status' | 'classmates' | 'enroll'>('status')
+  const [expandedNPC, setExpandedNPC] = useState<string | null>(null)
 
   const flash = (msg: string, ok: boolean) => {
     setFeedback({ msg, ok })
@@ -46,6 +75,11 @@ export function EducationScreen() {
 
   const handleStudy = () => {
     const r = studyAction()
+    flash(r.message, r.success)
+  }
+
+  const handleSchoolInteract = (npcId: string, action: SchoolAction) => {
+    const r = schoolInteract(npcId, action)
     flash(r.message, r.success)
   }
 
@@ -139,18 +173,139 @@ export function EducationScreen() {
         </div>
       )}
 
+      {/* School reputation */}
+      {education.currentLevel !== 'none' && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+          <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Reputazione:</span>
+          <span style={{
+            fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99,
+            background: SCHOOL_REP_CONFIG[education.schoolReputation ?? 'invisibile'].bg,
+            color: SCHOOL_REP_CONFIG[education.schoolReputation ?? 'invisibile'].color,
+          }}>
+            {SCHOOL_REP_CONFIG[education.schoolReputation ?? 'invisibile'].label}
+          </span>
+        </div>
+      )}
+
       {/* Tab switcher */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        {(['status', 'enroll'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)}
-            style={{ flex: 1, padding: '8px 0', borderRadius: 12, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none',
-              background: tab === t ? 'var(--color-cta)' : 'rgba(255,255,255,0.05)',
-              color: tab === t ? '#fff' : 'var(--color-text-secondary)' }}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        {([
+          { id: 'status', label: '📋 Info' },
+          { id: 'classmates', label: `👥 Persone${(education.classmates ?? []).length > 0 ? ` (${(education.classmates ?? []).length})` : ''}` },
+          { id: 'enroll', label: '📝 Università' },
+        ] as const).map(t => (
+          <button key={t.id} onClick={() => setTab(t.id)}
+            style={{ flex: 1, padding: '7px 4px', borderRadius: 12, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: 'none',
+              background: tab === t.id ? 'var(--color-cta)' : 'rgba(255,255,255,0.05)',
+              color: tab === t.id ? '#fff' : 'var(--color-text-secondary)' }}
           >
-            {t === 'status' ? '📋 Informazioni' : '📝 Iscriviti (Università)'}
+            {t.label}
           </button>
         ))}
       </div>
+
+      {/* Classmates tab */}
+      {tab === 'classmates' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {education.currentLevel === 'none' ? (
+            <div className="card" style={{ padding: '28px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>📚</div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>
+                Nessuna scuola attiva
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                Iscriviti a una scuola o università per incontrare compagni e professori.
+              </p>
+            </div>
+          ) : (education.classmates ?? []).length === 0 ? (
+            <div className="card" style={{ padding: '24px 16px', textAlign: 'center' }}>
+              <p style={{ fontSize: 32, marginBottom: 8 }}>👋</p>
+              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                Nuovo anno scolastico — compagni ancora sconosciuti.
+              </p>
+            </div>
+          ) : (
+            (education.classmates ?? []).map(npc => {
+              const isExpanded = expandedNPC === npc.id
+              const statusCfg = STATUS_LABELS[npc.status]
+              const isPromoted = !!npc.promotedToRelId
+              const roleLabel = npc.role === 'professor' ? (npc.subject ? `Prof. ${npc.subject}` : 'Professore') : 'Studente'
+              return (
+                <div key={npc.id} className="card" style={{ padding: '12px 14px' }}>
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+                    onClick={() => setExpandedNPC(isExpanded ? null : npc.id)}
+                  >
+                    <span style={{ fontSize: 26, flexShrink: 0 }}>{npc.emoji}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontWeight: 600, fontSize: 14 }}>{npc.name}</p>
+                      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                        {roleLabel} · {npc.age} anni
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
+                        background: `${statusCfg.color}22`, color: statusCfg.color,
+                      }}>
+                        {statusCfg.label}
+                      </span>
+                      <span style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
+                        {npc.affection}% affinità
+                      </span>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div style={{ marginTop: 10 }}>
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--color-text-secondary)', marginBottom: 3 }}>
+                          <span>Affinità</span><span>{npc.affection}/100</span>
+                        </div>
+                        <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${npc.affection}%`, background: '#22c55e', borderRadius: 4, transition: 'width 0.3s' }} />
+                        </div>
+                      </div>
+
+                      {isPromoted ? (
+                        <p style={{ fontSize: 12, color: '#4ade80', marginBottom: 8 }}>
+                          ✅ {npc.name} è diventato/a tuo amico/a!
+                        </p>
+                      ) : npc.role === 'student' ? (
+                        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
+                          Porta l'affinità a 65+ per guadagnarti la sua amicizia reale.
+                        </p>
+                      ) : null}
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+                        {SCHOOL_ACTIONS.filter(a => {
+                          if (a.profOnly && npc.role !== 'professor') return false
+                          if (a.studentOnly && npc.role !== 'student') return false
+                          return true
+                        }).map(({ action, label, emoji }) => (
+                          <button
+                            key={action}
+                            onClick={() => handleSchoolInteract(npc.id, action)}
+                            style={{
+                              padding: '8px 4px', borderRadius: 10, fontSize: 11, fontWeight: 500,
+                              background: action === 'fight' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.07)',
+                              color: action === 'fight' ? '#fca5a5' : 'var(--color-text)',
+                              border: `1px solid ${action === 'fight' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.08)'}`,
+                              cursor: 'pointer', textAlign: 'center',
+                            }}
+                          >
+                            {emoji}<br />{label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })
+          )}
+        </div>
+      )}
 
       {/* Enroll tab */}
       {tab === 'enroll' && (

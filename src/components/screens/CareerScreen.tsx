@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { CareerEngine, getAllJobs, getContractLabel } from '../../services/CareerEngine'
 import { useToastStore } from '../../store/toastStore'
+import type { WorkAction, WorkNPC, WorkReputationStatus } from '../../store/types'
 
 const CATEGORY_EMOJI: Record<string, string> = {
   care:      '🤝', retail:    '🛒', food:      '🍳', logistics: '🚚',
@@ -61,6 +62,34 @@ const JOB_TAGLINE: Record<string, string> = {
   life_coach:        'Aiuti chi non sa ancora dove andare.',
 }
 
+const WORK_REP_CONFIG: Record<WorkReputationStatus, { label: string; color: string; bg: string }> = {
+  nuovo:       { label: 'Nuovo',        color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' },
+  affidabile:  { label: 'Affidabile',   color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
+  ambizioso:   { label: 'Ambizioso',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
+  lecchino:    { label: 'Lecchino',     color: '#f472b6', bg: 'rgba(244,114,182,0.12)' },
+  tossico:     { label: 'Tossico',      color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
+  genio:       { label: 'Genio',        color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
+  pigro:       { label: 'Pigro',        color: '#64748b', bg: 'rgba(100,116,139,0.12)' },
+  leader:      { label: 'Leader',       color: '#38bdf8', bg: 'rgba(56,189,248,0.12)' },
+  problematico:{ label: 'Problematico', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
+}
+
+const WORK_ACTIONS: Array<{ action: WorkAction; label: string; emoji: string }> = [
+  { action: 'talk',       label: 'Parla',     emoji: '💬' },
+  { action: 'socialize',  label: 'Esci',      emoji: '☕' },
+  { action: 'help',       label: 'Aiuta',     emoji: '🤝' },
+  { action: 'compliment', label: 'Complimenta', emoji: '😊' },
+  { action: 'gossip',     label: 'Gossip',    emoji: '🗣️' },
+  { action: 'fight',      label: 'Litiga',    emoji: '😠' },
+]
+
+const STATUS_CONFIG: Record<WorkNPC['status'], { color: string; label: string }> = {
+  neutral:  { color: '#94a3b8', label: 'Neutrale' },
+  friendly: { color: '#22c55e', label: 'Amichevole' },
+  tense:    { color: '#f59e0b', label: 'Teso' },
+  hostile:  { color: '#ef4444', label: 'Ostile' },
+}
+
 function stressConfig(level: number) {
   if (level >= 70) return { label: 'Stress alto',   color: '#ef4444', bg: 'rgba(239,68,68,0.12)' }
   if (level >= 45) return { label: 'Stress medio',  color: '#f97316', bg: 'rgba(249,115,22,0.12)' }
@@ -81,8 +110,10 @@ export function CareerScreen() {
   const quitJob = useGameStore(s => s.quitJob)
   const attemptPromotion = useGameStore(s => s.attemptPromotion)
 
+  const workInteract = useGameStore(s => s.workInteract)
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
-  const [tab, setTab] = useState<'offers' | 'history'>('offers')
+  const [tab, setTab] = useState<'offers' | 'colleagues' | 'history'>('offers')
+  const [expandedColleague, setExpandedColleague] = useState<string | null>(null)
 
   const pushToast = useToastStore(s => s.push)
 
@@ -104,6 +135,11 @@ export function CareerScreen() {
 
   const handlePromotion = () => {
     const r = attemptPromotion()
+    flash(r.message, r.success)
+  }
+
+  const handleWorkInteract = (colleagueId: string, action: WorkAction) => {
+    const r = workInteract(colleagueId, action)
     flash(r.message, r.success)
   }
 
@@ -244,19 +280,37 @@ export function CareerScreen() {
         ))}
       </div>
 
+      {/* Work reputation badge */}
+      {career.currentJob && (
+        <div style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Reputazione:</span>
+          <span style={{
+            fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 99,
+            background: WORK_REP_CONFIG[career.workReputation ?? 'nuovo'].bg,
+            color: WORK_REP_CONFIG[career.workReputation ?? 'nuovo'].color,
+          }}>
+            {WORK_REP_CONFIG[career.workReputation ?? 'nuovo'].label}
+          </span>
+        </div>
+      )}
+
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 8, marginBottom: 12 }}>
-        {(['offers', 'history'] as const).map(t => (
+      <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        {([
+          { id: 'offers', label: '🔍 Offerte' },
+          { id: 'colleagues', label: `👥 Colleghi${career.colleagues?.length ? ` (${career.colleagues.length})` : ''}` },
+          { id: 'history', label: '📋 Storico' },
+        ] as const).map(t => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={t.id}
+            onClick={() => setTab(t.id)}
             style={{
-              flex: 1, padding: '8px 0', borderRadius: 12, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none',
-              background: tab === t ? 'var(--color-cta)' : 'rgba(255,255,255,0.05)',
-              color: tab === t ? '#fff' : 'var(--color-text-secondary)',
+              flex: 1, padding: '7px 4px', borderRadius: 12, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: 'none',
+              background: tab === t.id ? 'var(--color-cta)' : 'rgba(255,255,255,0.05)',
+              color: tab === t.id ? '#fff' : 'var(--color-text-secondary)',
             }}
           >
-            {t === 'offers' ? '🔍 Offerte' : '📋 Storico'}
+            {t.label}
           </button>
         ))}
       </div>
@@ -376,6 +430,105 @@ export function CareerScreen() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Colleagues tab */}
+      {tab === 'colleagues' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {!career.currentJob ? (
+            <div className="card" style={{ padding: '28px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 36, marginBottom: 10 }}>👥</div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>
+                Nessun collega attivo
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                Trova un lavoro per incontrare colleghi con cui costruire relazioni.
+              </p>
+            </div>
+          ) : (career.colleagues ?? []).length === 0 ? (
+            <div className="card" style={{ padding: '24px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>👋</div>
+              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                Nuovo lavoro — colleghi ancora sconosciuti.
+              </p>
+            </div>
+          ) : (
+            (career.colleagues ?? []).map(colleague => {
+              const isExpanded = expandedColleague === colleague.id
+              const statusCfg = STATUS_CONFIG[colleague.status]
+              const isPromoted = !!colleague.promotedToRelId
+              return (
+                <div key={colleague.id} className="card" style={{ padding: '12px 14px' }}>
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
+                    onClick={() => setExpandedColleague(isExpanded ? null : colleague.id)}
+                  >
+                    <span style={{ fontSize: 26, flexShrink: 0 }}>{colleague.emoji}</span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{ fontWeight: 600, fontSize: 14 }}>{colleague.name}</p>
+                      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                        {colleague.role} · {colleague.age} anni
+                      </p>
+                    </div>
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
+                      <span style={{
+                        fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
+                        background: `${statusCfg.color}22`, color: statusCfg.color,
+                      }}>
+                        {statusCfg.label}
+                      </span>
+                      <span style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
+                        {colleague.affection}% affinità
+                      </span>
+                    </div>
+                  </div>
+
+                  {isExpanded && (
+                    <div style={{ marginTop: 10 }}>
+                      {/* Affection bar */}
+                      <div style={{ marginBottom: 10 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--color-text-secondary)', marginBottom: 3 }}>
+                          <span>Affinità</span><span>{colleague.affection}/100</span>
+                        </div>
+                        <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
+                          <div style={{ height: '100%', width: `${colleague.affection}%`, background: '#22c55e', borderRadius: 4, transition: 'width 0.3s' }} />
+                        </div>
+                      </div>
+
+                      {isPromoted ? (
+                        <p style={{ fontSize: 12, color: '#4ade80', marginBottom: 8 }}>
+                          ✅ {colleague.name} è diventato/a tuo amico/a!
+                        </p>
+                      ) : (
+                        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
+                          Porta l'affinità a 65+ per promuoverlo/a come amico/a reale.
+                        </p>
+                      )}
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
+                        {WORK_ACTIONS.map(({ action, label, emoji }) => (
+                          <button
+                            key={action}
+                            onClick={() => handleWorkInteract(colleague.id, action)}
+                            style={{
+                              padding: '8px 4px', borderRadius: 10, fontSize: 11, fontWeight: 500,
+                              background: action === 'fight' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.07)',
+                              color: action === 'fight' ? '#fca5a5' : 'var(--color-text)',
+                              border: `1px solid ${action === 'fight' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.08)'}`,
+                              cursor: 'pointer', textAlign: 'center',
+                            }}
+                          >
+                            {emoji}<br />{label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )
+            })
+          )}
         </div>
       )}
 

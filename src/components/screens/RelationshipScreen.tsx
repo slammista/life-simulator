@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import type { NPCMood, NPCPersonalityTrait, Relationship } from '../../store/types'
-import type { NPCContext, NPCAction } from '../../services/RelationshipEngine'
+import type { NPCAction } from '../../services/RelationshipEngine'
 import { useToastStore } from '../../store/toastStore'
 
 const STAGE_EMOJI: Record<string, string> = {
@@ -13,16 +13,6 @@ const STAGE_EMOJI: Record<string, string> = {
   spouse: '💍',
 }
 
-const CONTEXT_LABELS: Record<NPCContext, string> = {
-  school: '🏫 Scuola',
-  work: '💼 Lavoro',
-  neighborhood: '🏘️ Quartiere',
-  dating_app: '📱 App dating',
-  bar: '🍺 Bar',
-  travel: '✈️ Viaggio',
-  family: '👪 Famiglia',
-  random: '🎲 Caso',
-}
 
 const MOOD_LABELS: Record<NPCMood, { label: string; emoji: string; color: string }> = {
   neutrale: { label: 'Neutrale', emoji: '😐', color: '#94a3b8' },
@@ -143,12 +133,10 @@ export function RelationshipScreen() {
   const relationships = useGameStore(s => s.relationships)
   const family = useGameStore(s => s.family)
   const playerAge = useGameStore(s => s.time.age)
-  const meetNewPerson = useGameStore(s => s.meetNewPerson)
   const interactWithNPC = useGameStore(s => s.interactWithNPC)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
-  const [showContextPicker, setShowContextPicker] = useState(false)
   const [view, setView] = useState<'attivi' | 'storia'>('attivi')
 
   const pushToast = useToastStore(s => s.push)
@@ -157,12 +145,6 @@ export function RelationshipScreen() {
     setFeedback({ msg, ok })
     pushToast(msg, ok ? '💚' : '❌', ok)
     setTimeout(() => setFeedback(null), 3500)
-  }
-
-  const handleMeet = (ctx: NPCContext) => {
-    setShowContextPicker(false)
-    const r = meetNewPerson(ctx)
-    flash(r.message, r.success)
   }
 
   const handleAction = (relId: string, action: NPCAction) => {
@@ -193,14 +175,6 @@ export function RelationshipScreen() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>❤️ Relazioni</h2>
-        {view === 'attivi' && (
-          <button
-            onClick={() => setShowContextPicker(true)}
-            style={{ padding: '6px 14px', borderRadius: 12, background: 'var(--color-cta)', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
-          >
-            + Incontra
-          </button>
-        )}
       </div>
 
       {/* View switcher */}
@@ -266,32 +240,9 @@ export function RelationshipScreen() {
             </div>
           )}
 
-          {showContextPicker && (
-            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-              onClick={() => setShowContextPicker(false)}>
-              <div style={{ background: 'var(--bg-card)', borderRadius: '20px 20px 0 0', padding: 20, width: '100%', maxWidth: 430 }}
-                onClick={e => e.stopPropagation()}>
-                <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Dove vuoi incontrare qualcuno?</p>
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-                  {(Object.entries(CONTEXT_LABELS) as [NPCContext, string][]).map(([ctx, label]) => (
-                    <button
-                      key={ctx}
-                      onClick={() => handleMeet(ctx)}
-                      style={{ padding: '10px 8px', borderRadius: 12, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--color-text)', fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
-                    >
-                      {label}
-                    </button>
-                  ))}
-                </div>
-                <button
-                  onClick={() => setShowContextPicker(false)}
-                  style={{ width: '100%', marginTop: 12, padding: '10px 0', borderRadius: 12, background: 'rgba(255,255,255,0.05)', color: 'var(--color-text-secondary)', fontSize: 14, border: 'none', cursor: 'pointer' }}
-                >
-                  Annulla
-                </button>
-              </div>
-            </div>
-          )}
+          <div style={{ borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 12, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', color: '#a5b4fc' }}>
+            💡 Per incontrare nuove persone vai su <strong>Attività → Socializza</strong>. Colleghi e compagni emergono automaticamente da Lavoro e Scuola.
+          </div>
 
           {activeRels.length === 0 && (
             <div className="card" style={{ textAlign: 'center', padding: 28 }}>

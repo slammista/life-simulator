@@ -177,6 +177,8 @@ export interface EducationState {
   university: string | null
   major: string | null
   graduationYear: number | null
+  classmates: SchoolNPC[]
+  schoolReputation: SchoolReputationStatus
 }
 
 // ---- Career ----
@@ -204,6 +206,8 @@ export interface CareerState {
   pensionContributions: number
   licenses: string[]
   businessOwned: Business | null
+  colleagues: WorkNPC[]
+  workReputation: WorkReputationStatus
 }
 
 export interface Business {
@@ -294,6 +298,81 @@ export interface Relationship {
   memoryLog: NPCMemory[]
   isAlive: boolean
   nationality: Nationality
+}
+
+// ---- Work Ecosystem ----
+
+export type WorkReputationStatus = 'nuovo' | 'affidabile' | 'ambizioso' | 'lecchino' | 'tossico' | 'genio' | 'pigro' | 'leader' | 'problematico'
+
+export type WorkAction = 'talk' | 'socialize' | 'help' | 'compliment' | 'gossip' | 'fight'
+
+export interface WorkNPC {
+  id: string
+  name: string
+  age: number
+  gender: Gender
+  emoji: string
+  role: string
+  personalityTraits: NPCPersonalityTrait[]
+  mood: NPCMood
+  affection: number      // 0-100
+  status: 'neutral' | 'friendly' | 'tense' | 'hostile'
+  promotedToRelId: string | null
+  jobId: string
+}
+
+// ---- School Ecosystem ----
+
+export type SchoolReputationStatus = 'invisibile' | 'popolare' | 'nerd' | 'atleta' | 'ribelle' | 'problematico' | 'leader' | 'artista'
+
+export type SchoolAction = 'talk' | 'befriend' | 'study_together' | 'gossip' | 'fight' | 'copy_homework'
+
+export type SchoolNPCRole = 'student' | 'professor' | 'coach'
+
+export interface SchoolNPC {
+  id: string
+  name: string
+  age: number
+  gender: Gender
+  emoji: string
+  role: SchoolNPCRole
+  subject?: string
+  personalityTraits: NPCPersonalityTrait[]
+  mood: NPCMood
+  affection: number      // 0-100
+  status: 'neutral' | 'friendly' | 'tense' | 'hostile'
+  promotedToRelId: string | null
+  educationLevel: EducationLevel
+}
+
+// ---- Player Skills ----
+
+export interface PlayerSkills {
+  athleticism: number    // 0-100
+  music: number
+  acting: number
+  creativity: number
+  charisma: number
+  discipline: number
+  leadership: number
+  academicSkill: number
+  socialSkill: number
+}
+
+// ---- Life Memories ----
+
+export type LifeMemoryCategory = 'life' | 'school' | 'work' | 'relationship' | 'health' | 'crime' | 'finance' | 'achievement'
+
+export interface LifeMemory {
+  id: string
+  year: number
+  age: number
+  title: string
+  description: string
+  emoji: string
+  category: LifeMemoryCategory
+  peopleInvolved: string[]
+  isImportant: boolean
 }
 
 // ---- Family Tree ----
@@ -1040,6 +1119,12 @@ export interface GameState {
 
   // Anti-abuse: diminishing returns tracking per action per year
   diminishingReturns: Record<string, number>
+
+  // Player skills built through activities
+  skills: PlayerSkills
+
+  // Life memories (important events)
+  lifeMemories: LifeMemory[]
 }
 
 // ---- Action Result (shared) ----
@@ -1069,6 +1154,9 @@ export interface GameActions {
   quitJob: () => ActionResult
   attemptPromotion: () => ActionResult
 
+  // Work ecosystem actions
+  workInteract: (colleagueId: string, action: WorkAction) => ActionResult
+
   // Relationship engine actions
   meetNewPerson: (context: import('../services/RelationshipEngine').NPCContext) => ActionResult
   interactWithNPC: (npcId: string, action: import('../services/RelationshipEngine').NPCAction) => ActionResult
@@ -1076,6 +1164,12 @@ export interface GameActions {
   // Education engine actions
   startEducation: (level: EducationLevel) => ActionResult
   studyAction: () => ActionResult
+
+  // School ecosystem actions
+  schoolInteract: (npcId: string, action: SchoolAction) => ActionResult
+
+  // Social activities outside work/school
+  socializeOutside: (location: import('../services/WorkSchoolEngine').SocialLocation) => ActionResult
 
   // Health engine actions
   medicalCheck: () => ActionResult
