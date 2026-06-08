@@ -184,7 +184,8 @@ export function RelationshipScreen() {
 
   const historicGroups: Record<string, Relationship[]> = {
     'Ex partner': historicRels.filter(r => r.type === 'ex_partner'),
-    'Defunti': historicRels.filter(r => !r.isAlive && r.type !== 'ex_partner'),
+    'Vecchi colleghi': historicRels.filter(r => !r.isAlive && r.type === 'colleague'),
+    'Defunti': historicRels.filter(r => !r.isAlive && r.type !== 'ex_partner' && r.type !== 'colleague'),
   }
 
   return (
@@ -341,11 +342,16 @@ export function RelationshipScreen() {
           ) : (
             Object.entries(historicGroups).map(([groupName, rels]) => {
               if (rels.length === 0) return null
-              const groupColor = groupName === 'Ex partner' ? '#f43f5e' : '#94a3b8'
+              const groupMeta: Record<string, { color: string; icon: string }> = {
+                'Ex partner':     { color: '#f43f5e', icon: '💔' },
+                'Vecchi colleghi': { color: '#60a5fa', icon: '💼' },
+                'Defunti':        { color: '#94a3b8', icon: '🕯️' },
+              }
+              const meta = groupMeta[groupName] ?? { color: '#94a3b8', icon: '👤' }
               return (
                 <div key={groupName} style={{ marginBottom: 16 }}>
-                  <p style={{ fontSize: 11, color: groupColor, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-                    {groupName === 'Ex partner' ? '💔 Ex partner' : '🕯️ Defunti'}
+                  <p style={{ fontSize: 11, color: meta.color, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                    {meta.icon} {groupName}
                   </p>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     {rels.map(rel => (
@@ -367,8 +373,9 @@ export function RelationshipScreen() {
 function HistoricRelCard({ rel }: { rel: Relationship }) {
   const [expanded, setExpanded] = useState(false)
   const isEx = rel.type === 'ex_partner'
-  const statusColor = isEx ? '#f43f5e' : '#64748b'
-  const statusLabel = isEx ? '💔 Ex' : '🕯️ Scomparso'
+  const isColleague = rel.type === 'colleague'
+  const statusColor = isEx ? '#f43f5e' : isColleague ? '#60a5fa' : '#64748b'
+  const statusLabel = isEx ? '💔 Ex' : isColleague ? '💼 Ex collega' : '🕯️ Scomparso'
 
   return (
     <div className="card" style={{ padding: 12, opacity: rel.isAlive ? 1 : 0.75 }}>

@@ -868,15 +868,43 @@ export const useGameStore = create<FullStore>()(
             combinedEffects[k] = (combinedEffects[k] ?? 0) + v
           }
         }
+
+        // Career cross-effects: colleague/rival interactions ripple into work
+        let careerBurnoutDelta = 0
+        let careerCrossMsg = ''
+        const isWorkNPC = rel.type === 'colleague' || rel.type === 'rival'
+        if (isWorkNPC && state.career.currentJob) {
+          if (action === 'fight') {
+            careerBurnoutDelta = 10
+            combinedEffects.reputation = (combinedEffects.reputation ?? 0) - 5
+            careerCrossMsg = ' Tensione in ufficio — stress lavorativo aumentato.'
+          } else if (action === 'cheat' && result.success) {
+            if (Math.random() < 0.40) {
+              careerBurnoutDelta = 15
+              combinedEffects.reputation = (combinedEffects.reputation ?? 0) - 15
+              careerCrossMsg = ' Scandalo in ufficio — reputazione professionale danneggiata!'
+            }
+          } else if (action === 'insult') {
+            careerBurnoutDelta = 6
+            combinedEffects.reputation = (combinedEffects.reputation ?? 0) - 8
+          } else if (['hang_out', 'gift', 'compliment'].includes(action) && result.success) {
+            careerBurnoutDelta = -3
+          } else if (result.stageAdvanced) {
+            careerBurnoutDelta = -5
+            careerCrossMsg = ' Buon clima in ufficio — stress ridotto.'
+          }
+        }
+
         const partial = applyEffects(state, combinedEffects)
         const key = `interact_${npcId}_${state.time.year}`
         const currentTraumas = state.health.traumas ?? []
         const nextTraumas = (result.success || action === 'cheat') && traumaResult.trauma
           ? [...currentTraumas, traumaResult.trauma].slice(-50)
           : currentTraumas
-        const resultMessage = traumaResult.message && (result.success || action === 'cheat')
+        const baseMsg = traumaResult.message && (result.success || action === 'cheat')
           ? `${result.message} ${traumaResult.message}`
           : result.message
+        const resultMessage = careerCrossMsg ? `${baseMsg}${careerCrossMsg}` : baseMsg
 
         const updatedRel: Relationship = {
           ...rel,
@@ -886,9 +914,14 @@ export const useGameStore = create<FullStore>()(
             : rel.memoryLog,
         }
 
+        const careerUpdate = careerBurnoutDelta !== 0
+          ? (s: GameState) => ({ career: { ...s.career, burnoutLevel: clamp(s.career.burnoutLevel + careerBurnoutDelta, 0, 100) } })
+          : null
+
         if (result.relationshipEnded) {
           set(s => ({
             ...partial,
+            ...(careerUpdate ? careerUpdate(s) : {}),
             health: { ...(partial.health ?? s.health), traumas: nextTraumas },
             relationships: s.relationships.map(r => r.id === npcId ? updatedRel : r),
             diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
@@ -897,6 +930,7 @@ export const useGameStore = create<FullStore>()(
         } else {
           set(s => ({
             ...partial,
+            ...(careerUpdate ? careerUpdate(s) : {}),
             health: { ...(partial.health ?? s.health), traumas: nextTraumas },
             relationships: s.relationships.map(r => r.id === npcId ? updatedRel : r),
             diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },

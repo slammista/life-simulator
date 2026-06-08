@@ -66,4 +66,25 @@ export default defineConfig({
       '@': '/src',
     },
   },
+  build: {
+    chunkSizeWarningLimit: 600,
+    rollupOptions: {
+      output: {
+        manualChunks: (id: string) => {
+          if (id.includes('node_modules/react') || id.includes('node_modules/react-dom') || id.includes('node_modules/scheduler')) {
+            return 'vendor-react'
+          }
+          if (id.includes('node_modules/@supabase') || id.includes('node_modules/supabase')) {
+            return 'vendor-supabase'
+          }
+          if (id.includes('node_modules/')) {
+            return 'vendor'
+          }
+          if (id.includes('/src/services/')) {
+            return 'game-engines'
+          }
+        },
+      },
+    },
+  },
 })

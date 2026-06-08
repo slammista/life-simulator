@@ -34,16 +34,23 @@ Obiettivo: avvicinare la struttura macro a BitLife dove funziona, mantenendo per
 | 13i | Assets aspirazionale | ✅ Completo | Sezione "Obiettivi finanziari" in FinanceScreen: 3 progress bar (Fondo emergenza / Prima casa / Libertà finanziaria) |
 | 13j | Ex/defunti sezione dedicata | ✅ Completo | Switcher Attivi / Storia in RelationshipScreen: tab Storia mostra ex-partner e defunti con memorie |
 
-### Completamento totale: **~99%**
+### Estensioni v1.2 (implementate)
+
+| # | Feature | Stato | Note |
+|---|---------|-------|------|
+| E1 | Code splitting bundle | ✅ Completo | manualChunks in vite.config.ts: index 1009kB→57kB; vendor-react 182kB + vendor-supabase 194kB + game-engines 776kB in parallelo HTTP/2 |
+| E2 | Impatto incrociato relazioni/lavoro | ✅ Completo | interactWithNPC: azioni su colleghi/rivali modificano burnoutLevel (fight +10, cheat scandalo +15, hang_out -3, stageAdvanced -5) + reputation |
+| E3 | Vecchi colleghi in tab Storia | ✅ Completo | Gruppo "Vecchi colleghi" (💼) separato da "Defunti" (🕯️) nella tab Storia; badge "Ex collega" in HistoricRelCard |
+
+### Completamento totale: **100%**
 
 ### Note finali
 
-Tutti gli step della v1.1 sono stati implementati. Le feature principali sono operative e testate in build. Eventuali miglioramenti futuri (v1.2):
+Tutti gli step della v1.1 + le estensioni v1.2 sono stati implementati e buildano senza errori. Il bundle è ora suddiviso in chunk paralleli per un caricamento più efficiente. Eventuali prossimi passi (v1.3):
 
-- Raffinamento rete sociale: impatto incrocio tra lavoro/relazioni/reputazione
 - Notifiche push per eventi importanti (Capacitor)
-- Ottimizzazione bundle size (code splitting per ridurre il chunk da ~1MB)
-- Eventuale sous-tab "Vecchi Colleghi" nella sezione Storia
+- Riduzione ulteriore game-engines chunk (~776kB) tramite lazy-loading degli engine secondari
+- Sistema save cloud automatico via Supabase
 
 ---
 
