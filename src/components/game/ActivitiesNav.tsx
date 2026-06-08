@@ -1,6 +1,6 @@
 type ActivitiesSubTab =
   | 'health' | 'hobby' | 'criminal' | 'substances' | 'religion'
-  | 'body' | 'beauty' | 'gambling' | 'sex_health' | 'cosmetic'
+  | 'body' | 'beauty' | 'barber' | 'gambling' | 'sex_health' | 'cosmetic'
   | 'travel' | 'politics' | 'goals' | 'challenges' | 'ribbons'
   | 'timeline' | 'minigames' | 'leaderboard' | 'settings' | 'privacy'
 
@@ -8,6 +8,7 @@ const ITEMS: { id: ActivitiesSubTab; emoji: string; label: string }[] = [
   { id: 'health',      emoji: '💊', label: 'Salute' },
   { id: 'hobby',       emoji: '🎸', label: 'Hobby' },
   { id: 'beauty',      emoji: '💄', label: 'Beauty' },
+  { id: 'barber',      emoji: '💈', label: 'Barbiere' },
   { id: 'cosmetic',    emoji: '💉', label: 'Estetica' },
   { id: 'body',        emoji: '🎨', label: 'Body Mod' },
   { id: 'sex_health',  emoji: '❤️‍🔥', label: 'Sess.' },
@@ -33,7 +34,7 @@ const CATEGORIES: { label: string; color: string; ids: ActivitiesSubTab[] }[] = 
   {
     label: 'Corpo & Salute',
     color: '#10b981',
-    ids: ['health', 'hobby', 'beauty', 'cosmetic', 'body', 'sex_health'],
+    ids: ['health', 'hobby', 'beauty', 'barber', 'cosmetic', 'body', 'sex_health'],
   },
   {
     label: 'Rischio',

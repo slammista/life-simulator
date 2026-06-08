@@ -113,6 +113,28 @@ export type Religion =
   | 'agnosticism'
   | 'other'
 
+// ---- Avatar System ----
+
+export type SkinTone = 'light' | 'medium_light' | 'medium' | 'medium_dark' | 'dark'
+export type AvatarHairStyle = 'bald' | 'buzz' | 'short' | 'medium' | 'long' | 'wavy' | 'curly' | 'afro' | 'ponytail' | 'bun'
+export type AvatarHairColor = 'black' | 'dark_brown' | 'brown' | 'light_brown' | 'blonde' | 'red' | 'auburn' | 'gray' | 'white' | 'blue' | 'pink'
+export type EyeStyle = 'round' | 'almond' | 'wide' | 'narrow'
+export type EyeColor = 'brown' | 'dark_brown' | 'blue' | 'green' | 'hazel' | 'gray' | 'amber'
+export type BrowStyle = 'thin' | 'medium' | 'thick' | 'arched'
+export type BeardStyle = 'none' | 'stubble' | 'short' | 'full' | 'goatee' | 'mustache'
+export type AvatarClothesStyle = 'casual' | 'formal' | 'sporty' | 'elegant' | 'punk' | 'traditional'
+
+export interface AvatarConfig {
+  skinTone: SkinTone
+  hairStyle: AvatarHairStyle
+  hairColor: AvatarHairColor
+  eyeStyle: EyeStyle
+  eyeColor: EyeColor
+  browStyle: BrowStyle
+  beardStyle: BeardStyle
+  clothesStyle: AvatarClothesStyle
+}
+
 export interface PlayerIdentity {
   name: string
   surname: string
@@ -123,6 +145,7 @@ export interface PlayerIdentity {
   religion: Religion
   sexualOrientation: SexualOrientation
   emoji: string
+  avatar?: AvatarConfig
 }
 
 // ---- Education ----
@@ -1157,6 +1180,10 @@ export interface GameActions {
   acceptChallenge: (defId: string) => ActionResult
   abandonChallenge: (defId: string) => ActionResult
   claimDailyQuest: (questId: string) => ActionResult
+
+  // Avatar actions
+  updateAvatar: (config: Partial<AvatarConfig>) => void
+  visitBarber: (serviceId: string) => ActionResult
 
   // Cheat actions
   cheatAddMoney: (amount: number) => void

@@ -1,7 +1,34 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import type { Gender, FamilyBackground, Religion, SexualOrientation, GameMode } from '../../store/types'
+import type { Gender, FamilyBackground, Religion, SexualOrientation, GameMode, AvatarConfig, SkinTone, AvatarHairStyle, AvatarHairColor } from '../../store/types'
+import { getDefaultAvatar, SKIN_TONES, HAIR_COLORS } from '../../services/AvatarEngine'
+import { AvatarRenderer } from '../avatar/AvatarRenderer'
 import db from '../../../public/db.json'
+
+const HAIR_STYLE_OPTIONS: { val: AvatarHairStyle; label: string }[] = [
+  { val: 'buzz',     label: 'Buzzcut' },
+  { val: 'short',    label: 'Corto' },
+  { val: 'medium',   label: 'Medio' },
+  { val: 'long',     label: 'Lungo' },
+  { val: 'wavy',     label: 'Mosso' },
+  { val: 'curly',    label: 'Ricci' },
+  { val: 'afro',     label: 'Afro' },
+  { val: 'ponytail', label: 'Coda' },
+  { val: 'bun',      label: 'Bun' },
+  { val: 'bald',     label: 'Pelato' },
+]
+
+const HAIR_COLOR_OPTIONS: { val: AvatarHairColor; label: string }[] = [
+  { val: 'black',       label: 'Nero' },
+  { val: 'dark_brown',  label: 'Castano' },
+  { val: 'brown',       label: 'Marrone' },
+  { val: 'light_brown', label: 'Bruno' },
+  { val: 'blonde',      label: 'Biondo' },
+  { val: 'red',         label: 'Rosso' },
+  { val: 'auburn',      label: 'Ramato' },
+  { val: 'blue',        label: 'Blu' },
+  { val: 'pink',        label: 'Rosa' },
+]
 
 export function NewGameScreen() {
   const { newGame } = useGameStore()
@@ -15,6 +42,15 @@ export function NewGameScreen() {
   const [orientation, setOrientation] = useState<SexualOrientation>('heterosexual')
   const [gameMode, setGameMode] = useState<GameMode>('normal')
   const [ironMan, setIronMan] = useState(false)
+  const [avatar, setAvatar] = useState<AvatarConfig>(() => getDefaultAvatar('male'))
+
+  const updateAvatar = (patch: Partial<AvatarConfig>) =>
+    setAvatar(prev => ({ ...prev, ...patch }))
+
+  const handleGenderChange = (g: Gender) => {
+    setGender(g)
+    setAvatar(getDefaultAvatar(g))
+  }
 
   const handleStart = () => {
     if (!name.trim()) return
@@ -28,6 +64,7 @@ export function NewGameScreen() {
       religion,
       sexualOrientation: orientation,
       emoji: '👶',
+      avatar,
     }, nationId, gameMode, ironMan)
   }
 
@@ -49,6 +86,9 @@ export function NewGameScreen() {
     display: 'block' as const,
     fontWeight: 600 as const,
   }
+
+  const skinTones = Object.entries(SKIN_TONES) as [SkinTone, string][]
+  const hairColors = HAIR_COLOR_OPTIONS
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
@@ -102,11 +142,89 @@ export function NewGameScreen() {
                   borderColor: gender === val ? 'var(--color-cta)' : 'var(--color-border)',
                   backgroundColor: gender === val ? 'rgba(233,69,96,0.1)' : 'var(--bg-secondary)',
                 }}
-                onClick={() => setGender(val as Gender)}
+                onClick={() => handleGenderChange(val as Gender)}
               >
                 {label}
               </button>
             ))}
+          </div>
+        </div>
+
+        {/* ── Avatar Customization ── */}
+        <div style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+          <div style={{ padding: '10px 12px', background: 'rgba(124,92,255,0.12)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>🎨 Personalizza il tuo avatar</span>
+          </div>
+          <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {/* Preview */}
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <div style={{ borderRadius: 16, border: '2px solid rgba(124,92,255,0.4)', overflow: 'hidden', background: 'rgba(255,255,255,0.04)' }}>
+                <AvatarRenderer size="lg" config={avatar} age={0} gender={gender} />
+              </div>
+            </div>
+
+            {/* Skin tone */}
+            <div>
+              <p style={labelStyle}>Carnagione</p>
+              <div style={{ display: 'flex', gap: 8 }}>
+                {skinTones.map(([key, hex]) => (
+                  <button
+                    key={key}
+                    onClick={() => updateAvatar({ skinTone: key })}
+                    style={{
+                      width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                      background: hex, flexShrink: 0,
+                      outline: avatar.skinTone === key ? `3px solid var(--primary)` : '2px solid rgba(255,255,255,0.15)',
+                      outlineOffset: 2,
+                    }}
+                    title={key}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* Hair style */}
+            <div>
+              <p style={labelStyle}>Capelli</p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                {HAIR_STYLE_OPTIONS.map(({ val, label }) => (
+                  <button
+                    key={val}
+                    onClick={() => updateAvatar({ hairStyle: val })}
+                    style={{
+                      padding: '4px 10px', borderRadius: 20, fontSize: 11, border: 'none', cursor: 'pointer',
+                      background: avatar.hairStyle === val ? 'rgba(124,92,255,0.3)' : 'rgba(255,255,255,0.07)',
+                      color: avatar.hairStyle === val ? 'var(--primary)' : 'var(--color-text-secondary)',
+                      outline: avatar.hairStyle === val ? '1px solid rgba(124,92,255,0.5)' : 'none',
+                    }}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Hair color */}
+            {avatar.hairStyle !== 'bald' && (
+              <div>
+                <p style={labelStyle}>Colore capelli</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                  {hairColors.map(({ val, label }) => (
+                    <button
+                      key={val}
+                      onClick={() => updateAvatar({ hairColor: val })}
+                      title={label}
+                      style={{
+                        width: 26, height: 26, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                        background: HAIR_COLORS[val], flexShrink: 0,
+                        outline: avatar.hairColor === val ? '3px solid var(--primary)' : '2px solid rgba(255,255,255,0.15)',
+                        outlineOffset: 2,
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

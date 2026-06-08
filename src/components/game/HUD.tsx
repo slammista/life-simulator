@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../../store/gameStore'
+import { AvatarRenderer } from '../avatar/AvatarRenderer'
 
 function useHUDData() {
   const stats = useGameStore(useShallow(s => s.stats))
@@ -90,13 +91,11 @@ export const HUD = memo(function HUD() {
         {/* Avatar with ring */}
         <div style={{
           width: 38, height: 38, borderRadius: '50%', flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: `${ringColor}22`,
+          overflow: 'hidden',
           border: `2px solid ${ringColor}66`,
           boxShadow: `0 0 12px ${ringColor}44`,
-          fontSize: 20, lineHeight: 1,
         }}>
-          {emoji}
+          <AvatarRenderer size="sm" />
         </div>
 
         {/* Name + age + status */}

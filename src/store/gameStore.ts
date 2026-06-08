@@ -52,7 +52,8 @@ import { ChaosEngine } from '../services/ChaosEngine'
 import { DailyQuestEngine } from '../services/DailyQuestEngine'
 import { NPCAgencyEngine } from '../services/NPCAgencyEngine'
 import { BalanceEngine } from '../services/BalanceEngine'
-import type { Addiction, TravelMemory, Religion, Child, LivingType } from './types'
+import type { Addiction, TravelMemory, Religion, Child, LivingType, AvatarConfig } from './types'
+import { getDefaultAvatar, getBarberServices } from '../services/AvatarEngine'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
 
@@ -138,7 +139,7 @@ function buildInitialState(): GameState {
     gameOverYear: null,
     settings: { mode: 'normal', ironMan: false, soundEnabled: true, notificationsEnabled: true, language: 'it', autoSave: true },
     time: { year: 2000, month: 1, age: 0 },
-    identity: { name: 'Giocatore', surname: 'Demo', gender: 'male', nationality: 'italy', birthYear: 2000, familyBackground: 'middle', religion: 'catholicism', sexualOrientation: 'heterosexual', emoji: '🙂' },
+    identity: { name: 'Giocatore', surname: 'Demo', gender: 'male', nationality: 'italy', birthYear: 2000, familyBackground: 'middle', religion: 'catholicism', sexualOrientation: 'heterosexual', emoji: '🙂', avatar: getDefaultAvatar('male') },
     stats: { health: 80, mentalHealth: 80, happiness: 70, intelligence: 50, looks: 50, energy: 80, karma: 0, reputation: 50, socialReputation: 50 },
     finance: { money: 1000, bankBalance: 0, debt: 0, creditScore: 650, monthlyIncome: 0, monthlyExpenses: 0, investments: [], assets: [] },
     market: FinanceEngine.initialMarketState(),
@@ -1706,6 +1707,37 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💎', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Avatar actions ====================
+      updateAvatar: (config: Partial<AvatarConfig>) => {
+        const state = get()
+        const current = state.identity.avatar ?? getDefaultAvatar(state.identity.gender)
+        set({ identity: { ...state.identity, avatar: { ...current, ...config } } })
+      },
+
+      visitBarber: (serviceId: string): ActionResult => {
+        const state = get()
+        if (state.time.age < 6) return { success: false, message: 'Sei troppo piccolo/a per andare dal barbiere.', effects: {} }
+        const service = getBarberServices().find(s => s.id === serviceId)
+        if (!service) return { success: false, message: 'Servizio non trovato.', effects: {} }
+        if (state.finance.money < service.cost) return { success: false, message: `Non hai abbastanza soldi. Servono €${service.cost}.`, effects: {} }
+        const badOutcome = Math.random() < 0.1
+        const current = state.identity.avatar ?? getDefaultAvatar(state.identity.gender)
+        const newAvatar = { ...current }
+        if (service.changesStyle) newAvatar.hairStyle = service.changesStyle
+        if (service.changesColor) newAvatar.hairColor = service.changesColor
+        const looksChange = badOutcome ? -3 : service.looksBonus
+        const msg = badOutcome
+          ? `✂️ Taglio andato storto! Il barbiere ha esagerato. (-${Math.abs(looksChange)} look)`
+          : `✂️ ${service.name} completato! Stai benissimo! (+${looksChange} look)`
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - service.cost },
+          identity: { ...s.identity, avatar: newAvatar },
+          stats: { ...s.stats, looks: clamp(s.stats.looks + looksChange, 0, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: '✂️', category: 'beauty', statChanges: { looks: looksChange } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: !badOutcome, message: msg, effects: { looks: looksChange } }
       },
 
       // ==================== Retirement actions ====================

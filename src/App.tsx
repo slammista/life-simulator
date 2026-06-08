@@ -40,6 +40,7 @@ const ParentingScreen     = lazy(() => import('./components/screens/ParentingScr
 const MilitaryScreen      = lazy(() => import('./components/screens/MilitaryScreen'))
 const BodyModScreen       = lazy(() => import('./components/screens/BodyModScreen'))
 const BeautyScreen        = lazy(() => import('./components/screens/BeautyScreen'))
+const BarberScreen        = lazy(() => import('./components/screens/BarberScreen').then(m => ({ default: m.BarberScreen })))
 const RetirementScreen    = lazy(() => import('./components/screens/RetirementScreen'))
 const GamblingScreen      = lazy(() => import('./components/screens/GamblingScreen'))
 const SexualHealthScreen  = lazy(() => import('./components/screens/SexualHealthScreen'))
@@ -58,7 +59,7 @@ type AssetsSubTab    = 'finance' | 'vehicle' | 'living' | 'social'
 type RelazioniSubTab = 'relationships' | 'dating' | 'famiglia' | 'pets'
 type ActivitiesSubTab =
   | 'health' | 'hobby' | 'criminal' | 'substances' | 'religion'
-  | 'body' | 'beauty' | 'gambling' | 'sex_health' | 'cosmetic'
+  | 'body' | 'beauty' | 'barber' | 'gambling' | 'sex_health' | 'cosmetic'
   | 'travel' | 'politics' | 'goals' | 'challenges' | 'ribbons'
   | 'timeline' | 'minigames' | 'leaderboard' | 'settings' | 'privacy'
 
@@ -227,6 +228,7 @@ function App() {
             {activeTab === 'activities' && activitiesSub === 'religion'    && <ReligionScreen />}
             {activeTab === 'activities' && activitiesSub === 'body'        && <BodyModScreen />}
             {activeTab === 'activities' && activitiesSub === 'beauty'      && <BeautyScreen />}
+            {activeTab === 'activities' && activitiesSub === 'barber'      && <BarberScreen />}
             {activeTab === 'activities' && activitiesSub === 'gambling'    && <GamblingScreen />}
             {activeTab === 'activities' && activitiesSub === 'sex_health'  && <SexualHealthScreen />}
             {activeTab === 'activities' && activitiesSub === 'cosmetic'    && <CosmeticSurgeryScreen />}
