@@ -4,7 +4,7 @@ import {
   SKIN_TONES, HAIR_COLORS, EYE_COLORS, CLOTHES_COLORS,
   applyAgeToConfig, getDefaultAvatar,
 } from '../../services/AvatarEngine'
-import type { AvatarConfig, AvatarHairStyle, EyeStyle, BrowStyle, BeardStyle, Gender } from '../../store/types'
+import type { AvatarConfig, AvatarHairStyle, AvatarAccessory, EyeStyle, BrowStyle, BeardStyle, Gender } from '../../store/types'
 
 const SIZE_PX = { sm: 38, md: 80, lg: 120 } as const
 
@@ -150,6 +150,76 @@ function Beard({ style, fill }: { style: BeardStyle; fill: string }) {
   return null
 }
 
+function Hat({ type }: { type: 'cap' | 'beanie' | 'fedora' }) {
+  if (type === 'cap') {
+    return (
+      <>
+        {/* Crown */}
+        <path d="M 24 40 Q 24 10 50 10 Q 76 10 76 40 Z" fill="#2563EB" />
+        {/* Brim */}
+        <path d="M 74 40 Q 86 38 88 46 Q 84 48 76 46 Z" fill="#1D4ED8" />
+        {/* Seam */}
+        <line x1="50" y1="10" x2="50" y2="40" stroke="#1D4ED8" strokeWidth="1" opacity="0.5" />
+        {/* Button */}
+        <circle cx="50" cy="10" r="2.5" fill="#1D4ED8" />
+      </>
+    )
+  }
+  if (type === 'beanie') {
+    return (
+      <>
+        {/* Body */}
+        <path d="M 22 40 Q 21 8 50 6 Q 79 8 78 40 Z" fill="#7C3AED" />
+        {/* Ribbed band */}
+        <path d="M 22 40 Q 50 46 78 40 Q 76 47 50 50 Q 24 47 22 40 Z" fill="#6D28D9" />
+        {/* Pom-pom */}
+        <circle cx="50" cy="6" r="5" fill="#A78BFA" />
+      </>
+    )
+  }
+  // fedora
+  return (
+    <>
+      {/* Crown */}
+      <ellipse cx="50" cy="20" rx="22" ry="14" fill="#374151" />
+      {/* Brim */}
+      <ellipse cx="50" cy="32" rx="36" ry="7" fill="#374151" />
+      {/* Dent on crown */}
+      <path d="M 50 8 Q 46 14 50 20 Q 54 14 50 8 Z" fill="#1F2937" />
+      {/* Band */}
+      <ellipse cx="50" cy="32" rx="22" ry="3.5" fill="#1F2937" />
+    </>
+  )
+}
+
+function Glasses({ type }: { type: 'round' | 'square' | 'sun' }) {
+  const frameColor = type === 'sun' ? '#111827' : '#1E293B'
+  const lensFill   = type === 'sun' ? 'rgba(0,0,0,0.55)' : 'rgba(186,224,255,0.25)'
+  const sw = 1.6
+
+  if (type === 'square') {
+    return (
+      <>
+        <rect x="32" y="39" width="15" height="11" rx="2" fill={lensFill} stroke={frameColor} strokeWidth={sw} />
+        <rect x="53" y="39" width="15" height="11" rx="2" fill={lensFill} stroke={frameColor} strokeWidth={sw} />
+        <line x1="47" y1="44" x2="53" y2="44" stroke={frameColor} strokeWidth={sw} />
+        <line x1="32" y1="44" x2="26" y2="43" stroke={frameColor} strokeWidth={sw - 0.4} />
+        <line x1="68" y1="44" x2="74" y2="43" stroke={frameColor} strokeWidth={sw - 0.4} />
+      </>
+    )
+  }
+  // round + sun (same shape, different fill)
+  return (
+    <>
+      <circle cx="40" cy="44" r="6" fill={lensFill} stroke={frameColor} strokeWidth={sw} />
+      <circle cx="60" cy="44" r="6" fill={lensFill} stroke={frameColor} strokeWidth={sw} />
+      <line x1="46" y1="44" x2="54" y2="44" stroke={frameColor} strokeWidth={sw} />
+      <line x1="34" y1="43" x2="28" y2="42" stroke={frameColor} strokeWidth={sw - 0.4} />
+      <line x1="66" y1="43" x2="72" y2="42" stroke={frameColor} strokeWidth={sw - 0.4} />
+    </>
+  )
+}
+
 interface Props {
   size?: 'sm' | 'md' | 'lg'
   config?: AvatarConfig
@@ -219,6 +289,11 @@ export function AvatarRenderer({ size = 'sm', config, age, gender, style }: Prop
       {/* Hair cap (clipped to head) */}
       <HairCap style={aged.hairStyle} fill={hairHex} clipId={clipId} />
 
+      {/* Hat (over hair, before face features) */}
+      {aged.accessory === 'hat_cap'    && <Hat type="cap" />}
+      {aged.accessory === 'hat_beanie' && <Hat type="beanie" />}
+      {aged.accessory === 'hat_fedora' && <Hat type="fedora" />}
+
       {/* Eyebrows */}
       <Brows style={aged.browStyle} color={browColor} />
 
@@ -274,6 +349,11 @@ export function AvatarRenderer({ size = 'sm', config, age, gender, style }: Prop
           <ellipse cx="66" cy="52" rx="5" ry="3.5" fill="#FF9A9A" opacity="0.35" />
         </>
       )}
+
+      {/* Glasses (rendered last, over eyes) */}
+      {aged.accessory === 'glasses_round'  && <Glasses type="round" />}
+      {aged.accessory === 'glasses_square' && <Glasses type="square" />}
+      {aged.accessory === 'sunglasses'     && <Glasses type="sun" />}
     </svg>
   )
 }

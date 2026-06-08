@@ -24,14 +24,15 @@
 | PR3.7 | Card-action class applicata | ✅ Completo | CareerScreen job offer cards → card-action class |
 | PR2.1 HUD | Stat flash micro-animation | ✅ Completo | Stat values flash (scale 1.35×) quando cambiano; prefers-reduced-motion respected |
 | QA mobile | Safe area, scroll, tap | ⚠️ Parziale | Safe area bottom rispettata in Toast e BottomNav; testare manualmente su mobile reale |
-| AVATAR | Avatar System & Character Customization | ✅ Completo | SVG modulare; AvatarRenderer, AvatarEngine, BarberScreen, integrazione HUD + NewGame |
+| AVATAR v1 | Avatar System & Character Customization | ✅ Completo | SVG modulare; AvatarRenderer, AvatarEngine, BarberScreen, integrazione HUD + NewGame |
+| AVATAR v2 | BeautyScreen integration + clothesStyle sync | ✅ Completo | Avatar preview in BeautyScreen, wardrobe→clothesStyle auto-sync, haircut→hairStyle/color sync |
+| AVATAR v2 | Accessori (occhiali, cappelli) | ✅ Completo | `AvatarAccessory` type, Hat+Glasses SVG components, tab Accessori in BeautyScreen, `buyAccessory`/`removeAccessory` |
 
-### Completamento totale: **~99%** (UI/UX polish originale) — **100%** avatar system v1 ✅
+### Completamento totale: **~99%** (UI/UX polish originale) — **100%** Avatar System v1+v2 ✅
 
 ### Ancora da fare
 
 - **QA mobile fisico** su iPhone SE e iPhone Pro Max — test su device reale (non automatizzabile)
-- **Avatar System** — intera nuova feature (vedi sezione dedicata in fondo al documento)
 
 ---
 
@@ -816,13 +817,14 @@ src/
 
 | File | Stato |
 |------|-------|
-| `src/store/types.ts` | ✅ `AvatarConfig`, `SkinTone`, `AvatarHairStyle`, `AvatarHairColor`, `EyeStyle/Color`, `BrowStyle`, `BeardStyle`, `AvatarClothesStyle` aggiunti; `PlayerIdentity.avatar?`, `updateAvatar`, `visitBarber` in `GameActions` |
-| `src/services/AvatarEngine.ts` | ✅ Nuovo file: color maps, `getDefaultAvatar`, `getRandomAvatar`, `applyAgeToConfig`, `getBarberServices` |
-| `src/components/avatar/AvatarRenderer.tsx` | ✅ Nuovo file: SVG modulare con cap+back hair, eyes, brows, nose, mouth, beard, acne, wrinkles, baby cheeks |
-| `src/store/gameStore.ts` | ✅ `avatar: getDefaultAvatar('male')` in initial state; `updateAvatar` e `visitBarber` actions |
+| `src/store/types.ts` | ✅ `AvatarConfig`, `SkinTone`, `AvatarHairStyle`, `AvatarHairColor`, `EyeStyle/Color`, `BrowStyle`, `BeardStyle`, `AvatarClothesStyle`, **`AvatarAccessory`** aggiunti; `PlayerIdentity.avatar?`, `updateAvatar`, `visitBarber`, **`buyAccessory`**, **`removeAccessory`** in `GameActions` |
+| `src/services/AvatarEngine.ts` | ✅ color maps, `getDefaultAvatar`, `getRandomAvatar`, `applyAgeToConfig`, `getBarberServices`; **`wardrobeTierToClothesStyle`**, **`beautyHairToAvatarStyle/Color`**, **`getAccessoryShop`** (6 item) |
+| `src/components/avatar/AvatarRenderer.tsx` | ✅ SVG modulare: cap+back hair, eyes, brows, nose, mouth, beard, acne, wrinkles, baby cheeks; **`Hat` (cap/beanie/fedora)**, **`Glasses` (round/square/sun)** |
+| `src/store/gameStore.ts` | ✅ initial avatar state; `updateAvatar`, `visitBarber`; **`buyAccessory`**, **`removeAccessory`**; `upgradeWardrobe` → auto-sync `clothesStyle`; `getHaircut` → auto-sync `hairStyle`/`hairColor` |
 | `src/components/screens/NewGameScreen.tsx` | ✅ Avatar preview `size="lg"`, skin tone picker (5), hair style picker (10), hair color picker (9) |
-| `src/components/game/HUD.tsx` | ✅ Emoji sostituita con `<AvatarRenderer size="sm" />` in ring container |
-| `src/components/screens/BarberScreen.tsx` | ✅ Nuovo screen: preview avatar `size="lg"`, lista 14 servizi, bad-outcome 10%, age gate <6 |
+| `src/components/game/HUD.tsx` | ✅ Emoji sostituita con `<AvatarRenderer size="sm" />` |
+| `src/components/screens/BarberScreen.tsx` | ✅ preview `size="lg"`, 14 servizi, bad-outcome 10%, age gate <6 |
+| `src/components/screens/BeautyScreen.tsx` | ✅ **Riscritto**: avatar preview `size="md"` in header; tab **Accessori** (shop 6 item, indossa/rimuovi); guardaroba info sync; nuova UI card-based |
 | `src/App.tsx` | ✅ `'barber'` aggiunto a `ActivitiesSubTab`, lazy import, render |
 | `src/components/game/ActivitiesNav.tsx` | ✅ `'barber'` aggiunto a tipo, ITEMS, Corpo & Salute category |
 

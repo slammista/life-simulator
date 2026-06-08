@@ -123,6 +123,7 @@ export type EyeColor = 'brown' | 'dark_brown' | 'blue' | 'green' | 'hazel' | 'gr
 export type BrowStyle = 'thin' | 'medium' | 'thick' | 'arched'
 export type BeardStyle = 'none' | 'stubble' | 'short' | 'full' | 'goatee' | 'mustache'
 export type AvatarClothesStyle = 'casual' | 'formal' | 'sporty' | 'elegant' | 'punk' | 'traditional'
+export type AvatarAccessory = 'none' | 'glasses_round' | 'glasses_square' | 'sunglasses' | 'hat_cap' | 'hat_beanie' | 'hat_fedora'
 
 export interface AvatarConfig {
   skinTone: SkinTone
@@ -133,6 +134,7 @@ export interface AvatarConfig {
   browStyle: BrowStyle
   beardStyle: BeardStyle
   clothesStyle: AvatarClothesStyle
+  accessory?: AvatarAccessory
 }
 
 export interface PlayerIdentity {
@@ -1184,6 +1186,8 @@ export interface GameActions {
   // Avatar actions
   updateAvatar: (config: Partial<AvatarConfig>) => void
   visitBarber: (serviceId: string) => ActionResult
+  buyAccessory: (accessoryId: string) => ActionResult
+  removeAccessory: () => void
 
   // Cheat actions
   cheatAddMoney: (amount: number) => void

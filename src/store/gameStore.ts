@@ -52,8 +52,8 @@ import { ChaosEngine } from '../services/ChaosEngine'
 import { DailyQuestEngine } from '../services/DailyQuestEngine'
 import { NPCAgencyEngine } from '../services/NPCAgencyEngine'
 import { BalanceEngine } from '../services/BalanceEngine'
-import type { Addiction, TravelMemory, Religion, Child, LivingType, AvatarConfig } from './types'
-import { getDefaultAvatar, getBarberServices } from '../services/AvatarEngine'
+import type { Addiction, TravelMemory, Religion, Child, LivingType, AvatarConfig, AvatarAccessory } from './types'
+import { getDefaultAvatar, getBarberServices, getAccessoryShop, wardrobeTierToClothesStyle, beautyHairToAvatarStyle, beautyHairToAvatarColor } from '../services/AvatarEngine'
 import type { PoliticsState } from '../services/PoliticsEngine'
 import type { MilitaryState } from '../services/MilitaryEngine'
 
@@ -1618,9 +1618,18 @@ export const useGameStore = create<FullStore>()(
         if (!result.success) return { success: false, message: result.message, effects: {} }
         const partial = applyEffects(state, result.effects)
         const key = `beauty_hair_${state.time.year}`
+        const newHairStyle = beautyHairToAvatarStyle(style)
+        const newHairColor = beautyHairToAvatarColor(style)
+        const curAvatar = state.identity.avatar ?? getDefaultAvatar(state.identity.gender)
+        const updatedAvatar = {
+          ...curAvatar,
+          ...(newHairStyle ? { hairStyle: newHairStyle } : {}),
+          ...(newHairColor ? { hairColor: newHairColor } : {}),
+        }
         set(s => ({
           ...partial,
           beauty: { ...s.beauty, ...(result.updatedBeauty ?? {}) },
+          identity: { ...s.identity, avatar: updatedAvatar },
           diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '✂️', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
@@ -1647,9 +1656,12 @@ export const useGameStore = create<FullStore>()(
         const result = BeautyEngine.upgradeWardrobe(tier as WardrobeTier, state)
         if (!result.success) return { success: false, message: result.message, effects: {} }
         const partial = applyEffects(state, result.effects)
+        const newClothes = wardrobeTierToClothesStyle(tier)
+        const curAvatar = state.identity.avatar ?? getDefaultAvatar(state.identity.gender)
         set(s => ({
           ...partial,
           beauty: { ...s.beauty, ...(result.updatedBeauty ?? {}) },
+          identity: { ...s.identity, avatar: { ...curAvatar, clothesStyle: newClothes } },
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '👗', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message: result.message, effects: result.effects }
@@ -1738,6 +1750,29 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: '✂️', category: 'beauty', statChanges: { looks: looksChange } }, ...s.eventLog].slice(0, 150),
         }))
         return { success: !badOutcome, message: msg, effects: { looks: looksChange } }
+      },
+
+      buyAccessory: (accessoryId: string): ActionResult => {
+        const state = get()
+        const shop = getAccessoryShop()
+        const item = shop.find(a => a.id === accessoryId)
+        if (!item) return { success: false, message: 'Accessorio non trovato.', effects: {} }
+        if (state.finance.money < item.cost) return { success: false, message: `Non hai abbastanza soldi. Servono €${item.cost}.`, effects: {} }
+        const current = state.identity.avatar ?? getDefaultAvatar(state.identity.gender)
+        const msg = `🛍️ ${item.name} acquistato! (+${item.looksBonus} look)`
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - item.cost },
+          identity: { ...s.identity, avatar: { ...current, accessory: accessoryId as AvatarAccessory } },
+          stats: { ...s.stats, looks: clamp(s.stats.looks + item.looksBonus, 0, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: item.emoji, category: 'beauty', statChanges: { looks: item.looksBonus } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: msg, effects: { looks: item.looksBonus } }
+      },
+
+      removeAccessory: () => {
+        const state = get()
+        const current = state.identity.avatar ?? getDefaultAvatar(state.identity.gender)
+        set({ identity: { ...state.identity, avatar: { ...current, accessory: 'none' as AvatarAccessory } } })
       },
 
       // ==================== Retirement actions ====================

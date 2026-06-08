@@ -1,4 +1,4 @@
-import type { AvatarConfig, AvatarHairStyle, AvatarHairColor, SkinTone, EyeColor, EyeStyle, BrowStyle, BeardStyle, Gender } from '../store/types'
+import type { AvatarConfig, AvatarHairStyle, AvatarHairColor, AvatarClothesStyle, AvatarAccessory, SkinTone, EyeColor, EyeStyle, BrowStyle, BeardStyle, Gender } from '../store/types'
 
 export const SKIN_TONES: Record<SkinTone, string> = {
   light:        '#FDDBB4',
@@ -52,7 +52,7 @@ export interface BarberService {
   changesColor?: AvatarHairColor
 }
 
-export interface AgeAppliedConfig extends AvatarConfig {
+export interface AgeAppliedConfig extends Required<AvatarConfig> {
   hasAcne: boolean
   grayStreak: boolean
   showLightWrinkles: boolean
@@ -106,12 +106,71 @@ export function applyAgeToConfig(age: number, config: AvatarConfig): AgeAppliedC
     ...config,
     hairColor,
     hairStyle,
+    accessory:          config.accessory ?? 'none',
     hasAcne:            age >= 13 && age <= 18,
     grayStreak:         age >= 40 && age <= 55 && !isDyed,
     showLightWrinkles:  age >= 51 && age <= 65,
     showWrinkles:       age >= 66,
     isBaby:             age < 6,
   }
+}
+
+// ---- Wardrobe tier → clothesStyle sync ----
+
+const WARDROBE_TO_CLOTHES: Record<string, AvatarClothesStyle> = {
+  none:        'casual',
+  economy:     'casual',
+  medium:      'formal',
+  luxury:      'elegant',
+  ultra_luxury:'elegant',
+}
+
+export function wardrobeTierToClothesStyle(tier: string): AvatarClothesStyle {
+  return WARDROBE_TO_CLOTHES[tier] ?? 'casual'
+}
+
+// ---- BeautyEngine hair style → AvatarHairStyle sync ----
+
+const BEAUTY_HAIR_TO_AVATAR: Record<string, AvatarHairStyle> = {
+  basic:   'short',
+  styled:  'medium',
+  colored: 'medium',
+  premium: 'long',
+}
+
+export function beautyHairToAvatarStyle(beautyStyle: string): AvatarHairStyle | null {
+  return BEAUTY_HAIR_TO_AVATAR[beautyStyle] ?? null
+}
+
+const BEAUTY_HAIR_TO_COLOR: Record<string, AvatarHairColor> = {
+  colored: 'auburn',
+  premium: 'blonde',
+}
+
+export function beautyHairToAvatarColor(beautyStyle: string): AvatarHairColor | null {
+  return BEAUTY_HAIR_TO_COLOR[beautyStyle] ?? null
+}
+
+// ---- Accessory shop ----
+
+export interface AccessoryItem {
+  id: AvatarAccessory
+  name: string
+  emoji: string
+  cost: number
+  looksBonus: number
+  description: string
+}
+
+export function getAccessoryShop(): AccessoryItem[] {
+  return [
+    { id: 'glasses_round',  name: 'Occhiali rotondi',   emoji: '👓', cost: 150,  looksBonus: 3, description: 'Montatura rotonda, look intellettuale.' },
+    { id: 'glasses_square', name: 'Occhiali squadrati',  emoji: '🔲', cost: 200,  looksBonus: 4, description: 'Montatura squadrata, stile moderno.' },
+    { id: 'sunglasses',     name: 'Occhiali da sole',    emoji: '🕶️', cost: 300,  looksBonus: 5, description: 'Occhiali da sole, look da star.' },
+    { id: 'hat_cap',        name: 'Cappellino',           emoji: '🧢', cost: 80,   looksBonus: 2, description: 'Baseball cap, look sportivo casual.' },
+    { id: 'hat_beanie',     name: 'Berretto',             emoji: '🎿', cost: 60,   looksBonus: 2, description: 'Berretto invernale, look urban.' },
+    { id: 'hat_fedora',     name: 'Fedora',               emoji: '🎩', cost: 250,  looksBonus: 4, description: 'Cappello a tesa larga, look sofisticato.' },
+  ]
 }
 
 export function getBarberServices(): BarberService[] {
