@@ -126,6 +126,17 @@ export function TravelScreen() {
       </div>
 
       {/* Travel history */}
+      {travelHistory.length === 0 && (
+        <div className="card" style={{ padding: '24px 16px', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🗺️</div>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>
+            Nessun viaggio ancora.
+          </p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+            Il mondo ti aspetta. Prenota il tuo primo viaggio e accumula esperienze!
+          </p>
+        </div>
+      )}
       {travelHistory.length > 0 && (
         <div>
           <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>

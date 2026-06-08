@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../../store/gameStore'
 
@@ -49,6 +49,27 @@ export const HUD = memo(function HUD() {
   const { stats, money, bankBalance, age, year, emoji, name, surname, fame } = data
   const status = getStatusBadge(data)
   const showFame = fame >= 30
+
+  // Flash stat value when it changes
+  const prevStatsRef = useRef<Record<string, number>>({})
+  const [flashKeys, setFlashKeys] = useState<Set<string>>(new Set())
+  useEffect(() => {
+    const prev = prevStatsRef.current
+    const changed: string[] = []
+    const checks: [string, number][] = [
+      ['happiness', stats.happiness], ['health', stats.health],
+      ['intelligence', stats.intelligence], ['looks', stats.looks], ['_fame', fame],
+    ]
+    for (const [k, v] of checks) {
+      const rounded = Math.round(v)
+      if (prev[k] !== undefined && prev[k] !== rounded) changed.push(k)
+      prev[k] = rounded
+    }
+    if (changed.length === 0) return
+    setFlashKeys(new Set(changed))
+    const t = setTimeout(() => setFlashKeys(new Set()), 400)
+    return () => clearTimeout(t)
+  }, [stats.happiness, stats.health, stats.intelligence, stats.looks, fame])
 
   const statList = showFame
     ? [...BASE_STATS, { key: '_fame', label: 'Fama', emoji: '⭐', color: '#FFB020' }]
@@ -126,7 +147,11 @@ export const HUD = memo(function HUD() {
             <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--color-text-secondary)' }}>
                 <span>{statEmoji} {label}</span>
-                <span style={{ color: isLow ? 'var(--red)' : displayVal > 70 ? barColor : 'var(--color-text-secondary)', fontWeight: isLow ? 700 : 400 }}>
+                <span
+                  key={`${key}-${displayVal}`}
+                  className={flashKeys.has(key) ? 'stat-value-flash' : undefined}
+                  style={{ color: isLow ? 'var(--red)' : displayVal > 70 ? barColor : 'var(--color-text-secondary)', fontWeight: isLow ? 700 : 400 }}
+                >
                   {displayVal}
                 </span>
               </div>

@@ -18,20 +18,18 @@
 | PR3.2 | Event Feed | ✅ Completo | EventLog.tsx: colori semantici per entry (positive/negative/social/career), empty state gamey |
 | PR3.3 | Toast | ✅ Completo | ToastNotification.tsx: blur, shadow forte, dismiss × button, bottom safe-area aware |
 | PR3.2b | EventDisplay | ✅ Completo | Choice buttons più gamey (primary tint per prima scelta), rarity badges colorati, empty state con emoji |
-| PR3.4 | Empty states gamey | ✅ Completo | CareerScreen (offerte + storico), HealthScreen (malattie), HobbyScreen (mine), FinanceScreen (assets), EventLog, EventDisplay aggiornati |
-| PR3.5 | Locked states | ✅ Completo | SubstanceScreen (età <13): card-locked con emoji+copy gamey. DatingScreen (età <18): card-locked gamey |
+| PR3.4 | Empty states gamey | ✅ Completo | Tutti gli screen principali aggiornati: Career, Health, Hobby, Finance, EventLog, EventDisplay, Travel, Criminal |
+| PR3.5 | Locked states | ✅ Completo | SubstanceScreen (<13), DatingScreen (<18), SocialMediaScreen (<13), PoliticsScreen (<18), PetScreen (<18), CriminalScreen (prigione) |
 | PR3.6 | Tap-scale micro-interactions | ✅ Completo | GamblingScreen (Gioca, Scommetti), SubstanceScreen (alcol + fumo card-buttons) con .tap-scale |
 | PR3.7 | Card-action class applicata | ✅ Completo | CareerScreen job offer cards → card-action class |
-| QA mobile | Safe area, scroll, tap | ⚠️ Parziale | Safe area bottom rispettata in Toast e BottomNav; testare manualmente su mobile |
+| PR2.1 HUD | Stat flash micro-animation | ✅ Completo | Stat values flash (scale 1.35×) quando cambiano; prefers-reduced-motion respected |
+| QA mobile | Safe area, scroll, tap | ⚠️ Parziale | Safe area bottom rispettata in Toast e BottomNav; testare manualmente su mobile reale |
 
-### Completamento totale: **~88%**
+### Completamento totale: **~97%**
 
 ### Ancora da fare
 
-- **QA mobile** completo su iPhone SE e iPhone Pro Max (test fisico)
-- **PR2.1 HUD** eventuale micro-animazione stat change (numero che lampeggia quando cambia) — bassa priorità
-- **Empty states** eventuali residui in screen secondari (TravelScreen, PetScreen, CriminalScreen, ecc.) — bassa priorità
-- **Locked states** eventuali residui (SocialMediaScreen <13, PoliticsScreen <18) — bassa priorità
+- **QA mobile fisico** su iPhone SE e iPhone Pro Max — unico item rimanente (non automatizzabile)
 
 ---
 

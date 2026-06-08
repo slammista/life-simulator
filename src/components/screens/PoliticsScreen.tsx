@@ -45,6 +45,16 @@ export function PoliticsScreen() {
       {/* OVERVIEW */}
       {tab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Age gate */}
+          {time.age < 18 && (
+            <div className="card card-locked" style={{ padding: '24px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🏛️</div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#fca5a5', marginBottom: 4 }}>Partecipazione non disponibile</p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                Potrai votare, iscriverti a un partito e fare politica dopo i 18 anni.
+              </p>
+            </div>
+          )}
           {/* Current role */}
           <div className="card" style={{ padding: '12px 14px', textAlign: 'center' }}>
             <div style={{ fontSize: 32, marginBottom: 4 }}>

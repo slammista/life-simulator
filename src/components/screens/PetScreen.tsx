@@ -257,9 +257,11 @@ export function PetScreen() {
       )}
 
       {time.age < 18 && alivePets.length === 0 && (
-        <div className="card" style={{ padding: 12, textAlign: 'center' }}>
-          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
-            Devi avere 18 anni per adottare un animale domestico.
+        <div className="card card-locked" style={{ padding: '24px 16px', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🐾</div>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#fca5a5', marginBottom: 4 }}>Non ancora disponibile</p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+            Puoi adottare un animale domestico dopo i 18 anni. Ti aspettano tanti amici pelosi!
           </p>
         </div>
       )}

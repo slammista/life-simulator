@@ -181,18 +181,22 @@ export function SocialMediaScreen() {
                   </label>
                 ))}
             </div>
-            <button
-              className="btn-primary"
-              style={{ width: '100%', padding: '8px 0', fontSize: 13, marginTop: 10 }}
-              onClick={handleCreate}
-              disabled={time.age < 13}
-            >
-              Crea Profilo Social
-            </button>
-            {time.age < 13 && (
-              <p style={{ fontSize: 11, color: '#fca5a5', textAlign: 'center', marginTop: 6 }}>
-                Devi avere almeno 13 anni
-              </p>
+            {time.age < 13 ? (
+              <div className="card card-locked" style={{ padding: '20px 16px', textAlign: 'center', marginTop: 10 }}>
+                <div style={{ fontSize: 28, marginBottom: 6 }}>📱</div>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#fca5a5', marginBottom: 4 }}>Non ancora disponibile</p>
+                <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                  I social media si sbloccano a 13 anni. Goditi la tua infanzia!
+                </p>
+              </div>
+            ) : (
+              <button
+                className="btn-primary"
+                style={{ width: '100%', padding: '8px 0', fontSize: 13, marginTop: 10 }}
+                onClick={handleCreate}
+              >
+                Crea Profilo Social
+              </button>
             )}
           </div>
           <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 6 }}>

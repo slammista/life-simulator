@@ -539,6 +539,18 @@ body {
   from { opacity: 0; transform: translateY(12px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+@keyframes statFlash {
+  0%   { transform: scale(1); }
+  35%  { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+.stat-value-flash {
+  display: inline-block;
+  animation: statFlash 0.38s ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .stat-value-flash { animation: none; }
+}
 
 /* ─── Shared screen pattern (Military, BodyMod, Beauty, etc.) ─── */
 .screen-content {

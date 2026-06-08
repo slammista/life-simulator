@@ -114,15 +114,29 @@ export function CriminalScreen() {
       {tab === 'crimes' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {criminal.inPrison ? (
-            <div className="card" style={{ padding: 24, textAlign: 'center' }}>
-              <p style={{ fontSize: 22, marginBottom: 6 }}>🔒</p>
-              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Non puoi commettere crimini mentre sei in prigione.</p>
+            <div className="card card-locked" style={{ padding: '24px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#fca5a5', marginBottom: 4 }}>Sei in prigione</p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                Non puoi commettere crimini mentre sconti la pena. Rifletti sulle tue scelte.
+              </p>
             </div>
           ) : (
             <>
               <div style={{ borderRadius: 12, padding: '10px 14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
                 <p style={{ fontSize: 12, color: '#fca5a5' }}>⚠️ Attenzione: le attività criminali comportano rischio di arresto e conseguenze permanenti.</p>
               </div>
+              {available.length === 0 && (
+                <div className="card" style={{ padding: '24px 16px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 32, marginBottom: 8 }}>😇</div>
+                  <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>
+                    Nessuna azione disponibile.
+                  </p>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                    Non hai i requisiti per nessun crimine ora. Cresci, esplora, torna più tardi.
+                  </p>
+                </div>
+              )}
               {available.map(def => (
                 <div key={def.id} className="card" style={{ padding: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
