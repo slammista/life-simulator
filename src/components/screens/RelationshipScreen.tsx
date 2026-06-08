@@ -149,6 +149,7 @@ export function RelationshipScreen() {
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [showContextPicker, setShowContextPicker] = useState(false)
+  const [view, setView] = useState<'attivi' | 'storia'>('attivi')
 
   const pushToast = useToastStore(s => s.push)
 
@@ -171,11 +172,19 @@ export function RelationshipScreen() {
 
   const toggleExpand = (id: string) => setExpanded(prev => prev === id ? null : id)
 
+  const activeRels = relationships.filter(r => r.isAlive && r.type !== 'ex_partner')
+  const historicRels = relationships.filter(r => !r.isAlive || r.type === 'ex_partner')
+
   const groupedRels: Record<string, Relationship[]> = {
-    Famiglia: relationships.filter(r => ['parent', 'sibling', 'child'].includes(r.type)),
-    Romantiche: relationships.filter(r => ['partner', 'spouse', 'ex_partner'].includes(r.type)),
-    Amici: relationships.filter(r => ['friend', 'best_friend', 'colleague', 'acquaintance'].includes(r.type)),
-    Altro: relationships.filter(r => ['rival', 'enemy'].includes(r.type)),
+    Famiglia: activeRels.filter(r => ['parent', 'sibling', 'child'].includes(r.type)),
+    Romantiche: activeRels.filter(r => ['partner', 'spouse'].includes(r.type)),
+    Amici: activeRels.filter(r => ['friend', 'best_friend', 'colleague', 'acquaintance'].includes(r.type)),
+    Altro: activeRels.filter(r => ['rival', 'enemy'].includes(r.type)),
+  }
+
+  const historicGroups: Record<string, Relationship[]> = {
+    'Ex partner': historicRels.filter(r => r.type === 'ex_partner'),
+    'Defunti': historicRels.filter(r => !r.isAlive && r.type !== 'ex_partner'),
   }
 
   return (
@@ -183,116 +192,252 @@ export function RelationshipScreen() {
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>❤️ Relazioni</h2>
-        <button
-          onClick={() => setShowContextPicker(true)}
-          style={{ padding: '6px 14px', borderRadius: 12, background: 'var(--color-cta)', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
-        >
-          + Incontra
-        </button>
+        {view === 'attivi' && (
+          <button
+            onClick={() => setShowContextPicker(true)}
+            style={{ padding: '6px 14px', borderRadius: 12, background: 'var(--color-cta)', color: '#fff', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
+          >
+            + Incontra
+          </button>
+        )}
       </div>
 
-      {family.members.length > 0 && (
-        <div className="card" style={{ padding: 12, marginBottom: 12 }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
-            <div>
-              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>
-                Albero familiare
-              </p>
-              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)', marginTop: 2 }}>
-                Casata {family.dynastyName}
+      {/* View switcher */}
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
+        {(['attivi', 'storia'] as const).map(v => (
+          <button
+            key={v}
+            onClick={() => setView(v)}
+            style={{
+              flex: 1, padding: '7px 0', borderRadius: 12, fontSize: 12, fontWeight: 500,
+              border: 'none', cursor: 'pointer',
+              background: view === v ? 'var(--color-cta)' : 'rgba(255,255,255,0.07)',
+              color: view === v ? '#fff' : 'var(--color-text-secondary)',
+            }}
+          >
+            {v === 'attivi' ? '👥 Attivi' : '📖 Storia'}
+            {v === 'storia' && historicRels.length > 0 && (
+              <span style={{ marginLeft: 5, fontSize: 10, opacity: 0.8 }}>({historicRels.length})</span>
+            )}
+          </button>
+        ))}
+      </div>
+
+      {/* ATTIVI view */}
+      {view === 'attivi' && (
+        <>
+          {family.members.length > 0 && (
+            <div className="card" style={{ padding: 12, marginBottom: 12 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
+                <div>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>
+                    Albero familiare
+                  </p>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)', marginTop: 2 }}>
+                    Casata {family.dynastyName}
+                  </p>
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
+                  <span style={{ fontSize: 12, color: '#cbd5e1', padding: '4px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
+                    👪 {family.members.length}
+                  </span>
+                  <span style={{ fontSize: 12, color: '#cbd5e1', padding: '4px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
+                    ⭐ {family.familyReputation}
+                  </span>
+                </div>
+              </div>
+              {family.inheritedFlags.length > 0 && (
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 8 }}>
+                  Origine: {family.familyWealthTier.replace('_', ' ')}
+                </p>
+              )}
+            </div>
+          )}
+
+          {feedback && (
+            <div style={{
+              borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
+              background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
+              color: feedback.ok ? '#86efac' : '#fca5a5',
+              border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+            }}>
+              {feedback.msg}
+            </div>
+          )}
+
+          {showContextPicker && (
+            <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
+              onClick={() => setShowContextPicker(false)}>
+              <div style={{ background: 'var(--bg-card)', borderRadius: '20px 20px 0 0', padding: 20, width: '100%', maxWidth: 430 }}
+                onClick={e => e.stopPropagation()}>
+                <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Dove vuoi incontrare qualcuno?</p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {(Object.entries(CONTEXT_LABELS) as [NPCContext, string][]).map(([ctx, label]) => (
+                    <button
+                      key={ctx}
+                      onClick={() => handleMeet(ctx)}
+                      style={{ padding: '10px 8px', borderRadius: 12, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--color-text)', fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+                <button
+                  onClick={() => setShowContextPicker(false)}
+                  style={{ width: '100%', marginTop: 12, padding: '10px 0', borderRadius: 12, background: 'rgba(255,255,255,0.05)', color: 'var(--color-text-secondary)', fontSize: 14, border: 'none', cursor: 'pointer' }}
+                >
+                  Annulla
+                </button>
+              </div>
+            </div>
+          )}
+
+          {activeRels.length === 0 && (
+            <div className="card" style={{ textAlign: 'center', padding: 28 }}>
+              <p style={{ fontSize: 24, marginBottom: 8 }}>👤</p>
+              <p style={{ fontSize: 14, color: 'var(--color-text)' }}>Nessuna relazione attiva.</p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+                Premi "+ Incontra" per conoscere qualcuno o invecchia per eventi sociali automatici.
               </p>
             </div>
-            <div style={{ display: 'flex', gap: 8, flexShrink: 0 }}>
-              <span style={{ fontSize: 12, color: '#cbd5e1', padding: '4px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
-                👪 {family.members.length}
-              </span>
-              <span style={{ fontSize: 12, color: '#cbd5e1', padding: '4px 8px', borderRadius: 999, background: 'rgba(255,255,255,0.06)' }}>
-                ⭐ {family.familyReputation}
+          )}
+
+          {Object.entries(groupedRels).map(([groupName, rels]) => {
+            if (rels.length === 0) return null
+            return (
+              <div key={groupName} style={{ marginBottom: 16 }}>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                  {groupName}
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {rels.map(rel => (
+                    <RelCard
+                      key={rel.id}
+                      rel={rel}
+                      expanded={expanded === rel.id}
+                      onToggle={() => toggleExpand(rel.id)}
+                      onAction={(action) => handleAction(rel.id, action)}
+                      playerAge={playerAge}
+                    />
+                  ))}
+                </div>
+              </div>
+            )
+          })}
+        </>
+      )}
+
+      {/* STORIA view */}
+      {view === 'storia' && (
+        <>
+          {historicRels.length === 0 ? (
+            <div className="card" style={{ textAlign: 'center', padding: 28 }}>
+              <p style={{ fontSize: 24, marginBottom: 8 }}>📖</p>
+              <p style={{ fontSize: 14, color: 'var(--color-text)' }}>Nessuna storia ancora.</p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
+                Ex partner e persone scomparse appariranno qui nel tempo.
+              </p>
+            </div>
+          ) : (
+            Object.entries(historicGroups).map(([groupName, rels]) => {
+              if (rels.length === 0) return null
+              const groupColor = groupName === 'Ex partner' ? '#f43f5e' : '#94a3b8'
+              return (
+                <div key={groupName} style={{ marginBottom: 16 }}>
+                  <p style={{ fontSize: 11, color: groupColor, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                    {groupName === 'Ex partner' ? '💔 Ex partner' : '🕯️ Defunti'}
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    {rels.map(rel => (
+                      <HistoricRelCard key={rel.id} rel={rel} />
+                    ))}
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+// ---- HistoricRelCard — read-only card for ex/deceased ----
+
+function HistoricRelCard({ rel }: { rel: Relationship }) {
+  const [expanded, setExpanded] = useState(false)
+  const isEx = rel.type === 'ex_partner'
+  const statusColor = isEx ? '#f43f5e' : '#64748b'
+  const statusLabel = isEx ? '💔 Ex' : '🕯️ Scomparso'
+
+  return (
+    <div className="card" style={{ padding: 12, opacity: rel.isAlive ? 1 : 0.75 }}>
+      <div
+        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+        onClick={() => setExpanded(p => !p)}
+      >
+        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <span style={{ fontSize: 26, filter: rel.isAlive ? 'none' : 'grayscale(1)' }}>{rel.emoji}</span>
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <p style={{ fontWeight: 600, fontSize: 14 }}>{rel.name}</p>
+              <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 99, background: `${statusColor}22`, color: statusColor }}>
+                {statusLabel}
               </span>
             </div>
-          </div>
-          {family.inheritedFlags.length > 0 && (
-            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 8 }}>
-              Origine: {family.familyWealthTier.replace('_', ' ')}
+            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+              {REL_TYPE_LABELS[rel.type] ?? rel.type} · {rel.age}y
             </p>
+          </div>
+        </div>
+        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{expanded ? '▲' : '▼'}</span>
+      </div>
+
+      {expanded && (
+        <div style={{ marginTop: 10 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
+            {[
+              { label: 'Fiducia', val: rel.trust, color: '#10b981' },
+              { label: 'Amore', val: rel.love, color: '#f43f5e' },
+            ].map(({ label, val, color }) => (
+              <div key={label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 55, flexShrink: 0 }}>{label}</span>
+                <div className="stat-bar" style={{ flex: 1 }}>
+                  <div className="stat-bar-fill" style={{ width: `${val}%`, backgroundColor: color }} />
+                </div>
+                <span style={{ fontSize: 11, width: 24, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{val}</span>
+              </div>
+            ))}
+          </div>
+
+          {rel.memoryLog && rel.memoryLog.length > 0 && (
+            <div>
+              <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                📖 Ricordi
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                {rel.memoryLog.slice(0, 5).map(mem => {
+                  const catColors: Record<string, string> = {
+                    romantic: '#f43f5e', family: '#f59e0b', friendship: '#10b981',
+                    professional: '#60a5fa', financial: '#a855f7', criminal: '#ef4444',
+                  }
+                  const color = catColors[mem.category] ?? '#94a3b8'
+                  return (
+                    <div key={mem.id} style={{
+                      fontSize: 11, color: '#94a3b8', padding: '4px 8px', borderRadius: 6,
+                      background: 'rgba(255,255,255,0.03)', borderLeft: `2px solid ${color}`,
+                      display: 'flex', justifyContent: 'space-between', gap: 8,
+                    }}>
+                      <span>{mem.description}</span>
+                      <span style={{ flexShrink: 0, color: '#475569' }}>Anno {mem.year}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
           )}
         </div>
       )}
-
-      {/* Feedback */}
-      {feedback && (
-        <div style={{
-          borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
-        }}>
-          {feedback.msg}
-        </div>
-      )}
-
-      {/* Context picker modal */}
-      {showContextPicker && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 50, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}
-          onClick={() => setShowContextPicker(false)}>
-          <div style={{ background: 'var(--bg-card)', borderRadius: '20px 20px 0 0', padding: 20, width: '100%', maxWidth: 430 }}
-            onClick={e => e.stopPropagation()}>
-            <p style={{ fontWeight: 700, fontSize: 15, marginBottom: 14 }}>Dove vuoi incontrare qualcuno?</p>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              {(Object.entries(CONTEXT_LABELS) as [NPCContext, string][]).map(([ctx, label]) => (
-                <button
-                  key={ctx}
-                  onClick={() => handleMeet(ctx)}
-                  style={{ padding: '10px 8px', borderRadius: 12, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--color-text)', fontSize: 13, cursor: 'pointer', textAlign: 'left' }}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
-            <button
-              onClick={() => setShowContextPicker(false)}
-              style={{ width: '100%', marginTop: 12, padding: '10px 0', borderRadius: 12, background: 'rgba(255,255,255,0.05)', color: 'var(--color-text-secondary)', fontSize: 14, border: 'none', cursor: 'pointer' }}
-            >
-              Annulla
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Empty state */}
-      {relationships.length === 0 && (
-        <div className="card" style={{ textAlign: 'center', padding: 28 }}>
-          <p style={{ fontSize: 24, marginBottom: 8 }}>👤</p>
-          <p style={{ fontSize: 14, color: 'var(--color-text)' }}>Nessuna relazione ancora.</p>
-          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 6 }}>
-            Premi "+ Incontra" per conoscere qualcuno o invecchia per eventi sociali automatici.
-          </p>
-        </div>
-      )}
-
-      {/* Groups */}
-      {Object.entries(groupedRels).map(([groupName, rels]) => {
-        if (rels.length === 0) return null
-        return (
-          <div key={groupName} style={{ marginBottom: 16 }}>
-            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-              {groupName}
-            </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {rels.map(rel => (
-                <RelCard
-                  key={rel.id}
-                  rel={rel}
-                  expanded={expanded === rel.id}
-                  onToggle={() => toggleExpand(rel.id)}
-                  onAction={(action) => handleAction(rel.id, action)}
-                  playerAge={playerAge}
-                />
-              ))}
-            </div>
-          </div>
-        )
-      })}
     </div>
   )
 }

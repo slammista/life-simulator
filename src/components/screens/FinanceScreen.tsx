@@ -157,6 +157,56 @@ export function FinanceScreen() {
             </div>
           </div>
 
+          {/* Financial Goals */}
+          <div className="card" style={{ padding: 14 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>🎯 Obiettivi finanziari</p>
+            {[
+              {
+                label: 'Fondo emergenza',
+                emoji: '🛡️',
+                current: finance.bankBalance,
+                target: 10000,
+                color: '#6366f1',
+                hint: '3 mesi di spese',
+              },
+              {
+                label: 'Prima casa',
+                emoji: '🏠',
+                current: finance.money + finance.bankBalance,
+                target: 50000,
+                color: '#10b981',
+                hint: 'Acconto 20% su €250k',
+              },
+              {
+                label: 'Libertà finanziaria',
+                emoji: '🌅',
+                current: totalValue,
+                target: 300000,
+                color: '#f59e0b',
+                hint: '€1k/mese passivi',
+              },
+            ].map(({ label, emoji, current, target, color, hint }) => {
+              const pct = Math.min(100, Math.round((current / target) * 100))
+              return (
+                <div key={label} style={{ marginBottom: 12 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                    <span style={{ fontSize: 12, fontWeight: 600 }}>{emoji} {label}</span>
+                    <span style={{ fontSize: 11, color: pct >= 100 ? '#86efac' : 'var(--color-text-secondary)' }}>
+                      {pct >= 100 ? '✅ Raggiunto!' : `${pct}%`}
+                    </span>
+                  </div>
+                  <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 6, overflow: 'hidden', marginBottom: 3 }}>
+                    <div style={{ height: '100%', width: `${pct}%`, background: color, borderRadius: 6 }} />
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--color-text-secondary)' }}>
+                    <span>{hint}</span>
+                    <span>€{Math.min(current, target).toLocaleString('it-IT')} / €{target.toLocaleString('it-IT')}</span>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+
           {/* Loan section */}
           <div className="card" style={{ padding: 14 }}>
             <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 10 }}>Richiedi prestito</p>

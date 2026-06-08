@@ -14,6 +14,7 @@ import { InstallBanner } from './components/game/InstallBanner'
 import { ToastContainer } from './components/game/ToastNotification'
 import { VitaWidgets } from './components/game/VitaWidgets'
 import { PinnedActivities } from './components/game/PinnedActivities'
+import { ActivitiesNav } from './components/game/ActivitiesNav'
 import { useShallow } from 'zustand/react/shallow'
 
 // ---- Lazy screens ----
@@ -168,32 +169,7 @@ function App() {
         <PinnedActivities activeSub={activitiesSub} onChange={setActivitiesSub} />
       )}
       {activeTab === 'activities' && (
-        <SubTabBar<ActivitiesSubTab>
-          tabs={[
-            { id: 'health',      label: 'Salute',    emoji: '💊' },
-            { id: 'hobby',       label: 'Hobby',     emoji: '🎸' },
-            { id: 'substances',  label: 'Sostanze',  emoji: '🍺' },
-            { id: 'criminal',    label: 'Crimini',   emoji: '🚔' },
-            { id: 'religion',    label: 'Fede',      emoji: '🙏' },
-            { id: 'body',        label: 'Body Mod',  emoji: '🎨' },
-            { id: 'beauty',      label: 'Beauty',    emoji: '💄' },
-            { id: 'gambling',    label: 'Azzardo',   emoji: '🎲' },
-            { id: 'sex_health',  label: 'Sess.',     emoji: '❤️‍🔥' },
-            { id: 'cosmetic',    label: 'Estetica',  emoji: '💉' },
-            { id: 'travel',      label: 'Viaggi',    emoji: '✈️' },
-            { id: 'politics',    label: 'Politica',  emoji: '🏛️' },
-            { id: 'goals',       label: 'Goals',     emoji: '🎯' },
-            { id: 'challenges',  label: 'Sfide',     emoji: '🏆' },
-            { id: 'ribbons',     label: 'Medaglie',  emoji: '🏅' },
-            { id: 'timeline',    label: 'Timeline',  emoji: '🧠' },
-            { id: 'minigames',   label: 'Giochi',    emoji: '🧩' },
-            { id: 'leaderboard', label: 'Classifica',emoji: '🥇' },
-            { id: 'settings',    label: 'Impost.',   emoji: '⚙️' },
-            { id: 'privacy',     label: 'Privacy',   emoji: '🔒' },
-          ]}
-          active={activitiesSub}
-          onChange={setActivitiesSubRaw}
-        />
+        <ActivitiesNav active={activitiesSub} onChange={setActivitiesSubRaw} />
       )}
 
       {/* Main content */}

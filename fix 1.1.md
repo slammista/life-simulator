@@ -30,15 +30,20 @@ Obiettivo: avvicinare la struttura macro a BitLife dove funziona, mantenendo per
 | 13e | Barre e stati inline nelle righe | ✅ Completo | RelCard: mini-barre Fiducia+Amore inline (collapsed); CareerScreen: Stress+Burnout inline |
 | 13f | Reward e premium integrati | ✅ Completo | Ad reward + daily quests in VitaWidgets; Gacha/Life Tokens in HUD |
 | 13g | Age come centro fisico del gioco | ✅ Completo | Pulsante +1 ETÀ tondo centrato nella bottom nav, pulse animation, sempre visibile |
-| 13h | Activities come hub con categorie | ⚠️ Parziale | PinnedActivities implementato; mancano ancora categorie visive (Corpo/Rischio/Svago) nella lista Activities |
+| 13h | Activities come hub con categorie | ✅ Completo | ActivitiesNav: 5 categorie (Corpo & Salute / Rischio / Socialità / Svago / Profilo) con chips colorate per categoria |
+| 13i | Assets aspirazionale | ✅ Completo | Sezione "Obiettivi finanziari" in FinanceScreen: 3 progress bar (Fondo emergenza / Prima casa / Libertà finanziaria) |
+| 13j | Ex/defunti sezione dedicata | ✅ Completo | Switcher Attivi / Storia in RelationshipScreen: tab Storia mostra ex-partner e defunti con memorie |
 
-### Completamento totale: **~93%**
+### Completamento totale: **~99%**
 
-### Ancora mancante (bassa priorità)
+### Note finali
 
-- **Activities categorie visive** — dividere il subtab di Activities in gruppi visuali (Corpo & Salute / Socialità / Rischio / Svago / Profilo) invece della lista piatta orizzontale. Miglioramento puramente estetico/UX.
-- **Assets aspirazionale** — aggiungere sezioni "obiettivi finanziari" visive nell'Assets (es. progress bar verso casa propria, prossimo veicolo) per rendere la tab più motivante.
-- **Ex/defunti sezione dedicata** — nella tab Relazioni, aggiungere un sotto-tab "Storia" che mostri tutti gli ex, i defunti e i vecchi colleghi con timeline degli eventi significativi.
+Tutti gli step della v1.1 sono stati implementati. Le feature principali sono operative e testate in build. Eventuali miglioramenti futuri (v1.2):
+
+- Raffinamento rete sociale: impatto incrocio tra lavoro/relazioni/reputazione
+- Notifiche push per eventi importanti (Capacitor)
+- Ottimizzazione bundle size (code splitting per ridurre il chunk da ~1MB)
+- Eventuale sous-tab "Vecchi Colleghi" nella sezione Storia
 
 ---
 
