@@ -3,6 +3,45 @@
 Documento di revisione funzionale per rendere Life Simulator 2D piu sicuro, piu leggibile e piu vendibile.  
 Obiettivo: avvicinare la struttura macro a BitLife dove funziona, mantenendo pero una profondita sistemica superiore e una UX piu moderna.
 
+---
+
+## 📊 STATO DI AVANZAMENTO — v1.1
+
+> Ultimo aggiornamento: 2026-06-08
+
+| # | Sezione | Stato | Note |
+|---|---------|-------|------|
+| 1 | Relazioni, consenso e limiti legali | ✅ Completo | Guard a livello engine + UI in RelationshipEngine e RelationshipScreen |
+| 2 | Incontri e rete sociale organica | ✅ Completo | NPC auto-spawn contestuale (scuola/lavoro) nel tick annuale + meetNewPerson per contesti manuali |
+| 3 | Scuola obbligatoria e progressione educativa | ✅ Completo | Auto-enrollment elementari/medie/liceo nel tick annuale; abbandono scolastico con conseguenze |
+| 4 | Scuola pubblica, privata e indirizzo | ✅ Completo | Scuola privata assegnata in base a familyWealthTier; bonus intelligenza +1 per scuola privata |
+| 5 | Layout sotto-menu da uniformare | ✅ Completo | CSS uniformato per Military, BodyMod, Beauty (commit v1.1 CSS polish) |
+| 6 | Pop-up conseguenze per azioni ed eventi | ✅ Completo | Toast system con ToastNotification + useToastStore, wired su Career e Relationship |
+| 7 | Dopo Age si torna sempre alla Home/Vita | ✅ Completo | handleAge() chiama setActiveTab('vita') prima di handleInvecchia() |
+| 8 | Nuova struttura di navigazione principale | ✅ Completo | 5 tab: Lavoro / Assets / Vita (Age centrale) / Relazioni / Activities |
+| 9 | Reward integrati nella pagina Vita | ✅ Completo | VitaWidgets: RewardBanner (ad reward + daily quests) + SuggestedActions contestuali |
+| 10 | Barre statistiche principali | ✅ Completo | HUD: Felicità/Salute/Intelligenza/Look + Fama dinamica (appare se fame ≥ 30) |
+| 11 | Uso di sostanze per eta | ✅ Completo | Age gates: blocco <13, alcohol/cannabis 16+, warning minorenni |
+| 12 | Lavori minorili, part-time e full-time | ✅ Completo | Part-time da 16+, full-time bloccato senza diploma, teen notice in CareerScreen |
+| 13a | Header personaggio persistente | ✅ Completo | Nome+Cognome, età, anno, status badge dinamico (Studente/Lavoratore/Famoso/In Carcere/Pensionato) |
+| 13b | Sezioni con intestazioni interne | ✅ Completo | Grouping in RelationshipScreen (Famiglia/Romantiche/Amici/Altro), categorie in Assets/Activities |
+| 13c | Favoriti dinamici e azioni consigliate | ✅ Completo | PinnedActivities: 5 pin salvati in localStorage, edit mode, default salute/hobby/viaggi |
+| 13d | Persone come entita persistenti | ✅ Completo | Memorie NPC, ex/partner/defunti nel log relazioni, memoryLog per ogni NPC |
+| 13e | Barre e stati inline nelle righe | ✅ Completo | RelCard: mini-barre Fiducia+Amore inline (collapsed); CareerScreen: Stress+Burnout inline |
+| 13f | Reward e premium integrati | ✅ Completo | Ad reward + daily quests in VitaWidgets; Gacha/Life Tokens in HUD |
+| 13g | Age come centro fisico del gioco | ✅ Completo | Pulsante +1 ETÀ tondo centrato nella bottom nav, pulse animation, sempre visibile |
+| 13h | Activities come hub con categorie | ⚠️ Parziale | PinnedActivities implementato; mancano ancora categorie visive (Corpo/Rischio/Svago) nella lista Activities |
+
+### Completamento totale: **~93%**
+
+### Ancora mancante (bassa priorità)
+
+- **Activities categorie visive** — dividere il subtab di Activities in gruppi visuali (Corpo & Salute / Socialità / Rischio / Svago / Profilo) invece della lista piatta orizzontale. Miglioramento puramente estetico/UX.
+- **Assets aspirazionale** — aggiungere sezioni "obiettivi finanziari" visive nell'Assets (es. progress bar verso casa propria, prossimo veicolo) per rendere la tab più motivante.
+- **Ex/defunti sezione dedicata** — nella tab Relazioni, aggiungere un sotto-tab "Storia" che mostri tutti gli ex, i defunti e i vecchi colleghi con timeline degli eventi significativi.
+
+---
+
 ## Priorita di prodotto
 
 La versione 1.1 deve concentrarsi su tre assi:

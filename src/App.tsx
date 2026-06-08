@@ -13,6 +13,7 @@ import { TutorialOverlay } from './components/game/TutorialOverlay'
 import { InstallBanner } from './components/game/InstallBanner'
 import { ToastContainer } from './components/game/ToastNotification'
 import { VitaWidgets } from './components/game/VitaWidgets'
+import { PinnedActivities } from './components/game/PinnedActivities'
 import { useShallow } from 'zustand/react/shallow'
 
 // ---- Lazy screens ----
@@ -164,9 +165,11 @@ function App() {
         />
       )}
       {activeTab === 'activities' && (
+        <PinnedActivities activeSub={activitiesSub} onChange={setActivitiesSub} />
+      )}
+      {activeTab === 'activities' && (
         <SubTabBar<ActivitiesSubTab>
           tabs={[
-
             { id: 'health',      label: 'Salute',    emoji: '💊' },
             { id: 'hobby',       label: 'Hobby',     emoji: '🎸' },
             { id: 'substances',  label: 'Sostanze',  emoji: '🍺' },

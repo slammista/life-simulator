@@ -374,6 +374,25 @@ export const useGameStore = create<FullStore>()(
         merge(traumaTick.effects)
         messages.push(...traumaTick.messages)
 
+        // 7c. Contextual NPC auto-spawn from real-life contexts
+        let autoSpawnedRelationship: import('./types').Relationship | null = null
+        const activeRels = npcAgencyTick.relationships.filter(r => r.isAlive && !['parent','sibling','child'].includes(r.type))
+        if (activeRels.length < 12) {
+          const inSchool = state.education.currentLevel !== 'none'
+          const hasJob = !!state.career.currentJob
+          const inPrison = state.criminal.inPrison
+          let spawnContext: import('../services/RelationshipEngine').NPCContext | null = null
+          if (!inPrison && inSchool && Math.random() < 0.22) spawnContext = 'school'
+          else if (!inPrison && hasJob && Math.random() < 0.18) spawnContext = 'work'
+          if (spawnContext) {
+            const spawnResult = RelationshipEngine.meetNewPerson(spawnContext, state)
+            if (spawnResult.success && spawnResult.newRelationship) {
+              autoSpawnedRelationship = spawnResult.newRelationship
+              messages.push(`👋 Hai conosciuto ${spawnResult.newRelationship.name} — ${spawnContext === 'school' ? 'a scuola' : 'al lavoro'}.`)
+            }
+          }
+        }
+
         // 8. Hobby annual tick
         const { effects: hobbyFx, updates: hobbyUpdates } = HobbyEngine.annualTick(state)
         merge(hobbyFx)
@@ -548,6 +567,10 @@ export const useGameStore = create<FullStore>()(
         eduUpdate = { ...eduUpdate, gpa: parseFloat(newGpa.toFixed(2)) }
 
         // Auto-enrollment in mandatory schooling (Italy: elementary 6, middle 11, highschool 14)
+        // School quality depends on family wealth tier
+        const wealthTier = state.family?.familyWealthTier ?? 'middle'
+        const isPrivateSchool = ['wealthy', 'ultra_wealthy', 'upper_middle'].includes(wealthTier)
+          || (['middle'].includes(wealthTier) && Math.random() < 0.35)
         if (!eduUpdate.dropOut && eduUpdate.currentLevel === 'none') {
           const mandatory = [
             { level: 'elementary' as const, minAge: 6,  maxAge: 10, prereq: null as string | null,   label: 'Scuola Elementare' },
@@ -559,7 +582,10 @@ export const useGameStore = create<FullStore>()(
                 !eduUpdate.completedLevels.includes(s.level) &&
                 (s.prereq === null || eduUpdate.completedLevels.includes(s.prereq as import('./types').EducationLevel))) {
               eduUpdate = { ...eduUpdate, currentLevel: s.level }
-              messages.push(`📚 Inizio anno scolastico: ${s.label}.`)
+              const schoolType = isPrivateSchool ? 'privata' : 'pubblica'
+              messages.push(`📚 Inizio anno scolastico: ${s.label} (${schoolType}).`)
+              // Private school gives a small extra intelligence bonus
+              if (isPrivateSchool) merge({ intelligence: 1 })
               break
             }
           }
@@ -621,7 +647,9 @@ export const useGameStore = create<FullStore>()(
             ptsd: traumaTick.ptsd || healthUpdate.ptsd,
           },
           education: eduUpdate,
-          relationships: npcAgencyTick.relationships,
+          relationships: autoSpawnedRelationship
+            ? [...npcAgencyTick.relationships, autoSpawnedRelationship]
+            : npcAgencyTick.relationships,
           npcAgency: npcAgencyTick.agency,
           criminal: updatedCriminal,
           hobbies: updatedHobbies,

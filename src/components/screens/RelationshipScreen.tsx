@@ -326,6 +326,23 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
               {rel.toxicityTag && <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 99, background: 'rgba(239,68,68,0.2)', color: '#fca5a5' }}>⚠️ tossica</span>}
             </div>
             <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{REL_TYPE_LABELS[rel.type] ?? rel.type} · {rel.age}y</p>
+            {/* Compact inline bars — always visible */}
+            {!expanded && (
+              <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+                {[
+                  { label: '❤️', val: rel.trust,  color: '#10b981', title: `Fiducia: ${rel.trust}` },
+                  { label: '💕', val: rel.love,   color: '#f43f5e', title: `Amore: ${rel.love}` },
+                ].map(({ label, val, color, title }) => (
+                  <div key={title} style={{ display: 'flex', alignItems: 'center', gap: 3 }} title={title}>
+                    <span style={{ fontSize: 9 }}>{label}</span>
+                    <div style={{ width: 36, height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 2, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${val}%`, background: color, borderRadius: 2 }} />
+                    </div>
+                    <span style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>{val}</span>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
