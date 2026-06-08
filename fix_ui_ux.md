@@ -24,12 +24,14 @@
 | PR3.7 | Card-action class applicata | ✅ Completo | CareerScreen job offer cards → card-action class |
 | PR2.1 HUD | Stat flash micro-animation | ✅ Completo | Stat values flash (scale 1.35×) quando cambiano; prefers-reduced-motion respected |
 | QA mobile | Safe area, scroll, tap | ⚠️ Parziale | Safe area bottom rispettata in Toast e BottomNav; testare manualmente su mobile reale |
+| AVATAR | Avatar System & Character Customization | ❌ Da fare | Nuovo sistema modulare SVG; barbiere, estetista, evoluzione con l'età, NewGame screen |
 
-### Completamento totale: **~97%**
+### Completamento totale: **~97%** (UI/UX polish originale) — **0%** avatar system (nuova feature roadmap)
 
 ### Ancora da fare
 
-- **QA mobile fisico** su iPhone SE e iPhone Pro Max — unico item rimanente (non automatizzabile)
+- **QA mobile fisico** su iPhone SE e iPhone Pro Max — test su device reale (non automatizzabile)
+- **Avatar System** — intera nuova feature (vedi sezione dedicata in fondo al documento)
 
 ---
 
@@ -547,3 +549,276 @@ Il lavoro è completo quando:
 La direzione non è “fare più UI”. La direzione è far percepire ogni tap come parte di un gioco vivo.
 
 Il player deve capire tutto al volo, ma sentire che ogni anno, card, reward e relazione hanno peso. L'app deve restare semplice, ma molto più succosa.
+
+---
+
+# AVATAR System & Character Customization
+
+## Obiettivo
+
+Creare un sistema avatar modulare che aumenti l'attaccamento emotivo al personaggio, migliori l'immersione e la retention, renda il personaggio riconoscibile e introduca una progressione visiva nel tempo.
+
+Questa feature **NON** deve cambiare la struttura generale del gioco, **NON** deve rallentare il loop principale, **NON** deve introdurre complessità inutile. Deve aumentare attachment emotivo e game feel mantenendo il gameplay rapido e compulsivo.
+
+---
+
+## Vincoli
+
+- Stessa struttura UI dell'app.
+- Stesso flow di gameplay invariato.
+- Mobile-first assoluto.
+- Nessuna libreria pesante aggiuntiva.
+- Leggero e performante anche su device lenti.
+- Tutte le animazioni rispettano `prefers-reduced-motion`.
+- Safe area iOS/Android sempre rispettata.
+- Compatible con dark UI esistente.
+
+---
+
+## Architettura tecnica
+
+### Formato
+
+Preferire **SVG modulari** invece di PNG.
+
+- Ogni layer è un componente SVG separato e sostituibile.
+- I colori sono variabili CSS dinamiche, modificabili a runtime.
+- Nessuna duplicazione di componenti: riutilizzare i layer esistenti con props diverse.
+- Il sistema deve supportare facilmente nuove varianti future.
+
+### Layer struttura
+
+```
+AvatarComponent
+├── Background / frame (opzionale)
+├── Body / silhouette
+├── Skin (colore base)
+├── Head (forma)
+├── Eyes (forma + colore)
+├── Brows (forma + colore)
+├── Hair (stile + colore)
+├── Beard (stile + colore, solo maschi/adulti)
+├── Mouth
+├── Accessories (occhiali, piercing, ecc.)
+└── Clothes (outfit base)
+```
+
+Ogni layer:
+- è un componente React separato (`<HairLayer />`, `<EyesLayer />`, ecc.);
+- accetta props di stile (`color`, `variant`);
+- è facilmente sostituibile senza toccare gli altri layer;
+- il colore di skin, capelli, occhi e vestiti è modificabile via CSS custom properties.
+
+### Integrazione HUD
+
+L'avatar attuale nel HUD (emoji) viene sostituito progressivamente dal componente SVG modulare. L'emoji resta come fallback se il layer non è ancora definito.
+
+---
+
+## Direzione visuale
+
+Lo stile deve essere:
+
+- **Cartoon** — non realistico, non fotografico.
+- **Pulito e morbido** — forme arrotondate, pochi dettagli.
+- **Moderno e universalmente leggibile**.
+- **Stylized** — identità visiva propria.
+- **Mobile-first** — leggibile a 38×38px nel HUD fino a 120×120px nel profilo.
+
+### Ispirazione
+
+- BitLife (semplicità, chiarezza, immediacy) — **NON copiare direttamente**.
+- Nintendo Mii (personalizzazione modulare, stile cartoon).
+- Duolingo avatars (morbido, colorato, leggero).
+- Emoji style moderni (universalmente riconoscibili).
+
+### Da evitare
+
+- Slider facciali complessi stile RPG.
+- Editing realistico o fotorealistico.
+- Troppe opzioni contemporaneamente visibili.
+- UI di customizzazione lunga più di 2 scroll.
+
+---
+
+## UX Goals — Customizzazione
+
+La customizzazione deve essere:
+
+- **Veloce** — non più di 30 secondi per un look completo.
+- **Semplice** — massimo 4-6 opzioni visibili per categoria.
+- **Soddisfacente** — ogni cambio si vede subito in tempo reale.
+- **”Toy-like”** — piacevole da usare anche senza uno scopo preciso.
+- **Accessibile** — funziona anche per utenti casual, no glosse tecniche.
+
+---
+
+## Integrazione gameplay
+
+### 1. Creazione personaggio iniziale (`NewGameScreen`)
+
+La schermata di nuovo gioco include una sezione avatar rapida:
+
+**Step flow:**
+1. Inserisci nome
+2. Scegli genere (influenza layer hair/beard disponibili)
+3. Scegli paese
+4. Personalizza avatar — max 3 step veloci:
+   - Skin tone (5 varianti)
+   - Capelli (8 stili, 6 colori)
+   - Occhi (colore)
+5. Inizia
+
+Il player può saltare la personalizzazione e ottenere un avatar random. Il flusso non deve allungare l'onboarding.
+
+---
+
+### 2. Barbiere (`BarberScreen` — nuova activity)
+
+Nuova attività accessibile dallo schermo attività esistente.
+
+**Disponibile da:** 10 anni  
+**Categoria:** Svago / Aspetto
+
+**Modifiche disponibili:**
+
+| Modifica | Costo | Effetto |
+|----------|-------|---------|
+| Cambio capelli | €15–€80 | +Looks variabile |
+| Cambio colore capelli | €20–€120 | +Looks variabile |
+| Rasatura / barba | €10–€40 | +Looks variabile |
+| Sopracciglia | €15–€30 | +Looks lieve |
+| Taglio buzz cut | €10 | +Looks lieve |
+| Taglio luxury | €150 | +Looks forte |
+
+**Outcome system:**
+- Esito positivo (70%): look migliorato, stat Look +2/+5.
+- Esito neutro (20%): cambiamento senza effetto stats.
+- Esito negativo (10%): “Taglio sbagliato” — Look -2 per 1 anno, poi si normalizza.
+
+---
+
+### 3. Estetista / Beauty (`BeautyScreen` — espansione screen esistente)
+
+Espansione dello schermo Beauty già esistente, o nuova sezione accessibile dallo screen attività.
+
+**Disponibile da:** 13 anni  
+**Categoria:** Svago / Aspetto
+
+**Modifiche disponibili:**
+
+| Modifica | Costo | Effetto |
+|----------|-------|---------|
+| Makeup leggero | €10–€30 | +Looks lieve |
+| Makeup evento | €40–€100 | +Looks forte (temp.) |
+| Skincare routine | €20/mese | +Looks nel tempo |
+| Piercing | €30–€80 | +Looks / -Looks (casuale) |
+| Rimozione piercing | €20 | Ripristino |
+| Tattoo piccolo | €80–€200 | +Looks / neutro (casuale) |
+| Tattoo grande | €300–€800 | +Looks / -Looks (casuale) |
+| Rimozione tattoo | €500–€2.000 | Ripristino (lungo) |
+
+Gli accessori visibili (piercing, tattoo) aggiornano il layer `Accessories` dell'avatar in tempo reale.
+
+---
+
+## Evoluzione automatica con l'età
+
+Il personaggio cambia aspetto automaticamente nel tempo. I cambiamenti sono **leggeri, stilizzati e non pesanti**.
+
+| Fascia d'età | Cambiamenti avatar |
+|--------------|--------------------|
+| 0–5 anni | Volto morbido, occhi grandi, no barba |
+| 6–12 anni | Volto infantile, capelli più semplici |
+| 13–17 anni | Acne lieve (layer spot opzionale), primi accenni peluria |
+| 18–30 anni | Look adulto standard, barba possibile |
+| 31–50 anni | Leggera stempiatura se geneticamente prevista |
+| 51–65 anni | Prime rughe stilizzate (1-2 linee), capelli meno folti |
+| 66+ anni | Capelli bianchi/grigi, rughe più marcate (sempre stylized) |
+
+I cambiamenti avvengono automaticamente avanzando di anno. Nessuna azione richiesta al player.
+
+Specificare nella codebase che:
+- i cambiamenti sono gestiti da una funzione `getAvatarLayersForAge(age, identity)`;
+- ogni fascia d'età ha un set di layer default che vengono applicati automaticamente;
+- le personalizzazioni manuali del player sovrascrivono il default solo se compatibili con l'età.
+
+---
+
+## Future-proofing
+
+Il sistema deve essere pensato per espansioni future senza refactor:
+
+- **Outfit / vestiti** — layer `Clothes` già presente, varianti da aggiungere.
+- **Accessori** — occhiali, cappelli, borse, orologi.
+- **Skin pack** — temi visivi alternativi (es. “Anni '80”, “Cyberpunk”).
+- **Reward cosmetici** — avatar item come premio per achievement.
+- **Eventi speciali** — outfit natalizi, Halloween, ecc.
+- **Personalizzazione tramite acquisti in-game** — vestiti comprati nel gameplay che aggiornano il layer clothes.
+
+---
+
+## Struttura file suggerita
+
+```
+src/
+├── components/
+│   └── avatar/
+│       ├── AvatarRenderer.tsx       ← componente principale, compone i layer
+│       ├── layers/
+│       │   ├── SkinLayer.tsx
+│       │   ├── HairLayer.tsx
+│       │   ├── EyesLayer.tsx
+│       │   ├── BrowsLayer.tsx
+│       │   ├── BeardLayer.tsx
+│       │   ├── AccessoriesLayer.tsx
+│       │   └── ClothesLayer.tsx
+│       └── avatarUtils.ts           ← getAvatarLayersForAge(), getRandomAvatar()
+├── store/
+│   └── types.ts                     ← estendere Identity con avatarConfig: AvatarConfig
+└── screens/
+    ├── NewGameScreen.tsx            ← aggiungere step avatar
+    └── BarberScreen.tsx             ← nuova schermata
+```
+
+---
+
+## Ordine di implementazione consigliato
+
+1. Definire il tipo `AvatarConfig` in `types.ts` ed estendere `Identity`.
+2. Creare `AvatarRenderer.tsx` con layer base (skin + head + eyes).
+3. Sostituire emoji nel HUD con `<AvatarRenderer size=”sm” />`.
+4. Aggiungere step avatar in `NewGameScreen`.
+5. Implementare layer hair, beard, accessories, clothes.
+6. Creare `BarberScreen` con outcome system.
+7. Espandere `BeautyScreen` con piercing/tattoo.
+8. Implementare `getAvatarLayersForAge()` e collegarla all'avanzamento anno.
+9. QA mobile: rendering a tutte le dimensioni, dark mode, performance.
+
+---
+
+## Acceptance Criteria
+
+- [ ] Avatar renderizzato correttamente su mobile a tutte le dimensioni (HUD 38px, profilo 120px).
+- [ ] Nessun impatto significativo sulle performance (< 5ms render time aggiuntivo).
+- [ ] Sistema compatibile con dark UI esistente — nessun colore hardcoded bianco/chiaro.
+- [ ] Cambio look aggiornato in tempo reale senza reload schermata.
+- [ ] Avatar coerente in tutto il gioco (HUD, NewGame, Barbiere, profilo, ecc.).
+- [ ] Funzionamento corretto con safe area mobile (avatar non tagliato).
+- [ ] Supporto `prefers-reduced-motion` per eventuali animazioni avatar.
+- [ ] Evoluzione età funziona automaticamente senza input player.
+- [ ] BarberScreen: outcome positivo/negativo/neutro funzionante.
+- [ ] Avatar random disponibile come fallback in NewGame.
+- [ ] Nessuna regressione su screen esistenti.
+
+---
+
+## Cosa NON fare
+
+- Non creare un editor ultra-dettagliato stile RPG hardcore.
+- Non usare slider facciali continui.
+- Non inserire più di 6 opzioni visibili contemporaneamente per categoria.
+- Non usare PNG pesanti: solo SVG inline o CSS shapes.
+- Non cambiare la struttura di navigazione dell'app.
+- Non rallentare il loop principale (`+1 ETÀ` deve restare istantaneo).
+- Non copiare direttamente lo stile BitLife.
