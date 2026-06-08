@@ -7,9 +7,18 @@ export function ToastContainer() {
 
   return (
     <div style={{
-      position: 'fixed', bottom: 90, left: '50%', transform: 'translateX(-50%)',
-      display: 'flex', flexDirection: 'column', gap: 8, zIndex: 9999,
-      alignItems: 'center', pointerEvents: 'none', width: '90%', maxWidth: 360,
+      position: 'fixed',
+      bottom: 'calc(70px + env(safe-area-inset-bottom, 0px))',
+      left: '50%',
+      transform: 'translateX(-50%)',
+      display: 'flex',
+      flexDirection: 'column-reverse',
+      gap: 8,
+      zIndex: 9000,
+      alignItems: 'center',
+      pointerEvents: 'none',
+      width: '92%',
+      maxWidth: 360,
     }}>
       {toasts.map(t => (
         <div
@@ -17,27 +26,29 @@ export function ToastContainer() {
           onClick={() => remove(t.id)}
           style={{
             pointerEvents: 'auto',
-            padding: '10px 16px',
-            borderRadius: 12,
+            padding: '11px 16px',
+            borderRadius: 'var(--radius-md)',
             fontSize: 13,
             fontWeight: 600,
             display: 'flex',
             alignItems: 'center',
-            gap: 8,
-            backdropFilter: 'blur(12px)',
+            gap: 10,
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
             background: t.ok
-              ? 'rgba(16, 185, 129, 0.15)'
-              : 'rgba(239, 68, 68, 0.15)',
-            border: `1px solid ${t.ok ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}`,
+              ? 'rgba(24,211,158,0.13)'
+              : 'rgba(255,77,109,0.13)',
+            border: `1px solid ${t.ok ? 'rgba(24,211,158,0.32)' : 'rgba(255,77,109,0.32)'}`,
             color: t.ok ? '#6ee7b7' : '#fca5a5',
-            boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+            boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)`,
             animation: 'slideUp 0.2s ease-out',
             cursor: 'pointer',
             width: '100%',
           }}
         >
-          <span style={{ fontSize: 18, flexShrink: 0 }}>{t.emoji}</span>
-          <span style={{ flex: 1 }}>{t.text}</span>
+          <span style={{ fontSize: 19, flexShrink: 0 }}>{t.emoji}</span>
+          <span style={{ flex: 1, lineHeight: 1.4 }}>{t.text}</span>
+          <span style={{ fontSize: 16, opacity: 0.4, flexShrink: 0 }}>×</span>
         </div>
       ))}
     </div>

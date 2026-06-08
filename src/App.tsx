@@ -15,6 +15,7 @@ import { ToastContainer } from './components/game/ToastNotification'
 import { VitaWidgets } from './components/game/VitaWidgets'
 import { PinnedActivities } from './components/game/PinnedActivities'
 import { ActivitiesNav } from './components/game/ActivitiesNav'
+import { AgeTransitionOverlay } from './components/game/AgeTransitionOverlay'
 import { useShallow } from 'zustand/react/shallow'
 
 // ---- Lazy screens ----
@@ -114,10 +115,17 @@ function App() {
 
   const ageDisabled = isGameOver || currentEvent !== null
 
+  const [ageOverlay, setAgeOverlay] = useState<{ visible: boolean; age: number; year: number }>({
+    visible: false, age: 0, year: 2000,
+  })
+
   const handleAge = useCallback(() => {
     setActiveTab('vita')
-    if (!ageDisabled) handleInvecchia()
-  }, [ageDisabled, handleInvecchia])
+    if (!ageDisabled) {
+      setAgeOverlay({ visible: true, age: time.age + 1, year: time.year + 1 })
+      handleInvecchia()
+    }
+  }, [ageDisabled, handleInvecchia, time.age, time.year])
 
   if (!ageConfirmed) return <AgeGate onConfirm={() => setAgeConfirmed(true)} />
   if (!isStarted)    return <NewGameScreen />
@@ -246,6 +254,12 @@ function App() {
         currentAge={time.age}
       />
 
+      <AgeTransitionOverlay
+        age={ageOverlay.age}
+        year={ageOverlay.year}
+        visible={ageOverlay.visible}
+        onDone={() => setAgeOverlay(s => ({ ...s, visible: false }))}
+      />
       <ToastContainer />
       <InstallBanner />
     </div>
