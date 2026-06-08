@@ -67,19 +67,91 @@ export function HealthScreen() {
         ))}
       </div>
 
-      {/* Action buttons */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
-        <button onClick={handleExercise}
-          style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(16,185,129,0.15)', color: '#6ee7b7', fontSize: 13, fontWeight: 600, border: '1px solid rgba(16,185,129,0.25)', cursor: 'pointer' }}>
-          🏋️ Allenati
+      {/* Activity cards */}
+      <p style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+        Azioni disponibili
+      </p>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+        {/* Esercizio */}
+        <button
+          onClick={handleExercise}
+          className="tap-scale"
+          style={{
+            width: '100%', padding: '14px', borderRadius: 14, cursor: 'pointer', textAlign: 'left',
+            background: 'linear-gradient(135deg, rgba(16,185,129,0.12) 0%, var(--bg-card) 70%)',
+            border: '1px solid rgba(16,185,129,0.25)',
+            display: 'flex', gap: 12, alignItems: 'center',
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+            🏋️
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text)', marginBottom: 2 }}>Allenati</p>
+            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+              Corpo sano, mente forte. Ogni sessione conta.
+            </p>
+          </div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#6ee7b7' }}>+Salute</p>
+            <p style={{ fontSize: 10, color: 'var(--text-faint)' }}>Gratis</p>
+          </div>
         </button>
-        <button onClick={handleMedical}
-          style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', fontSize: 13, fontWeight: 600, border: '1px solid rgba(99,102,241,0.25)', cursor: 'pointer' }}>
-          🏥 Visita medica{nation?.healthcarePublic ? ' (gratis)' : ' (€120)'}
+
+        {/* Visita medica */}
+        <button
+          onClick={handleMedical}
+          className="tap-scale"
+          style={{
+            width: '100%', padding: '14px', borderRadius: 14, cursor: 'pointer', textAlign: 'left',
+            background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, var(--bg-card) 70%)',
+            border: '1px solid rgba(99,102,241,0.22)',
+            display: 'flex', gap: 12, alignItems: 'center',
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(99,102,241,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+            🏥
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text)', marginBottom: 2 }}>Visita medica</p>
+            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+              Diagnosi precoce. Individua problemi prima che peggiorino.
+            </p>
+          </div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#a5b4fc' }}>Diagnosi</p>
+            <p style={{ fontSize: 10, color: nation?.healthcarePublic ? '#86efac' : 'var(--text-faint)' }}>
+              {nation?.healthcarePublic ? 'Gratis' : '€120'}
+            </p>
+          </div>
         </button>
-        <button onClick={handleTherapy}
-          style={{ gridColumn: '1 / -1', padding: '12px 0', borderRadius: 14, background: 'rgba(139,92,246,0.15)', color: '#c4b5fd', fontSize: 13, fontWeight: 600, border: '1px solid rgba(139,92,246,0.25)', cursor: 'pointer' }}>
-          🧠 Terapia{nation?.healthcarePublic ? ' (€40)' : ' (€180)'}
+
+        {/* Terapia */}
+        <button
+          onClick={handleTherapy}
+          className="tap-scale"
+          style={{
+            width: '100%', padding: '14px', borderRadius: 14, cursor: 'pointer', textAlign: 'left',
+            background: 'linear-gradient(135deg, rgba(139,92,246,0.1) 0%, var(--bg-card) 70%)',
+            border: '1px solid rgba(139,92,246,0.22)',
+            display: 'flex', gap: 12, alignItems: 'center',
+          }}
+        >
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(139,92,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+            🧠
+          </div>
+          <div style={{ flex: 1 }}>
+            <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text)', marginBottom: 2 }}>Terapia</p>
+            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+              Elabora traumi e costruisci resilienza nel tempo.
+            </p>
+          </div>
+          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#c4b5fd' }}>+Mente</p>
+            <p style={{ fontSize: 10, color: nation?.healthcarePublic ? '#86efac' : 'var(--text-faint)' }}>
+              {nation?.healthcarePublic ? '€40' : '€180'}
+            </p>
+          </div>
         </button>
       </div>
 

@@ -117,27 +117,43 @@ export function FinanceScreen() {
       {/* Overview tab */}
       {tab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {/* Net worth */}
-          <div className="card" style={{ padding: 14 }}>
-            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 4 }}>Patrimonio netto</p>
-            <p style={{ fontSize: 28, fontWeight: 800, color: '#10b981' }}>
+          {/* Net worth — premium card */}
+          <div className="card" style={{
+            padding: '18px 16px',
+            background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, var(--bg-card) 70%)',
+            border: '1px solid rgba(16,185,129,0.22)',
+          }}>
+            <p style={{ fontSize: 11, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 700, marginBottom: 6 }}>
+              Patrimonio netto
+            </p>
+            <p style={{ fontSize: 36, fontWeight: 900, color: '#18D39E', lineHeight: 1, letterSpacing: -1 }}>
               €{(finance.money + finance.bankBalance + totalValue + totalAssets - finance.debt).toLocaleString('it-IT')}
             </p>
+            {totalGain !== 0 && (
+              <p style={{ fontSize: 12, color: totalGain > 0 ? '#86efac' : '#fca5a5', marginTop: 4, fontWeight: 600 }}>
+                {totalGain > 0 ? '▲' : '▼'} €{Math.abs(Math.round(totalGain)).toLocaleString('it-IT')} da investimenti
+              </p>
+            )}
           </div>
 
           {/* Stats grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[
-              { label: 'Liquidità', val: `€${finance.money.toLocaleString('it-IT')}`, emoji: '💵', color: '#10b981' },
-              { label: 'Banca', val: `€${finance.bankBalance.toLocaleString('it-IT')}`, emoji: '🏦', color: '#6366f1' },
-              { label: 'Investimenti', val: `€${totalValue.toLocaleString('it-IT')}`, emoji: '📈', color: totalGain >= 0 ? '#10b981' : '#ef4444' },
-              { label: 'Debiti', val: `€${finance.debt.toLocaleString('it-IT')}`, emoji: '💳', color: finance.debt > 0 ? '#ef4444' : '#10b981' },
-            ].map(({ label, val, emoji, color }) => (
-              <div key={label} className="card" style={{ padding: 12 }}>
-                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{emoji} {label}</p>
-                <p style={{ fontWeight: 700, fontSize: 14, color, marginTop: 4 }}>{val}</p>
-              </div>
-            ))}
+              { label: 'Liquidità', val: finance.money, emoji: '💵', color: '#10b981' },
+              { label: 'Banca', val: finance.bankBalance, emoji: '🏦', color: '#6366f1' },
+              { label: 'Investimenti', val: totalValue, emoji: '📈', color: totalGain >= 0 ? '#10b981' : '#ef4444' },
+              { label: 'Debiti', val: finance.debt, emoji: '💳', color: finance.debt > 0 ? '#ef4444' : '#687087' },
+            ].map(({ label, val, emoji, color }) => {
+              const display = val >= 1_000_000 ? `€${(val/1_000_000).toFixed(1)}M`
+                : val >= 1_000 ? `€${(val/1_000).toFixed(0)}k`
+                : `€${val.toLocaleString('it-IT')}`
+              return (
+                <div key={label} className="card" style={{ padding: 12 }}>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{emoji} {label}</p>
+                  <p style={{ fontWeight: 800, fontSize: 18, color, marginTop: 4, lineHeight: 1 }}>{display}</p>
+                </div>
+              )
+            })}
           </div>
 
           {/* Credit score */}

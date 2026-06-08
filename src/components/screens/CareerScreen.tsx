@@ -3,6 +3,76 @@ import { useGameStore } from '../../store/gameStore'
 import { CareerEngine, getAllJobs, getContractLabel } from '../../services/CareerEngine'
 import { useToastStore } from '../../store/toastStore'
 
+const CATEGORY_EMOJI: Record<string, string> = {
+  care:      '🤝', retail:    '🛒', food:      '🍳', logistics: '🚚',
+  technical: '🔧', medical:   '🏥', finance:   '📈', media:     '📸',
+  creative:  '🎨', public:    '🏛️', education: '📚', tech:      '💻',
+  business:  '💼', legal:     '⚖️', criminal:  '🕵️', none:      '👤',
+}
+
+const CATEGORY_ACCENT: Record<string, string> = {
+  care:      'rgba(244,114,182,0.12)', retail:    'rgba(251,191,36,0.1)',
+  food:      'rgba(249,115,22,0.12)',  logistics: 'rgba(234,179,8,0.1)',
+  technical: 'rgba(99,102,241,0.12)', medical:   'rgba(239,68,68,0.1)',
+  finance:   'rgba(16,185,129,0.12)', media:     'rgba(168,85,247,0.12)',
+  creative:  'rgba(236,72,153,0.12)', public:    'rgba(59,130,246,0.12)',
+  education: 'rgba(96,165,250,0.1)',  tech:      'rgba(124,92,255,0.12)',
+  business:  'rgba(245,158,11,0.12)', legal:     'rgba(148,163,184,0.1)',
+}
+
+const JOB_TAGLINE: Record<string, string> = {
+  babysitter:        'Tieni d\'occhio piccoli terremoti dopo scuola.',
+  cashier:           'Il sorriso professionale non è negoziabile.',
+  barista:           'Cappuccini perfetti e clienti mattinieri.',
+  delivery_rider:    'Ogni consegna è una corsa contro l\'orologio.',
+  mechanic:          'Dai vita ai motori quando tutti li danno per morti.',
+  chef:              'L\'adrenalina della cucina non ha eguali.',
+  nurse:             'Cura chi non può curarsi da solo.',
+  accountant:        'I numeri raccontano storie che nessuno legge.',
+  journalist:        'La verità prima o poi trova la sua via.',
+  designer:          'Trasforma idee astratte in pixel concreti.',
+  police:            'Ordine, rispetto, presenza sul campo.',
+  social_worker:     'Chi aiuta gli altri dimentica spesso se stesso.',
+  architect:         'Disegna spazi che cambieranno la vita delle persone.',
+  psychologist:      'Ascolti quello che le parole non dicono.',
+  manager:           'Decidi, coordini, dai il ritmo alla squadra.',
+  programmer:        'Il codice è il linguaggio del futuro.',
+  teacher:           'Formi menti prima ancora che carriere.',
+  doctor:            'Ogni diagnosi è una responsabilità enorme.',
+  lawyer:            'Le parole giuste possono cambiare tutto.',
+  criminal_petty:    'Rischi, ma i guadagni sono rapidi.',
+  electrician:       'Porti la luce dove c\'è il buio.',
+  plumber:           'Il tuo telefono squilla sempre all\'ora peggiore.',
+  firefighter:       'Entri dove tutti scappano.',
+  paramedic:         'I secondi contano e tu lo sai.',
+  pilot:             'Il cielo è il tuo ufficio.',
+  pharmacist:        'Il medicinale giusto nella dose giusta.',
+  veterinarian:      'Loro non parlano ma tu li capisci.',
+  personal_trainer:  'Spingi gli altri oltre i loro limiti.',
+  real_estate_agent: 'Ogni appartamento è un sogno da vendere.',
+  influencer:        'Il tuo telefono è la tua azienda.',
+  game_developer:    'Crei mondi che altri abitano.',
+  data_scientist:    'Trasformi dati grezzi in decisioni intelligenti.',
+  entrepreneur:      'Zero sicurezze, infinite possibilità.',
+  event_planner:     'Il chaos è il tuo ambiente naturale.',
+  security_guard:    'Presenza, vigilanza, deterrenza silenziosa.',
+  translator:        'Sei il ponte tra due mondi.',
+  tattoo_artist:     'L\'arte rimane sulla pelle per sempre.',
+  life_coach:        'Aiuti chi non sa ancora dove andare.',
+}
+
+function stressConfig(level: number) {
+  if (level >= 70) return { label: 'Stress alto',   color: '#ef4444', bg: 'rgba(239,68,68,0.12)' }
+  if (level >= 45) return { label: 'Stress medio',  color: '#f97316', bg: 'rgba(249,115,22,0.12)' }
+  return               { label: 'Stress basso',   color: '#22c55e', bg: 'rgba(34,197,94,0.1)' }
+}
+
+function formatSalary(n: number): string {
+  if (n >= 1_000_000) return `€${(n / 1_000_000).toFixed(1)}M`
+  if (n >= 1_000)     return `€${(n / 1_000).toFixed(0)}k`
+  return `€${n}`
+}
+
 export function CareerScreen() {
   const career = useGameStore(s => s.career)
   const time = useGameStore(s => s.time)
@@ -194,61 +264,111 @@ export function CareerScreen() {
       {/* Offers list */}
       {tab === 'offers' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            {availableJobs.length} offerta/e disponibile/i per te
-          </p>
+          {availableJobs.length > 0 && (
+            <p style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.8 }}>
+              {availableJobs.length} {availableJobs.length === 1 ? 'offerta disponibile' : 'offerte disponibili'}
+            </p>
+          )}
           {availableJobs.length === 0 && (
-            <div className="card" style={{ padding: '24px 16px', textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>
-                Niente per te al momento.
+            <div className="card" style={{ padding: '28px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: 40, marginBottom: 10 }}>🔍</div>
+              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)', marginBottom: 6 }}>
+                Mercato silenzioso
               </p>
-              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                Il mercato del lavoro non ti considera ancora. Studia, fai esperienza o abbassa le aspettative.
+              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
+                {isMinor
+                  ? 'Sei ancora giovane. I lavori arriveranno con l\'età e la scuola.'
+                  : 'Il mercato non ti considera ancora. Studia, fai esperienza o abbassa le aspettative.'
+                }
               </p>
             </div>
           )}
           {availableJobs.map(job => {
             const isCurrent = career.currentJob?.id === job.id
+            const catEmoji = CATEGORY_EMOJI[job.category] ?? '💼'
+            const catAccent = CATEGORY_ACCENT[job.category] ?? 'rgba(124,92,255,0.08)'
+            const tagline = JOB_TAGLINE[job.id] ?? ''
+            const stress = stressConfig(job.stressLevel)
             return (
               <div
                 key={job.id}
-                className={`card card-action${isCurrent ? '' : ''}`}
-                style={{ padding: 12, border: isCurrent ? '1px solid rgba(34,197,94,0.4)' : undefined }}
+                className="card tap-scale"
+                style={{
+                  padding: '14px 14px 12px',
+                  background: isCurrent
+                    ? 'linear-gradient(135deg, rgba(34,197,94,0.08) 0%, var(--bg-card) 70%)'
+                    : `linear-gradient(135deg, ${catAccent} 0%, var(--bg-card) 70%)`,
+                  border: isCurrent ? '1px solid rgba(34,197,94,0.35)' : '1px solid var(--border-soft)',
+                }}
               >
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                  <div>
-                    <p style={{ fontWeight: 600, fontSize: 14 }}>{job.title}</p>
-                    <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>{job.category}</p>
+                {/* Row 1: icon + title + salary */}
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: tagline ? 6 : 10 }}>
+                  <div style={{
+                    width: 44, height: 44, borderRadius: 12, flexShrink: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: 'rgba(255,255,255,0.07)', border: '1px solid var(--border-soft)',
+                    fontSize: 22,
+                  }}>
+                    {catEmoji}
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ color: '#10b981', fontSize: 13, fontWeight: 700 }}>
-                      €{job.salaryMin.toLocaleString('it-IT')}–{job.salaryMax.toLocaleString('it-IT')}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-text)', marginBottom: 1 }}>{job.title}</p>
+                    {isCurrent && (
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#4ade80', background: 'rgba(34,197,94,0.12)', padding: '1px 7px', borderRadius: 99, border: '1px solid rgba(34,197,94,0.25)' }}>
+                        ✅ Lavoro attuale
+                      </span>
+                    )}
+                  </div>
+                  {/* Salary chip */}
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <p style={{ color: '#18D39E', fontSize: 15, fontWeight: 800, lineHeight: 1 }}>
+                      {formatSalary(job.salaryMin)}
                     </p>
-                    <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>/mese</p>
+                    <p style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 2 }}>
+                      fino a {formatSalary(job.salaryMax)}
+                    </p>
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 8 }}>
-                  <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-secondary)' }}>
-                    Stress {job.stressLevel}%
+                {/* Tagline */}
+                {tagline && (
+                  <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.5, marginBottom: 10, paddingLeft: 56 }}>
+                    {tagline}
+                  </p>
+                )}
+
+                {/* Badges row */}
+                <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginBottom: 10 }}>
+                  <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 99, background: stress.bg, color: stress.color, fontWeight: 600, border: `1px solid ${stress.color}33` }}>
+                    {stress.label}
                   </span>
-                  <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-secondary)' }}>
+                  <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 99, background: 'rgba(255,255,255,0.07)', color: 'var(--color-text-secondary)', border: '1px solid var(--border-soft)' }}>
                     {getContractLabel(job.contractType)}
                   </span>
                   {job.requirements.cleanRecord && (
-                    <span style={{ fontSize: 11, padding: '2px 7px', borderRadius: 99, background: 'rgba(234,179,8,0.2)', color: '#fde047' }}>
-                      Fedina pulita
+                    <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 99, background: 'rgba(234,179,8,0.12)', color: '#fde047', border: '1px solid rgba(234,179,8,0.25)' }}>
+                      🧾 Fedina pulita
+                    </span>
+                  )}
+                  {job.requirements.minAge > 0 && (
+                    <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 99, background: 'rgba(255,255,255,0.05)', color: 'var(--text-faint)', border: '1px solid var(--border-soft)' }}>
+                      {job.requirements.minAge}+ anni
                     </span>
                   )}
                 </div>
 
-                {isCurrent ? (
-                  <p style={{ fontSize: 12, color: '#4ade80', fontWeight: 500 }}>✅ Lavoro attuale</p>
-                ) : (
+                {/* CTA */}
+                {!isCurrent && (
                   <button
                     onClick={() => handleApply(job.id)}
-                    style={{ width: '100%', padding: '8px 0', borderRadius: 12, background: 'rgba(233,69,96,0.15)', color: 'var(--color-cta)', fontSize: 13, fontWeight: 500, border: '1px solid rgba(233,69,96,0.3)', cursor: 'pointer' }}
+                    className="tap-scale"
+                    style={{
+                      width: '100%', padding: '10px 0', borderRadius: 12,
+                      background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%)',
+                      color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer',
+                      boxShadow: '0 4px 16px rgba(124,92,255,0.3)',
+                      letterSpacing: 0.3,
+                    }}
                   >
                     Candidati
                   </button>

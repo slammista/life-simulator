@@ -76,33 +76,54 @@ export function HobbyScreen() {
           {hobbies.map(hobby => {
             const def = getHobbyDef(hobby.id)
             const skillColor = hobby.skillLevel >= 70 ? '#10b981' : hobby.skillLevel >= 40 ? '#f59e0b' : '#6366f1'
+            const skillLabel = hobby.skillLevel >= 80 ? 'Esperto' : hobby.skillLevel >= 55 ? 'Avanzato' : hobby.skillLevel >= 30 ? 'Intermedio' : 'Principiante'
             return (
-              <div key={hobby.id} className="card" style={{ padding: 12 }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                  <div>
-                    <p style={{ fontWeight: 600, fontSize: 14 }}>{def?.emoji ?? '🎯'} {hobby.name}</p>
-                    <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                      Dal {hobby.yearStarted} · {def?.category ?? ''}
-                    </p>
+              <div key={hobby.id} className="card" style={{
+                padding: '14px',
+                background: `linear-gradient(135deg, ${skillColor}10 0%, var(--bg-card) 70%)`,
+                border: `1px solid ${skillColor}30`,
+              }}>
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 10 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.07)', border: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+                    {def?.emoji ?? '🎯'}
                   </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontWeight: 700, fontSize: 16, color: skillColor }}>{Math.round(hobby.skillLevel)}</p>
-                    <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>skill / 100</p>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-text)' }}>{hobby.name}</p>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginTop: 3 }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: skillColor, background: `${skillColor}18`, padding: '1px 7px', borderRadius: 99, border: `1px solid ${skillColor}30` }}>
+                        {skillLabel}
+                      </span>
+                      <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>dal {hobby.yearStarted}</span>
+                    </div>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    <p style={{ fontWeight: 900, fontSize: 20, color: skillColor, lineHeight: 1 }}>{Math.round(hobby.skillLevel)}</p>
+                    <p style={{ fontSize: 9, color: 'var(--text-faint)', marginTop: 1 }}>/ 100</p>
                   </div>
                 </div>
 
-                <div style={{ marginBottom: 8 }}>
-                  <div style={{ height: 5, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${hobby.skillLevel}%`, background: skillColor, borderRadius: 4 }} />
+                <div style={{ marginBottom: 10 }}>
+                  <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${hobby.skillLevel}%`, background: skillColor, borderRadius: 4, transition: 'width 0.4s ease' }} />
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  {hobby.monetizable && hobby.monthlyIncome > 0 && (
-                    <span style={{ fontSize: 12, color: '#86efac' }}>💰 €{hobby.monthlyIncome}/mese</span>
+                  {hobby.monetizable && hobby.monthlyIncome > 0 ? (
+                    <span style={{ fontSize: 12, color: '#86efac', fontWeight: 600 }}>💰 +€{hobby.monthlyIncome}/mese</span>
+                  ) : (
+                    <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>+Felicità · +Skill</span>
                   )}
-                  <button onClick={() => handlePractice(hobby.id)}
-                    style={{ marginLeft: 'auto', padding: '7px 16px', borderRadius: 12, background: 'rgba(233,69,96,0.15)', color: 'var(--color-cta)', fontSize: 13, fontWeight: 500, border: '1px solid rgba(233,69,96,0.3)', cursor: 'pointer' }}>
+                  <button
+                    onClick={() => handlePractice(hobby.id)}
+                    className="tap-scale"
+                    style={{
+                      padding: '8px 20px', borderRadius: 12,
+                      background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%)',
+                      color: '#fff', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer',
+                      boxShadow: '0 3px 12px rgba(124,92,255,0.3)',
+                    }}
+                  >
                     Pratica
                   </button>
                 </div>
@@ -115,34 +136,80 @@ export function HobbyScreen() {
       {/* Discover */}
       {tab === 'discover' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {discoverable.map(def => (
-            <div key={def.id} className="card" style={{ padding: 12 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
-                <div>
-                  <p style={{ fontWeight: 600, fontSize: 14 }}>{def.emoji} {def.name}</p>
-                  <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>{def.category}</p>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  {def.costToStart > 0 && <p style={{ fontSize: 12, color: '#fca5a5' }}>€{def.costToStart.toLocaleString('it-IT')} avvio</p>}
-                  {def.monetizable && <p style={{ fontSize: 11, color: '#86efac' }}>Monetizzabile</p>}
-                </div>
-              </div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 8 }}>
-                {Object.entries(def.statBenefits).filter(([, v]) => v !== 0).map(([k, v]) => (
-                  <span key={k} style={{ fontSize: 11, padding: '2px 7px', borderRadius: 99, background: v > 0 ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)', color: v > 0 ? '#86efac' : '#fca5a5' }}>
-                    {v > 0 ? '+' : ''}{v} {k}
-                  </span>
-                ))}
-              </div>
-              <button onClick={() => handleAdd(def.id)}
-                disabled={finance.money < def.costToStart}
-                style={{ width: '100%', padding: '8px 0', borderRadius: 12, fontSize: 13, fontWeight: 500, border: 'none', cursor: finance.money >= def.costToStart ? 'pointer' : 'not-allowed',
-                  background: finance.money >= def.costToStart ? 'var(--color-cta)' : 'rgba(255,255,255,0.05)',
-                  color: finance.money >= def.costToStart ? '#fff' : 'var(--color-text-secondary)' }}>
-                {finance.money >= def.costToStart ? 'Inizia' : `Servono €${def.costToStart.toLocaleString('it-IT')}`}
-              </button>
+          {discoverable.length === 0 && (
+            <div className="card" style={{ padding: '28px 20px', textAlign: 'center' }}>
+              <div style={{ fontSize: 40, marginBottom: 10 }}>🎯</div>
+              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)', marginBottom: 6 }}>Hai esplorato tutto!</p>
+              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
+                Hai già tutti gli hobby disponibili. Continua a praticarli per crescere.
+              </p>
             </div>
-          ))}
+          )}
+          {discoverable.map(def => {
+            const canAfford = finance.money >= def.costToStart
+            const benefits = Object.entries(def.statBenefits).filter(([, v]) => v !== 0)
+            return (
+              <div
+                key={def.id}
+                className={`card${canAfford ? ' tap-scale' : ' card-locked'}`}
+                style={{ padding: '14px', opacity: canAfford ? 1 : 0.7 }}
+              >
+                <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
+                  <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(255,255,255,0.07)', border: '1px solid var(--border-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+                    {def.emoji}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text)', marginBottom: 3 }}>{def.name}</p>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>{def.category}</p>
+                  </div>
+                  <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                    {def.costToStart > 0 ? (
+                      <span style={{
+                        fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 99,
+                        background: canAfford ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
+                        color: canAfford ? '#86efac' : '#fca5a5',
+                        border: `1px solid ${canAfford ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
+                      }}>
+                        {canAfford ? '' : '🔒 '}€{def.costToStart.toLocaleString('it-IT')}
+                      </span>
+                    ) : (
+                      <span style={{ fontSize: 11, color: '#86efac', fontWeight: 600 }}>Gratis</span>
+                    )}
+                    {def.monetizable && (
+                      <p style={{ fontSize: 10, color: '#86efac', marginTop: 2 }}>💰 Monetizzabile</p>
+                    )}
+                  </div>
+                </div>
+
+                {benefits.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
+                    {benefits.map(([k, v]) => (
+                      <span key={k} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, fontWeight: 600, background: (v as number) > 0 ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', color: (v as number) > 0 ? '#86efac' : '#fca5a5' }}>
+                        {(v as number) > 0 ? '+' : ''}{v} {k}
+                      </span>
+                    ))}
+                  </div>
+                )}
+
+                <button
+                  onClick={() => handleAdd(def.id)}
+                  disabled={!canAfford}
+                  className={canAfford ? 'tap-scale' : undefined}
+                  style={{
+                    width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 700, border: 'none',
+                    cursor: canAfford ? 'pointer' : 'not-allowed',
+                    background: canAfford
+                      ? 'linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%)'
+                      : 'rgba(255,255,255,0.05)',
+                    color: canAfford ? '#fff' : 'var(--color-text-secondary)',
+                    boxShadow: canAfford ? '0 4px 16px rgba(124,92,255,0.3)' : 'none',
+                  }}
+                >
+                  {canAfford ? 'Inizia' : `Servono €${def.costToStart.toLocaleString('it-IT')}`}
+                </button>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>
