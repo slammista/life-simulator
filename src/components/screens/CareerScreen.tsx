@@ -198,8 +198,14 @@ export function CareerScreen() {
             {availableJobs.length} offerta/e disponibile/i per te
           </p>
           {availableJobs.length === 0 && (
-            <div className="card" style={{ padding: 16, textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: 13 }}>
-              Nessuna offerta con le tue qualifiche attuali.
+            <div className="card" style={{ padding: '24px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🔍</div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>
+                Niente per te al momento.
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                Il mercato del lavoro non ti considera ancora. Studia, fai esperienza o abbassa le aspettative.
+              </p>
             </div>
           )}
           {availableJobs.map(job => {
@@ -207,7 +213,7 @@ export function CareerScreen() {
             return (
               <div
                 key={job.id}
-                className="card"
+                className={`card card-action${isCurrent ? '' : ''}`}
                 style={{ padding: 12, border: isCurrent ? '1px solid rgba(34,197,94,0.4)' : undefined }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
@@ -257,8 +263,14 @@ export function CareerScreen() {
       {tab === 'history' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {career.jobHistory.length === 0 && (
-            <div className="card" style={{ padding: 16, textAlign: 'center', color: 'var(--color-text-secondary)', fontSize: 13 }}>
-              Nessuna esperienza lavorativa ancora.
+            <div className="card" style={{ padding: '24px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>📋</div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>
+                Nessuna storia lavorativa.
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                I tuoi lavori passati appariranno qui. La carriera inizia con il primo impiego.
+              </p>
             </div>
           )}
           {[...career.jobHistory].reverse().map((job, i) => (

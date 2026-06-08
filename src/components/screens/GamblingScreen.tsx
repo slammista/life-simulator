@@ -112,6 +112,7 @@ export default function GamblingScreen() {
                     style={{ flex: 1, padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--color-text)', fontSize: 13 }}
                   />
                   <button
+                    className="tap-scale"
                     onClick={() => {
                       const r = playCasinoGame(game.id, bet)
                       setLastMsg(r.message)
@@ -176,6 +177,7 @@ export default function GamblingScreen() {
                     style={{ flex: 1, padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--color-text)', fontSize: 13 }}
                   />
                   <button
+                    className="tap-scale"
                     onClick={() => { const r = placeSportsBet(sport.id, bet); setLastMsg(r.message) }}
                     disabled={finance.money < 5}
                     style={{ padding: '6px 16px', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#059669', color: '#fff', opacity: finance.money < 5 ? 0.5 : 1 }}>

@@ -75,11 +75,11 @@ export function SubstanceScreen() {
 
       {/* Blocco minori assoluto */}
       {age < MIN_AGE_SMOKE && (
-        <div className="card" style={{ padding: '14px 16px', borderColor: 'rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.06)', textAlign: 'center' }}>
-          <p style={{ fontSize: 22, marginBottom: 6 }}>🔞</p>
-          <p style={{ fontSize: 13, fontWeight: 600, color: '#fca5a5' }}>Non disponibile</p>
-          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 4 }}>
-            Sei troppo giovane per accedere a questa sezione.
+        <div className="card card-locked" style={{ padding: '24px 16px', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🔞</div>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#fca5a5', marginBottom: 4 }}>Accesso negato</p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+            Sei troppo giovane per questa sezione. Disponibile dai {MIN_AGE_SMOKE} anni.
           </p>
         </div>
       )}
@@ -99,7 +99,7 @@ export function SubstanceScreen() {
             {(Object.entries(ALCOHOL) as [AlcoholType, typeof ALCOHOL[AlcoholType]][]).map(([type, def]) => (
               <button
                 key={type}
-                className="card"
+                className="card tap-scale"
                 style={{ padding: '10px', border: 'none', cursor: 'pointer', textAlign: 'left' }}
                 onClick={() => handleDrink(type)}
               >
@@ -132,7 +132,7 @@ export function SubstanceScreen() {
               return (
                 <button
                   key={type}
-                  className="card"
+                  className="card tap-scale"
                   style={{ padding: '10px', border: 'none', cursor: blocked ? 'not-allowed' : 'pointer', textAlign: 'left', opacity: blocked ? 0.4 : 1 }}
                   onClick={() => !blocked && handleSmoke(type)}
                   disabled={blocked}

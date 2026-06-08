@@ -63,10 +63,14 @@ export function HobbyScreen() {
       {tab === 'mine' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {hobbies.length === 0 && (
-            <div className="card" style={{ padding: 24, textAlign: 'center' }}>
-              <p style={{ fontSize: 24, marginBottom: 8 }}>😐</p>
-              <p style={{ fontSize: 13, color: 'var(--color-text)' }}>Nessun hobby ancora.</p>
-              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 4 }}>Vai su "Scopri" per iniziarne uno.</p>
+            <div className="card" style={{ padding: '24px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🎸</div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>
+                Nessuna passione ancora.
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                Gli hobby aumentano felicità e abilità. Vai su "Scopri" per iniziarne uno.
+              </p>
             </div>
           )}
           {hobbies.map(hobby => {

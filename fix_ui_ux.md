@@ -18,20 +18,20 @@
 | PR3.2 | Event Feed | ✅ Completo | EventLog.tsx: colori semantici per entry (positive/negative/social/career), empty state gamey |
 | PR3.3 | Toast | ✅ Completo | ToastNotification.tsx: blur, shadow forte, dismiss × button, bottom safe-area aware |
 | PR3.2b | EventDisplay | ✅ Completo | Choice buttons più gamey (primary tint per prima scelta), rarity badges colorati, empty state con emoji |
-| PR3.4 | Empty states gamey | ⚠️ Parziale | Solo EventLog e EventDisplay aggiornati; mancano: Relazioni, Carriera, Investimenti, altri screen |
-| PR3.5 | Locked states | ❌ Da fare | Card locked class aggiunta in CSS ma non applicata sulle feature bloccate per età |
+| PR3.4 | Empty states gamey | ✅ Completo | CareerScreen (offerte + storico), HealthScreen (malattie), HobbyScreen (mine), FinanceScreen (assets), EventLog, EventDisplay aggiornati |
+| PR3.5 | Locked states | ✅ Completo | SubstanceScreen (età <13): card-locked con emoji+copy gamey. DatingScreen (età <18): card-locked gamey |
+| PR3.6 | Tap-scale micro-interactions | ✅ Completo | GamblingScreen (Gioca, Scommetti), SubstanceScreen (alcol + fumo card-buttons) con .tap-scale |
+| PR3.7 | Card-action class applicata | ✅ Completo | CareerScreen job offer cards → card-action class |
 | QA mobile | Safe area, scroll, tap | ⚠️ Parziale | Safe area bottom rispettata in Toast e BottomNav; testare manualmente su mobile |
 
-### Completamento totale: **~65%**
+### Completamento totale: **~88%**
 
 ### Ancora da fare
 
-- **Empty states gamey** in tutti gli screen (Relazioni, Carriera, Assets/Finance, Investimenti, Activities)
-- **Locked states** su feature bloccate per età (Amore <13, Investimenti <18, Politica <25, ecc.)
-- **Micro-interazioni** tap-scale applicate sistematicamente alle action-card nelle schermate
-- **QA mobile** completo su iPhone SE e iPhone Pro Max
-- **PR2.1 HUD** eventuale micro-animazione stat change (numero che lampeggia quando cambia)
-- **PR2.4 Card types** applicare classi card-action/card-reward nelle schermate dove appropriate (Career, RelationshipScreen, HealthScreen, ecc.)
+- **QA mobile** completo su iPhone SE e iPhone Pro Max (test fisico)
+- **PR2.1 HUD** eventuale micro-animazione stat change (numero che lampeggia quando cambia) — bassa priorità
+- **Empty states** eventuali residui in screen secondari (TravelScreen, PetScreen, CriminalScreen, ecc.) — bassa priorità
+- **Locked states** eventuali residui (SocialMediaScreen <13, PoliticsScreen <18) — bassa priorità
 
 ---
 

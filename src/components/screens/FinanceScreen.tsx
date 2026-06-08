@@ -352,9 +352,14 @@ export function FinanceScreen() {
             Asset posseduti
           </p>
           {finance.assets.length === 0 && (
-            <div className="card" style={{ padding: 24, textAlign: 'center' }}>
-              <p style={{ fontSize: 22, marginBottom: 6 }}>🏠</p>
-              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Nessun asset posseduto.</p>
+            <div className="card" style={{ padding: '24px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>🏠</div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>
+                Nessun asset posseduto.
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                Investi in immobili, veicoli e altri beni per costruire il tuo patrimonio.
+              </p>
             </div>
           )}
           {finance.assets.map(asset => {

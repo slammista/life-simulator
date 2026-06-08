@@ -182,8 +182,12 @@ export function DatingScreen() {
             📱 App di Dating
           </p>
           {time.age < 18 ? (
-            <div className="card" style={{ padding: 12, textAlign: 'center' }}>
-              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Devi avere 18 anni.</p>
+            <div className="card card-locked" style={{ padding: '24px 16px', textAlign: 'center' }}>
+              <div style={{ fontSize: 32, marginBottom: 8 }}>❤️</div>
+              <p style={{ fontSize: 14, fontWeight: 600, color: '#fca5a5', marginBottom: 4 }}>Non ancora disponibile</p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+                Le app di dating sono disponibili dai 18 anni. Torna quando sei maggiorenne.
+              </p>
             </div>
           ) : (
             <div className="card" style={{ padding: '12px 14px' }}>

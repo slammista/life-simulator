@@ -129,9 +129,14 @@ export function HealthScreen() {
         Condizioni ({health.diseases.length})
       </p>
       {health.diseases.length === 0 ? (
-        <div className="card" style={{ padding: 16, textAlign: 'center' }}>
-          <p style={{ fontSize: 22, marginBottom: 6 }}>✅</p>
-          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>Nessuna malattia diagnosticata.</p>
+        <div className="card" style={{ padding: '24px 16px', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>✅</div>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>
+            Sei in perfetta salute!
+          </p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+            Nessuna malattia diagnosticata. Mantieniti attivo per non ammalarti.
+          </p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
