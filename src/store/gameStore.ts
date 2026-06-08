@@ -16,7 +16,7 @@ import type {
 import db from '../../public/db.json'
 import { CareerEngine, getAllJobs } from '../services/CareerEngine'
 import { RelationshipEngine, type NPCContext, type NPCAction } from '../services/RelationshipEngine'
-import { EducationEngine } from '../services/EducationEngine'
+import { EducationEngine, getEducationLabel } from '../services/EducationEngine'
 import { HealthEngine } from '../services/HealthEngine'
 import { HobbyEngine } from '../services/HobbyEngine'
 import { CriminalEngine } from '../services/CriminalEngine'
@@ -65,6 +65,18 @@ export const clamp = (val: number, min: number, max: number) =>
   Math.min(max, Math.max(min, val))
 
 export const uid = () => Math.random().toString(36).slice(2, 10)
+
+function makeMemory(
+  timeRef: { year: number; age: number },
+  title: string,
+  description: string,
+  emoji: string,
+  category: import('./types').LifeMemoryCategory,
+  people: string[] = [],
+  isImportant = true
+): import('./types').LifeMemory {
+  return { id: uid(), year: timeRef.year, age: timeRef.age, title, description, emoji, category, peopleInvolved: people, isImportant }
+}
 
 function getPlayerEmoji(state: GameState): string {
   const { stats, time } = state
@@ -601,6 +613,24 @@ export const useGameStore = create<FullStore>()(
           }
         }
 
+        // Build life memories for major milestones this year
+        const yearMemories: import('./types').LifeMemory[] = []
+        const ageMilestones: Record<number, string> = {
+          18: 'Sei diventato/a maggiorenne. Il mondo si apre davanti a te.',
+          30: 'Trenta anni. La vita adulta è pienamente iniziata.',
+          40: 'Quaranta anni. Un bilancio della prima metà della vita.',
+          50: 'Cinquanta anni. Metà secolo vissuto.',
+          65: 'Sessantacinque anni. Hai raggiunto l\'età pensionabile.',
+          80: 'Ottanta anni. Una lunga vita ricca di esperienze.',
+        }
+        if (ageMilestones[newAge]) {
+          yearMemories.push(makeMemory({ year: newYear, age: newAge }, `${newAge} anni`, ageMilestones[newAge], '🎂', 'life', [], true))
+        }
+        if (eduTick.graduated && state.education.currentLevel !== 'none') {
+          const lvlLabel = getEducationLabel(state.education.currentLevel)
+          yearMemories.push(makeMemory({ year: newYear, age: newAge }, `Diploma: ${lvlLabel}`, `Hai completato ${lvlLabel} con GPA ${state.education.gpa.toFixed(2)}/4.00.`, '🎓', 'school', [], true))
+        }
+
         // Build log entry
         const eventText = picked ? `${picked.emoji} ${picked.title}` : `Hai compiuto ${newAge} anni.`
         const allMessages = messages.filter(Boolean)
@@ -712,6 +742,7 @@ export const useGameStore = create<FullStore>()(
                 ...newRibbons.map(def => AchievementsEngine.buildRibbonRecord(def, newYear)),
               ]
             : state.ribbons,
+          lifeMemories: yearMemories.length > 0 ? [...state.lifeMemories, ...yearMemories].slice(-200) : state.lifeMemories,
         })
 
         get().checkGoals()
@@ -785,6 +816,7 @@ export const useGameStore = create<FullStore>()(
           const oldJob = state.career.currentJob
           const newJobDef = getAllJobs().find(j => j.id === jobId)
           const newColleagues = WorkSchoolEngine.generateColleagues(jobId, newJobDef?.category ?? 'default', 3)
+          const jobMemory = makeMemory(state.time, `Nuovo lavoro: ${result.newJob.title}`, `Hai iniziato a lavorare come ${result.newJob.title} in ${result.newJob.company}.`, '💼', 'work', [], true)
           set(s => ({
             ...partial,
             career: {
@@ -794,6 +826,7 @@ export const useGameStore = create<FullStore>()(
               colleagues: newColleagues,
               workReputation: 'nuovo',
             },
+            lifeMemories: [...s.lifeMemories, jobMemory].slice(-200),
             eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💼', category: 'career', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
           }))
         } else {
@@ -832,6 +865,7 @@ export const useGameStore = create<FullStore>()(
         const key = `promo_${state.time.year}`
 
         if (result.success && result.salaryIncrease && state.career.currentJob) {
+          const promoMemory = makeMemory(state.time, 'Promozione!', `Sei stato/a promosso/a in ${state.career.currentJob.company}. Nuovo stipendio: €${(state.career.currentJob.salary + result.salaryIncrease).toLocaleString()}/mese.`, '📈', 'work', [], true)
           set(s => ({
             ...partial,
             career: {
@@ -839,6 +873,7 @@ export const useGameStore = create<FullStore>()(
               currentJob: { ...s.career.currentJob!, salary: s.career.currentJob!.salary + result.salaryIncrease! },
               promotions: s.career.promotions + 1,
             },
+            lifeMemories: [...s.lifeMemories, promoMemory].slice(-200),
             diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
             eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '📈', category: 'career', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
           }))
@@ -939,6 +974,38 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '📚', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      // ==================== Club actions ====================
+      joinClub: (clubId: string): ActionResult => {
+        const state = get()
+        if (state.education.currentLevel === 'none') return { success: false, message: 'Devi essere iscritto/a a una scuola per entrare in un club.', effects: {} }
+        if (state.education.clubs.includes(clubId)) return { success: false, message: 'Sei già membro di questo club.', effects: {} }
+
+        const CLUB_EFFECTS: Record<string, { skills: Partial<PlayerSkills>; statEffects: Record<string, number>; emoji: string; label: string }> = {
+          sport:    { skills: { athleticism: 2, discipline: 1 }, statEffects: { health: 2, happiness: 1 }, emoji: '⚽', label: 'Club Sportivo' },
+          music:    { skills: { music: 2, creativity: 1 },       statEffects: { happiness: 2 },            emoji: '🎸', label: 'Club Musicale' },
+          academic: { skills: { academicSkill: 2, discipline: 1 }, statEffects: { intelligence: 2 },       emoji: '📚', label: 'Club Accademico' },
+          art:      { skills: { creativity: 2, charisma: 1 },    statEffects: { happiness: 1 },            emoji: '🎨', label: 'Club Arte' },
+          debate:   { skills: { charisma: 2, leadership: 1 },    statEffects: { intelligence: 1 },         emoji: '🗣️', label: 'Club Dibattito' },
+        }
+
+        const cfg = CLUB_EFFECTS[clubId]
+        if (!cfg) return { success: false, message: 'Club non trovato.', effects: {} }
+
+        const newSkills: PlayerSkills = { ...state.skills }
+        for (const [k, v] of Object.entries(cfg.skills)) {
+          (newSkills as unknown as Record<string, number>)[k] = Math.min(100, ((newSkills as unknown as Record<string, number>)[k] ?? 0) + v)
+        }
+
+        const partial = applyEffects(state, cfg.statEffects)
+        set(s => ({
+          ...partial,
+          skills: newSkills,
+          education: { ...s.education, clubs: [...s.education.clubs, clubId] },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Ti sei iscritto/a al ${cfg.label}!`, emoji: cfg.emoji, category: 'education', statChanges: cfg.statEffects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Ti sei iscritto/a al ${cfg.label}!`, effects: cfg.statEffects }
       },
 
       // ==================== Social activities (outside work/school) ====================
@@ -1585,11 +1652,14 @@ export const useGameStore = create<FullStore>()(
         const result = DatingEngine.marry(npcId, weddingBudget, state)
         if (!result.success) return { success: false, message: result.message, effects: result.effects }
         const partial = applyEffects(state, result.effects)
+        const spouseName = state.relationships.find(r => r.id === npcId)?.name ?? 'il tuo partner'
+        const marriageMemory = makeMemory(state.time, `Matrimonio con ${spouseName}`, `Hai sposato ${spouseName} con un budget di €${weddingBudget.toLocaleString()}.`, '💒', 'relationship', [spouseName], true)
         set(s => ({
           ...partial,
           relationships: result.updatedRelationship
             ? s.relationships.map(r => r.id === npcId ? { ...r, ...result.updatedRelationship } : r)
             : s.relationships,
+          lifeMemories: [...s.lifeMemories, marriageMemory].slice(-200),
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '💒', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         get().checkGoals()
@@ -1601,11 +1671,14 @@ export const useGameStore = create<FullStore>()(
         const result = DatingEngine.divorce(npcId, state)
         if (!result.success) return { success: false, message: result.message, effects: result.effects }
         const partial = applyEffects(state, result.effects)
+        const exName = state.relationships.find(r => r.id === npcId)?.name ?? 'il tuo ex'
+        const divorceMemory = makeMemory(state.time, `Divorzio da ${exName}`, `Il matrimonio con ${exName} è finito.`, '📜', 'relationship', [exName], true)
         set(s => ({
           ...partial,
           relationships: result.updatedRelationship
             ? s.relationships.map(r => r.id === npcId ? { ...r, ...result.updatedRelationship } : r)
             : s.relationships,
+          lifeMemories: [...s.lifeMemories, divorceMemory].slice(-200),
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '📜', category: 'social', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message: result.message, effects: result.effects }
@@ -1617,9 +1690,12 @@ export const useGameStore = create<FullStore>()(
         const result = ParentingEngine.haveChild(state, false)
         if (!result.success) return { success: false, message: result.message, effects: {} }
         const partial = applyEffects(state, result.effects)
+        const childName = result.newChild?.name ?? 'tuo figlio/a'
+        const childMemory = makeMemory(state.time, `Nascita di ${childName}`, `${childName} è venuto/a al mondo. La tua vita è cambiata per sempre.`, '👶', 'life', [childName], true)
         set(s => ({
           ...partial,
           children: result.newChild ? [...s.children, result.newChild] : s.children,
+          lifeMemories: [...s.lifeMemories, childMemory].slice(-200),
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '👶', category: 'life', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
         }))
         get().checkGoals()

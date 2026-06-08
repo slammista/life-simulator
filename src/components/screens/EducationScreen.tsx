@@ -51,12 +51,22 @@ const ENROLLABLE_LEVELS: EducationLevel[] = [
 ]
 const ALL_LEVELS = ENROLLABLE_LEVELS
 
+const CLUBS = [
+  { id: 'sport',    label: 'Club Sportivo',   emoji: '⚽', hint: 'Atletica +2, Disciplina +1' },
+  { id: 'music',    label: 'Club Musicale',   emoji: '🎸', hint: 'Musica +2, Creatività +1' },
+  { id: 'academic', label: 'Club Accademico', emoji: '📚', hint: 'Accademico +2, Disciplina +1' },
+  { id: 'art',      label: 'Club Arte',       emoji: '🎨', hint: 'Creatività +2, Carisma +1' },
+  { id: 'debate',   label: 'Club Dibattito',  emoji: '🗣️', hint: 'Carisma +2, Leadership +1' },
+]
+
 export function EducationScreen() {
   const education = useGameStore(s => s.education)
+  const skills = useGameStore(s => s.skills)
   const state = useGameStore(s => s)
   const startEducation = useGameStore(s => s.startEducation)
   const studyAction = useGameStore(s => s.studyAction)
   const schoolInteract = useGameStore(s => s.schoolInteract)
+  const joinClub = useGameStore(s => s.joinClub)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [tab, setTab] = useState<'status' | 'classmates' | 'enroll'>('status')
@@ -345,17 +355,87 @@ export function EducationScreen() {
 
       {/* Stats tab */}
       {tab === 'status' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {[
-            { label: 'Studenti loan', val: `€${education.studentLoan.toLocaleString('it-IT')}`, emoji: '💸' },
-            { label: 'Borse di studio', val: education.scholarships.length, emoji: '🏆' },
-            { label: 'Club frequentati', val: education.clubs.length, emoji: '🎭' },
-          ].map(({ label, val, emoji }) => (
-            <div key={label} className="card" style={{ padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{emoji} {label}</p>
-              <p style={{ fontWeight: 600, fontSize: 13 }}>{val}</p>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Quick stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            {[
+              { label: 'Prestito', val: `€${education.studentLoan.toLocaleString('it-IT')}`, emoji: '💸', color: '#f97316' },
+              { label: 'Borse di studio', val: String(education.scholarships.length), emoji: '🏆', color: '#f59e0b' },
+            ].map(({ label, val, emoji, color }) => (
+              <div key={label} className="card" style={{ padding: '10px 12px' }}>
+                <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginBottom: 4 }}>{emoji} {label}</p>
+                <p style={{ fontWeight: 700, fontSize: 16, color }}>{val}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Skills panel */}
+          <div className="card" style={{ padding: '12px 14px' }}>
+            <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Abilità sviluppate</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+              {[
+                { key: 'academicSkill', label: 'Accademico',  color: '#60a5fa' },
+                { key: 'discipline',    label: 'Disciplina',  color: '#a78bfa' },
+                { key: 'creativity',    label: 'Creatività',  color: '#fbbf24' },
+                { key: 'music',         label: 'Musica',      color: '#f472b6' },
+                { key: 'athleticism',   label: 'Atletica',    color: '#4ade80' },
+                { key: 'charisma',      label: 'Carisma',     color: '#fb923c' },
+                { key: 'leadership',    label: 'Leadership',  color: '#e879f9' },
+                { key: 'socialSkill',   label: 'Socialità',   color: '#38bdf8' },
+              ].map(({ key, label, color }) => {
+                const val = (skills as unknown as Record<string, number>)[key] ?? 0
+                return (
+                  <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 80, flexShrink: 0 }}>{label}</span>
+                    <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
+                      <div style={{ height: '100%', width: `${val}%`, background: color, borderRadius: 4, transition: 'width 0.3s' }} />
+                    </div>
+                    <span style={{ fontSize: 10, color, width: 24, textAlign: 'right', flexShrink: 0 }}>{val}</span>
+                  </div>
+                )
+              })}
             </div>
-          ))}
+          </div>
+
+          {/* Clubs section */}
+          <div className="card" style={{ padding: '12px 14px' }}>
+            <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Club & attività extrascolastiche</p>
+            {education.currentLevel === 'none' ? (
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Iscriviti a una scuola per accedere ai club.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                {CLUBS.map(club => {
+                  const joined = education.clubs.includes(club.id)
+                  return (
+                    <div key={club.id} style={{
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
+                      padding: '8px 10px', borderRadius: 10,
+                      background: joined ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${joined ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span style={{ fontSize: 18 }}>{club.emoji}</span>
+                        <div>
+                          <p style={{ fontSize: 12, fontWeight: 600, color: joined ? '#a5b4fc' : 'var(--color-text)' }}>{club.label}</p>
+                          <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>{club.hint}</p>
+                        </div>
+                      </div>
+                      {joined ? (
+                        <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: 'rgba(99,102,241,0.2)', color: '#a5b4fc' }}>✓ Membro</span>
+                      ) : (
+                        <button
+                          onClick={() => { const r = joinClub(club.id); flash(r.message, r.success) }}
+                          style={{ fontSize: 11, padding: '5px 12px', borderRadius: 8, background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', fontWeight: 600 }}
+                        >
+                          Entra
+                        </button>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
       )}
     </div>

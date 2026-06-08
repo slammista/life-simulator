@@ -1,7 +1,17 @@
+import { useEffect, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 
 export function EventDisplay() {
   const { currentEvent, availableChoices, handleChoice } = useGameStore()
+  const [cinematic, setCinematic] = useState(false)
+
+  useEffect(() => {
+    if (currentEvent && (currentEvent.rarity === 'epic' || currentEvent.rarity === 'legendary')) {
+      setCinematic(true)
+      const t = setTimeout(() => setCinematic(false), 2200)
+      return () => clearTimeout(t)
+    }
+  }, [currentEvent?.id])
 
   if (!currentEvent) {
     return (
@@ -15,53 +25,113 @@ export function EventDisplay() {
   }
 
   const rarityConfig = {
-    common:    { label: 'COMUNE',     bg: 'rgba(255,255,255,0.06)',    color: '#9DA6BA' },
-    uncommon:  { label: 'NON COMUNE', bg: 'rgba(24,211,158,0.12)',     color: '#18D39E' },
-    rare:      { label: 'RARO',       bg: 'rgba(124,92,255,0.14)',     color: '#7C5CFF' },
-    epic:      { label: 'EPICO',      bg: 'rgba(236,72,153,0.14)',     color: '#ec4899' },
-    legendary: { label: 'LEGGENDARIO',bg: 'rgba(255,176,32,0.14)',     color: '#FFB020' },
+    common:    { label: 'COMUNE',      bg: 'rgba(255,255,255,0.06)',   color: '#9DA6BA', glow: 'none' },
+    uncommon:  { label: 'NON COMUNE',  bg: 'rgba(24,211,158,0.12)',    color: '#18D39E', glow: '0 0 20px rgba(24,211,158,0.2)' },
+    rare:      { label: 'RARO',        bg: 'rgba(124,92,255,0.14)',    color: '#7C5CFF', glow: '0 0 24px rgba(124,92,255,0.25)' },
+    epic:      { label: 'EPICO',       bg: 'rgba(236,72,153,0.14)',    color: '#ec4899', glow: '0 0 32px rgba(236,72,153,0.3)' },
+    legendary: { label: 'LEGGENDARIO', bg: 'rgba(255,176,32,0.14)',    color: '#FFB020', glow: '0 0 40px rgba(255,176,32,0.35)' },
   }
   const rarity = rarityConfig[currentEvent.rarity as keyof typeof rarityConfig] ?? rarityConfig.common
+  const isEpicPlus = currentEvent.rarity === 'epic' || currentEvent.rarity === 'legendary'
 
   return (
-    <div className="card fade-in-up" style={{ margin: '12px' }}>
-      {/* Event header */}
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
+    <>
+      {/* Cinematic entrance overlay for epic/legendary */}
+      {cinematic && isEpicPlus && (
         <div style={{
-          width: 52, height: 52, borderRadius: 'var(--radius-md)', flexShrink: 0,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'rgba(255,255,255,0.06)', border: '1px solid var(--border-soft)',
-          fontSize: 28,
+          position: 'fixed', inset: 0, zIndex: 9000,
+          display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+          background: currentEvent.rarity === 'legendary'
+            ? 'radial-gradient(ellipse at center, rgba(255,176,32,0.25) 0%, rgba(0,0,0,0.92) 70%)'
+            : 'radial-gradient(ellipse at center, rgba(236,72,153,0.2) 0%, rgba(0,0,0,0.92) 70%)',
+          animation: 'fadeInOut 2.2s ease',
+          pointerEvents: 'none',
         }}>
-          {currentEvent.emoji}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-            <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-text)', flex: 1 }}>
-              {currentEvent.title}
-            </p>
-            {currentEvent.rarity !== 'common' && (
-              <span style={{
-                fontSize: 9, fontWeight: 800, letterSpacing: 0.5,
-                padding: '2px 7px', borderRadius: 'var(--radius-pill)',
-                background: rarity.bg, color: rarity.color,
-                border: `1px solid ${rarity.color}33`, flexShrink: 0,
-              }}>
-                {rarity.label}
-              </span>
-            )}
+          <div style={{
+            fontSize: 72,
+            animation: 'popIn 0.4s cubic-bezier(0.34,1.56,0.64,1)',
+            filter: `drop-shadow(0 0 30px ${rarity.color})`,
+            marginBottom: 20,
+          }}>
+            {currentEvent.emoji}
           </div>
-          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
-            {currentEvent.description}
+          <div style={{
+            fontSize: 11, fontWeight: 800, letterSpacing: 3,
+            color: rarity.color, textTransform: 'uppercase',
+            padding: '5px 16px', borderRadius: 20,
+            background: rarity.bg, border: `1px solid ${rarity.color}44`,
+            marginBottom: 12,
+          }}>
+            ✦ {rarity.label} ✦
+          </div>
+          <p style={{
+            fontSize: 18, fontWeight: 700, color: '#fff',
+            textAlign: 'center', maxWidth: 280,
+            textShadow: `0 0 20px ${rarity.color}`,
+          }}>
+            {currentEvent.title}
           </p>
         </div>
-      </div>
+      )}
 
-      {/* Choices */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {availableChoices.map((choice, i) => {
-          const hasCost = choice.effects.money && choice.effects.money < 0
-          return (
+      <div
+        className="card fade-in-up"
+        style={{
+          margin: '12px',
+          boxShadow: isEpicPlus ? rarity.glow : undefined,
+          border: isEpicPlus ? `1px solid ${rarity.color}33` : undefined,
+          transition: 'box-shadow 0.3s',
+        }}
+      >
+        {/* Epic/legendary top accent bar */}
+        {isEpicPlus && (
+          <div style={{
+            height: 3, borderRadius: '8px 8px 0 0', marginBottom: 12,
+            background: currentEvent.rarity === 'legendary'
+              ? 'linear-gradient(90deg, #FFB020, #ff6b6b, #FFB020)'
+              : 'linear-gradient(90deg, #ec4899, #a855f7, #ec4899)',
+            backgroundSize: '200% 100%',
+            animation: 'shimmer 2s linear infinite',
+          }} />
+        )}
+
+        {/* Event header */}
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 'var(--radius-md)', flexShrink: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: isEpicPlus ? rarity.bg : 'rgba(255,255,255,0.06)',
+            border: `1px solid ${isEpicPlus ? rarity.color + '44' : 'var(--border-soft)'}`,
+            fontSize: 28,
+            boxShadow: isEpicPlus ? `0 0 16px ${rarity.color}33` : undefined,
+          }}>
+            {currentEvent.emoji}
+          </div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
+              <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-text)', flex: 1 }}>
+                {currentEvent.title}
+              </p>
+              {currentEvent.rarity !== 'common' && (
+                <span style={{
+                  fontSize: 9, fontWeight: 800, letterSpacing: 0.5,
+                  padding: '2px 7px', borderRadius: 'var(--radius-pill)',
+                  background: rarity.bg, color: rarity.color,
+                  border: `1px solid ${rarity.color}33`, flexShrink: 0,
+                }}>
+                  {rarity.label}
+                </span>
+              )}
+            </div>
+            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
+              {currentEvent.description}
+            </p>
+          </div>
+        </div>
+
+        {/* Choices */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {availableChoices.map((choice, i) => (
             <button
               key={choice.id}
               className="tap-scale"
@@ -79,10 +149,27 @@ export function EventDisplay() {
               <span style={{ flex: 1, lineHeight: 1.4 }}>{choice.text}</span>
               <EffectPreview effects={choice.effects} />
             </button>
-          )
-        })}
+          ))}
+        </div>
       </div>
-    </div>
+
+      <style>{`
+        @keyframes fadeInOut {
+          0%   { opacity: 0; }
+          15%  { opacity: 1; }
+          75%  { opacity: 1; }
+          100% { opacity: 0; }
+        }
+        @keyframes popIn {
+          0%   { transform: scale(0.4); opacity: 0; }
+          100% { transform: scale(1);   opacity: 1; }
+        }
+        @keyframes shimmer {
+          0%   { background-position: 200% 0; }
+          100% { background-position: -200% 0; }
+        }
+      `}</style>
+    </>
   )
 }
 
