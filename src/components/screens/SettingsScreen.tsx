@@ -210,7 +210,7 @@ function BackupPanel() {
 // ─── Main SettingsScreen ─────────────────────────────────────────
 
 export function SettingsScreen() {
-  const { settings, nation, identity, finance, time, adRewards, claimAdReward, cheatAddMoney, cheatSetMaxStats, cheatSetImmortal, cheatSkipToAge } =
+  const { settings, nation, identity, finance, time, adRewards, claimAdReward, cheatAddMoney, cheatSetMaxStats, cheatSetImmortal, cheatSkipToAge, unlockGodMode } =
     useGameStore(useShallow(s => ({
       settings: s.settings,
       nation: s.nation,
@@ -223,12 +223,15 @@ export function SettingsScreen() {
       cheatSetMaxStats: s.cheatSetMaxStats,
       cheatSetImmortal: s.cheatSetImmortal,
       cheatSkipToAge: s.cheatSkipToAge,
+      unlockGodMode: s.unlockGodMode,
     })))
 
   const [cheatMoneyAmt, setCheatMoneyAmt] = useState(10000)
   const [cheatAge, setCheatAge] = useState(time.age + 10)
   const [cheatMsg, setCheatMsg] = useState('')
   const [showCheatWarning, setShowCheatWarning] = useState(false)
+  const [showPurchaseModal, setShowPurchaseModal] = useState(false)
+  const [purchasing, setPurchasing] = useState(false)
 
   const runCheat = (fn: () => void, msg: string) => {
     fn()
@@ -308,87 +311,186 @@ export function SettingsScreen() {
         )}
       </div>
 
-      {/* Cheat system */}
-      <div className="card" style={{ marginBottom: 12 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-          <p style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600 }}>⚡ Cheat System</p>
-          <button onClick={() => setShowCheatWarning(!showCheatWarning)}
-            style={{ fontSize: 11, padding: '3px 10px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'rgba(245,158,11,0.2)', color: '#f59e0b' }}>
-            {showCheatWarning ? 'Nascondi' : 'Mostra'}
-          </button>
-        </div>
-
-        {showCheatWarning && (
-          <>
-            <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.1)', marginBottom: 12 }}>
-              <p style={{ fontSize: 11, color: '#ef4444' }}>
-                ⚠️ L'uso di cheat attiva la <strong>Modalità Dio</strong> e disabilita gli achievement.
-              </p>
-            </div>
-
-            {cheatMsg && (
-              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(99,102,241,0.15)', marginBottom: 12 }}>
-                <p style={{ fontSize: 12, color: '#818cf8' }}>{cheatMsg}</p>
-              </div>
-            )}
-
-            <div style={{ marginBottom: 10 }}>
-              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>Aggiungi denaro</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input type="number" min={1000} max={999999999} value={cheatMoneyAmt}
-                  onChange={e => setCheatMoneyAmt(Number(e.target.value))}
-                  style={{ flex: 1, padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--color-text)', fontSize: 13 }} />
-                <button onClick={() => runCheat(() => cheatAddMoney(cheatMoneyAmt), `💰 +€${cheatMoneyAmt.toLocaleString()} aggiunti!`)}
-                  style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#10b981', color: '#fff' }}>
-                  +€
-                </button>
-              </div>
-            </div>
-
-            <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-              {[10000, 100000, 1000000].map(amt => (
-                <button key={amt} onClick={() => runCheat(() => cheatAddMoney(amt), `💰 +€${amt.toLocaleString()} aggiunti!`)}
-                  style={{ padding: '4px 10px', borderRadius: 12, fontSize: 11, border: 'none', cursor: 'pointer', background: 'rgba(16,185,129,0.2)', color: '#10b981' }}>
-                  +€{amt.toLocaleString()}
-                </button>
+      {/* God Mode — paywall or unlocked cheat panel */}
+      {!settings.godModeUnlocked ? (
+        <div className="card" style={{ marginBottom: 12, background: 'linear-gradient(135deg, rgba(124,58,237,0.12) 0%, rgba(99,102,241,0.08) 100%)', border: '1px solid rgba(124,58,237,0.3)' }}>
+          <div style={{ textAlign: 'center', padding: '8px 0 4px' }}>
+            <div style={{ fontSize: 32, marginBottom: 6 }}>⚡</div>
+            <p style={{ fontSize: 15, fontWeight: 800, color: '#c4b5fd', marginBottom: 4 }}>God Mode</p>
+            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 12, lineHeight: 1.5 }}>
+              Modifica statistiche, aggiungi denaro illimitato, salta gli anni. Accesso permanente.
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {[
+                '💰 Aggiungi qualsiasi somma di denaro',
+                '⚡ Statistiche al massimo istantaneamente',
+                '⏩ Salta a qualsiasi età',
+                '♾️ Accesso permanente, una tantum',
+              ].map(feat => (
+                <div key={feat} style={{ display: 'flex', alignItems: 'center', gap: 8, textAlign: 'left' }}>
+                  <span style={{ fontSize: 11, color: '#a78bfa' }}>{feat}</span>
+                </div>
               ))}
             </div>
-
-            <button onClick={() => runCheat(cheatSetMaxStats, '⚡ Tutte le statistiche al massimo!')}
-              style={{ width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#6366f1', color: '#fff', marginBottom: 8 }}>
-              ⚡ Max Statistiche
+            <button
+              onClick={() => setShowPurchaseModal(true)}
+              style={{
+                marginTop: 14, width: '100%', padding: '12px 0',
+                borderRadius: 10, fontSize: 14, fontWeight: 700,
+                background: 'linear-gradient(135deg, #7c3aed, #6366f1)',
+                color: '#fff', border: 'none', cursor: 'pointer',
+                boxShadow: '0 4px 14px rgba(124,58,237,0.4)',
+              }}
+            >
+              🔓 Sblocca God Mode — €5.99
             </button>
-
-            <button onClick={() => runCheat(cheatSetImmortal, '☠️ Salute al 100%!')}
-              style={{ width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#7c3aed', color: '#fff', marginBottom: 8 }}>
-              ☠️ Ripristina Salute
+            <p style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 6 }}>
+              Pagamento unico · Nessun abbonamento
+            </p>
+          </div>
+        </div>
+      ) : (
+        <div className="card" style={{ marginBottom: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <p style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600 }}>⚡ God Mode — Attivo</p>
+            <button onClick={() => setShowCheatWarning(!showCheatWarning)}
+              style={{ fontSize: 11, padding: '3px 10px', borderRadius: 12, border: 'none', cursor: 'pointer', background: 'rgba(245,158,11,0.2)', color: '#f59e0b' }}>
+              {showCheatWarning ? 'Nascondi' : 'Mostra'}
             </button>
+          </div>
 
-            <div>
-              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>Salta all'età</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                <input type="number" min={time.age + 1} max={100} value={cheatAge}
-                  onChange={e => setCheatAge(Number(e.target.value))}
-                  style={{ flex: 1, padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--color-text)', fontSize: 13 }} />
-                <button onClick={() => {
-                  if (cheatAge > time.age) runCheat(() => cheatSkipToAge(cheatAge), `⏩ Saltato a ${cheatAge} anni!`)
-                }}
-                  style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#f59e0b', color: '#fff' }}>
-                  Salta
-                </button>
+          {showCheatWarning && (
+            <>
+              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.1)', marginBottom: 12 }}>
+                <p style={{ fontSize: 11, color: '#ef4444' }}>
+                  ⚠️ L'uso di cheat attiva la <strong>Modalità Dio</strong> e disabilita gli achievement.
+                </p>
               </div>
-              <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
-                {[18, 25, 40, 65].map(age => age > time.age && (
-                  <button key={age} onClick={() => runCheat(() => cheatSkipToAge(age), `⏩ Saltato a ${age} anni!`)}
-                    style={{ padding: '4px 10px', borderRadius: 12, fontSize: 11, border: 'none', cursor: 'pointer', background: 'rgba(245,158,11,0.2)', color: '#f59e0b' }}>
-                    {age} anni
+
+              {cheatMsg && (
+                <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(99,102,241,0.15)', marginBottom: 12 }}>
+                  <p style={{ fontSize: 12, color: '#818cf8' }}>{cheatMsg}</p>
+                </div>
+              )}
+
+              <div style={{ marginBottom: 10 }}>
+                <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>Aggiungi denaro</p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input type="number" min={1000} max={999999999} value={cheatMoneyAmt}
+                    onChange={e => setCheatMoneyAmt(Number(e.target.value))}
+                    style={{ flex: 1, padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--color-text)', fontSize: 13 }} />
+                  <button onClick={() => runCheat(() => cheatAddMoney(cheatMoneyAmt), `💰 +€${cheatMoneyAmt.toLocaleString()} aggiunti!`)}
+                    style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#10b981', color: '#fff' }}>
+                    +€
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
+                {[10000, 100000, 1000000].map(amt => (
+                  <button key={amt} onClick={() => runCheat(() => cheatAddMoney(amt), `💰 +€${amt.toLocaleString()} aggiunti!`)}
+                    style={{ padding: '4px 10px', borderRadius: 12, fontSize: 11, border: 'none', cursor: 'pointer', background: 'rgba(16,185,129,0.2)', color: '#10b981' }}>
+                    +€{amt.toLocaleString()}
                   </button>
                 ))}
               </div>
+
+              <button onClick={() => runCheat(cheatSetMaxStats, '⚡ Tutte le statistiche al massimo!')}
+                style={{ width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#6366f1', color: '#fff', marginBottom: 8 }}>
+                ⚡ Max Statistiche
+              </button>
+
+              <button onClick={() => runCheat(cheatSetImmortal, '☠️ Salute al 100%!')}
+                style={{ width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#7c3aed', color: '#fff', marginBottom: 8 }}>
+                ☠️ Ripristina Salute
+              </button>
+
+              <div>
+                <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 4 }}>Salta all'età</p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  <input type="number" min={time.age + 1} max={100} value={cheatAge}
+                    onChange={e => setCheatAge(Number(e.target.value))}
+                    style={{ flex: 1, padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--color-text)', fontSize: 13 }} />
+                  <button onClick={() => {
+                    if (cheatAge > time.age) runCheat(() => cheatSkipToAge(cheatAge), `⏩ Saltato a ${cheatAge} anni!`)
+                  }}
+                    style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#f59e0b', color: '#fff' }}>
+                    Salta
+                  </button>
+                </div>
+                <div style={{ display: 'flex', gap: 6, marginTop: 6, flexWrap: 'wrap' }}>
+                  {[18, 25, 40, 65].map(age => age > time.age && (
+                    <button key={age} onClick={() => runCheat(() => cheatSkipToAge(age), `⏩ Saltato a ${age} anni!`)}
+                      style={{ padding: '4px 10px', borderRadius: 12, fontSize: 11, border: 'none', cursor: 'pointer', background: 'rgba(245,158,11,0.2)', color: '#f59e0b' }}>
+                      {age} anni
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* God Mode purchase modal */}
+      {showPurchaseModal && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 9999,
+          background: 'rgba(0,0,0,0.7)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20,
+        }}>
+          <div style={{
+            background: 'var(--bg-card)', borderRadius: 16, padding: 24, width: '100%', maxWidth: 340,
+            border: '1px solid rgba(124,58,237,0.4)',
+            boxShadow: '0 8px 40px rgba(0,0,0,0.5)',
+          }}>
+            <div style={{ textAlign: 'center', marginBottom: 16 }}>
+              <div style={{ fontSize: 40, marginBottom: 8 }}>⚡</div>
+              <p style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-text)', marginBottom: 4 }}>
+                Sblocca God Mode
+              </p>
+              <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.5 }}>
+                Accesso permanente a tutti i cheat.<br />Pagamento unico.
+              </p>
             </div>
-          </>
-        )}
-      </div>
+
+            <div style={{ background: 'rgba(124,58,237,0.12)', borderRadius: 10, padding: '12px 16px', marginBottom: 16, textAlign: 'center' }}>
+              <p style={{ fontSize: 28, fontWeight: 900, color: '#c4b5fd' }}>€5.99</p>
+              <p style={{ fontSize: 11, color: 'var(--text-faint)' }}>IVA inclusa · Una tantum</p>
+            </div>
+
+            <button
+              onClick={async () => {
+                setPurchasing(true)
+                await new Promise(r => setTimeout(r, 1200))
+                unlockGodMode()
+                setPurchasing(false)
+                setShowPurchaseModal(false)
+              }}
+              disabled={purchasing}
+              style={{
+                width: '100%', padding: '13px 0', borderRadius: 10, fontSize: 15, fontWeight: 700,
+                background: purchasing ? 'rgba(124,58,237,0.4)' : 'linear-gradient(135deg, #7c3aed, #6366f1)',
+                color: '#fff', border: 'none', cursor: purchasing ? 'not-allowed' : 'pointer',
+                marginBottom: 10, boxShadow: '0 4px 14px rgba(124,58,237,0.4)',
+              }}
+            >
+              {purchasing ? '⏳ Elaborazione...' : '🔓 Acquista — €5.99'}
+            </button>
+
+            <button
+              onClick={() => setShowPurchaseModal(false)}
+              style={{
+                width: '100%', padding: '10px 0', borderRadius: 10, fontSize: 13,
+                background: 'rgba(255,255,255,0.06)', color: 'var(--color-text-secondary)',
+                border: '1px solid rgba(255,255,255,0.1)', cursor: 'pointer',
+              }}
+            >
+              Annulla
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Version info */}
       <div className="card">

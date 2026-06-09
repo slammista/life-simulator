@@ -145,13 +145,34 @@ function applyEffects(state: GameState, effects: Effect): Partial<GameState> {
   }
 }
 
+// Compute total weekly hours occupied by work + school + clubs
+function computeWeeklyHours(state: Pick<GameState, 'career' | 'education'>): number {
+  let hours = 0
+  const ct = state.career.currentJob?.contractType
+  if (ct === 'full_time') hours += 40
+  else if (ct === 'part_time') hours += 20
+  else if (ct === 'freelance') hours += 30
+  else if (ct === 'business_owner') hours += 50
+  if (state.education.currentLevel && state.education.currentLevel !== 'none') hours += 40
+  for (const club of state.education.clubs) {
+    const l = club.toLowerCase()
+    if (l.includes('sport') || l.includes('calcio') || l.includes('basket') || l.includes('nuoto') || l.includes('atletica')) hours += 8
+    else if (l.includes('musica') || l.includes('music') || l.includes('band') || l.includes('coro')) hours += 8
+    else if (l.includes('drama') || l.includes('teatro')) hours += 8
+    else hours += 4
+  }
+  return hours
+}
+
+export { computeWeeklyHours }
+
 function buildInitialState(): GameState {
   return {
     isStarted: false,
     isGameOver: false,
     deathType: null,
     gameOverYear: null,
-    settings: { mode: 'normal', ironMan: false, soundEnabled: true, notificationsEnabled: true, language: 'it', autoSave: true },
+    settings: { mode: 'normal', ironMan: false, soundEnabled: true, notificationsEnabled: true, language: 'it', autoSave: true, godModeUnlocked: false },
     time: { year: 2000, month: 1, age: 0 },
     identity: { name: 'Giocatore', surname: 'Demo', gender: 'male', nationality: 'italy', birthYear: 2000, familyBackground: 'middle', religion: 'catholicism', sexualOrientation: 'heterosexual', emoji: '🙂', avatar: getDefaultAvatar('male') },
     stats: { health: 80, mentalHealth: 80, happiness: 70, intelligence: 50, looks: 50, energy: 80, karma: 0, reputation: 50, socialReputation: 50 },
@@ -522,11 +543,18 @@ export const useGameStore = create<FullStore>()(
           ? (db.choices as unknown as Choice[]).filter(c => c.eventId === picked.id)
           : []
 
+        // Weekly hours overload stress
+        const weeklyHours = computeWeeklyHours(state)
+        if (weeklyHours > 60) {
+          const over = weeklyHours - 60
+          merge({ energy: -Math.round(over * 0.3), mentalHealth: -Math.round(over * 0.2), health: -1 })
+        }
+
         // Cap ordinary stat swings per annual tick (non-financial)
         const ANNUAL_STAT_KEYS = ['health', 'happiness', 'intelligence', 'looks', 'energy', 'mentalHealth', 'karma', 'reputation', 'socialReputation'] as const
         for (const key of ANNUAL_STAT_KEYS) {
           if (combined[key] !== undefined) {
-            combined[key] = Math.max(-10, Math.min(10, combined[key]))
+            combined[key] = Math.max(-3, Math.min(3, combined[key]))
           }
         }
 
@@ -2340,6 +2368,10 @@ export const useGameStore = create<FullStore>()(
           settings: { ...s.settings, mode: 'god' },
           eventLog: [{ id: uid(), year: state.time.year + yearsToSkip, age: targetAge, text: `⏩ [CHEAT] Saltato a ${targetAge} anni.`, emoji: '⏩', category: 'cheat', statChanges: {} }, ...s.eventLog].slice(0, 150),
         }))
+      },
+
+      unlockGodMode: () => {
+        set(s => ({ settings: { ...s.settings, godModeUnlocked: true } }))
       },
 
       // ==================== Cosmetic Surgery actions ====================

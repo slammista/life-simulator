@@ -1,7 +1,44 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { useGameStore } from '../../store/gameStore'
+import { useGameStore, computeWeeklyHours } from '../../store/gameStore'
 import { AvatarRenderer } from '../avatar/AvatarRenderer'
+
+function useWeeklyHoursData() {
+  const contractType = useGameStore(s => s.career.currentJob?.contractType ?? null)
+  const eduLevel = useGameStore(s => s.education.currentLevel)
+  const clubs = useGameStore(useShallow(s => s.education.clubs))
+  const hours = computeWeeklyHours({
+    career: { currentJob: contractType ? { contractType } as never : null } as never,
+    education: { currentLevel: eduLevel, clubs } as never,
+  })
+  return hours
+}
+
+function WeeklyHoursBar() {
+  const contractType = useGameStore(s => s.career.currentJob?.contractType ?? null)
+  const eduLevel = useGameStore(s => s.education.currentLevel)
+  const clubs = useGameStore(useShallow(s => s.education.clubs))
+  const hours = computeWeeklyHours({
+    career: { currentJob: contractType ? { contractType } as never : null } as never,
+    education: { currentLevel: eduLevel, clubs } as never,
+  })
+  if (hours === 0) return null
+  const pct = Math.min(100, (hours / 80) * 100)
+  const color = hours > 60 ? '#ef4444' : hours > 40 ? '#f59e0b' : '#10b981'
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+      <span style={{ fontSize: 9, color: 'var(--color-text-secondary)', flexShrink: 0, minWidth: 52 }}>
+        ⏰ {hours}/80h
+      </span>
+      <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
+        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 2, transition: 'width 0.4s ease' }} />
+      </div>
+      {hours > 60 && (
+        <span style={{ fontSize: 9, color: '#ef4444', fontWeight: 700, flexShrink: 0 }}>⚠️ stress</span>
+      )}
+    </div>
+  )
+}
 
 function useHUDData() {
   const stats = useGameStore(useShallow(s => s.stats))
@@ -244,6 +281,9 @@ export const HUD = memo(function HUD() {
           )}
         </div>
       </div>
+
+      {/* Weekly hours bar */}
+      <WeeklyHoursBar />
 
       {/* Stat bars with delta overlays */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${statList.length}, 1fr)`, gap: 6 }}>

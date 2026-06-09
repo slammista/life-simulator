@@ -148,7 +148,12 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 - Pulsante "Sblocca God Mode — €5.99"
 - Dopo acquisto: accesso permanente a tutte le opzioni god mode
 
-**Stato**: ⏳ Da fare
+**Stato**: ✅ Fatto — `godModeUnlocked` flag in `GameSettings`; paywall card in SettingsScreen con modal acquisto; `unlockGodMode()` action; cheat panel mostrato solo dopo acquisto
+
+---
+
+## Feature: Sistema ore/effort settimanale
+**Stato**: ✅ Fatto — `computeWeeklyHours()` utility calcola ore da lavoro + scuola + club; se >60h/settimana, tick annuale applica penalità energia/mentalHealth/salute; barra visiva `WeeklyHoursBar` in HUD (verde→giallo→rosso con warning ⚠️ stress a >60h)
 
 ---
 
@@ -156,16 +161,16 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 
 | Feature | Priorità | Stato |
 |---|---|---|
-| Fix stat cap overflow | Critica | ✅ |
+| Fix stat cap overflow ±3 | Critica | ✅ |
 | Fix barra studio 3/4 | Alta | ✅ |
 | Diminishing returns hard block | Alta | ✅ |
 | Event pop-up modal | Alta | ✅ |
 | NPCs scuola 20+6 | Alta | ✅ |
 | NPCs lavoro 10+5+1 | Alta | ✅ |
-| Sistema ore/effort settimanale | Media | ⏳ |
+| Sistema ore/effort settimanale | Media | ✅ |
 | Psicologo preventivo | Media | ✅ |
 | Social media esteso (7 piattaforme) | Media | ✅ |
 | Attributi NPC estesi (politics, religion, craziness, fertility, willpower, smarts) | Media | ✅ |
-| God Mode €5.99 | Bassa | ⏳ |
+| God Mode €5.99 | Bassa | ✅ |
 
-**Progresso sessione attuale: 82% — 9/11 feature completate, 2 rimaste (ore/settimana, God Mode)**
+**Progresso sessione attuale: 100% — tutte le 11 feature completate ✅**

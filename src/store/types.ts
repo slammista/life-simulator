@@ -974,6 +974,7 @@ export interface GameSettings {
   notificationsEnabled: boolean
   language: string
   autoSave: boolean
+  godModeUnlocked: boolean
 }
 
 // ---- Event Log ----
@@ -1305,6 +1306,7 @@ export interface GameActions {
   cheatSetMaxStats: () => void
   cheatSetImmortal: () => void
   cheatSkipToAge: (targetAge: number) => void
+  unlockGodMode: () => void
 
   // Pet battle actions
   petBattle: (petId: string) => ActionResult
