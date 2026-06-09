@@ -142,9 +142,15 @@ export function HealthScreen() {
           </div>
           <div style={{ flex: 1 }}>
             <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text)', marginBottom: 2 }}>Terapia</p>
-            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
-              Elabora traumi e costruisci resilienza nel tempo.
-            </p>
+            {health.mentalDisorders.length === 0 && (health.traumas ?? []).filter(t => !t.resolved).length === 0 ? (
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+                💡 Terapia preventiva — nessun disturbo attivo, ma la terapia migliora resilienza e benessere.
+              </p>
+            ) : (
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', lineHeight: 1.4 }}>
+                Elabora traumi e costruisci resilienza nel tempo. La terapia preventiva aumenta la resilienza e protegge la salute mentale.
+              </p>
+            )}
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: '#c4b5fd' }}>+Mente</p>

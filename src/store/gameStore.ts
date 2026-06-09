@@ -327,8 +327,8 @@ export const useGameStore = create<FullStore>()(
         const decayMult = ironManMultiplier * hardModeMultiplier
         // Energy: -2/year natural decay (was -5 — too aggressive).
         // Happiness penalty scales with poverty level and living situation.
-        const happinessPenalty = state.finance.money < 200 ? -6
-          : state.finance.money < 500 ? -3
+        const happinessPenalty = state.finance.money < 200 ? -3
+          : state.finance.money < 500 ? -2
           : state.living.type === 'homeless' ? -5
           : 0
         merge({
@@ -522,6 +522,14 @@ export const useGameStore = create<FullStore>()(
           ? (db.choices as unknown as Choice[]).filter(c => c.eventId === picked.id)
           : []
 
+        // Cap ordinary stat swings per annual tick (non-financial)
+        const ANNUAL_STAT_KEYS = ['health', 'happiness', 'intelligence', 'looks', 'energy', 'mentalHealth', 'karma', 'reputation', 'socialReputation'] as const
+        for (const key of ANNUAL_STAT_KEYS) {
+          if (combined[key] !== undefined) {
+            combined[key] = Math.max(-10, Math.min(10, combined[key]))
+          }
+        }
+
         // Apply all effects
         const partial = applyEffects(state, combined)
 
@@ -597,10 +605,11 @@ export const useGameStore = create<FullStore>()(
             if (newAge >= s.minAge && newAge <= s.maxAge &&
                 !eduUpdate.completedLevels.includes(s.level) &&
                 (s.prereq === null || eduUpdate.completedLevels.includes(s.prereq as import('./types').EducationLevel))) {
-              const autoClassmates = WorkSchoolEngine.generateClassmates(s.level, newAge, 4)
+              const autoClassmates = WorkSchoolEngine.generateClassmates(s.level, newAge)
               eduUpdate = {
                 ...eduUpdate,
                 currentLevel: s.level,
+                gpa: 3.0,
                 classmates: autoClassmates,
                 schoolReputation: 'invisibile',
               }
@@ -815,7 +824,7 @@ export const useGameStore = create<FullStore>()(
         if (result.success && result.newJob) {
           const oldJob = state.career.currentJob
           const newJobDef = getAllJobs().find(j => j.id === jobId)
-          const newColleagues = WorkSchoolEngine.generateColleagues(jobId, newJobDef?.category ?? 'default', 3)
+          const newColleagues = WorkSchoolEngine.generateColleagues(jobId, newJobDef?.category ?? 'default')
           const jobMemory = makeMemory(state.time, `Nuovo lavoro: ${result.newJob.title}`, `Hai iniziato a lavorare come ${result.newJob.title} in ${result.newJob.company}.`, '💼', 'work', [], true)
           set(s => ({
             ...partial,
@@ -1154,13 +1163,14 @@ export const useGameStore = create<FullStore>()(
         const result = EducationEngine.startEducation(level, state)
         if (!result.success) return { success: false, message: result.message, effects: {} }
 
-        const newClassmates = WorkSchoolEngine.generateClassmates(result.newLevel ?? level, state.time.age, 4)
+        const newClassmates = WorkSchoolEngine.generateClassmates(result.newLevel ?? level, state.time.age)
         const partial = applyEffects(state, result.effects)
         set(s => ({
           ...partial,
           education: {
             ...s.education,
             currentLevel: result.newLevel ?? s.education.currentLevel,
+            gpa: 3.0,
             classmates: newClassmates,
             schoolReputation: 'invisibile',
           },
@@ -1171,9 +1181,13 @@ export const useGameStore = create<FullStore>()(
 
       studyAction: (): ActionResult => {
         const state = get()
+        const key = `study_${state.time.year}`
+        const attempts = state.diminishingReturns[key] ?? 0
+        if (attempts >= 3) {
+          return { success: false, message: 'Hai già studiato molto quest\'anno. Riprova l\'anno prossimo!', effects: {} }
+        }
         const result = EducationEngine.study(state)
         const partial = applyEffects(state, result.effects)
-        const key = `study_${state.time.year}`
 
         set(s => ({
           ...partial,
@@ -1223,9 +1237,13 @@ export const useGameStore = create<FullStore>()(
 
       exercise: (): ActionResult => {
         const state = get()
+        const key = `exercise_${state.time.year}`
+        const attempts = state.diminishingReturns[key] ?? 0
+        if (attempts >= 3) {
+          return { success: false, message: 'Hai già fatto abbastanza esercizio quest\'anno. Riprova l\'anno prossimo!', effects: {} }
+        }
         const result = HealthEngine.exercise(state)
         const partial = applyEffects(state, result.effects)
-        const key = `exercise_${state.time.year}`
         const fitnessGain = result.success ? 8 : 0
 
         set(s => ({

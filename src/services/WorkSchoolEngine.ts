@@ -12,6 +12,10 @@ import type {
   Effect,
   Relationship,
   PlayerSkills,
+  NPCExtendedAttributes,
+  SexualOrientation,
+  PoliticalOrientation,
+  Religion,
 } from '../store/types'
 
 // ---- name pools ----
@@ -101,6 +105,24 @@ function traitBonus(traits: NPCPersonalityTrait[], action: string): number {
   return 0
 }
 
+// ---- Extended attributes helper ----
+
+const SEXUALITIES: SexualOrientation[] = ['heterosexual', 'homosexual', 'bisexual', 'pansexual', 'asexual']
+const POLITICS: PoliticalOrientation[] = ['sinistra', 'centro-sinistra', 'centro', 'centro-destra', 'destra', 'apolitico']
+const RELIGIONS: Religion[] = ['catholicism', 'islam', 'buddhism', 'hinduism', 'judaism', 'protestantism', 'orthodoxy', 'atheism', 'agnosticism', 'other']
+
+function randomExtendedAttributes(): NPCExtendedAttributes {
+  return {
+    craziness:  Math.floor(Math.random() * 101),
+    fertility:  Math.floor(Math.random() * 101),
+    willpower:  Math.floor(Math.random() * 101),
+    smarts:     Math.floor(Math.random() * 101),
+    sexuality:  SEXUALITIES[Math.floor(Math.random() * SEXUALITIES.length)],
+    politics:   POLITICS[Math.floor(Math.random() * POLITICS.length)],
+    religion:   RELIGIONS[Math.floor(Math.random() * RELIGIONS.length)],
+  }
+}
+
 // Convert WorkNPC/SchoolNPC to a full Relationship when promoted
 function buildPromoRel(name: string, age: number, gender: Gender, emoji: string, traits: NPCPersonalityTrait[], mood: NPCMood, year: number): Relationship {
   return {
@@ -147,10 +169,14 @@ const WORK_ROLES_BY_CATEGORY: Record<string, string[]> = {
   default:    ['Collega', 'Responsabile', 'Assistente', 'Coordinatore'],
 }
 
+const SUPERIOR_ROLES = ['Responsabile', 'Manager', 'Direttore', 'Team Lead', 'Supervisore']
+
 export class WorkSchoolEngine {
-  static generateColleagues(jobId: string, category: string, count = 3): WorkNPC[] {
+  static generateColleagues(jobId: string, category: string): WorkNPC[] {
     const roles = WORK_ROLES_BY_CATEGORY[category] ?? WORK_ROLES_BY_CATEGORY.default
-    return Array.from({ length: count }, () => {
+
+    // 10 standard colleagues
+    const colleagues: WorkNPC[] = Array.from({ length: 10 }, () => {
       const gender = randomGender()
       const traits = randomTraits()
       const mood = randomMood(traits)
@@ -162,14 +188,62 @@ export class WorkSchoolEngine {
         gender,
         emoji: GENDER_EMOJIS[gender][age > 50 ? 3 : age > 30 ? 2 : 1],
         role: roles[Math.floor(Math.random() * roles.length)],
+        level: 'colleague' as const,
         personalityTraits: traits,
         mood,
         affection: 20 + Math.floor(Math.random() * 20),
         status: 'neutral' as const,
         promotedToRelId: null,
         jobId,
+        extendedAttributes: randomExtendedAttributes(),
       }
     })
+
+    // 5 superiors
+    const superiors: WorkNPC[] = Array.from({ length: 5 }, () => {
+      const gender = randomGender()
+      const traits = randomTraits()
+      const mood = randomMood(traits)
+      const age = 30 + Math.floor(Math.random() * 20)
+      return {
+        id: uid(),
+        name: randomName(gender),
+        age,
+        gender,
+        emoji: GENDER_EMOJIS[gender][age > 50 ? 3 : 2],
+        role: SUPERIOR_ROLES[Math.floor(Math.random() * SUPERIOR_ROLES.length)],
+        level: 'superior' as const,
+        personalityTraits: traits,
+        mood,
+        affection: 15 + Math.floor(Math.random() * 20),
+        status: 'neutral' as const,
+        promotedToRelId: null,
+        jobId,
+        extendedAttributes: randomExtendedAttributes(),
+      }
+    })
+
+    // 1 CEO
+    const ceoGender = randomGender()
+    const ceoAge = 40 + Math.floor(Math.random() * 26)
+    const ceo: WorkNPC = {
+      id: uid(),
+      name: randomName(ceoGender),
+      age: ceoAge,
+      gender: ceoGender,
+      emoji: ceoGender === 'male' ? '👔' : '👩‍💼',
+      role: 'CEO',
+      level: 'ceo' as const,
+      personalityTraits: randomTraits(),
+      mood: 'motivato',
+      affection: 10 + Math.floor(Math.random() * 15),
+      status: 'neutral' as const,
+      promotedToRelId: null,
+      jobId,
+      extendedAttributes: randomExtendedAttributes(),
+    }
+
+    return [...colleagues, ...superiors, ceo]
   }
 
   static workInteract(colleague: WorkNPC, action: WorkAction, playerLooks: number, year: number, workReputation: WorkReputationStatus = 'nuovo', playerSkillBonus = 0): WorkInteractResult {
@@ -283,33 +357,55 @@ export class WorkSchoolEngine {
 
   // ---- School Engine ----
 
-  static generateClassmates(level: EducationLevel, playerAge: number, count = 4): SchoolNPC[] {
-    const isUniversity = ['bachelor', 'master', 'phd', 'mba', 'medical', 'law'].includes(level)
-    const isProfessor = (i: number) => i >= count - 1 // last NPC is a professor
-    return Array.from({ length: count + 1 }, (_, i) => {
-      const isProf = isProfessor(i)
+  static generateClassmates(level: EducationLevel, playerAge: number): SchoolNPC[] {
+    // 20 students
+    const students: SchoolNPC[] = Array.from({ length: 20 }, () => {
       const gender = randomGender()
       const traits = randomTraits()
       const mood = randomMood(traits)
-      const age = isProf
-        ? 35 + Math.floor(Math.random() * 25)
-        : playerAge + Math.floor(Math.random() * 3) - 1
+      const age = Math.max(6, playerAge + Math.floor(Math.random() * 3) - 1)
       return {
         id: uid(),
         name: randomName(gender),
-        age: Math.max(6, age),
+        age,
         gender,
-        emoji: GENDER_EMOJIS[gender][isProf ? 2 : 1],
-        role: (isProf ? 'professor' : 'student') as SchoolNPC['role'],
-        subject: isProf ? SCHOOL_SUBJECTS[Math.floor(Math.random() * SCHOOL_SUBJECTS.length)] : undefined,
+        emoji: GENDER_EMOJIS[gender][1],
+        role: 'student' as SchoolNPC['role'],
         personalityTraits: traits,
         mood,
         affection: 15 + Math.floor(Math.random() * 20),
         status: 'neutral' as const,
         promotedToRelId: null,
         educationLevel: level,
+        extendedAttributes: randomExtendedAttributes(),
       }
     })
+
+    // 6 professors
+    const professors: SchoolNPC[] = Array.from({ length: 6 }, () => {
+      const gender = randomGender()
+      const traits = randomTraits()
+      const mood = randomMood(traits)
+      const age = 35 + Math.floor(Math.random() * 25)
+      return {
+        id: uid(),
+        name: randomName(gender),
+        age,
+        gender,
+        emoji: GENDER_EMOJIS[gender][2],
+        role: 'professor' as SchoolNPC['role'],
+        subject: SCHOOL_SUBJECTS[Math.floor(Math.random() * SCHOOL_SUBJECTS.length)],
+        personalityTraits: traits,
+        mood,
+        affection: 15 + Math.floor(Math.random() * 20),
+        status: 'neutral' as const,
+        promotedToRelId: null,
+        educationLevel: level,
+        extendedAttributes: randomExtendedAttributes(),
+      }
+    })
+
+    return [...students, ...professors]
   }
 
   static schoolInteract(npc: SchoolNPC, action: SchoolAction, playerIntelligence: number, year: number, schoolReputation: SchoolReputationStatus = 'invisibile', playerSkillBonus = 0): SchoolInteractResult {

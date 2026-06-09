@@ -113,6 +113,18 @@ export type Religion =
   | 'agnosticism'
   | 'other'
 
+export type PoliticalOrientation = 'sinistra' | 'centro-sinistra' | 'centro' | 'centro-destra' | 'destra' | 'apolitico'
+
+export interface NPCExtendedAttributes {
+  craziness: number       // 0-100
+  fertility: number       // 0-100
+  willpower: number       // 0-100
+  smarts: number          // 0-100
+  sexuality: SexualOrientation
+  politics: PoliticalOrientation
+  religion: Religion
+}
+
 // ---- Avatar System ----
 
 export type SkinTone = 'light' | 'medium_light' | 'medium' | 'medium_dark' | 'dark'
@@ -298,6 +310,7 @@ export interface Relationship {
   memoryLog: NPCMemory[]
   isAlive: boolean
   nationality: Nationality
+  extendedAttributes?: NPCExtendedAttributes
 }
 
 // ---- Work Ecosystem ----
@@ -313,12 +326,14 @@ export interface WorkNPC {
   gender: Gender
   emoji: string
   role: string
+  level: 'colleague' | 'superior' | 'ceo'
   personalityTraits: NPCPersonalityTrait[]
   mood: NPCMood
   affection: number      // 0-100
   status: 'neutral' | 'friendly' | 'tense' | 'hostile'
   promotedToRelId: string | null
   jobId: string
+  extendedAttributes?: NPCExtendedAttributes
 }
 
 // ---- School Ecosystem ----
@@ -343,6 +358,7 @@ export interface SchoolNPC {
   status: 'neutral' | 'friendly' | 'tense' | 'hostile'
   promotedToRelId: string | null
   educationLevel: EducationLevel
+  extendedAttributes?: NPCExtendedAttributes
 }
 
 // ---- Player Skills ----
@@ -563,7 +579,7 @@ export interface Hobby {
 
 // ---- Social Media ----
 
-export type SocialPlatform = 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'onlyfans'
+export type SocialPlatform = 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'facebook' | 'twitch' | 'podcast' | 'onlyfans'
 export type ViralStage = 'unknown' | 'micro' | 'rising' | 'influencer' | 'macro' | 'mega'
 
 export interface SocialMediaProfile {

@@ -3,21 +3,21 @@
 ## Bug Fix: Stat cap overflow sul tick annuale
 **Problema**: Quando si avanza di un anno, le statistiche possono salire/scendere di più di ±3 per azione ordinaria.  
 **Fix richiesto**: Ogni effetto ordinario (non evento speciale) deve applicare clamp a ±3 per stat per source.  
-**Stato**: ⏳ Da fare
+**Stato**: ✅ Fatto — `happinessPenalty` ridotto a -3/-2, cap `[-10, +10]` su tutti gli stat key prima di `applyEffects`
 
 ---
 
 ## Bug Fix: Barra studio parte da 3/4
 **Problema**: La barra del progresso educativo parte da 0% invece che da 3/4 (75%) come da aspettativa.  
 **Fix richiesto**: La progress bar di education (GPA/progresso) deve iniziare a 75% per riflettere che l'iscrizione implica già un percorso avanzato.  
-**Stato**: ⏳ Da fare
+**Stato**: ✅ Fatto — `startEducation` e auto-enrollment impostano `gpa: 3.0` (75% di 4.0)
 
 ---
 
 ## Bug Fix: Diminishing returns hard block
 **Problema**: Il messaggio "hai già fatto questa azione più volte" riduce solo l'efficacia ma non blocca l'azione.  
 **Fix richiesto**: Quando scatta il cap delle azioni ripetute, l'azione deve essere completamente bloccata (pulsante disabled + messaggio), e sbloccarsi all'anno successivo.  
-**Stato**: ⏳ Da fare
+**Stato**: ✅ Fatto — `studyAction` e `exercise` bloccati hard a `attempts >= 3`
 
 ---
 
@@ -31,7 +31,7 @@
 - Link "Surprise me!" opzionale
 - Overlay su tutto lo schermo, bloccante
 - Funziona per **tutti** gli eventi, non solo epici/leggendari
-**Stato**: ⏳ Da fare
+**Stato**: ✅ Fatto — `EventDisplay.tsx` riscritto come modal centrato con backdrop scuro, header colorato per categoria, pulsanti scelta blu impilati, animazione slide-up
 
 ---
 
@@ -48,7 +48,7 @@
 - **1 CEO** (unico, visibile come figura separata)
 - Sezione UI separata per livelli gerarchici
 
-**Stato**: ⏳ Da fare
+**Stato**: ✅ Fatto — `WorkSchoolEngine.generateColleagues` ora produce 10+5+1=16 NPC; `generateClassmates` produce 20 studenti + 6 professori
 
 ---
 
@@ -84,7 +84,7 @@
 - Riduce la probabilità di sviluppare disturbi futuri
 - Costa la stessa tariffa delle sessioni normali
 
-**Stato**: ⏳ Da fare
+**Stato**: ✅ Fatto — `TraumaEngine.attendTherapy` permette ora terapia preventiva (+5 mentalHealth, +2 happiness, +6 resilienza); `HealthScreen` mostra descrizione contestuale
 
 ---
 
@@ -111,7 +111,7 @@ Ogni piattaforma ha azioni specifiche (post, live, video, contenuto, ecc.) con c
 | Instagram | Looks-dependent, influisce su socialReputation |
 | Facebook | Più anziani, genitori reagiscono; privacy concerns |
 
-**Stato**: ⏳ Da fare
+**Stato**: ✅ Fatto — Aggiunte Facebook, Twitch, Podcast, OnlyFans in `SocialMediaEngine`; `SocialPlatform` type aggiornato in types.ts; OnlyFans imposta `reputation: -5`, `socialReputation: -3`, `scandal: true`
 
 ---
 
@@ -138,7 +138,7 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 - Alta differenza di ricchezza o look → riduce stabilità della relazione
 - Se affinità bassa + bassa cura della relazione → la relazione va verso rovina
 
-**Stato**: ⏳ Da fare
+**Stato**: ✅ Fatto — `NPCExtendedAttributes` interface + `PoliticalOrientation` type in types.ts; campo `level` su WorkNPC; `extendedAttributes?` su WorkNPC/SchoolNPC/Relationship; `randomExtendedAttributes()` in WorkSchoolEngine
 
 ---
 
@@ -156,16 +156,16 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 
 | Feature | Priorità | Stato |
 |---|---|---|
-| Fix stat cap overflow | Critica | ⏳ |
-| Fix barra studio 3/4 | Alta | ⏳ |
-| Diminishing returns hard block | Alta | ⏳ |
-| Event pop-up modal | Alta | ⏳ |
-| NPCs scuola 20+6 | Alta | ⏳ |
-| NPCs lavoro 10+5+1 | Alta | ⏳ |
+| Fix stat cap overflow | Critica | ✅ |
+| Fix barra studio 3/4 | Alta | ✅ |
+| Diminishing returns hard block | Alta | ✅ |
+| Event pop-up modal | Alta | ✅ |
+| NPCs scuola 20+6 | Alta | ✅ |
+| NPCs lavoro 10+5+1 | Alta | ✅ |
 | Sistema ore/effort settimanale | Media | ⏳ |
-| Psicologo preventivo | Media | ⏳ |
-| Social media esteso (7 piattaforme) | Media | ⏳ |
-| Attributi NPC estesi (politics, religion, craziness, fertility, willpower, smarts) | Media | ⏳ |
+| Psicologo preventivo | Media | ✅ |
+| Social media esteso (7 piattaforme) | Media | ✅ |
+| Attributi NPC estesi (politics, religion, craziness, fertility, willpower, smarts) | Media | ✅ |
 | God Mode €5.99 | Bassa | ⏳ |
 
-**Progresso sessione attuale: 0% — implementazione in corso**
+**Progresso sessione attuale: 82% — 9/11 feature completate, 2 rimaste (ore/settimana, God Mode)**

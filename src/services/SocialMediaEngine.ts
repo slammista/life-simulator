@@ -1,6 +1,6 @@
 import type { GameState, SocialMediaProfile, Effect } from '../store/types'
 
-export type SocialPlatform = 'instagram' | 'tiktok' | 'youtube' | 'twitter'
+export type SocialPlatform = 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'facebook' | 'twitch' | 'podcast' | 'onlyfans'
 export type PostType = 'photo' | 'video' | 'educational' | 'comedy' | 'controversial' | 'trending'
 
 interface PlatformDef {
@@ -9,10 +9,14 @@ interface PlatformDef {
 }
 
 const PLATFORMS: PlatformDef[] = [
-  { id: 'instagram', name: 'Instagram', emoji: '📸', minAge: 13, viralMultiplier: 1.2, adsensePer1k: 2, baseGrowth: 30 },
-  { id: 'tiktok',    name: 'TikTok',    emoji: '🎵', minAge: 13, viralMultiplier: 2.0, adsensePer1k: 1.5, baseGrowth: 80 },
-  { id: 'youtube',   name: 'YouTube',   emoji: '▶️', minAge: 13, viralMultiplier: 0.8, adsensePer1k: 5, baseGrowth: 15 },
-  { id: 'twitter',   name: 'Twitter/X', emoji: '🐦', minAge: 13, viralMultiplier: 1.5, adsensePer1k: 0.5, baseGrowth: 20 },
+  { id: 'instagram', name: 'Instagram', emoji: '📸', minAge: 13, viralMultiplier: 1.2, adsensePer1k: 2,    baseGrowth: 30 },
+  { id: 'tiktok',    name: 'TikTok',    emoji: '🎵', minAge: 13, viralMultiplier: 2.0, adsensePer1k: 1.5,  baseGrowth: 80 },
+  { id: 'youtube',   name: 'YouTube',   emoji: '▶️', minAge: 13, viralMultiplier: 0.8, adsensePer1k: 5,    baseGrowth: 15 },
+  { id: 'twitter',   name: 'Twitter/X', emoji: '🐦', minAge: 13, viralMultiplier: 1.5, adsensePer1k: 0.5,  baseGrowth: 20 },
+  { id: 'facebook',  name: 'Facebook',  emoji: '📘', minAge: 13, viralMultiplier: 0.6, adsensePer1k: 1.0,  baseGrowth: 10 },
+  { id: 'twitch',    name: 'Twitch',    emoji: '🟣', minAge: 16, viralMultiplier: 1.8, adsensePer1k: 3.5,  baseGrowth: 20 },
+  { id: 'podcast',   name: 'Podcast',   emoji: '🎙️', minAge: 16, viralMultiplier: 0.5, adsensePer1k: 8.0,  baseGrowth: 5  },
+  { id: 'onlyfans',  name: 'OnlyFans',  emoji: '🔞', minAge: 18, viralMultiplier: 3.0, adsensePer1k: 50.0, baseGrowth: 40 },
 ]
 
 const POST_MULTIPLIERS: Record<PostType, number> = {
@@ -89,14 +93,22 @@ export class SocialMediaEngine {
     }
     if (monthlyIncome > 0) effects.money = Math.floor(monthlyIncome / 12)
 
+    // OnlyFans special consequences
+    const isOnlyFans = platform === 'onlyfans'
+    if (isOnlyFans) {
+      effects.reputation = -5
+      effects.socialReputation = (effects.socialReputation ?? 0) - 3
+    }
+
+    const onlyFansNote = isOnlyFans ? ' ⚠️ Questo influenza le tue relazioni e reputazione.' : ''
     const message = cancelRisk
       ? `😡 Il tuo post controverso è stato cancellato! Perdi ${followerLoss} follower.`
       : isViral
-        ? `🚀 Post VIRALE su ${def.emoji} ${def.name}! Guadagni ${totalGain.toLocaleString()} follower!`
-        : `${def.emoji} Post pubblicato su ${def.name}. +${totalGain} follower.`
+        ? `🚀 Post VIRALE su ${def.emoji} ${def.name}! Guadagni ${totalGain.toLocaleString()} follower!${onlyFansNote}`
+        : `${def.emoji} Post pubblicato su ${def.name}. +${totalGain} follower.${onlyFansNote}`
 
     return {
-      success: true, message, effects, viralEvent: isViral, followerGain: totalGain, scandal: cancelRisk,
+      success: true, message, effects, viralEvent: isViral, followerGain: totalGain, scandal: cancelRisk || isOnlyFans,
       updatedProfile: {
         followers: Math.max(0, newFollowers - followerLoss),
         viralScore: newViralScore,

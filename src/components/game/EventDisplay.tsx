@@ -1,8 +1,51 @@
-import { useEffect, useState } from 'react'
+import { memo, useEffect, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 
-export function EventDisplay() {
-  const { currentEvent, availableChoices, handleChoice } = useGameStore()
+// Category → header color mapping (BitLife-style)
+const CATEGORY_COLORS: Record<string, string> = {
+  career:      '#f59e0b',
+  lavoro:      '#f59e0b',
+  health:      '#22c55e',
+  salute:      '#22c55e',
+  criminal:    '#ef4444',
+  crimine:     '#ef4444',
+  social:      '#f472b6',
+  education:   '#60a5fa',
+  istruzione:  '#60a5fa',
+  finance:     '#10b981',
+  finanze:     '#10b981',
+  life:        '#a78bfa',
+  vita:        '#a78bfa',
+}
+
+function getCategoryColor(category?: string): string {
+  if (!category) return '#6366f1'
+  return CATEGORY_COLORS[category.toLowerCase()] ?? '#6366f1'
+}
+
+function getCategoryLabel(category?: string): string {
+  if (!category) return 'EVENTO'
+  const labels: Record<string, string> = {
+    career: 'CARRIERA', lavoro: 'CARRIERA',
+    health: 'SALUTE', salute: 'SALUTE',
+    criminal: 'CRIMINE', crimine: 'CRIMINE',
+    social: 'SOCIALE',
+    education: 'ISTRUZIONE', istruzione: 'ISTRUZIONE',
+    finance: 'FINANZE', finanze: 'FINANZE',
+    life: 'VITA', vita: 'VITA',
+  }
+  return labels[category.toLowerCase()] ?? category.toUpperCase()
+}
+
+const rarityGlow: Record<string, string> = {
+  epic:      '0 0 0 2px #ec489944, 0 0 32px rgba(236,72,153,0.35)',
+  legendary: '0 0 0 2px #FFB02044, 0 0 40px rgba(255,176,32,0.4)',
+}
+
+export const EventDisplay = memo(function EventDisplay() {
+  const currentEvent = useGameStore(s => s.currentEvent)
+  const availableChoices = useGameStore(s => s.availableChoices)
+  const handleChoice = useGameStore(s => s.handleChoice)
   const [cinematic, setCinematic] = useState(false)
 
   useEffect(() => {
@@ -24,15 +67,22 @@ export function EventDisplay() {
     )
   }
 
+  const isEpicPlus = currentEvent.rarity === 'epic' || currentEvent.rarity === 'legendary'
+
+  // Determine category from packId or other field
+  const category = (currentEvent as unknown as { category?: string }).category
+  const headerColor = getCategoryColor(category)
+  const categoryLabel = getCategoryLabel(category)
+  const npcName = (currentEvent as unknown as { npcName?: string }).npcName
+
   const rarityConfig = {
-    common:    { label: 'COMUNE',      bg: 'rgba(255,255,255,0.06)',   color: '#9DA6BA', glow: 'none' },
-    uncommon:  { label: 'NON COMUNE',  bg: 'rgba(24,211,158,0.12)',    color: '#18D39E', glow: '0 0 20px rgba(24,211,158,0.2)' },
-    rare:      { label: 'RARO',        bg: 'rgba(124,92,255,0.14)',    color: '#7C5CFF', glow: '0 0 24px rgba(124,92,255,0.25)' },
-    epic:      { label: 'EPICO',       bg: 'rgba(236,72,153,0.14)',    color: '#ec4899', glow: '0 0 32px rgba(236,72,153,0.3)' },
-    legendary: { label: 'LEGGENDARIO', bg: 'rgba(255,176,32,0.14)',    color: '#FFB020', glow: '0 0 40px rgba(255,176,32,0.35)' },
+    common:    { label: 'COMUNE',      bg: 'rgba(255,255,255,0.06)',   color: '#9DA6BA' },
+    uncommon:  { label: 'NON COMUNE',  bg: 'rgba(24,211,158,0.12)',    color: '#18D39E' },
+    rare:      { label: 'RARO',        bg: 'rgba(124,92,255,0.14)',    color: '#7C5CFF' },
+    epic:      { label: 'EPICO',       bg: 'rgba(236,72,153,0.14)',    color: '#ec4899' },
+    legendary: { label: 'LEGGENDARIO', bg: 'rgba(255,176,32,0.14)',    color: '#FFB020' },
   }
   const rarity = rarityConfig[currentEvent.rarity as keyof typeof rarityConfig] ?? rarityConfig.common
-  const isEpicPlus = currentEvent.rarity === 'epic' || currentEvent.rarity === 'legendary'
 
   return (
     <>
@@ -74,82 +124,137 @@ export function EventDisplay() {
         </div>
       )}
 
-      <div
-        className="card fade-in-up"
-        style={{
-          margin: '12px',
-          boxShadow: isEpicPlus ? rarity.glow : undefined,
-          border: isEpicPlus ? `1px solid ${rarity.color}33` : undefined,
-          transition: 'box-shadow 0.3s',
-        }}
-      >
-        {/* Epic/legendary top accent bar */}
-        {isEpicPlus && (
+      {/* Backdrop */}
+      <div style={{
+        position: 'fixed', inset: 0, zIndex: 8000,
+        background: 'rgba(0,0,0,0.55)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: '16px',
+      }}>
+        {/* Modal card */}
+        <div style={{
+          background: '#ffffff',
+          borderRadius: 16,
+          width: '100%',
+          maxWidth: 380,
+          overflow: 'hidden',
+          boxShadow: isEpicPlus
+            ? rarityGlow[currentEvent.rarity] ?? '0 8px 40px rgba(0,0,0,0.4)'
+            : '0 8px 40px rgba(0,0,0,0.4)',
+          animation: 'slideUpModal 0.22s cubic-bezier(0.34,1.2,0.64,1)',
+        }}>
+          {/* Colored header banner */}
           <div style={{
-            height: 3, borderRadius: '8px 8px 0 0', marginBottom: 12,
-            background: currentEvent.rarity === 'legendary'
-              ? 'linear-gradient(90deg, #FFB020, #ff6b6b, #FFB020)'
-              : 'linear-gradient(90deg, #ec4899, #a855f7, #ec4899)',
-            backgroundSize: '200% 100%',
-            animation: 'shimmer 2s linear infinite',
-          }} />
-        )}
-
-        {/* Event header */}
-        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
-          <div style={{
-            width: 52, height: 52, borderRadius: 'var(--radius-md)', flexShrink: 0,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: isEpicPlus ? rarity.bg : 'rgba(255,255,255,0.06)',
-            border: `1px solid ${isEpicPlus ? rarity.color + '44' : 'var(--border-soft)'}`,
-            fontSize: 28,
-            boxShadow: isEpicPlus ? `0 0 16px ${rarity.color}33` : undefined,
+            background: headerColor,
+            padding: '14px 16px 12px',
+            position: 'relative',
           }}>
-            {currentEvent.emoji}
-          </div>
-          <div style={{ flex: 1, minWidth: 0 }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 3 }}>
-              <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-text)', flex: 1 }}>
-                {currentEvent.title}
-              </p>
-              {currentEvent.rarity !== 'common' && (
-                <span style={{
-                  fontSize: 9, fontWeight: 800, letterSpacing: 0.5,
-                  padding: '2px 7px', borderRadius: 'var(--radius-pill)',
-                  background: rarity.bg, color: rarity.color,
-                  border: `1px solid ${rarity.color}33`, flexShrink: 0,
-                }}>
-                  {rarity.label}
-                </span>
-              )}
+            {/* Category pill top-right */}
+            <span style={{
+              position: 'absolute', top: 10, right: 12,
+              fontSize: 9, fontWeight: 800, letterSpacing: 0.8,
+              padding: '3px 8px', borderRadius: 99,
+              background: 'rgba(255,255,255,0.25)', color: '#fff',
+            }}>
+              {categoryLabel}
+            </span>
+
+            {/* Epic/legendary rarity pill */}
+            {isEpicPlus && (
+              <span style={{
+                position: 'absolute', top: 10, left: 12,
+                fontSize: 9, fontWeight: 800, letterSpacing: 0.5,
+                padding: '3px 8px', borderRadius: 99,
+                background: rarity.bg, color: rarity.color,
+                border: `1px solid ${rarity.color}44`,
+              }}>
+                ✦ {rarity.label}
+              </span>
+            )}
+
+            {/* Event emoji (large) */}
+            <div style={{
+              fontSize: 48, textAlign: 'center',
+              marginTop: isEpicPlus ? 18 : 8,
+              marginBottom: 4,
+              filter: isEpicPlus ? `drop-shadow(0 0 12px ${rarity.color})` : undefined,
+            }}>
+              {currentEvent.emoji}
             </div>
-            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.55 }}>
+
+            {/* NPC avatar below emoji if applicable */}
+            {npcName && (
+              <div style={{
+                textAlign: 'center', fontSize: 11,
+                color: 'rgba(255,255,255,0.85)', fontWeight: 600,
+              }}>
+                👤 {npcName}
+              </div>
+            )}
+          </div>
+
+          {/* Body */}
+          <div style={{ padding: '16px 16px 20px' }}>
+            {/* Title */}
+            <p style={{
+              fontWeight: 700, fontSize: 16,
+              color: '#1a1a2e',
+              textAlign: 'center', marginBottom: 8,
+            }}>
+              {currentEvent.title}
+            </p>
+
+            {/* Description */}
+            <p style={{
+              fontSize: 13, color: '#4a5568',
+              lineHeight: 1.55, textAlign: 'center',
+              marginBottom: 16,
+            }}>
               {currentEvent.description}
             </p>
-          </div>
-        </div>
 
-        {/* Choices */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {availableChoices.map((choice, i) => (
-            <button
-              key={choice.id}
-              className="tap-scale"
-              onClick={() => handleChoice(choice.id)}
-              style={{
-                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '12px 14px', borderRadius: 'var(--radius-md)',
-                background: i === 0 ? 'var(--primary-soft)' : 'rgba(255,255,255,0.05)',
-                border: `1px solid ${i === 0 ? 'rgba(124,92,255,0.3)' : 'var(--border-soft)'}`,
-                color: 'var(--color-text)', fontSize: 13, fontWeight: 500,
-                cursor: 'pointer', textAlign: 'left', width: '100%',
-                transition: 'background var(--transition-fast), border-color var(--transition-fast)',
-              }}
-            >
-              <span style={{ flex: 1, lineHeight: 1.4 }}>{choice.text}</span>
-              <EffectPreview effects={choice.effects} />
-            </button>
-          ))}
+            {/* Choice buttons */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {availableChoices.length > 0 ? (
+                availableChoices.map(choice => (
+                  <button
+                    key={choice.id}
+                    className="tap-scale"
+                    onClick={() => handleChoice(choice.id)}
+                    style={{
+                      width: '100%', padding: '12px 14px',
+                      borderRadius: 10,
+                      background: '#2563eb',
+                      color: '#ffffff',
+                      fontSize: 13, fontWeight: 600,
+                      border: 'none', cursor: 'pointer',
+                      textAlign: 'center', lineHeight: 1.4,
+                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                      gap: 8,
+                    }}
+                  >
+                    <span style={{ flex: 1 }}>{choice.text}</span>
+                    <EffectPreview effects={choice.effects} />
+                  </button>
+                ))
+              ) : (
+                <button
+                  className="tap-scale"
+                  onClick={() => handleChoice('')}
+                  style={{
+                    width: '100%', padding: '12px 0',
+                    borderRadius: 10,
+                    background: '#2563eb',
+                    color: '#ffffff',
+                    fontSize: 14, fontWeight: 700,
+                    border: 'none', cursor: 'pointer',
+                  }}
+                >
+                  OK
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
@@ -164,6 +269,10 @@ export function EventDisplay() {
           0%   { transform: scale(0.4); opacity: 0; }
           100% { transform: scale(1);   opacity: 1; }
         }
+        @keyframes slideUpModal {
+          0%   { transform: translateY(24px) scale(0.97); opacity: 0; }
+          100% { transform: translateY(0) scale(1);       opacity: 1; }
+        }
         @keyframes shimmer {
           0%   { background-position: 200% 0; }
           100% { background-position: -200% 0; }
@@ -171,7 +280,7 @@ export function EventDisplay() {
       `}</style>
     </>
   )
-}
+})
 
 function EffectPreview({ effects }: { effects: Record<string, number> }) {
   const entries = Object.entries(effects).filter(([k]) =>
@@ -180,15 +289,15 @@ function EffectPreview({ effects }: { effects: Record<string, number> }) {
   if (!entries.length) return null
 
   return (
-    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', marginLeft: 8, flexShrink: 0 }}>
+    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', flexShrink: 0 }}>
       {entries.slice(0, 3).map(([key, val]) => (
         <span
           key={key}
           style={{
-            fontSize: 11, fontWeight: 600,
-            color: val > 0 ? 'var(--green)' : 'var(--red)',
-            background: val > 0 ? 'var(--green-soft)' : 'var(--red-soft)',
-            padding: '2px 6px', borderRadius: 'var(--radius-pill)',
+            fontSize: 10, fontWeight: 700,
+            color: val > 0 ? '#16a34a' : '#dc2626',
+            background: val > 0 ? '#dcfce7' : '#fee2e2',
+            padding: '2px 6px', borderRadius: 99,
           }}
         >
           {key === 'money' ? '€' : ''}{val > 0 ? '+' : ''}{val}

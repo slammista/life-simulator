@@ -151,17 +151,22 @@ export class TraumaEngine {
 
   static attendTherapy(state: GameState): TherapyResult {
     const activeTraumas = (state.health.traumas ?? []).filter(trauma => !trauma.resolved)
-    if (activeTraumas.length === 0) {
-      return {
-        success: false,
-        message: 'Non hai traumi attivi da affrontare in terapia.',
-        effects: {},
-      }
-    }
+    const isPreventive = activeTraumas.length === 0
 
     const cost = state.nation?.healthcarePublic ? 40 : 180
     if (state.finance.money < cost) {
       return { success: false, message: `La terapia costa €${cost}. Non hai abbastanza soldi.`, effects: {} }
+    }
+
+    if (isPreventive) {
+      // Preventive therapy: smaller resilience gain, no trauma to resolve
+      return {
+        success: true,
+        message: 'La terapia preventiva aumenta la tua resilienza e protegge la salute mentale.',
+        effects: { money: -cost, mentalHealth: 5, happiness: 2 },
+        updatedTraumas: state.health.traumas ?? [],
+        resilienceGain: 6,
+      }
     }
 
     const resilienceGain = 4
