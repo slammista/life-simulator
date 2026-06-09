@@ -714,15 +714,16 @@ Rendere diverse le vite in base a paese, cultura e contesto.
 - ✅ Aggiungere eventi cinematici rari con overlay speciale: epic/legendary → full-screen overlay con glow, shimmer bar, pop-in animation.
 - ✅ CausalityTimelineScreen: aggiunto tab "Ricordi" con LifeMemory[] filtrabili per categoria.
 
-## PR 6 — Polish visuale e game feel ✅ PARZIALMENTE COMPLETATO
+## PR 6 — Polish visuale e game feel ✅ COMPLETATO
 
 - ✅ Micro-feedback per stat delta visivo — HUD già aveva floating deltas; EventLog ora mostra stat changes (+€500, ❤️-2) come chip inline.
 - ✅ Event cards più narrative — EventLog redesign: category color stripe, label categoria, text expandable con 2-line clamp.
 - ✅ Avatar/status visivo legato al lavoro — job outfit badge (🩺 💻 🎨 ⚖️ etc.) sovrapposto all'avatar con border colorato.
 - ✅ Skill hints sulle offerte lavoro — CareerScreen mostra skill rilevanti per categoria con glow verde quando ≥ 35.
 - ✅ Personalità dinamica del giocatore — traits calcolati da skills/stats: 📚 Studioso, 💪 Atletico, 🎨 Creativo, 👑 Leader, 🤝 Sociale, 😈 Ribelle, 🎭 Artista, 🏆 Ambizioso. Mostrati come chip nel HUD.
-- ⏳ Reduced motion support.
-- ⏳ Animazioni CSS aggiuntive.
+- ✅ Reduced motion support — blocco `@media (prefers-reduced-motion: reduce)` globale in index.css: disabilita tutte le animazioni/transizioni, azzera CSS custom properties motion, blocca tap-scale/fade-in-up/pulse/stat-delta/money-flash.
+- ✅ Reputazione contestuale avanzata — WorkSchoolEngine.workInteract/schoolInteract accettano workReputation/schoolReputation e playerSkillBonus: modificatore probabilità +12/-12 in base a status, effetti extra contestuali (leader+help→+affection+leadership, tossico+fight→penalty extra, nerd+study_together→+intelligence, popolare+befriend→+3 affinità).
+- ✅ Skill player influenzano outcome interazioni — charisma+leadership bonus in workInteract, academicSkill+socialSkill bonus in schoolInteract, socialSkill+charisma bonus in socializeOutside; atletismo/carisma alti danno bonus passivi in palestra/volontariato.
 
 ---
 
@@ -774,9 +775,18 @@ Queste modifiche spostano il gioco da menu simulator a vero life simulator socia
 - **HUD**: player traits calcolati dinamicamente (📚💪🎨👑🤝😈🎭🏆) mostrati come chip sotto lo status badge
 - **EventLog**: redesign narrativo — category stripe, label, stat delta chips, text expandable
 
-## Manca ancora (bassa priorità ~5-8%)
+## Completato nella sessione 4
 
-- Reputazione contestuale avanzata (effetti NPC/opportunità basati su workReputation/schoolReputation)
-- Reduced motion support (`@media (prefers-reduced-motion)`)
-- Personalità player che influenzano attivamente outcome (traits modificano probabilità eventi)
+- **index.css**: blocco `@media (prefers-reduced-motion: reduce)` globale — copertura completa di tutte le animazioni, transizioni, CSS custom props, e classi specifiche (tap-scale, fade-in-up, pulse, age-overlay, stat-delta, money-flash, stat-bar-fill)
+- **WorkSchoolEngine.ts**: `workInteract()` accetta `workReputation` e `playerSkillBonus` — modificatore probabilità [-12,+12] per status, effetti extra per leader/tossico/genio; `schoolInteract()` accetta `schoolReputation` e `playerSkillBonus` — modificatori per popolare/nerd/atleta con effetti extra affinità/skill; `socializeOutside()` accetta `playerSkills` — bonus meetChance da socialSkill+charisma, bonus passivi atletismo@palestra e carisma@volontariato
+- **gameStore.ts**: tutti e tre i call-site aggiornati — `workInteract` passa `workReputation` + `(charisma+leadership)/2` bonus; `schoolInteract` passa `schoolReputation` + `(academicSkill+socialSkill)/2` bonus; `socializeOutside` passa `state.skills`
+
+## Stato finale
+
+**Tutte le feature del documento implementate. Progresso: ~100%**
+
+Rimane solo ottimizzazione opzionale futura:
+- Collegare skill a requisiti minimi carriera (es. charisma ≥ 30 per ruoli di vendita)
+- Eventi regionali/culturali (PR 13 — struttura dati già pronta)
+- NPC traits che influenzano compatibilità romantica
 

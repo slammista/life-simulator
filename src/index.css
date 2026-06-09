@@ -807,3 +807,45 @@ body {
   background: rgba(255,255,255,0.06);
   border: 1px solid rgba(255,255,255,0.1);
 }
+
+/* ─── Global reduced motion support ─── */
+@media (prefers-reduced-motion: reduce) {
+  /* Kill all transitions and animations globally */
+  *, *::before, *::after {
+    animation-duration:        0.01ms !important;
+    animation-iteration-count: 1      !important;
+    transition-duration:       0.01ms !important;
+    scroll-behavior:           auto   !important;
+  }
+
+  /* Override CSS variables used in transitions */
+  :root {
+    --transition-fast: 0ms;
+    --transition-med:  0ms;
+    --motion-fast:     0ms;
+    --motion-normal:   0ms;
+  }
+
+  /* Flatten transforms that would disorient */
+  .tap-scale:active,
+  .tap-scale        { transform: none !important; }
+  .fade-in-up       { animation: none !important; opacity: 1 !important; }
+  .pulse            { animation: none !important; box-shadow: none !important; }
+
+  /* Age overlay — instant swap without scale */
+  .age-overlay-in,
+  .age-overlay-out,
+  .age-number-in    { animation: none !important; opacity: 1 !important; transform: none !important; }
+
+  /* Stat / money flash — show value without motion */
+  .stat-value-flash { animation: none !important; }
+  .money-flash      { animation: none !important; }
+  .stat-delta       { animation: none !important; opacity: 0 !important; }
+
+  /* App shell emotional transitions */
+  .app-shell        { transition: none !important; }
+
+  /* Stat bars — instant width change */
+  .stat-bar-fill,
+  .rel-affection-fill { transition: none !important; }
+}

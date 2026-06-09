@@ -172,9 +172,10 @@ export class WorkSchoolEngine {
     })
   }
 
-  static workInteract(colleague: WorkNPC, action: WorkAction, playerLooks: number, year: number): WorkInteractResult {
+  static workInteract(colleague: WorkNPC, action: WorkAction, playerLooks: number, year: number, workReputation: WorkReputationStatus = 'nuovo', playerSkillBonus = 0): WorkInteractResult {
     const bonus = traitBonus(colleague.personalityTraits, action)
-    const base = 0.55 + (playerLooks / 400)
+    const repMod = { leader: 12, affidabile: 6, ambizioso: 4, genio: 8, lecchino: -4, tossico: -12, pigro: -6, problematico: -10, nuovo: 0 }[workReputation] ?? 0
+    const base = 0.55 + (playerLooks / 400) + (repMod / 100) + (playerSkillBonus / 200)
     const roll = Math.random()
 
     let affectionDelta = 0
@@ -245,6 +246,22 @@ export class WorkSchoolEngine {
         break
     }
 
+    // Reputation-driven extra effects on actions
+    if (workReputation === 'leader' && action === 'help') {
+      affectionDelta += 2
+      skillDeltas = { ...skillDeltas, leadership: (skillDeltas.leadership ?? 0) + 1 }
+    }
+    if (workReputation === 'tossico' && action === 'fight') {
+      effects = { ...effects, reputation: (effects.reputation ?? 0) - 1 }
+      message += ' (Reputazione tossica peggiora la situazione.)'
+    }
+    if (workReputation === 'genio' && action === 'help') {
+      effects = { ...effects, reputation: (effects.reputation ?? 0) + 1 }
+    }
+    if ((workReputation === 'problematico' || workReputation === 'tossico') && action === 'socialize') {
+      affectionDelta = Math.min(affectionDelta, 2)
+    }
+
     const newAffection = Math.min(100, Math.max(0, colleague.affection + affectionDelta + bonus))
     const newStatus: WorkNPC['status'] =
       newAffection >= 65 ? 'friendly'
@@ -254,7 +271,6 @@ export class WorkSchoolEngine {
 
     const updatedColleague: WorkNPC = { ...colleague, affection: newAffection, status: newStatus }
 
-    // Promote to full Relationship if affection high enough and not already promoted
     let promotedRel: Relationship | undefined
     if (newAffection >= 65 && !colleague.promotedToRelId) {
       promotedRel = buildPromoRel(colleague.name, colleague.age, colleague.gender, colleague.emoji, colleague.personalityTraits, colleague.mood, year)
@@ -296,9 +312,10 @@ export class WorkSchoolEngine {
     })
   }
 
-  static schoolInteract(npc: SchoolNPC, action: SchoolAction, playerIntelligence: number, year: number): SchoolInteractResult {
+  static schoolInteract(npc: SchoolNPC, action: SchoolAction, playerIntelligence: number, year: number, schoolReputation: SchoolReputationStatus = 'invisibile', playerSkillBonus = 0): SchoolInteractResult {
     const bonus = traitBonus(npc.personalityTraits, action)
-    const base = 0.5 + (playerIntelligence / 400)
+    const repMod = { popolare: 10, leader: 12, atleta: 6, artista: 6, nerd: 4, ribelle: -6, problematico: -10, invisibile: 0 }[schoolReputation] ?? 0
+    const base = 0.5 + (playerIntelligence / 400) + (repMod / 100) + (playerSkillBonus / 200)
     const roll = Math.random()
 
     let affectionDelta = 0
@@ -392,6 +409,22 @@ export class WorkSchoolEngine {
         break
     }
 
+    // Reputation-driven extra effects in school
+    if (schoolReputation === 'popolare' && action === 'befriend') {
+      affectionDelta += 3
+      skillDeltas = { ...skillDeltas, socialSkill: (skillDeltas.socialSkill ?? 0) + 1 }
+    }
+    if (schoolReputation === 'nerd' && action === 'study_together') {
+      effects = { ...effects, intelligence: (effects.intelligence ?? 0) + 1 }
+      skillDeltas = { ...skillDeltas, academicSkill: (skillDeltas.academicSkill ?? 0) + 1 }
+    }
+    if (schoolReputation === 'atleta' && action === 'talk') {
+      affectionDelta += 2
+    }
+    if ((schoolReputation === 'problematico' || schoolReputation === 'ribelle') && action === 'befriend') {
+      affectionDelta = Math.min(affectionDelta, 2)
+    }
+
     const newAffection = Math.min(100, Math.max(0, npc.affection + affectionDelta + bonus))
     const newStatus: SchoolNPC['status'] =
       newAffection >= 65 ? 'friendly'
@@ -430,8 +463,11 @@ export class WorkSchoolEngine {
     looks: number,
     happiness: number,
     year: number,
+    playerSkills?: Partial<PlayerSkills>,
   ): SocializeResult {
-    const meetChance = 0.45 + (looks / 300) + (happiness / 400)
+    const socialBonus = (playerSkills?.socialSkill ?? 0) / 300
+    const charismaBonus = (playerSkills?.charisma ?? 0) / 300
+    const meetChance = 0.45 + (looks / 300) + (happiness / 400) + socialBonus + charismaBonus
     const met = Math.random() < meetChance
 
     const effects: Effect = { energy: -2, happiness: met ? 2 : 1 }
@@ -439,11 +475,11 @@ export class WorkSchoolEngine {
 
     if (location === 'palestra') {
       effects.health = 2
-      skillDeltas.athleticism = 2
+      skillDeltas.athleticism = 2 + ((playerSkills?.athleticism ?? 0) >= 40 ? 1 : 0)
     }
     if (location === 'volontariato') {
       effects.karma = 2
-      skillDeltas.charisma = 1
+      skillDeltas.charisma = 1 + ((playerSkills?.charisma ?? 0) >= 35 ? 1 : 0)
     }
     if (location === 'club') {
       skillDeltas.creativity = 1

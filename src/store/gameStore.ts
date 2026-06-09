@@ -893,7 +893,8 @@ export const useGameStore = create<FullStore>()(
         const colleague = state.career.colleagues.find(c => c.id === colleagueId)
         if (!colleague) return { success: false, message: 'Collega non trovato.', effects: {} }
 
-        const result = WorkSchoolEngine.workInteract(colleague, action, state.stats.looks, state.time.year)
+        const skillBonus = (state.skills.charisma + state.skills.leadership) / 2
+        const result = WorkSchoolEngine.workInteract(colleague, action, state.stats.looks, state.time.year, state.career.workReputation, skillBonus)
         const partial = applyEffects(state, result.effects)
 
         // Apply skill deltas
@@ -938,7 +939,8 @@ export const useGameStore = create<FullStore>()(
         const npc = state.education.classmates.find(c => c.id === npcId)
         if (!npc) return { success: false, message: 'Persona non trovata.', effects: {} }
 
-        const result = WorkSchoolEngine.schoolInteract(npc, action, state.stats.intelligence, state.time.year)
+        const skillBonus = (state.skills.academicSkill + state.skills.socialSkill) / 2
+        const result = WorkSchoolEngine.schoolInteract(npc, action, state.stats.intelligence, state.time.year, state.education.schoolReputation, skillBonus)
         const partial = applyEffects(state, result.effects)
 
         const sd = result.skillDeltas ?? {}
@@ -1017,6 +1019,7 @@ export const useGameStore = create<FullStore>()(
           state.stats.looks,
           state.stats.happiness,
           state.time.year,
+          state.skills,
         )
         const partial = applyEffects(state, result.effects)
 
