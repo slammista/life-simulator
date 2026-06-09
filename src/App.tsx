@@ -13,8 +13,7 @@ import { TutorialOverlay } from './components/game/TutorialOverlay'
 import { InstallBanner } from './components/game/InstallBanner'
 import { ToastContainer } from './components/game/ToastNotification'
 import { VitaWidgets } from './components/game/VitaWidgets'
-import { PinnedActivities } from './components/game/PinnedActivities'
-import { ActivitiesNav } from './components/game/ActivitiesNav'
+import { ActivitiesNav, ACTIVITIES_ITEM_MAP, type ActivitiesSubTab as ActivitiesSubTabBase } from './components/game/ActivitiesNav'
 import { AgeTransitionOverlay } from './components/game/AgeTransitionOverlay'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -58,12 +57,7 @@ const SocializeScreen     = lazy(() => import('./components/screens/SocializeScr
 type LavoroSubTab    = 'career' | 'education' | 'military' | 'pension'
 type AssetsSubTab    = 'finance' | 'vehicle' | 'living' | 'social'
 type RelazioniSubTab = 'relationships' | 'dating' | 'famiglia' | 'pets'
-type ActivitiesSubTab =
-  | 'health' | 'hobby' | 'criminal' | 'substances' | 'religion'
-  | 'body' | 'beauty' | 'barber' | 'gambling' | 'sex_health' | 'cosmetic'
-  | 'travel' | 'politics' | 'goals' | 'challenges' | 'ribbons'
-  | 'timeline' | 'minigames' | 'leaderboard' | 'settings' | 'privacy'
-  | 'socialize'
+type ActivitiesSubTab = ActivitiesSubTabBase | 'home'
 
 function SubTabBar<T extends string>({
   tabs, active, onChange,
@@ -109,7 +103,7 @@ function App() {
   const [lavoroSub,    setLavoroSubRaw]    = useState<LavoroSubTab>('career')
   const [assetsSub,    setAssetsSub]    = useState<AssetsSubTab>('finance')
   const [relazioniSub, setRelazioniSubRaw] = useState<RelazioniSubTab>('relationships')
-  const [activitiesSub, setActivitiesSubRaw] = useState<ActivitiesSubTab>('health')
+  const [activitiesSub, setActivitiesSubRaw] = useState<ActivitiesSubTab>('home')
 
   // Cast-safe wrappers used by VitaWidgets (which receives (sub: string) => void)
   const setLavoroSub    = (s: string) => setLavoroSubRaw(s as LavoroSubTab)
@@ -176,15 +170,38 @@ function App() {
           onChange={setRelazioniSubRaw}
         />
       )}
-      {activeTab === 'activities' && (
-        <PinnedActivities activeSub={activitiesSub} onChange={setActivitiesSub} />
-      )}
-      {activeTab === 'activities' && (
-        <ActivitiesNav active={activitiesSub} onChange={setActivitiesSubRaw} />
+      {activeTab === 'activities' && activitiesSub !== 'home' && (
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: 10, padding: '7px 14px 7px 10px',
+          background: 'rgba(0,0,0,0.22)', borderBottom: '1px solid rgba(255,255,255,0.06)',
+          flexShrink: 0,
+        }}>
+          <button
+            onClick={() => setActivitiesSubRaw('home')}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 3,
+              fontSize: 13, fontWeight: 500, color: 'var(--primary)',
+              border: 'none', background: 'transparent', cursor: 'pointer',
+              padding: '3px 4px', borderRadius: 6,
+            }}
+          >
+            ‹ Attività
+          </button>
+          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.12)' }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
+            {ACTIVITIES_ITEM_MAP[activitiesSub as ActivitiesSubTabBase]?.emoji}{' '}
+            {ACTIVITIES_ITEM_MAP[activitiesSub as ActivitiesSubTabBase]?.label}
+          </span>
+        </div>
       )}
 
       {/* Main content */}
       <div className="app-content">
+        {/* Activities home menu — full-page BitLife-style list */}
+        {activeTab === 'activities' && activitiesSub === 'home' && (
+          <ActivitiesNav onChange={sub => setActivitiesSubRaw(sub as ActivitiesSubTab)} />
+        )}
+
         {activeTab === 'vita' && (
           <div className="main-dashboard">
             <div className="event-panel">

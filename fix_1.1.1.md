@@ -174,3 +174,15 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 | God Mode €5.99 | Bassa | ✅ |
 
 **Progresso sessione attuale: 100% — tutte le 11 feature completate ✅**
+
+---
+
+## UX Fix: Sezione Attività riallineata a BitLife
+**Problema**: La schermata Activities era incasinata — chip orizzontali a scorrimento, sezioni sovrapposte, nessuna gerarchia visiva chiara.  
+**Fix**: Rimossi `PinnedActivities` + vecchio `ActivitiesNav`. Implementato nuovo design BitLife-style:
+- Schermata "home" attività: lista verticale con righe icon circle + nome + sottotitolo + freccia ›
+- Sezione "Preferiti" editabile in cima (pin con checkmark)
+- 5 categorie con header separatori grigi
+- Back bar nella sottostazione attiva: "‹ Attività" + nome categoria
+- Default cambiato da 'health' → 'home'
+**Stato**: ✅ Fatto
