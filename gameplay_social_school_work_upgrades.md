@@ -714,13 +714,15 @@ Rendere diverse le vite in base a paese, cultura e contesto.
 - ✅ Aggiungere eventi cinematici rari con overlay speciale: epic/legendary → full-screen overlay con glow, shimmer bar, pop-in animation.
 - ✅ CausalityTimelineScreen: aggiunto tab "Ricordi" con LifeMemory[] filtrabili per categoria.
 
-## PR 6 — Polish visuale e game feel ⏳ DA FARE
+## PR 6 — Polish visuale e game feel ✅ PARZIALMENTE COMPLETATO
 
-- ⏳ Micro-feedback per stat delta visivo.
-- ⏳ Event cards più narrative.
-- ⏳ Avatar/status visivo legato al lavoro.
-- ⏳ Animazioni leggere.
-- ⏳ Reduced motion.
+- ✅ Micro-feedback per stat delta visivo — HUD già aveva floating deltas; EventLog ora mostra stat changes (+€500, ❤️-2) come chip inline.
+- ✅ Event cards più narrative — EventLog redesign: category color stripe, label categoria, text expandable con 2-line clamp.
+- ✅ Avatar/status visivo legato al lavoro — job outfit badge (🩺 💻 🎨 ⚖️ etc.) sovrapposto all'avatar con border colorato.
+- ✅ Skill hints sulle offerte lavoro — CareerScreen mostra skill rilevanti per categoria con glow verde quando ≥ 35.
+- ✅ Personalità dinamica del giocatore — traits calcolati da skills/stats: 📚 Studioso, 💪 Atletico, 🎨 Creativo, 👑 Leader, 🤝 Sociale, 😈 Ribelle, 🎭 Artista, 🏆 Ambizioso. Mostrati come chip nel HUD.
+- ⏳ Reduced motion support.
+- ⏳ Animazioni CSS aggiuntive.
 
 ---
 
@@ -765,13 +767,16 @@ Queste modifiche spostano il gioco da menu simulator a vero life simulator socia
 - **gameStore**: azione `joinClub()` con 5 club e relativi bonus skill/stat; importato `getEducationLabel`
 - **types.ts**: `joinClub` aggiunto a GameActions
 
-## Manca ancora (bassa priorità)
+## Completato nella sessione 3
 
-- Collegare skill esplicitamente a requisiti carriera (label “richiede X skill”)
-- Micro-feedback visivo per stat delta migliorato (HUD già ha floating deltas)
-- Event cards più narrative (testo più storytelling nel log)
-- Avatar/status visivo legato al job/reputazione (outfit per job)
-- Personalità dinamica del giocatore (tratti che influenzano outcome)
-- Reputazione contestuale avanzata (effetti su NPC e opportunità)
-- Status sociale visivo (outfit per job/status)
+- **CareerScreen**: skill hints su ogni offerta lavoro — categorie mappate a skill rilevanti, glow verde quando player ≥ 35
+- **HUD**: job outfit badge sull'avatar (🩺💻🎨⚖️ etc.) con border color per categoria
+- **HUD**: player traits calcolati dinamicamente (📚💪🎨👑🤝😈🎭🏆) mostrati come chip sotto lo status badge
+- **EventLog**: redesign narrativo — category stripe, label, stat delta chips, text expandable
+
+## Manca ancora (bassa priorità ~5-8%)
+
+- Reputazione contestuale avanzata (effetti NPC/opportunità basati su workReputation/schoolReputation)
+- Reduced motion support (`@media (prefers-reduced-motion)`)
+- Personalità player che influenzano attivamente outcome (traits modificano probabilità eventi)
 
