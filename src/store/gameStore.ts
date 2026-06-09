@@ -301,12 +301,23 @@ export const useGameStore = create<FullStore>()(
       ...buildInitialState(),
 
       // ==================== newGame ====================
-      newGame: (identity: PlayerIdentity, nationId: string, mode = 'normal' as import('./types').GameMode, ironMan = false) => {
+      newGame: (identity: PlayerIdentity, nationId: string, mode = 'normal' as import('./types').GameMode, ironMan = false, startingBonus?: Effect) => {
         const initial = buildInitialState()
         const nation = (db.nations as Nation[]).find(n => n.id === nationId) ?? initial.nation
         const startMoney = BACKGROUND_MONEY[identity.familyBackground] ?? 1000
         const startingFamily = FamilyEngine.createStartingFamily(identity)
         const siblingCount = startingFamily.relationships.filter(rel => rel.type === 'sibling').length
+
+        const bonusStats = startingBonus ? {
+          health:       clamp((initial.stats.health        ?? 100) + (startingBonus.health        ?? 0), 0, 100),
+          happiness:    clamp((initial.stats.happiness     ?? 80)  + (startingBonus.happiness     ?? 0), 0, 100),
+          intelligence: clamp((initial.stats.intelligence  ?? 50)  + (startingBonus.intelligence  ?? 0), 0, 100),
+          looks:        clamp((initial.stats.looks         ?? 50)  + (startingBonus.looks         ?? 0), 0, 100),
+          energy:       clamp((initial.stats.energy        ?? 80)  + (startingBonus.energy        ?? 0), 0, 100),
+          mentalHealth: clamp((initial.stats.mentalHealth  ?? 80)  + (startingBonus.mentalHealth  ?? 0), 0, 100),
+          karma:        clamp((initial.stats.karma         ?? 50)  + (startingBonus.karma         ?? 0), 0, 100),
+          reputation:   clamp((initial.stats.reputation    ?? 30)  + (startingBonus.reputation    ?? 0), 0, 100),
+        } : {}
 
         set({
           ...initial,
@@ -315,7 +326,8 @@ export const useGameStore = create<FullStore>()(
           time: { year: identity.birthYear, month: 1, age: 0 },
           nation,
           settings: { ...initial.settings, mode, ironMan },
-          finance: { ...initial.finance, money: startMoney },
+          stats: { ...initial.stats, ...bonusStats },
+          finance: { ...initial.finance, money: startMoney + (startingBonus?.money ?? 0) },
           relationships: startingFamily.relationships,
           family: startingFamily.family,
           eventLog: [{

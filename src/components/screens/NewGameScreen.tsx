@@ -1,9 +1,83 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import type { Gender, FamilyBackground, Religion, SexualOrientation, GameMode, AvatarConfig, SkinTone, AvatarHairStyle, AvatarHairColor } from '../../store/types'
+import type { Gender, FamilyBackground, Religion, SexualOrientation, GameMode, AvatarConfig, SkinTone, AvatarHairStyle, AvatarHairColor, Effect } from '../../store/types'
 import { getDefaultAvatar, SKIN_TONES, HAIR_COLORS } from '../../services/AvatarEngine'
 import { AvatarRenderer } from '../avatar/AvatarRenderer'
 import db from '../../../public/db.json'
+
+interface Scenario {
+  id: string
+  emoji: string
+  title: string
+  subtitle: string
+  color: string
+  background: FamilyBackground
+  mode: GameMode
+  bonus: Effect
+}
+
+const SCENARIOS: Scenario[] = [
+  {
+    id: 'normal',
+    emoji: '🌍',
+    title: 'Vita Normale',
+    subtitle: 'Famiglia media, partenza equilibrata',
+    color: '#6366f1',
+    background: 'middle',
+    mode: 'normal',
+    bonus: {},
+  },
+  {
+    id: 'rich',
+    emoji: '💰',
+    title: 'Nato Privilegiato',
+    subtitle: 'Famiglia ricca, opportunità facili',
+    color: '#f59e0b',
+    background: 'rich',
+    mode: 'normal',
+    bonus: { intelligence: 10, looks: 10, happiness: 10, money: 20000 },
+  },
+  {
+    id: 'poor',
+    emoji: '🏚️',
+    title: 'Vita Difficile',
+    subtitle: 'Partenza in povertà, tutto da guadagnarsi',
+    color: '#ef4444',
+    background: 'poor',
+    mode: 'hard',
+    bonus: { intelligence: -5, happiness: -10, mentalHealth: -5 },
+  },
+  {
+    id: 'prodigy',
+    emoji: '🎓',
+    title: 'Prodigio',
+    subtitle: 'Intelletto fuori dal comune, QI altissimo',
+    color: '#3b82f6',
+    background: 'middle',
+    mode: 'normal',
+    bonus: { intelligence: 35, energy: 10, happiness: 5 },
+  },
+  {
+    id: 'celebrity',
+    emoji: '🎬',
+    title: 'Figlio di Famosi',
+    subtitle: 'Genitori celebrity, fama e pressioni',
+    color: '#ec4899',
+    background: 'elite',
+    mode: 'normal',
+    bonus: { looks: 20, reputation: 30, happiness: -5, money: 50000 },
+  },
+  {
+    id: 'athlete',
+    emoji: '🏆',
+    title: 'Atleta Nato',
+    subtitle: 'Fisico eccezionale, energia inesauribile',
+    color: '#10b981',
+    background: 'middle',
+    mode: 'normal',
+    bonus: { health: 20, energy: 20, looks: 10, intelligence: -5 },
+  },
+]
 
 const HAIR_STYLE_OPTIONS: { val: AvatarHairStyle; label: string }[] = [
   { val: 'buzz',     label: 'Buzzcut' },
@@ -43,9 +117,16 @@ export function NewGameScreen() {
   const [gameMode, setGameMode] = useState<GameMode>('normal')
   const [ironMan, setIronMan] = useState(false)
   const [avatar, setAvatar] = useState<AvatarConfig>(() => getDefaultAvatar('male'))
+  const [selectedScenario, setSelectedScenario] = useState<string>('normal')
 
   const updateAvatar = (patch: Partial<AvatarConfig>) =>
     setAvatar(prev => ({ ...prev, ...patch }))
+
+  const applyScenario = (s: Scenario) => {
+    setSelectedScenario(s.id)
+    setBackground(s.background)
+    setGameMode(s.mode)
+  }
 
   const handleGenderChange = (g: Gender) => {
     setGender(g)
@@ -54,6 +135,7 @@ export function NewGameScreen() {
 
   const handleStart = () => {
     if (!name.trim()) return
+    const scenario = SCENARIOS.find(s => s.id === selectedScenario)
     newGame({
       name: name.trim(),
       surname: surname.trim() || 'Rossi',
@@ -65,7 +147,7 @@ export function NewGameScreen() {
       sexualOrientation: orientation,
       emoji: '👶',
       avatar,
-    }, nationId, gameMode, ironMan)
+    }, nationId, gameMode, ironMan, scenario?.bonus)
   }
 
   const inputStyle = {
@@ -100,6 +182,49 @@ export function NewGameScreen() {
         <p style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>
           Crea il tuo personaggio e inizia la tua vita
         </p>
+      </div>
+
+      {/* ── Scenario Selector ── */}
+      <div style={{ marginBottom: 20 }}>
+        <label style={{ ...labelStyle, fontSize: 13, marginBottom: 10 }}>🎭 Scegli il tuo scenario di vita</label>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          {SCENARIOS.map(s => {
+            const active = selectedScenario === s.id
+            return (
+              <button
+                key={s.id}
+                onClick={() => applyScenario(s)}
+                style={{
+                  padding: '10px 12px', borderRadius: 12, textAlign: 'left',
+                  cursor: 'pointer', border: `2px solid ${active ? s.color : 'rgba(255,255,255,0.08)'}`,
+                  background: active ? `${s.color}18` : 'rgba(255,255,255,0.03)',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <div style={{ fontSize: 22, marginBottom: 4 }}>{s.emoji}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, color: active ? s.color : 'var(--color-text)', lineHeight: 1.2 }}>
+                  {s.title}
+                </div>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.35 }}>
+                  {s.subtitle}
+                </div>
+                {active && s.id !== 'normal' && (
+                  <div style={{ marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                    {Object.entries(s.bonus).filter(([, v]) => v !== 0).slice(0, 3).map(([k, v]) => (
+                      <span key={k} style={{
+                        fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 99,
+                        background: (v as number) > 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
+                        color: (v as number) > 0 ? '#6ee7b7' : '#fca5a5',
+                      }}>
+                        {k === 'money' ? `€${Math.abs(v as number).toLocaleString()}` : `${(v as number) > 0 ? '+' : ''}${v} ${k}`}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </button>
+            )
+          })}
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

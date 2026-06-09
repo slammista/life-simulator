@@ -17,6 +17,7 @@ import { ActionResultPanel } from './components/game/ActionResultPanel'
 import { NPCEventNotifications } from './components/game/NPCEventNotifications'
 import { VitaWidgets } from './components/game/VitaWidgets'
 import { ShareLifeButton } from './components/game/ShareLifeButton'
+import { FirstPlayHint } from './components/game/FirstPlayHint'
 import { ActivitiesNav, ACTIVITIES_ITEM_MAP, type ActivitiesSubTab as ActivitiesSubTabBase } from './components/game/ActivitiesNav'
 import { AgeTransitionOverlay } from './components/game/AgeTransitionOverlay'
 import { useShallow } from 'zustand/react/shallow'
@@ -292,6 +293,7 @@ function App() {
         visible={ageOverlay.visible}
         onDone={() => setAgeOverlay(s => ({ ...s, visible: false }))}
       />
+      <FirstPlayHint hasEvent={currentEvent !== null} />
       <NPCEventNotifications />
       <ActionResultPanel />
       <ToastContainer />

@@ -272,3 +272,41 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 - Placeholder "Email" → "Indirizzo email" (SettingsScreen)
 - Placeholder "Password" → "Password (min. 6 caratteri)" (SettingsScreen)
 **Stato**: ✅ Fatto
+
+---
+
+## Feature: Scenari di vita — NewGameScreen
+**Fix**: Aggiunta selezione scenario prima della creazione personaggio (6 preset a griglia 2×3):
+- 🌍 Vita Normale — partenza bilanciata (default)
+- 💰 Nato Privilegiato — famiglia ricca, +intel, +looks, +€20.000
+- 🏚️ Vita Difficile — famiglia povera, Hard Mode, penalità stat iniziali
+- 🎓 Prodigio — +35 intelligenza, +10 energia
+- 🎬 Figlio di Famosi — +30 reputazione, +20 looks, +€50.000, -5 felicità
+- 🏆 Atleta Nato — +20 salute, +20 energia, +10 looks, -5 intelligenza
+- Ogni scenario pre-imposta `familyBackground` e `gameMode`, mostra chip bonus visibili
+- `newGame()` accetta `startingBonus?: Effect`, applicato alle stat iniziali
+**Stato**: ✅ Fatto
+
+---
+
+## Feature: Hint tutorial interattivo (FirstPlayHint)
+**Fix**: Banner "👇 Tocca +1 ETÀ per iniziare!" animato (bounce loop) sopra il pulsante centrale:
+- Appare 2 secondi dopo l'inizio del primo gioco (se tutorial non già visto)
+- Sparisce automaticamente quando appare il primo evento (=player ha premuto +1 ETÀ)
+- Persiste in localStorage (`lifesim2d_first_age_up`)
+**Stato**: ✅ Fatto
+
+---
+
+## Feature: 20 nuovi eventi con scelte ramificate
+**Fix**: Aggiunti 20 eventi + 51 scelte a db.json (totale: 395 eventi, 1499 scelte):
+- Il Capo Tossico (career drama, 3 scelte)
+- Offerta da Sogno (career opportunity, req. intelligence 70 per negoziare)
+- Flirt in Ufficio, Dolore al Petto, Sintomi Misteriosi
+- Cripto del Momento, Eredità Inaspettata, Truffa Online
+- Gelosia Esplosiva, Tradimento di un Amico, Il Passato Ritorna
+- Momento Virale, Accusa Falsa
+- Trent'anni e Cinquant'anni (triggered esatti a age==30/50, probability 1.0)
+- Crollo da Burnout (triggered su stats.energy < 30)
+- Gravidanza Inaspettata, L'Idea del Secolo, La Tentazione, Calamità Naturale
+**Stato**: ✅ Fatto

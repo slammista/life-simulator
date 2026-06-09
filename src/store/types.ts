@@ -1165,7 +1165,7 @@ export interface GameActions {
   salvaGioco: () => void
   caricaGioco: () => void
   resetGiorno: () => void
-  newGame: (identity: PlayerIdentity, nationId: string, mode?: import('./types').GameMode, ironMan?: boolean) => void
+  newGame: (identity: PlayerIdentity, nationId: string, mode?: import('./types').GameMode, ironMan?: boolean, startingBonus?: Effect) => void
 
   // Career engine actions
   applyForJob: (jobId: string) => ActionResult
