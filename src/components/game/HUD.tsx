@@ -20,6 +20,24 @@ function useHUDData() {
   return { stats, money, bankBalance, age, year, emoji, name, surname, fame, currentJob, eduLevel, inPrison, isRetired }
 }
 
+const JOB_CATEGORY_OUTFIT: Record<string, { emoji: string; color: string }> = {
+  medical:   { emoji: '🩺', color: '#ef4444' },
+  legal:     { emoji: '⚖️', color: '#94a3b8' },
+  tech:      { emoji: '💻', color: '#60a5fa' },
+  education: { emoji: '📖', color: '#60a5fa' },
+  finance:   { emoji: '📊', color: '#10b981' },
+  media:     { emoji: '📸', color: '#a78bfa' },
+  creative:  { emoji: '🎨', color: '#ec4899' },
+  public:    { emoji: '🏛️', color: '#60a5fa' },
+  business:  { emoji: '💼', color: '#f59e0b' },
+  care:      { emoji: '🤝', color: '#f472b6' },
+  food:      { emoji: '🍳', color: '#f97316' },
+  logistics: { emoji: '🚚', color: '#fbbf24' },
+  technical: { emoji: '🔧', color: '#6366f1' },
+  retail:    { emoji: '🛒', color: '#fbbf24' },
+  criminal:  { emoji: '🕵️', color: '#6b7280' },
+}
+
 function getStatusBadge(data: ReturnType<typeof useHUDData>) {
   const { fame, currentJob, eduLevel, inPrison, isRetired, age } = data
   if (inPrison)  return { label: '🔒 In Carcere', color: '#FF4D6D' }
@@ -30,6 +48,17 @@ function getStatusBadge(data: ReturnType<typeof useHUDData>) {
   if (eduLevel && eduLevel !== 'none') return { label: '📚 Studente', color: '#60a5fa' }
   if (age < 6)   return { label: '👶 Bambino',       color: '#f472b6' }
   return { label: '🔍 Disoccupato', color: '#687087' }
+}
+
+function getJobOutfitBadge(data: ReturnType<typeof useHUDData>): { emoji: string; color: string } | null {
+  const { currentJob, inPrison, isRetired } = data
+  if (inPrison)  return { emoji: '🔒', color: '#FF4D6D' }
+  if (isRetired) return { emoji: '🎗️', color: '#a78bfa' }
+  if (currentJob) {
+    const cat = (currentJob as unknown as { category?: string }).category
+    return JOB_CATEGORY_OUTFIT[cat ?? ''] ?? { emoji: '💼', color: '#18D39E' }
+  }
+  return null
 }
 
 const BASE_STATS = [
@@ -52,10 +81,34 @@ interface StatDelta {
   id: number
 }
 
+function usePlayerTraits() {
+  const skills = useGameStore(s => s.skills)
+  const stats = useGameStore(s => s.stats)
+  const criminal = useGameStore(s => s.criminal)
+  const career = useGameStore(s => s.career)
+  const relationships = useGameStore(s => s.relationships)
+  const children = useGameStore(s => s.children)
+
+  const traits: { emoji: string; label: string; color: string }[] = []
+  if (skills.academicSkill >= 40 && stats.intelligence >= 55) traits.push({ emoji: '📚', label: 'Studioso', color: '#60a5fa' })
+  if (skills.athleticism >= 40 && stats.health >= 65) traits.push({ emoji: '💪', label: 'Atletico', color: '#4ade80' })
+  if (skills.creativity >= 40) traits.push({ emoji: '🎨', label: 'Creativo', color: '#fbbf24' })
+  if (skills.leadership >= 40 && skills.charisma >= 35 && career.promotions >= 2) traits.push({ emoji: '👑', label: 'Leader', color: '#f59e0b' })
+  if (skills.socialSkill >= 40 && relationships.length >= 5) traits.push({ emoji: '🤝', label: 'Sociale', color: '#f472b6' })
+  if (stats.karma < -30 || criminal.hasRecord) traits.push({ emoji: '😈', label: 'Ribelle', color: '#f97316' })
+  if (children.length >= 2) traits.push({ emoji: '👨‍👩‍👧', label: 'Genitore', color: '#a78bfa' })
+  if (skills.music >= 35 || (skills.creativity >= 45 && skills.acting >= 20)) traits.push({ emoji: '🎭', label: 'Artista', color: '#ec4899' })
+  if (career.promotions >= 3 && skills.charisma >= 40) traits.push({ emoji: '🏆', label: 'Ambizioso', color: '#f59e0b' })
+
+  return traits.slice(0, 4)
+}
+
 export const HUD = memo(function HUD() {
   const data = useHUDData()
   const { stats, money, bankBalance, age, year, name, surname, fame } = data
   const status = getStatusBadge(data)
+  const outfitBadge = getJobOutfitBadge(data)
+  const traits = usePlayerTraits()
   const showFame = fame >= 30
 
   // Flash stat value when it changes
@@ -114,14 +167,28 @@ export const HUD = memo(function HUD() {
     <div className="hud flex-col gap-1" style={{ padding: '10px 14px 8px' }}>
       {/* Row 1: avatar + identity + wallet */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-        {/* Avatar with ring */}
-        <div style={{
-          width: 40, height: 40, borderRadius: '50%', flexShrink: 0,
-          overflow: 'hidden',
-          border: `2px solid ${ringColor}77`,
-          boxShadow: `0 0 14px ${ringColor}55`,
-        }}>
-          <AvatarRenderer size="sm" />
+        {/* Avatar with ring + job outfit badge */}
+        <div style={{ position: 'relative', flexShrink: 0, width: 40, height: 40 }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: '50%',
+            overflow: 'hidden',
+            border: `2px solid ${outfitBadge ? outfitBadge.color + '88' : ringColor + '77'}`,
+            boxShadow: `0 0 14px ${outfitBadge ? outfitBadge.color + '44' : ringColor + '55'}`,
+          }}>
+            <AvatarRenderer size="sm" />
+          </div>
+          {outfitBadge && (
+            <div style={{
+              position: 'absolute', bottom: -2, right: -2,
+              width: 16, height: 16, borderRadius: '50%',
+              background: `${outfitBadge.color}22`,
+              border: `1px solid ${outfitBadge.color}66`,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 9, lineHeight: 1,
+            }}>
+              {outfitBadge.emoji}
+            </div>
+          )}
         </div>
 
         {/* Name + age + status */}
@@ -134,13 +201,24 @@ export const HUD = memo(function HUD() {
               {age}a · {year}
             </span>
           </div>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', marginTop: 2,
-            padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 10, fontWeight: 700,
-            background: `${status.color}1A`, color: status.color,
-            border: `1px solid ${status.color}44`,
-          }}>
-            {status.label}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2, flexWrap: 'wrap' }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center',
+              padding: '2px 8px', borderRadius: 'var(--radius-pill)', fontSize: 10, fontWeight: 700,
+              background: `${status.color}1A`, color: status.color,
+              border: `1px solid ${status.color}44`,
+            }}>
+              {status.label}
+            </div>
+            {traits.map(t => (
+              <div key={t.label} title={t.label} style={{
+                padding: '2px 5px', borderRadius: 'var(--radius-pill)', fontSize: 9,
+                background: `${t.color}15`, color: t.color,
+                border: `1px solid ${t.color}30`,
+              }}>
+                {t.emoji} {t.label}
+              </div>
+            ))}
           </div>
         </div>
 

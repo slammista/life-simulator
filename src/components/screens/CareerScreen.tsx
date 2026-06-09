@@ -2,7 +2,24 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { CareerEngine, getAllJobs, getContractLabel } from '../../services/CareerEngine'
 import { useToastStore } from '../../store/toastStore'
-import type { WorkAction, WorkNPC, WorkReputationStatus } from '../../store/types'
+import type { WorkAction, WorkNPC, WorkReputationStatus, PlayerSkills } from '../../store/types'
+
+const CATEGORY_SKILL_HINTS: Record<string, { key: keyof PlayerSkills; label: string; emoji: string }[]> = {
+  care:      [{ key: 'socialSkill',   label: 'Socialità',  emoji: '💬' }, { key: 'charisma',     label: 'Carisma',    emoji: '✨' }],
+  retail:    [{ key: 'socialSkill',   label: 'Socialità',  emoji: '💬' }, { key: 'charisma',     label: 'Carisma',    emoji: '✨' }],
+  food:      [{ key: 'creativity',    label: 'Creatività', emoji: '🎨' }, { key: 'discipline',   label: 'Disciplina', emoji: '🎯' }],
+  logistics: [{ key: 'athleticism',   label: 'Atletica',   emoji: '💪' }, { key: 'discipline',   label: 'Disciplina', emoji: '🎯' }],
+  technical: [{ key: 'academicSkill', label: 'Accademico', emoji: '🧠' }, { key: 'discipline',   label: 'Disciplina', emoji: '🎯' }],
+  medical:   [{ key: 'academicSkill', label: 'Accademico', emoji: '🧠' }, { key: 'discipline',   label: 'Disciplina', emoji: '🎯' }],
+  finance:   [{ key: 'academicSkill', label: 'Accademico', emoji: '🧠' }, { key: 'leadership',   label: 'Leadership', emoji: '👑' }],
+  media:     [{ key: 'creativity',    label: 'Creatività', emoji: '🎨' }, { key: 'charisma',     label: 'Carisma',    emoji: '✨' }],
+  creative:  [{ key: 'creativity',    label: 'Creatività', emoji: '🎨' }, { key: 'music',        label: 'Musica',     emoji: '🎵' }],
+  public:    [{ key: 'leadership',    label: 'Leadership', emoji: '👑' }, { key: 'charisma',     label: 'Carisma',    emoji: '✨' }],
+  education: [{ key: 'academicSkill', label: 'Accademico', emoji: '🧠' }, { key: 'socialSkill',  label: 'Socialità',  emoji: '💬' }],
+  tech:      [{ key: 'academicSkill', label: 'Accademico', emoji: '🧠' }, { key: 'creativity',   label: 'Creatività', emoji: '🎨' }],
+  business:  [{ key: 'leadership',    label: 'Leadership', emoji: '👑' }, { key: 'charisma',     label: 'Carisma',    emoji: '✨' }],
+  legal:     [{ key: 'academicSkill', label: 'Accademico', emoji: '🧠' }, { key: 'charisma',     label: 'Carisma',    emoji: '✨' }],
+}
 
 const CATEGORY_EMOJI: Record<string, string> = {
   care:      '🤝', retail:    '🛒', food:      '🍳', logistics: '🚚',
@@ -410,6 +427,28 @@ export function CareerScreen() {
                     </span>
                   )}
                 </div>
+
+                {/* Skill hints */}
+                {CATEGORY_SKILL_HINTS[job.category] && (
+                  <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>
+                    <span style={{ fontSize: 10, color: 'var(--text-faint)', alignSelf: 'center' }}>skill utili:</span>
+                    {CATEGORY_SKILL_HINTS[job.category].map(({ key, label, emoji }) => {
+                      const val = (state.skills as unknown as Record<string, number>)[key] ?? 0
+                      const isStrong = val >= 35
+                      return (
+                        <span key={key} style={{
+                          fontSize: 10, padding: '2px 8px', borderRadius: 99,
+                          background: isStrong ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
+                          color: isStrong ? '#4ade80' : 'var(--color-text-secondary)',
+                          border: `1px solid ${isStrong ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                          fontWeight: isStrong ? 600 : 400,
+                        }}>
+                          {emoji} {label}{val > 0 ? ` ${val}` : ''}
+                        </span>
+                      )
+                    })}
+                  </div>
+                )}
 
                 {/* CTA */}
                 {!isCurrent && (

@@ -1,26 +1,32 @@
+import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 
-const CATEGORY_CLASS: Record<string, string> = {
-  career:   'career',
-  social:   'social',
-  health:   'negative',
-  finance:  'career',
-  criminal: 'negative',
-  life:     'positive',
+const CATEGORY_CONFIG: Record<string, { emoji: string; color: string; label: string }> = {
+  career:    { emoji: '💼', color: '#f59e0b', label: 'Carriera' },
+  social:    { emoji: '👥', color: '#f472b6', label: 'Sociale' },
+  health:    { emoji: '❤️', color: '#ef4444', label: 'Salute' },
+  finance:   { emoji: '💰', color: '#10b981', label: 'Finanze' },
+  criminal:  { emoji: '🚔', color: '#f97316', label: 'Crimini' },
+  life:      { emoji: '✨', color: '#a78bfa', label: 'Vita' },
+  education: { emoji: '📚', color: '#60a5fa', label: 'Istruzione' },
+  choice:    { emoji: '🎯', color: '#22c55e', label: 'Scelta' },
+  year:      { emoji: '📅', color: '#94a3b8', label: 'Anno' },
 }
 
-function getEntryClass(entry: { emoji: string; category?: string; statChanges?: Record<string, number> }): string {
-  if (entry.category && CATEGORY_CLASS[entry.category]) return CATEGORY_CLASS[entry.category]
-  // Infer from statChanges
-  const changes = entry.statChanges ?? {}
-  const sum = Object.values(changes).reduce((a, b) => a + b, 0)
-  if (sum > 0) return 'positive'
-  if (sum < 0) return 'negative'
-  return ''
+function formatStatChanges(changes: Record<string, number>): { key: string; val: number }[] {
+  return Object.entries(changes)
+    .filter(([k]) => ['health', 'happiness', 'money', 'intelligence', 'karma'].includes(k) && changes[k] !== 0)
+    .map(([key, val]) => ({ key, val }))
+    .slice(0, 3)
+}
+
+const STAT_EMOJI: Record<string, string> = {
+  health: '❤️', happiness: '😊', money: '€', intelligence: '🧠', karma: '☯️'
 }
 
 export function EventLog() {
   const { eventLog } = useGameStore()
+  const [expanded, setExpanded] = useState<string | null>(null)
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 12px' }}>
@@ -45,14 +51,61 @@ export function EventLog() {
         )}
 
         {eventLog.map(entry => {
-          const cls = getEntryClass(entry)
+          const cfg = CATEGORY_CONFIG[entry.category ?? 'year'] ?? CATEGORY_CONFIG.year
+          const statChanges = formatStatChanges(entry.statChanges ?? {})
+          const isExpanded = expanded === entry.id
           return (
-            <div key={entry.id} className={`event-log-entry${cls ? ` ${cls}` : ''}`}>
-              <span style={{ flexShrink: 0, fontSize: 15 }}>{entry.emoji}</span>
+            <div
+              key={entry.id}
+              onClick={() => setExpanded(isExpanded ? null : entry.id)}
+              style={{
+                display: 'flex', gap: 8, padding: '6px 0', cursor: 'pointer',
+                borderBottom: '1px solid rgba(255,255,255,0.04)',
+              }}
+            >
+              {/* Category color stripe */}
+              <div style={{
+                width: 2, borderRadius: 2, flexShrink: 0, alignSelf: 'stretch',
+                background: cfg.color + '60',
+              }} />
+
+              {/* Emoji */}
+              <span style={{ fontSize: 14, flexShrink: 0, alignSelf: 'flex-start', marginTop: 1 }}>
+                {entry.emoji}
+              </span>
+
               <div style={{ flex: 1, minWidth: 0 }}>
-                <span style={{ color: 'var(--color-text)', fontSize: 12 }}>{entry.text}</span>
-                <div style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 2 }}>
-                  Età {entry.age} · {entry.year}
+                {/* Main text */}
+                <p style={{
+                  color: 'var(--color-text)', fontSize: 12, lineHeight: 1.45,
+                  overflow: isExpanded ? 'visible' : 'hidden',
+                  display: isExpanded ? 'block' : '-webkit-box',
+                  WebkitLineClamp: isExpanded ? undefined : 2,
+                  WebkitBoxOrient: isExpanded ? undefined : 'vertical',
+                }}>
+                  {entry.text}
+                </p>
+
+                {/* Meta row */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 3, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 9, color: 'var(--text-faint)' }}>
+                    {entry.age}a · {entry.year}
+                  </span>
+                  <span style={{
+                    fontSize: 9, padding: '1px 5px', borderRadius: 99,
+                    background: `${cfg.color}18`, color: cfg.color,
+                  }}>
+                    {cfg.label}
+                  </span>
+                  {/* Stat delta chips */}
+                  {statChanges.map(({ key, val }) => (
+                    <span key={key} style={{
+                      fontSize: 9, fontWeight: 600,
+                      color: val > 0 ? '#4ade80' : '#f87171',
+                    }}>
+                      {STAT_EMOJI[key]}{val > 0 ? '+' : ''}{key === 'money' ? `€${val}` : val}
+                    </span>
+                  ))}
                 </div>
               </div>
             </div>
