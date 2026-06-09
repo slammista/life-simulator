@@ -186,3 +186,51 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 - Back bar nella sottostazione attiva: "‹ Attività" + nome categoria
 - Default cambiato da 'health' → 'home'
 **Stato**: ✅ Fatto
+
+---
+
+## Feature: Tutorial onboarding migliorato
+**Fix**: Riscritto `TutorialOverlay.tsx` con 4 step più contestuali:
+- Step 1: Welcome + spiegazione concetto
+- Step 2: Pulsante "+1 ETÀ" con call-to-action evidenziata e box "👇 Clicca..."
+- Step 3: Sistema eventi con colori categoria spiegati
+- Step 4: Schede e sistema Attività con tip sui preferiti
+- Pulsanti migliorati: verde "Inizia la vita!" sull'ultimo step; box tip contestuale in ogni step
+**Stato**: ✅ Fatto
+
+---
+
+## Feature: Categorie evento derivate dall'ID
+**Problema**: Tutti i 375 eventi in db.json hanno `category: "none"` — l'header del modal era sempre viola.  
+**Fix**: Aggiunta funzione `deriveCategory(id: string)` in `EventDisplay.tsx` che mappa pattern ID → categoria:
+- `ev_school_*` / `study` / `edu` → ISTRUZIONE (blu)
+- `ev_job_*` / `career` / `work` → CARRIERA (arancio)
+- `health` / `hospital` / `sick` → SALUTE (verde)
+- `crime` / `prison` / `police` → CRIMINE (rosso)
+- `money` / `finance` / `invest` → FINANZE (verde scuro)
+- `love` / `romance` / `wedding` / `breakup` → AMORE (rosa)
+- `family` / `parent` / `child` / `birth` → FAMIGLIA (arancio chiaro)
+- Fallback → VITA (viola)
+**Stato**: ✅ Fatto
+
+---
+
+## Feature: NPC spontaneous events — notifiche prominenti
+**Problema**: Gli eventi autonomi degli NPC (morte, matrimonio, nascita, ecc.) erano nascosti nel log testuale.  
+**Fix**:
+- Aggiunta `npcEventQueue: NPCAgencyEvent[]` a `GameState` + `dismissNpcEvent(id)` action
+- Tick annuale popola la coda con max 5 eventi NPC per anno
+- Nuovo componente `NPCEventNotifications.tsx`: banner slide-down in alto con icona colorata per tipo, nome NPC, descrizione, e contatore "N altri eventi in attesa"
+- Colori per tipo: morte=viola, matrimonio=rosa, nascita=arancio, trasloco=blu, riconciliazione=verde, ecc.
+**Stato**: ✅ Fatto
+
+---
+
+## Feature: Post-action result panel
+**Descrizione**: Pannello slide-up BitLife-style dopo ogni azione con effetti sulle statistiche.  
+**Fix**:
+- `toastStore` esteso con `panel: ActionPanel | null`, `showPanel()`, `closePanel()`
+- Nuovo componente `ActionResultPanel.tsx`: card scura con barra colorata (verde=successo, rosso=fail), emoji, titolo, e chip per ogni stat modificata (colore verde/rosso + valore)
+- `HealthScreen` aggiornato: usa `showPanel` invece del feedback inline, passa `effects` all'azione
+- Pannello auto-chiude dopo 3.5s, oppure tap per chiudere
+**Stato**: ✅ Fatto

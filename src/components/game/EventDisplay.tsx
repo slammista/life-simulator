@@ -16,11 +16,28 @@ const CATEGORY_COLORS: Record<string, string> = {
   finanze:     '#10b981',
   life:        '#a78bfa',
   vita:        '#a78bfa',
+  family:      '#fb923c',
+  famiglia:    '#fb923c',
+  relationship:'#f472b6',
+  relazione:   '#f472b6',
+}
+
+function deriveCategory(id: string): string {
+  const l = id.toLowerCase()
+  if (l.includes('school') || l.includes('edu') || l.includes('univ') || l.includes('grade') || l.includes('study') || l.includes('gpa') || l.includes('teacher') || l.includes('lesson')) return 'education'
+  if (l.includes('job') || l.includes('career') || l.includes('work') || l.includes('boss') || l.includes('salary') || l.includes('promo') || l.includes('fired') || l.includes('hire') || l.includes('office')) return 'career'
+  if (l.includes('health') || l.includes('disease') || l.includes('hospital') || l.includes('injury') || l.includes('accident') || l.includes('sick') || l.includes('doctor') || l.includes('medical')) return 'health'
+  if (l.includes('crime') || l.includes('prison') || l.includes('arrest') || l.includes('police') || l.includes('thief') || l.includes('rob') || l.includes('steal') || l.includes('drug_') || l.includes('illegal')) return 'criminal'
+  if (l.includes('money') || l.includes('finance') || l.includes('invest') || l.includes('bank') || l.includes('debt') || l.includes('loan') || l.includes('stock') || l.includes('budget') || l.includes('tax')) return 'finance'
+  if (l.includes('love') || l.includes('romance') || l.includes('wedding') || l.includes('divorce') || l.includes('crush') || l.includes('breakup') || l.includes('relation') || l.includes('date') || l.includes('kiss')) return 'relationship'
+  if (l.includes('family') || l.includes('parent') || l.includes('child') || l.includes('sibling') || l.includes('birth') || l.includes('baby') || l.includes('mom') || l.includes('dad') || l.includes('brother') || l.includes('sister')) return 'family'
+  return 'life'
 }
 
 function getCategoryColor(category?: string): string {
   if (!category) return '#6366f1'
-  return CATEGORY_COLORS[category.toLowerCase()] ?? '#6366f1'
+  const derived = (!category || category === 'none') ? 'life' : category.toLowerCase()
+  return CATEGORY_COLORS[derived] ?? '#6366f1'
 }
 
 function getCategoryLabel(category?: string): string {
@@ -33,6 +50,8 @@ function getCategoryLabel(category?: string): string {
     education: 'ISTRUZIONE', istruzione: 'ISTRUZIONE',
     finance: 'FINANZE', finanze: 'FINANZE',
     life: 'VITA', vita: 'VITA',
+    family: 'FAMIGLIA', famiglia: 'FAMIGLIA',
+    relationship: 'AMORE', relazione: 'AMORE',
   }
   return labels[category.toLowerCase()] ?? category.toUpperCase()
 }
@@ -69,8 +88,9 @@ export const EventDisplay = memo(function EventDisplay() {
 
   const isEpicPlus = currentEvent.rarity === 'epic' || currentEvent.rarity === 'legendary'
 
-  // Determine category from packId or other field
-  const category = (currentEvent as unknown as { category?: string }).category
+  // Determine category — derive from event ID if JSON has "none"
+  const rawCategory = (currentEvent as unknown as { category?: string }).category
+  const category = (!rawCategory || rawCategory === 'none') ? deriveCategory(currentEvent.id) : rawCategory
   const headerColor = getCategoryColor(category)
   const categoryLabel = getCategoryLabel(category)
   const npcName = (currentEvent as unknown as { npcName?: string }).npcName

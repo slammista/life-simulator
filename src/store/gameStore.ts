@@ -257,6 +257,7 @@ function buildInitialState(): GameState {
     },
     dailyQuests: DailyQuestEngine.initialState(),
     npcAgency: NPCAgencyEngine.initialState(),
+    npcEventQueue: [],
     currentEvent: null,
     availableChoices: [],
     pendingEffects: null,
@@ -406,6 +407,7 @@ export const useGameStore = create<FullStore>()(
         const npcAgencyTick = NPCAgencyEngine.annualTick(state, updatedRelationships)
         merge(npcAgencyTick.effects)
         messages.push(...npcAgencyTick.messages)
+        const newNpcEvents = npcAgencyTick.agency.events.slice(0, 5) // max 5 queued per year
 
         // 7b. Trauma & grief annual burden
         const traumaTick = TraumaEngine.annualTick(state)
@@ -728,6 +730,7 @@ export const useGameStore = create<FullStore>()(
             ? [...npcAgencyTick.relationships, autoSpawnedRelationship]
             : npcAgencyTick.relationships,
           npcAgency: npcAgencyTick.agency,
+          npcEventQueue: [...(state.npcEventQueue ?? []), ...newNpcEvents].slice(-10),
           criminal: updatedCriminal,
           hobbies: updatedHobbies,
           socialMedia: updatedProfiles.length > 0 ? updatedProfiles : state.socialMedia,
@@ -2153,6 +2156,7 @@ export const useGameStore = create<FullStore>()(
           chaos: ChaosEngine.initialState(),
           dailyQuests: DailyQuestEngine.initialState(),
           npcAgency: NPCAgencyEngine.initialState(),
+          npcEventQueue: [],
           adRewards: AdRewardEngine.initialState(),
           legacy: state.legacy,
           diminishingReturns: {},
@@ -2372,6 +2376,10 @@ export const useGameStore = create<FullStore>()(
 
       unlockGodMode: () => {
         set(s => ({ settings: { ...s.settings, godModeUnlocked: true } }))
+      },
+
+      dismissNpcEvent: (id: string) => {
+        set(s => ({ npcEventQueue: (s.npcEventQueue ?? []).filter(e => e.id !== id) }))
       },
 
       // ==================== Cosmetic Surgery actions ====================

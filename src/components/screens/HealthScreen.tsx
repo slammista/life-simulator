@@ -1,5 +1,5 @@
-import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
+import { useToastStore } from '../../store/toastStore'
 import type { Disease, TraumaEvent } from '../../store/types'
 
 export function HealthScreen() {
@@ -10,18 +10,17 @@ export function HealthScreen() {
   const treatDisease = useGameStore(s => s.treatDisease)
   const exercise = useGameStore(s => s.exercise)
   const attendTherapy = useGameStore(s => s.attendTherapy)
+  const showPanel = useToastStore(s => s.showPanel)
 
-  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
-
-  const flash = (msg: string, ok: boolean) => {
-    setFeedback({ msg, ok })
-    setTimeout(() => setFeedback(null), 3500)
+  const flash = (msg: string, ok: boolean, emoji: string, effects: Record<string, number> = {}) => {
+    showPanel({ title: msg, emoji, ok, effects })
+    setTimeout(() => useToastStore.getState().closePanel(), 3500)
   }
 
-  const handleMedical = () => { const r = medicalCheck(); flash(r.message, r.success) }
-  const handleExercise = () => { const r = exercise(); flash(r.message, r.success) }
-  const handleTherapy = () => { const r = attendTherapy(); flash(r.message, r.success) }
-  const handleTreat = (id: string) => { const r = treatDisease(id); flash(r.message, r.success) }
+  const handleMedical = () => { const r = medicalCheck(); flash(r.message, r.success, '🏥', r.effects as Record<string, number>) }
+  const handleExercise = () => { const r = exercise(); flash(r.message, r.success, '🏋️', r.effects as Record<string, number>) }
+  const handleTherapy = () => { const r = attendTherapy(); flash(r.message, r.success, '🧘', r.effects as Record<string, number>) }
+  const handleTreat = (id: string) => { const r = treatDisease(id); flash(r.message, r.success, '💊', r.effects as Record<string, number>) }
 
   const severityColor = (s: number) =>
     s >= 4 ? '#ef4444' : s >= 3 ? '#f97316' : s >= 2 ? '#eab308' : '#10b981'
@@ -34,17 +33,6 @@ export function HealthScreen() {
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
       <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginBottom: 12 }}>💊 Salute</h2>
-
-      {feedback && (
-        <div style={{
-          borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
-        }}>
-          {feedback.msg}
-        </div>
-      )}
 
       {/* Stats overview */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>

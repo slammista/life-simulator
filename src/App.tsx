@@ -12,6 +12,8 @@ import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { TutorialOverlay } from './components/game/TutorialOverlay'
 import { InstallBanner } from './components/game/InstallBanner'
 import { ToastContainer } from './components/game/ToastNotification'
+import { ActionResultPanel } from './components/game/ActionResultPanel'
+import { NPCEventNotifications } from './components/game/NPCEventNotifications'
 import { VitaWidgets } from './components/game/VitaWidgets'
 import { ActivitiesNav, ACTIVITIES_ITEM_MAP, type ActivitiesSubTab as ActivitiesSubTabBase } from './components/game/ActivitiesNav'
 import { AgeTransitionOverlay } from './components/game/AgeTransitionOverlay'
@@ -282,6 +284,8 @@ function App() {
         visible={ageOverlay.visible}
         onDone={() => setAgeOverlay(s => ({ ...s, visible: false }))}
       />
+      <NPCEventNotifications />
+      <ActionResultPanel />
       <ToastContainer />
       <InstallBanner />
     </div>

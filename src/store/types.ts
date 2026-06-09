@@ -1100,6 +1100,7 @@ export interface GameState {
 
   // Autonomous NPC life simulation
   npcAgency: NPCAgencyState
+  npcEventQueue: NPCAgencyEvent[]
 
   // Events
   currentEvent: GameEvent | null
@@ -1307,6 +1308,7 @@ export interface GameActions {
   cheatSetImmortal: () => void
   cheatSkipToAge: (targetAge: number) => void
   unlockGodMode: () => void
+  dismissNpcEvent: (id: string) => void
 
   // Pet battle actions
   petBattle: (petId: string) => ActionResult
