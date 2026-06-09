@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import { CareerEngine, getAllJobs, getContractLabel } from '../../services/CareerEngine'
+import { CareerEngine, getAllJobs, getContractLabel, getCategorySkillBonus } from '../../services/CareerEngine'
 import { useToastStore } from '../../store/toastStore'
 import type { WorkAction, WorkNPC, WorkReputationStatus, PlayerSkills } from '../../store/types'
 
@@ -77,6 +77,19 @@ const JOB_TAGLINE: Record<string, string> = {
   translator:        'Sei il ponte tra due mondi.',
   tattoo_artist:     'L\'arte rimane sulla pelle per sempre.',
   life_coach:        'Aiuti chi non sa ancora dove andare.',
+}
+
+const TRAIT_CONFIG: Record<string, { emoji: string; color: string }> = {
+  introverso:  { emoji: '🤫', color: '#94a3b8' },
+  ambizioso:   { emoji: '🔥', color: '#f59e0b' },
+  geloso:      { emoji: '💚', color: '#22c55e' },
+  generoso:    { emoji: '🤝', color: '#f472b6' },
+  sensibile:   { emoji: '💙', color: '#60a5fa' },
+  sicuro:      { emoji: '😎', color: '#a78bfa' },
+  avido:       { emoji: '💰', color: '#fbbf24' },
+  leale:       { emoji: '🛡️', color: '#38bdf8' },
+  empatico:    { emoji: '💫', color: '#ec4899' },
+  impulsivo:   { emoji: '⚡', color: '#ef4444' },
 }
 
 const WORK_REP_CONFIG: Record<WorkReputationStatus, { label: string; color: string; bg: string }> = {
@@ -428,7 +441,7 @@ export function CareerScreen() {
                   )}
                 </div>
 
-                {/* Skill hints */}
+                {/* Skill hints + boost badge */}
                 {CATEGORY_SKILL_HINTS[job.category] && (
                   <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 10 }}>
                     <span style={{ fontSize: 10, color: 'var(--text-faint)', alignSelf: 'center' }}>skill utili:</span>
@@ -447,6 +460,15 @@ export function CareerScreen() {
                         </span>
                       )
                     })}
+                    {getCategorySkillBonus(job.category, state.skills) >= 0.06 && (
+                      <span style={{
+                        fontSize: 10, padding: '2px 8px', borderRadius: 99,
+                        background: 'rgba(124,92,255,0.15)', color: '#a78bfa',
+                        border: '1px solid rgba(124,92,255,0.3)', fontWeight: 700,
+                      }}>
+                        ⚡ Skill boost attivo
+                      </span>
+                    )}
                   </div>
                 )}
 
@@ -525,6 +547,24 @@ export function CareerScreen() {
 
                   {isExpanded && (
                     <div style={{ marginTop: 10 }}>
+                      {/* Trait badges */}
+                      {colleague.personalityTraits.length > 0 && (
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
+                          {colleague.personalityTraits.map(trait => {
+                            const tc = TRAIT_CONFIG[trait] ?? { emoji: '🔹', color: '#94a3b8' }
+                            return (
+                              <span key={trait} title={trait} style={{
+                                fontSize: 10, padding: '2px 7px', borderRadius: 99,
+                                background: `${tc.color}15`, color: tc.color,
+                                border: `1px solid ${tc.color}30`,
+                              }}>
+                                {tc.emoji} {trait}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      )}
+
                       {/* Affection bar */}
                       <div style={{ marginBottom: 10 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--color-text-secondary)', marginBottom: 3 }}>

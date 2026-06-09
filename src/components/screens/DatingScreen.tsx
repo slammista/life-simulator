@@ -2,6 +2,19 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { DatingEngine, type DatingApp } from '../../services/DatingEngine'
 
+function CompatChip({ value }: { value: number }) {
+  const color = value >= 75 ? '#f472b6' : value >= 55 ? '#f59e0b' : '#94a3b8'
+  const label = value >= 80 ? 'Ottima intesa' : value >= 60 ? 'Buona intesa' : value >= 40 ? 'Discreta' : 'Poca affinità'
+  return (
+    <span style={{
+      fontSize: 10, padding: '2px 8px', borderRadius: 99,
+      background: `${color}18`, color, border: `1px solid ${color}35`, fontWeight: 600,
+    }}>
+      💕 {value}% · {label}
+    </span>
+  )
+}
+
 const WEDDING_PRESETS = [
   { label: 'Intimo', cost: 5000 },
   { label: 'Standard', cost: 20000 },
@@ -9,7 +22,7 @@ const WEDDING_PRESETS = [
 ]
 
 export function DatingScreen() {
-  const { relationships, stats, finance, time, criminal, swipe, proposeToPartner, getMarried, getDivorced } = useGameStore()
+  const { relationships, stats, finance, time, criminal, swipe, proposeToPartner, getMarried, getDivorced, skills } = useGameStore()
   const [feedback, setFeedback] = useState('')
   const [selectedApp, setSelectedApp] = useState<DatingApp>('tinder')
   const [ringValue, setRingValue] = useState(2000)
@@ -52,14 +65,19 @@ export function DatingScreen() {
           <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
             💒 Sposato/a con
           </p>
-          {spouses.map(s => (
+          {spouses.map(s => {
+            const compat = DatingEngine.computeCompatibility(skills, stats, s.personalityTraits)
+            return (
             <div key={s.id} className="card" style={{ padding: '12px 14px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <div>
                   <span style={{ fontSize: 22 }}>{s.emoji}</span>
                   <span style={{ fontSize: 14, fontWeight: 600, marginLeft: 8 }}>{s.name}</span>
                   <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginLeft: 6 }}>{s.age} anni</span>
                 </div>
+              </div>
+              <div style={{ marginBottom: 10 }}>
+                <CompatChip value={compat} />
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
                 {[
@@ -87,7 +105,8 @@ export function DatingScreen() {
                 📜 Divorzia
               </button>
             </div>
-          ))}
+            )
+          })}
         </div>
       )}
 
@@ -134,18 +153,23 @@ export function DatingScreen() {
       )}
 
       {/* Partner (not yet engaged) */}
-      {partners.filter(p => !p.historyFlags.includes('engaged') && p.type !== 'spouse').map(partner => (
+      {partners.filter(p => !p.historyFlags.includes('engaged') && p.type !== 'spouse').map(partner => {
+        const compat = DatingEngine.computeCompatibility(skills, stats, partner.personalityTraits)
+        return (
         <div key={partner.id}>
           <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
             ❤️ Partner
           </p>
           <div className="card" style={{ padding: '12px 14px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
               <span style={{ fontSize: 22 }}>{partner.emoji}</span>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{partner.name}</div>
                 <div style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>❤️ Partner · {partner.age} anni</div>
               </div>
+            </div>
+            <div style={{ marginBottom: 10 }}>
+              <CompatChip value={compat} />
             </div>
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>Valore anello</p>
             <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
@@ -173,7 +197,8 @@ export function DatingScreen() {
             </button>
           </div>
         </div>
-      ))}
+        )
+      })}
 
       {/* Dating apps */}
       {spouses.length === 0 && (

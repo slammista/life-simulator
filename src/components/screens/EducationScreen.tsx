@@ -1,7 +1,20 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { EducationEngine, getEducationLabel } from '../../services/EducationEngine'
-import type { EducationLevel, SchoolAction, SchoolNPC, SchoolReputationStatus } from '../../store/types'
+import type { EducationLevel, SchoolAction, SchoolNPC, SchoolReputationStatus, NPCPersonalityTrait } from '../../store/types'
+
+const TRAIT_CONFIG: Record<NPCPersonalityTrait, { emoji: string; color: string }> = {
+  introverso:  { emoji: '🤫', color: '#94a3b8' },
+  ambizioso:   { emoji: '🔥', color: '#f59e0b' },
+  geloso:      { emoji: '💚', color: '#22c55e' },
+  generoso:    { emoji: '🤝', color: '#f472b6' },
+  sensibile:   { emoji: '💙', color: '#60a5fa' },
+  sicuro:      { emoji: '😎', color: '#a78bfa' },
+  avido:       { emoji: '💰', color: '#fbbf24' },
+  leale:       { emoji: '🛡️', color: '#38bdf8' },
+  empatico:    { emoji: '💫', color: '#ec4899' },
+  impulsivo:   { emoji: '⚡', color: '#ef4444' },
+}
 
 const LEVEL_EMOJI: Record<EducationLevel, string> = {
   none: '❌',
@@ -268,6 +281,23 @@ export function EducationScreen() {
 
                   {isExpanded && (
                     <div style={{ marginTop: 10 }}>
+                      {/* NPC personality trait badges */}
+                      {npc.personalityTraits.length > 0 && (
+                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
+                          {npc.personalityTraits.map(trait => {
+                            const tc = TRAIT_CONFIG[trait]
+                            return (
+                              <span key={trait} style={{
+                                fontSize: 10, padding: '2px 7px', borderRadius: 99,
+                                background: `${tc.color}15`, color: tc.color,
+                                border: `1px solid ${tc.color}30`,
+                              }}>
+                                {tc.emoji} {trait}
+                              </span>
+                            )
+                          })}
+                        </div>
+                      )}
                       <div style={{ marginBottom: 10 }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--color-text-secondary)', marginBottom: 3 }}>
                           <span>Affinità</span><span>{npc.affection}/100</span>

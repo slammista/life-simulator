@@ -705,7 +705,7 @@ Rendere diverse le vite in base a paese, cultura e contesto.
 - ✅ Skill panel in EducationScreen con barre di progresso per tutte le 8 abilità.
 - ✅ Club scolastici: 5 club (Sport, Musicale, Accademico, Arte, Dibattito) ognuno con bonus skill specifici, UI nella scheda Info.
 - ✅ joinClub() action nel gameStore.
-- ⏳ Collegare skill esplicitamente a requisiti carriera.
+- ✅ Collegare skill esplicitamente a requisiti carriera — bonus hire chance (+12% max) via getCategorySkillBonus(), badge "⚡ Skill boost attivo" su job card.
 
 ## PR 5 — Memorie, eventi rari e timeline ✅ COMPLETATO
 
@@ -736,7 +736,7 @@ Se bisogna scegliere cosa implementare prima, partire da:
 3. ✅ Lavoro con colleghi persistenti.
 4. ✅ Scuola con studenti persistenti.
 5. ✅ Attività scolastiche che aumentano skill.
-6. ⏳ Timeline/memorie.
+6. ✅ Timeline/memorie — implementato in sessione 2 (LifeMemory auto-save, tab Ricordi, milestone età).
 
 Queste modifiche spostano il gioco da menu simulator a vero life simulator sociale.
 
@@ -781,12 +781,20 @@ Queste modifiche spostano il gioco da menu simulator a vero life simulator socia
 - **WorkSchoolEngine.ts**: `workInteract()` accetta `workReputation` e `playerSkillBonus` — modificatore probabilità [-12,+12] per status, effetti extra per leader/tossico/genio; `schoolInteract()` accetta `schoolReputation` e `playerSkillBonus` — modificatori per popolare/nerd/atleta con effetti extra affinità/skill; `socializeOutside()` accetta `playerSkills` — bonus meetChance da socialSkill+charisma, bonus passivi atletismo@palestra e carisma@volontariato
 - **gameStore.ts**: tutti e tre i call-site aggiornati — `workInteract` passa `workReputation` + `(charisma+leadership)/2` bonus; `schoolInteract` passa `schoolReputation` + `(academicSkill+socialSkill)/2` bonus; `socializeOutside` passa `state.skills`
 
+## Completato nella sessione 5 (out-of-scope)
+
+- **CareerEngine.ts**: `getCategorySkillBonus()` — mappa 14 categorie → skill rilevanti con pesi; usata in `applyForJob` come bonus fino a +12% sulla hire chance; messaggio di feedback menziona la skill quando il bonus è alto
+- **CareerScreen.tsx**: badge "⚡ Skill boost attivo" sui job card quando il bonus skill categoria ≥ 6%; trait badges (🔥🤫💙⚡ etc.) sui colleghi espansi
+- **EducationScreen.tsx**: trait badges di personalità sui compagni/professori espansi (stesso sistema di colori)
+- **DatingEngine.ts**: `computeCompatibility(skills, stats, npcTraits)` — calcola 0-100 su 11 trait match/clash (Studioso↔leale/empatico, Atletico↔sicuro/ambizioso, Creativo↔sensibile, Ribelle↔impulsivo, Ambizioso↔ambizioso/sicuro, etc.)
+- **DatingScreen.tsx**: `CompatChip` component + chip visibile su partner e coniuge con etichetta qualitativa (Ottima intesa / Buona intesa / Discreta / Poca affinità)
+
 ## Stato finale
 
-**Tutte le feature del documento implementate. Progresso: ~100%**
+**Tutte le feature del documento implementate + feature extra. Progresso: 100%**
 
-Rimane solo ottimizzazione opzionale futura:
-- Collegare skill a requisiti minimi carriera (es. charisma ≥ 30 per ruoli di vendita)
-- Eventi regionali/culturali (PR 13 — struttura dati già pronta)
-- NPC traits che influenzano compatibilità romantica
+Possibili feature future (non nel doc originale):
+- Eventi regionali/culturali (struttura dati già pronta — `nationality` su ogni NPC)
+- Compatibilità in RelationshipScreen (oltre DatingScreen)
+- Carriera richiederebbe skill minimo obbligatorio (hard block invece di soft bonus)
 

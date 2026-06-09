@@ -1,4 +1,4 @@
-import type { Effect, GameState, NPCMood, NPCPersonalityTrait, Relationship } from '../store/types'
+import type { Effect, GameState, NPCMood, NPCPersonalityTrait, PlayerSkills, CoreStats, Relationship } from '../store/types'
 
 export type DatingApp = 'tinder' | 'bumble' | 'hinge' | 'okCupid'
 
@@ -155,6 +155,36 @@ export class DatingEngine {
         trust: Math.min(100, rel.trust + 10),
       },
     }
+  }
+
+  static computeCompatibility(skills: PlayerSkills, stats: CoreStats, npcTraits: NPCPersonalityTrait[]): number {
+    let score = 50
+    const isStudioso  = skills.academicSkill >= 40 && stats.intelligence >= 55
+    const isAtletico  = skills.athleticism   >= 40 && stats.health       >= 65
+    const isCreativo  = skills.creativity    >= 40
+    const isSociale   = skills.socialSkill   >= 40
+    const isRibelle   = stats.karma < -30
+    const isAmbizioso = skills.leadership >= 40 && skills.charisma >= 35
+
+    for (const trait of npcTraits) {
+      if (isStudioso  && (trait === 'leale' || trait === 'empatico' || trait === 'ambizioso')) score += 8
+      if (isStudioso  && (trait === 'impulsivo' || trait === 'avido')) score -= 7
+      if (isAtletico  && (trait === 'sicuro'  || trait === 'ambizioso'))    score += 8
+      if (isAtletico  && trait === 'introverso')                             score -= 5
+      if (isCreativo  && (trait === 'sensibile' || trait === 'empatico'))   score += 10
+      if (isCreativo  && trait === 'avido')                                  score -= 6
+      if (isSociale   && trait !== 'introverso')                             score += 4
+      if (isSociale   && trait === 'introverso')                             score -= 5
+      if (isRibelle   && (trait === 'impulsivo' || trait === 'avido'))      score += 6
+      if (isRibelle   && (trait === 'leale' || trait === 'sensibile'))      score -= 8
+      if (isAmbizioso && (trait === 'ambizioso' || trait === 'sicuro'))     score += 7
+      if (isAmbizioso && (trait === 'geloso' || trait === 'introverso'))    score -= 5
+      // looks bonus/penalty
+      if (stats.looks >= 65 && trait === 'geloso')  score -= 6
+      if (stats.looks >= 65 && trait === 'sicuro')  score += 5
+    }
+
+    return Math.max(10, Math.min(97, score))
   }
 
   static divorce(npcId: string, state: GameState): DatingResult {

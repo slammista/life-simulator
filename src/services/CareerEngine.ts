@@ -1,5 +1,31 @@
-import type { GameState, Effect, Job, ContractType } from '../store/types'
+import type { GameState, Effect, Job, ContractType, PlayerSkills } from '../store/types'
 import db from '../../public/db.json'
+
+// Skill weights per job category — each entry is [skillKey, bonus per 100 pts]
+const CATEGORY_SKILL_WEIGHT: Partial<Record<string, [keyof PlayerSkills, number][]>> = {
+  medical:   [['academicSkill', 0.07], ['discipline', 0.04]],
+  legal:     [['academicSkill', 0.07], ['charisma', 0.04]],
+  tech:      [['academicSkill', 0.07], ['creativity', 0.04]],
+  finance:   [['academicSkill', 0.05], ['leadership', 0.04]],
+  business:  [['leadership', 0.07], ['charisma', 0.05]],
+  public:    [['leadership', 0.06], ['charisma', 0.05]],
+  creative:  [['creativity', 0.07], ['music', 0.04]],
+  media:     [['creativity', 0.05], ['charisma', 0.05]],
+  education: [['academicSkill', 0.05], ['socialSkill', 0.04]],
+  care:      [['socialSkill', 0.07], ['charisma', 0.04]],
+  retail:    [['socialSkill', 0.05], ['charisma', 0.04]],
+  food:      [['creativity', 0.05], ['discipline', 0.05]],
+  logistics: [['athleticism', 0.05], ['discipline', 0.05]],
+  technical: [['academicSkill', 0.06], ['discipline', 0.05]],
+}
+
+export function getCategorySkillBonus(category: string, skills: PlayerSkills): number {
+  const weights = CATEGORY_SKILL_WEIGHT[category]
+  if (!weights) return 0
+  return weights.reduce((sum, [key, weight]) => {
+    return sum + (skills[key] / 100) * weight
+  }, 0)
+}
 
 // ---- types ----
 
@@ -98,18 +124,21 @@ export class CareerEngine {
       return { success: false, message: 'Lavori già qui.', effects: {} }
     }
 
-    // Hire chance based on stats
+    // Hire chance based on stats + skills
+    const skillBonus = getCategorySkillBonus(jobDef.category, state.skills)
     const base = 0.45
       + (state.stats.reputation / 250)
       + (state.stats.intelligence / 250)
       + (state.stats.looks / 500)
+      + skillBonus
     const chance = Math.min(0.92, base)
     const hired = Math.random() < chance
 
     if (!hired) {
+      const skillMsg = skillBonus >= 0.08 ? ' Nonostante le tue skill, la concorrenza era alta.' : ''
       return {
         success: false,
-        message: `Non sei stato selezionato per ${jobDef.title}. Riprova più tardi.`,
+        message: `Non sei stato selezionato per ${jobDef.title}. Riprova più tardi.${skillMsg}`,
         effects: { happiness: -3, mentalHealth: -2 },
       }
     }
