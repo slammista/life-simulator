@@ -8,6 +8,7 @@ import { NewGameScreen } from './components/screens/NewGameScreen'
 import { GameOverScreen } from './components/screens/GameOverScreen'
 import { AgeGate } from './components/screens/AgeGate'
 import { EmotionalUIEngine } from './services/EmotionalUIEngine'
+import { haptic } from './services/HapticEngine'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { TutorialOverlay } from './components/game/TutorialOverlay'
 import { InstallBanner } from './components/game/InstallBanner'
@@ -15,6 +16,7 @@ import { ToastContainer } from './components/game/ToastNotification'
 import { ActionResultPanel } from './components/game/ActionResultPanel'
 import { NPCEventNotifications } from './components/game/NPCEventNotifications'
 import { VitaWidgets } from './components/game/VitaWidgets'
+import { ShareLifeButton } from './components/game/ShareLifeButton'
 import { ActivitiesNav, ACTIVITIES_ITEM_MAP, type ActivitiesSubTab as ActivitiesSubTabBase } from './components/game/ActivitiesNav'
 import { AgeTransitionOverlay } from './components/game/AgeTransitionOverlay'
 import { useShallow } from 'zustand/react/shallow'
@@ -121,6 +123,7 @@ function App() {
   const handleAge = useCallback(() => {
     setActiveTab('vita')
     if (!ageDisabled) {
+      haptic('heavy')
       setAgeOverlay({ visible: true, age: time.age + 1, year: time.year + 1 })
       handleInvecchia()
     }
@@ -217,7 +220,12 @@ function App() {
               </div>
               <EventDisplay />
             </div>
-            <div className="event-log-panel"><EventLog /></div>
+            <div className="event-log-panel">
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'flex-end', padding: '6px 12px 0' }}>
+                <ShareLifeButton />
+              </div>
+              <EventLog />
+            </div>
           </div>
         )}
 

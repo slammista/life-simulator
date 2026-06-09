@@ -1,5 +1,6 @@
 import { memo, useEffect, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
+import { haptic } from '../../services/HapticEngine'
 
 // Category → header color mapping (BitLife-style)
 const CATEGORY_COLORS: Record<string, string> = {
@@ -240,7 +241,7 @@ export const EventDisplay = memo(function EventDisplay() {
                   <button
                     key={choice.id}
                     className="tap-scale"
-                    onClick={() => handleChoice(choice.id)}
+                    onClick={() => { haptic('tap'); handleChoice(choice.id) }}
                     style={{
                       width: '100%', padding: '12px 14px',
                       borderRadius: 10,
@@ -260,7 +261,7 @@ export const EventDisplay = memo(function EventDisplay() {
               ) : (
                 <button
                   className="tap-scale"
-                  onClick={() => handleChoice('')}
+                  onClick={() => { haptic('tap'); handleChoice('') }}
                   style={{
                     width: '100%', padding: '12px 0',
                     borderRadius: 10,

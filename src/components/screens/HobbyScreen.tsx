@@ -1,30 +1,34 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { getAllHobbyDefs, getHobbyDef } from '../../services/HobbyEngine'
+import { useToastStore } from '../../store/toastStore'
+import { haptic } from '../../services/HapticEngine'
 
 export function HobbyScreen() {
   const hobbies = useGameStore(s => s.hobbies)
   const finance = useGameStore(s => s.finance)
   const addHobby = useGameStore(s => s.addHobby)
   const practiceHobby = useGameStore(s => s.practiceHobby)
+  const showPanel = useToastStore(s => s.showPanel)
+  const closePanel = useToastStore(s => s.closePanel)
 
-  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [tab, setTab] = useState<'mine' | 'discover'>('mine')
 
-  const flash = (msg: string, ok: boolean) => {
-    setFeedback({ msg, ok })
-    setTimeout(() => setFeedback(null), 3500)
+  const flash = (msg: string, ok: boolean, emoji = '🎸', effects: Record<string, number> = {}) => {
+    haptic(ok ? 'success' : 'error')
+    showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
+    setTimeout(() => closePanel(), 3500)
   }
 
   const handleAdd = (id: string) => {
     const r = addHobby(id)
-    flash(r.message, r.success)
+    flash(r.message, r.success, '🎸', r.effects as Record<string, number>)
     if (r.success) setTab('mine')
   }
 
   const handlePractice = (id: string) => {
     const r = practiceHobby(id)
-    flash(r.message, r.success)
+    flash(r.message, r.success, '⭐', r.effects as Record<string, number>)
   }
 
   const allDefs = getAllHobbyDefs()
@@ -34,17 +38,6 @@ export function HobbyScreen() {
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
       <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginBottom: 12 }}>🎸 Hobby</h2>
-
-      {feedback && (
-        <div style={{
-          borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
-        }}>
-          {feedback.msg}
-        </div>
-      )}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>

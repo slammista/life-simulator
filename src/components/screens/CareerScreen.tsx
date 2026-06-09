@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { CareerEngine, getAllJobs, getContractLabel, getCategorySkillBonus } from '../../services/CareerEngine'
 import { useToastStore } from '../../store/toastStore'
+import { haptic } from '../../services/HapticEngine'
 import type { WorkAction, WorkNPC, WorkReputationStatus, PlayerSkills } from '../../store/types'
 
 const CATEGORY_SKILL_HINTS: Record<string, { key: keyof PlayerSkills; label: string; emoji: string }[]> = {
@@ -145,32 +146,34 @@ export function CareerScreen() {
   const [tab, setTab] = useState<'offers' | 'colleagues' | 'history'>('offers')
   const [expandedColleague, setExpandedColleague] = useState<string | null>(null)
 
-  const pushToast = useToastStore(s => s.push)
+  const showPanel = useToastStore(s => s.showPanel)
+  const closePanel = useToastStore(s => s.closePanel)
 
-  const flash = (msg: string, ok: boolean) => {
+  const flash = (msg: string, ok: boolean, emoji = '💼', effects: Record<string, number> = {}) => {
+    haptic(ok ? 'success' : 'error')
     setFeedback({ msg, ok })
-    pushToast(msg, ok ? '💼' : '❌', ok)
-    setTimeout(() => setFeedback(null), 3000)
+    showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
+    setTimeout(() => { setFeedback(null); closePanel() }, 3500)
   }
 
   const handleApply = (jobId: string) => {
     const r = applyForJob(jobId)
-    flash(r.message, r.success)
+    flash(r.message, r.success, '💼', r.effects as Record<string, number>)
   }
 
   const handleQuit = () => {
     const r = quitJob()
-    flash(r.message, r.success)
+    flash(r.message, r.success, '🚪', r.effects as Record<string, number>)
   }
 
   const handlePromotion = () => {
     const r = attemptPromotion()
-    flash(r.message, r.success)
+    flash(r.message, r.success, '📈', r.effects as Record<string, number>)
   }
 
   const handleWorkInteract = (colleagueId: string, action: WorkAction) => {
     const r = workInteract(colleagueId, action)
-    flash(r.message, r.success)
+    flash(r.message, r.success, '🤝', r.effects as Record<string, number>)
   }
 
   const hasDiploma = state.education.completedLevels.some(l =>
@@ -205,18 +208,6 @@ export function CareerScreen() {
       {isMinor && (
         <div style={{ borderRadius: 10, padding: '8px 12px', marginBottom: 12, fontSize: 12, background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)', color: '#fbbf24' }}>
           👦 Minorenne — disponibili solo lavori part-time e freelance. Lavori full-time sbloccati dopo il diploma.
-        </div>
-      )}
-
-      {/* Feedback */}
-      {feedback && (
-        <div style={{
-          borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
-        }}>
-          {feedback.msg}
         </div>
       )}
 

@@ -137,11 +137,11 @@ function CloudSavePanel() {
             ))}
           </div>
           <input
-            type="email" placeholder="Email" value={email}
+            type="email" placeholder="Indirizzo email" value={email}
             onChange={e => setEmail(e.target.value)} style={inputStyle}
           />
           <input
-            type="password" placeholder="Password" value={password}
+            type="password" placeholder="Password (min. 6 caratteri)" value={password}
             onChange={e => setPassword(e.target.value)} style={inputStyle}
             onKeyDown={e => e.key === 'Enter' && handleAuth()}
           />

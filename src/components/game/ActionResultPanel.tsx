@@ -1,4 +1,5 @@
 import { useToastStore } from '../../store/toastStore'
+import { haptic } from '../../services/HapticEngine'
 
 const STAT_LABELS: Record<string, string> = {
   health: 'Salute', happiness: 'Felicità', energy: 'Energia',
@@ -15,7 +16,10 @@ const STAT_EMOJI: Record<string, string> = {
 }
 
 export function ActionResultPanel() {
-  const { panel, closePanel } = useToastStore()
+  const { panel } = useToastStore()
+  const rawClose = useToastStore(s => s.closePanel)
+
+  const closePanel = () => { haptic(panel?.ok ? 'tap' : 'error'); rawClose() }
 
   if (!panel) return null
 

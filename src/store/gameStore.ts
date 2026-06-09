@@ -370,7 +370,6 @@ export const useGameStore = create<FullStore>()(
         if (hobbyIncome > 0) merge({ money: hobbyIncome * 12 })
 
         // 2c. Living costs — rent or mortgage (monthly × 12 per year)
-        // This was previously missing, causing housing to be effectively free.
         if (state.living.monthlyCost > 0) {
           merge({ money: -(state.living.monthlyCost * 12) })
           // Warn player if rent is more than 40% of annual income
@@ -378,6 +377,12 @@ export const useGameStore = create<FullStore>()(
           if (annualIncome > 0 && state.living.monthlyCost * 12 > annualIncome * 0.4) {
             merge({ mentalHealth: -2, happiness: -2 })
           }
+        }
+
+        // 2d. Basic living expenses (food, utilities, transport) — excluded if living with parents
+        if (newAge >= 18 && state.living.type !== 'parents') {
+          const baseExpenses = state.living.type === 'renting' ? 420 : state.living.type === 'owning' ? 380 : 500
+          merge({ money: -(baseExpenses * 12) })
         }
 
         // 3. Nation effect

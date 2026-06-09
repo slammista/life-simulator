@@ -1,5 +1,6 @@
 import { useGameStore } from '../../store/gameStore'
 import { useToastStore } from '../../store/toastStore'
+import { haptic } from '../../services/HapticEngine'
 import type { Disease, TraumaEvent } from '../../store/types'
 
 export function HealthScreen() {
@@ -13,6 +14,7 @@ export function HealthScreen() {
   const showPanel = useToastStore(s => s.showPanel)
 
   const flash = (msg: string, ok: boolean, emoji: string, effects: Record<string, number> = {}) => {
+    haptic(ok ? 'success' : 'error')
     showPanel({ title: msg, emoji, ok, effects })
     setTimeout(() => useToastStore.getState().closePanel(), 3500)
   }

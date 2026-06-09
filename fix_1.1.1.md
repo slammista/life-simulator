@@ -233,4 +233,42 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 - Nuovo componente `ActionResultPanel.tsx`: card scura con barra colorata (verde=successo, rosso=fail), emoji, titolo, e chip per ogni stat modificata (colore verde/rosso + valore)
 - `HealthScreen` aggiornato: usa `showPanel` invece del feedback inline, passa `effects` all'azione
 - Pannello auto-chiude dopo 3.5s, oppure tap per chiudere
+- Esteso anche a `CareerScreen` e `HobbyScreen`
+**Stato**: ✅ Fatto
+
+---
+
+## Feature: Haptic feedback (vibrazione) su mobile
+**Fix**: Aggiunto `HapticEngine.ts` con `haptic(type)` che usa `navigator.vibrate()`:
+- `tap` (10ms) — scelte evento
+- `success` (10+40+10ms) — azione riuscita
+- `error` (40+25+40ms) — azione fallita  
+- `heavy` (40ms) — pulsante +1 ETÀ
+- Integrato in: +1 ETÀ, EventDisplay choice buttons, ActionResultPanel close, HealthScreen, CareerScreen, HobbyScreen
+**Stato**: ✅ Fatto
+
+---
+
+## Feature: Social sharing — "Condividi la tua vita"
+**Fix**: Aggiunto `ShareLifeButton.tsx` nel pannello log della vita:
+- Usa Web Share API (`navigator.share`) su mobile, fallback clipboard su desktop
+- Testo condiviso: nome, età, emoji stat, lavoro attuale, link al gioco
+**Stato**: ✅ Fatto
+
+---
+
+## Fix: Bilanciamento economia — spese di vita correnti
+**Problema**: Il denaro si accumulava troppo facilmente perché non erano simulate le spese quotidiane (cibo, utenze, trasporti).  
+**Fix**: Aggiunta deduzione annuale automatica "spese correnti" per i giocatori >= 18 anni che non vivono coi genitori:
+- In affitto: €420/mese × 12 = €5.040/anno
+- Di proprietà: €380/mese × 12 = €4.560/anno
+- Altra sistemazione: €500/mese × 12 = €6.000/anno
+**Stato**: ✅ Fatto
+
+---
+
+## Fix: Localizzazione etichette inglesi
+- "Challenge pts" → "Punti sfida" (RibbonsScreen)
+- Placeholder "Email" → "Indirizzo email" (SettingsScreen)
+- Placeholder "Password" → "Password (min. 6 caratteri)" (SettingsScreen)
 **Stato**: ✅ Fatto

@@ -96,7 +96,7 @@ export default function RibbonsScreen() {
         <StatBadge label="Modalità" value={state.settings.mode.toUpperCase()} color={state.settings.mode === 'hard' ? '#f87171' : '#60a5fa'} />
         {state.settings.ironMan && <StatBadge label="Iron Man" value="☠️ ON" color="#f87171" />}
         <StatBadge label="Medaglie" value={`${totalUnlocked}/${totalRibbons}`} color="#fbbf24" />
-        <StatBadge label="Challenge pts" value={state.challengeEngine.totalPoints.toLocaleString()} color="#a855f7" />
+        <StatBadge label="Punti sfida" value={state.challengeEngine.totalPoints.toLocaleString()} color="#a855f7" />
       </div>
 
       {/* Tier breakdown */}
