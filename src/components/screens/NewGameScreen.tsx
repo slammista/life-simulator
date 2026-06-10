@@ -350,6 +350,16 @@ export function NewGameScreen() {
                 </div>
               </div>
             )}
+
+            {/* Adult hair preview */}
+            {avatar.hairStyle !== 'bald' && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'rgba(124,92,255,0.08)', border: '1px solid rgba(124,92,255,0.18)' }}>
+                <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', flex: 1 }}>
+                  👤 Aspetto da adulto (anteprima)
+                </span>
+                <AvatarRenderer size="sm" config={avatar} age={25} gender={gender} />
+              </div>
+            )}
           </div>
         </div>
 

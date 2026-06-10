@@ -10,7 +10,7 @@ interface Props {
 }
 
 const SIDE_TABS: { id: Tab; emoji: string; label: string }[] = [
-  { id: 'lavoro',  emoji: '💼', label: 'Lavoro'  },
+  { id: 'lavoro',  emoji: '💼', label: 'Carriera' },
   { id: 'assets',  emoji: '🏦', label: 'Assets'  },
 ]
 const SIDE_TABS_RIGHT: { id: Tab; emoji: string; label: string }[] = [

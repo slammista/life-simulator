@@ -80,6 +80,7 @@ export function EducationScreen() {
   const studyAction = useGameStore(s => s.studyAction)
   const schoolInteract = useGameStore(s => s.schoolInteract)
   const joinClub = useGameStore(s => s.joinClub)
+  const leaveClub = useGameStore(s => s.leaveClub)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [tab, setTab] = useState<'status' | 'classmates' | 'enroll'>('status')
@@ -429,11 +430,23 @@ export function EducationScreen() {
 
           {/* Clubs section */}
           <div className="card" style={{ padding: '12px 14px' }}>
-            <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 10 }}>Club & attività extrascolastiche</p>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+              <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, margin: 0 }}>Club & attività extrascolastiche</p>
+              {education.currentLevel !== 'none' && (
+                <span style={{ fontSize: 10, color: education.clubs.length >= 2 ? '#f59e0b' : 'var(--color-text-secondary)' }}>
+                  {education.clubs.length}/2 club
+                </span>
+              )}
+            </div>
             {education.currentLevel === 'none' ? (
               <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Iscriviti a una scuola per accedere ai club.</p>
             ) : (
               <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                {education.clubs.length >= 2 && (
+                  <div style={{ padding: '7px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.25)', fontSize: 11, color: '#fbbf24' }}>
+                    ⚠️ Hai raggiunto il limite di club (2 max con scuola). Lascia un club per entrarne in un altro.
+                  </div>
+                )}
                 {CLUBS.map(club => {
                   const joined = education.clubs.includes(club.id)
                   return (
@@ -447,15 +460,21 @@ export function EducationScreen() {
                         <span style={{ fontSize: 18 }}>{club.emoji}</span>
                         <div>
                           <p style={{ fontSize: 12, fontWeight: 600, color: joined ? '#a5b4fc' : 'var(--color-text)' }}>{club.label}</p>
-                          <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>{club.hint}</p>
+                          <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>{club.hint} · 8h/sett.</p>
                         </div>
                       </div>
                       {joined ? (
-                        <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: 'rgba(99,102,241,0.2)', color: '#a5b4fc' }}>✓ Membro</span>
+                        <button
+                          onClick={() => { const r = leaveClub(club.id); flash(r.message, r.success) }}
+                          style={{ fontSize: 11, padding: '5px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.12)', color: '#fca5a5', border: '1px solid rgba(239,68,68,0.25)', cursor: 'pointer', fontWeight: 600 }}
+                        >
+                          Lascia
+                        </button>
                       ) : (
                         <button
                           onClick={() => { const r = joinClub(club.id); flash(r.message, r.success) }}
-                          style={{ fontSize: 11, padding: '5px 12px', borderRadius: 8, background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', fontWeight: 600 }}
+                          disabled={education.clubs.length >= 2}
+                          style={{ fontSize: 11, padding: '5px 12px', borderRadius: 8, background: education.clubs.length >= 2 ? 'rgba(255,255,255,0.05)' : 'rgba(99,102,241,0.15)', color: education.clubs.length >= 2 ? 'var(--color-text-secondary)' : '#a5b4fc', border: `1px solid ${education.clubs.length >= 2 ? 'rgba(255,255,255,0.08)' : 'rgba(99,102,241,0.3)'}`, cursor: education.clubs.length >= 2 ? 'not-allowed' : 'pointer', fontWeight: 600 }}
                         >
                           Entra
                         </button>

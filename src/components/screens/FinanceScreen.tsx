@@ -13,8 +13,12 @@ export function FinanceScreen() {
   const insureAsset = useGameStore(s => s.insureAsset)
   const maintainAsset = useGameStore(s => s.maintainAsset)
   const takeLoan = useGameStore(s => s.takeLoan)
+  const requestMoneyFromParents = useGameStore(s => s.requestMoneyFromParents)
+  const age = useGameStore(s => s.time.age)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
+  const [parentAmount, setParentAmount] = useState('50')
+  const [parentReason, setParentReason] = useState('')
   const [tab, setTab] = useState<'overview' | 'invest' | 'assets'>('overview')
   const [investAmount, setInvestAmount] = useState('')
   const [selectedDef, setSelectedDef] = useState<string | null>(null)
@@ -121,6 +125,46 @@ export function FinanceScreen() {
           </button>
         ))}
       </div>
+
+      {/* Parent money card — only for under 18 */}
+      {age < 18 && (
+        <div className="card" style={{ padding: '14px 16px', marginBottom: 12, border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.06)' }}>
+          <p style={{ fontSize: 11, fontWeight: 800, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+            💸 Chiedi soldi ai genitori
+          </p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
+            {age < 14
+              ? 'Sei minore: i tuoi genitori pagano le tue spese automaticamente.'
+              : 'Hai 14+ anni: i tuoi genitori decidono in base al vostro rapporto.'}
+          </p>
+          <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
+            <input
+              type="number"
+              value={parentAmount}
+              onChange={e => setParentAmount(e.target.value)}
+              placeholder="Importo €"
+              style={{ flex: 1, padding: '7px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--color-text)', fontSize: 13 }}
+            />
+            <input
+              type="text"
+              value={parentReason}
+              onChange={e => setParentReason(e.target.value)}
+              placeholder="Per cosa? (es. libri, sport…)"
+              style={{ flex: 2, padding: '7px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', color: 'var(--color-text)', fontSize: 13 }}
+            />
+          </div>
+          <button
+            onClick={() => {
+              const amt = parseInt(parentAmount) || 50
+              const r = requestMoneyFromParents(amt, parentReason || 'spese personali')
+              flash(r.message, r.success)
+            }}
+            style={{ width: '100%', padding: '9px 0', borderRadius: 10, background: 'rgba(245,158,11,0.18)', border: '1px solid rgba(245,158,11,0.4)', color: '#fbbf24', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
+          >
+            🙏 Chiedi ai genitori
+          </button>
+        </div>
+      )}
 
       {/* Overview tab */}
       {tab === 'overview' && (

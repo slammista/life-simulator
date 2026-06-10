@@ -4,17 +4,20 @@ const SEEN_KEY = 'lifesim2d_first_age_up'
 
 interface Props {
   hasEvent: boolean
+  age: number
 }
 
-export function FirstPlayHint({ hasEvent }: Props) {
+export function FirstPlayHint({ hasEvent, age }: Props) {
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    if (!localStorage.getItem(SEEN_KEY)) {
+    if (age === 0 && !localStorage.getItem(SEEN_KEY)) {
       const t = setTimeout(() => setVisible(true), 2000)
       return () => clearTimeout(t)
+    } else if (age > 0) {
+      setVisible(false)
     }
-  }, [])
+  }, [age])
 
   // Hide hint once player advances (event appeared = they pressed +1 ETÀ)
   useEffect(() => {

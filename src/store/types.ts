@@ -1203,6 +1203,8 @@ export interface GameActions {
   // School ecosystem actions
   schoolInteract: (npcId: string, action: SchoolAction) => ActionResult
   joinClub: (clubId: string) => ActionResult
+  leaveClub: (clubId: string) => ActionResult
+  requestMoneyFromParents: (amount: number, reason: string) => ActionResult
 
   // Social activities outside work/school
   socializeOutside: (location: import('../services/WorkSchoolEngine').SocialLocation) => ActionResult

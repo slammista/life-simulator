@@ -62,6 +62,16 @@ function HairBack({ style, fill }: { style: AvatarHairStyle; fill: string }) {
   }
 }
 
+function BabyHairTuft({ fill }: { fill: string }) {
+  return (
+    <>
+      <path d="M 47 18 Q 45 10 44 16" stroke={fill} strokeWidth="2.8" fill="none" strokeLinecap="round" />
+      <path d="M 51 16 Q 52 8 53 14" stroke={fill} strokeWidth="2.8" fill="none" strokeLinecap="round" />
+      <path d="M 56 18 Q 58 10 57 16" stroke={fill} strokeWidth="2.8" fill="none" strokeLinecap="round" />
+    </>
+  )
+}
+
 function HairCap({ style, fill, clipId }: { style: AvatarHairStyle; fill: string; clipId: string }) {
   if (style === 'bald') return null
   const inner = style === 'buzz'
@@ -288,6 +298,11 @@ export function AvatarRenderer({ size = 'sm', config, age, gender, style }: Prop
 
       {/* Hair cap (clipped to head) */}
       <HairCap style={aged.hairStyle} fill={hairHex} clipId={clipId} />
+
+      {/* Baby hair tuft — shown when baby but selected style is not bald */}
+      {aged.isBaby && aged.hairStyle === 'bald' && resolvedConfig.hairStyle !== 'bald' && (
+        <BabyHairTuft fill={hairHex} />
+      )}
 
       {/* Hat (over hair, before face features) */}
       {aged.accessory === 'hat_cap'    && <Hat type="cap" />}

@@ -1147,6 +1147,16 @@ export const useGameStore = create<FullStore>()(
         if (state.education.currentLevel === 'none') return { success: false, message: 'Devi essere iscritto/a a una scuola per entrare in un club.', effects: {} }
         if (state.education.clubs.includes(clubId)) return { success: false, message: 'Sei già membro di questo club.', effects: {} }
 
+        // Max 2 clubs while studying (school=40h + 2 clubs×8h = 56h, 3 clubs = 64h > stress threshold)
+        const MAX_CLUBS = 2 // we're past the 'none' guard, so always studying
+        if (state.education.clubs.length >= MAX_CLUBS) {
+          return { success: false, message: `Puoi iscriverti a massimo ${MAX_CLUBS} club mentre studi. Lascia un club per entrarne in un altro.`, effects: {} }
+        }
+        const projectedHours = computeWeeklyHours(state) + 8
+        if (projectedHours > 64) {
+          return { success: false, message: 'Troppo occupato/a! Hai già troppi impegni settimanali. Lascia un\'attività prima.', effects: {} }
+        }
+
         const CLUB_EFFECTS: Record<string, { skills: Partial<PlayerSkills>; statEffects: Record<string, number>; emoji: string; label: string }> = {
           sport:    { skills: { athleticism: 2, discipline: 1 }, statEffects: { health: 2, happiness: 1 }, emoji: '⚽', label: 'Club Sportivo' },
           music:    { skills: { music: 2, creativity: 1 },       statEffects: { happiness: 2 },            emoji: '🎸', label: 'Club Musicale' },
@@ -1171,6 +1181,46 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Ti sei iscritto/a al ${cfg.label}!`, emoji: cfg.emoji, category: 'education', statChanges: cfg.statEffects }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message: `Ti sei iscritto/a al ${cfg.label}!`, effects: cfg.statEffects }
+      },
+
+      leaveClub: (clubId: string): ActionResult => {
+        const state = get()
+        if (!state.education.clubs.includes(clubId)) return { success: false, message: 'Non sei membro di questo club.', effects: {} }
+        const CLUB_LABELS: Record<string, string> = {
+          sport: 'Club Sportivo', music: 'Club Musicale', academic: 'Club Accademico', art: 'Club Arte', debate: 'Club Dibattito',
+        }
+        const label = CLUB_LABELS[clubId] ?? 'Club'
+        set(s => ({
+          education: { ...s.education, clubs: s.education.clubs.filter(c => c !== clubId) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Hai lasciato il ${label}.`, emoji: '🚪', category: 'education', statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Hai lasciato il ${label}.`, effects: {} }
+      },
+
+      requestMoneyFromParents: (amount: number, reason: string): ActionResult => {
+        const state = get()
+        const age = state.time.age
+        if (age >= 18) return { success: false, message: 'Sei maggiorenne, gestisci i tuoi soldi autonomamente.', effects: {} }
+        const parents = state.relationships.filter(r => r.type === 'parent' && r.isAlive)
+        if (parents.length === 0) return { success: false, message: 'Non hai genitori che possono darti soldi.', effects: {} }
+        // Under 14: parents always pay
+        if (age < 14) {
+          set(s => ({
+            finance: { ...s.finance, money: s.finance.money + amount },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `I tuoi genitori ti danno €${amount.toLocaleString('it-IT')} per ${reason}.`, emoji: '💸', category: 'life', statChanges: { money: amount } }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: true, message: `I tuoi genitori ti danno €${amount.toLocaleString('it-IT')} per ${reason}!`, effects: { money: amount } }
+        }
+        // 14-17: depends on relationship affection
+        const avgAffection = parents.reduce((sum, p) => sum + p.love, 0) / parents.length
+        if (avgAffection >= 50) {
+          set(s => ({
+            finance: { ...s.finance, money: s.finance.money + amount },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `I tuoi genitori accettano di pagarti €${amount.toLocaleString('it-IT')} per ${reason}.`, emoji: '💸', category: 'life', statChanges: { money: amount } }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: true, message: `I tuoi genitori accettano! Ti danno €${amount.toLocaleString('it-IT')} per ${reason}.`, effects: { money: amount } }
+        }
+        return { success: false, message: `I tuoi genitori rifiutano di darti €${amount.toLocaleString('it-IT')}. Il rapporto con loro è troppo teso.`, effects: {} }
       },
 
       // ==================== Social activities (outside work/school) ====================

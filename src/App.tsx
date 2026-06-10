@@ -20,6 +20,9 @@ import { VitaWidgets } from './components/game/VitaWidgets'
 import { ShareLifeButton } from './components/game/ShareLifeButton'
 import { FirstPlayHint } from './components/game/FirstPlayHint'
 import { ActivitiesNav, ACTIVITIES_ITEM_MAP, type ActivitiesSubTab as ActivitiesSubTabBase } from './components/game/ActivitiesNav'
+import { CarreraNav, CARRERA_ITEMS, type CarreraSubTab } from './components/game/CarreraNav'
+import { AssetsNav, ASSETS_ITEMS, type AssetsSubTabId } from './components/game/AssetsNav'
+import { RelazioniNav, RELAZIONI_ITEMS, type RelazioniSubTabId } from './components/game/RelazioniNav'
 import { AgeTransitionOverlay } from './components/game/AgeTransitionOverlay'
 import { useShallow } from 'zustand/react/shallow'
 
@@ -60,9 +63,9 @@ const LeaderboardScreen   = lazy(() => import('./components/screens/LeaderboardS
 const SocializeScreen     = lazy(() => import('./components/screens/SocializeScreen').then(m => ({ default: m.SocializeScreen })))
 
 // ---- Sub-tab types ----
-type LavoroSubTab    = 'career' | 'education' | 'military' | 'pension'
-type AssetsSubTab    = 'finance' | 'vehicle' | 'living' | 'social'
-type RelazioniSubTab = 'relationships' | 'dating' | 'famiglia' | 'pets'
+type LavoroSubTab    = 'home' | CarreraSubTab
+type AssetsSubTab    = 'home' | AssetsSubTabId
+type RelazioniSubTab = 'home' | RelazioniSubTabId
 type ActivitiesSubTab = ActivitiesSubTabBase | 'home'
 
 function SubTabBar<T extends string>({
@@ -96,6 +99,35 @@ function ScreenFallback() {
   return <div className="screen-loading">Caricamento...</div>
 }
 
+function SectionBackBar({ label, itemLabel, onBack }: { label: string; itemLabel?: string; onBack: () => void }) {
+  return (
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 10, padding: '6px 14px 6px 8px',
+      background: 'rgba(0,0,0,0.22)', borderBottom: '1px solid rgba(255,255,255,0.06)',
+      flexShrink: 0,
+    }}>
+      <button
+        onClick={onBack}
+        style={{
+          display: 'flex', alignItems: 'center', gap: 4,
+          fontSize: 15, fontWeight: 600, color: 'var(--primary)',
+          border: '1px solid rgba(124,92,255,0.3)',
+          background: 'rgba(124,92,255,0.12)', cursor: 'pointer',
+          padding: '5px 12px', borderRadius: 20,
+        }}
+      >
+        ‹ {label}
+      </button>
+      {itemLabel && (
+        <>
+          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.12)' }} />
+          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>{itemLabel}</span>
+        </>
+      )}
+    </div>
+  )
+}
+
 function App() {
   const isStarted  = useGameStore(s => s.isStarted)
   const isGameOver = useGameStore(s => s.isGameOver)
@@ -105,16 +137,25 @@ function App() {
   const emotionalUI = useGameStore(useShallow(s => EmotionalUIEngine.derive(s)))
 
   const [ageConfirmed, setAgeConfirmed] = useState(() => !!localStorage.getItem('age_confirmed'))
-  const [activeTab, setActiveTab] = useState<Tab>('vita')
-  const [lavoroSub,    setLavoroSubRaw]    = useState<LavoroSubTab>('career')
-  const [assetsSub,    setAssetsSub]    = useState<AssetsSubTab>('finance')
-  const [relazioniSub, setRelazioniSubRaw] = useState<RelazioniSubTab>('relationships')
+  const [activeTab, _setActiveTab] = useState<Tab>('vita')
+  const [lavoroSub,    setLavoroSubRaw]    = useState<LavoroSubTab>('home')
+  const [assetsSub,    setAssetsSub]    = useState<AssetsSubTab>('home')
+  const [relazioniSub, setRelazioniSubRaw] = useState<RelazioniSubTab>('home')
   const [activitiesSub, setActivitiesSubRaw] = useState<ActivitiesSubTab>('home')
 
   // Cast-safe wrappers used by VitaWidgets (which receives (sub: string) => void)
   const setLavoroSub    = (s: string) => setLavoroSubRaw(s as LavoroSubTab)
   const setRelazioniSub = (s: string) => setRelazioniSubRaw(s as RelazioniSubTab)
   const setActivitiesSub = (s: string) => setActivitiesSubRaw(s as ActivitiesSubTab)
+
+  // Reset sub-tabs to home when switching top-level tabs
+  const setActiveTab = (tab: Tab) => {
+    _setActiveTab(tab)
+    if (tab === 'lavoro')     setLavoroSubRaw('home')
+    if (tab === 'assets')     setAssetsSub('home')
+    if (tab === 'relazioni')  setRelazioniSubRaw('home')
+    if (tab === 'activities') setActivitiesSubRaw('home')
+  }
 
   const ageDisabled = isGameOver || currentEvent !== null
 
@@ -140,6 +181,13 @@ function App() {
     visible: false, age: 0, year: 2000,
   })
 
+  // Hide age-transition overlay whenever a new game starts
+  useEffect(() => {
+    if (isStarted && !isGameOver) {
+      setAgeOverlay({ visible: false, age: 0, year: 0 })
+    }
+  }, [isStarted])
+
   const handleAge = useCallback(() => {
     setActiveTab('vita')
     if (!ageDisabled) {
@@ -159,73 +207,50 @@ function App() {
       <TutorialOverlay />
       <HUD />
 
-      {/* Sub-tab bars */}
-      {activeTab === 'lavoro' && (
-        <SubTabBar<LavoroSubTab>
-          tabs={[
-            { id: 'career',    label: 'Carriera',  emoji: '💼' },
-            { id: 'education', label: 'Istruzione', emoji: '📚' },
-            { id: 'military',  label: 'Militare',   emoji: '🪖' },
-            { id: 'pension',   label: 'Pensione',   emoji: '🎗️' },
-          ]}
-          active={lavoroSub}
-          onChange={setLavoroSubRaw}
+      {/* Sub-section back bars (Activities-style) */}
+      {activeTab === 'lavoro' && lavoroSub !== 'home' && (
+        <SectionBackBar
+          label="Carriera"
+          itemLabel={CARRERA_ITEMS.find(i => i.id === lavoroSub)?.emoji + ' ' + CARRERA_ITEMS.find(i => i.id === lavoroSub)?.label}
+          onBack={() => setLavoroSubRaw('home')}
         />
       )}
-      {activeTab === 'assets' && (
-        <SubTabBar<AssetsSubTab>
-          tabs={[
-            { id: 'finance', label: 'Finanze',    emoji: '💰' },
-            { id: 'vehicle', label: 'Veicoli',    emoji: '🚗' },
-            { id: 'living',  label: 'Abitazione', emoji: '🏠' },
-            { id: 'social',  label: 'Social',     emoji: '📱' },
-          ]}
-          active={assetsSub}
-          onChange={setAssetsSub}
+      {activeTab === 'assets' && assetsSub !== 'home' && (
+        <SectionBackBar
+          label="Assets"
+          itemLabel={ASSETS_ITEMS.find(i => i.id === assetsSub)?.emoji + ' ' + ASSETS_ITEMS.find(i => i.id === assetsSub)?.label}
+          onBack={() => setAssetsSub('home')}
         />
       )}
-      {activeTab === 'relazioni' && (
-        <SubTabBar<RelazioniSubTab>
-          tabs={[
-            { id: 'relationships', label: 'Relazioni', emoji: '👥' },
-            { id: 'dating',        label: 'Amore',     emoji: '💘' },
-            { id: 'famiglia',      label: 'Famiglia',  emoji: '👨‍👩‍👧‍👦' },
-            { id: 'pets',          label: 'Animali',   emoji: '🐾' },
-          ]}
-          active={relazioniSub}
-          onChange={setRelazioniSubRaw}
+      {activeTab === 'relazioni' && relazioniSub !== 'home' && (
+        <SectionBackBar
+          label="Relazioni"
+          itemLabel={RELAZIONI_ITEMS.find(i => i.id === relazioniSub)?.emoji + ' ' + RELAZIONI_ITEMS.find(i => i.id === relazioniSub)?.label}
+          onBack={() => setRelazioniSubRaw('home')}
         />
       )}
       {activeTab === 'activities' && activitiesSub !== 'home' && (
-        <div style={{
-          display: 'flex', alignItems: 'center', gap: 10, padding: '7px 14px 7px 10px',
-          background: 'rgba(0,0,0,0.22)', borderBottom: '1px solid rgba(255,255,255,0.06)',
-          flexShrink: 0,
-        }}>
-          <button
-            onClick={() => setActivitiesSubRaw('home')}
-            style={{
-              display: 'flex', alignItems: 'center', gap: 3,
-              fontSize: 13, fontWeight: 500, color: 'var(--primary)',
-              border: 'none', background: 'transparent', cursor: 'pointer',
-              padding: '3px 4px', borderRadius: 6,
-            }}
-          >
-            ‹ Attività
-          </button>
-          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.12)' }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>
-            {ACTIVITIES_ITEM_MAP[activitiesSub as ActivitiesSubTabBase]?.emoji}{' '}
-            {ACTIVITIES_ITEM_MAP[activitiesSub as ActivitiesSubTabBase]?.label}
-          </span>
-        </div>
+        <SectionBackBar
+          label="Attività"
+          itemLabel={ACTIVITIES_ITEM_MAP[activitiesSub as ActivitiesSubTabBase]?.emoji + ' ' + ACTIVITIES_ITEM_MAP[activitiesSub as ActivitiesSubTabBase]?.label}
+          onBack={() => setActivitiesSubRaw('home')}
+        />
       )}
 
       {/* Main content */}
       <div className="app-content">
-        {/* Activities home menu — full-page BitLife-style list */}
+        {/* Home nav screens — BitLife-style list */}
         {activeTab === 'activities' && activitiesSub === 'home' && (
           <ActivitiesNav onChange={sub => setActivitiesSubRaw(sub as ActivitiesSubTab)} />
+        )}
+        {activeTab === 'lavoro' && lavoroSub === 'home' && (
+          <CarreraNav onChange={sub => setLavoroSubRaw(sub as LavoroSubTab)} />
+        )}
+        {activeTab === 'assets' && assetsSub === 'home' && (
+          <AssetsNav onChange={sub => setAssetsSub(sub as AssetsSubTab)} />
+        )}
+        {activeTab === 'relazioni' && relazioniSub === 'home' && (
+          <RelazioniNav onChange={sub => setRelazioniSubRaw(sub as RelazioniSubTab)} />
         )}
 
         {activeTab === 'vita' && (
@@ -313,7 +338,7 @@ function App() {
         visible={ageOverlay.visible}
         onDone={() => setAgeOverlay(s => ({ ...s, visible: false }))}
       />
-      <FirstPlayHint hasEvent={currentEvent !== null} />
+      <FirstPlayHint hasEvent={currentEvent !== null} age={time.age} />
       <NPCEventNotifications />
       <ActionResultPanel />
       <ToastContainer />

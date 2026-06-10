@@ -60,6 +60,14 @@ export function GameOverScreen() {
   const [extraLifeUsed, setExtraLifeUsed] = useState(false)
   const [adError, setAdError] = useState('')
   const [shareDone, setShareDone] = useState(false)
+  const [showNewLifeSplash, setShowNewLifeSplash] = useState(false)
+
+  const handleNewLife = () => {
+    setShowNewLifeSplash(true)
+    setTimeout(() => {
+      newGame({ ...identity, emoji: '👶' }, 'italy')
+    }, 2000)
+  }
 
   const death = deathMessages[deathType ?? 'natural'] ?? deathMessages.natural
   const goalsCount = completedGoals.length
@@ -317,11 +325,29 @@ export function GameOverScreen() {
         {/* New game */}
         <button
           className="btn-age"
-          onClick={() => newGame({ ...identity, emoji: '👶' }, 'italy')}
+          onClick={handleNewLife}
           style={{ width: '100%', opacity: 0.7 }}
         >
           🔄 Nuova Vita (Ricomincia)
         </button>
+
+        {/* "Nuova Vita!" splash overlay */}
+        {showNewLifeSplash && (
+          <div style={{
+            position: 'fixed', inset: 0, zIndex: 9999,
+            background: 'var(--bg-app, #1a1a2e)',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', gap: 16,
+          }}>
+            <span style={{ fontSize: 72 }}>🎉</span>
+            <h1 style={{ fontSize: 28, fontWeight: 900, color: 'var(--color-text, #fff)', textAlign: 'center', margin: 0 }}>
+              Nuova Vita!
+            </h1>
+            <p style={{ fontSize: 16, color: 'var(--color-text-secondary, rgba(255,255,255,0.6))', textAlign: 'center', margin: 0 }}>
+              In bocca al lupo con questa ahah
+            </p>
+          </div>
+        )}
       </div>
     </div>
   )
