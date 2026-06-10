@@ -5,6 +5,15 @@ import { LegacyEngine } from '../../services/LegacyEngine'
 import { CloudSaveService } from '../../services/CloudSaveService'
 import { AdRewardEngine } from '../../services/AdRewardEngine'
 import { AdRewardButton } from '../game/AdRewardButton'
+import type { LifeMemory } from '../../store/types'
+
+function getLifeGrade(score: number): { letter: string; color: string; label: string } {
+  if (score >= 750) return { letter: 'A', color: '#10b981', label: 'Vita Straordinaria' }
+  if (score >= 500) return { letter: 'B', color: '#3b82f6', label: 'Vita Ricca' }
+  if (score >= 300) return { letter: 'C', color: '#f59e0b', label: 'Vita Dignitosa' }
+  if (score >= 150) return { letter: 'D', color: '#f97316', label: 'Vita Difficile' }
+  return { letter: 'F', color: '#ef4444', label: 'Vita Travagliata' }
+}
 
 const deathMessages: Record<string, { emoji: string; title: string; text: string }> = {
   natural:   { emoji: '🕊️',  title: 'Morte Naturale',     text: 'Hai vissuto una vita piena. Hai raggiunto la fine del tuo cammino in pace.' },
@@ -28,7 +37,7 @@ const LEGACY_TIER_INFO: Record<string, { label: string; emoji: string; color: st
 
 export function GameOverScreen() {
   const store = useGameStore()
-  const { deathType, time, stats, finance, completedGoals, goals, newGame, identity, continueAsChild, legacy, adRewards, claimAdReward, aggiornaStats } =
+  const { deathType, time, stats, finance, completedGoals, goals, newGame, identity, continueAsChild, legacy, adRewards, claimAdReward, aggiornaStats, lifeMemories } =
     useGameStore(useShallow(s => ({
       deathType: s.deathType,
       time: s.time,
@@ -44,6 +53,7 @@ export function GameOverScreen() {
       adRewards: s.adRewards,
       claimAdReward: s.claimAdReward,
       aggiornaStats: s.aggiornaStats,
+      lifeMemories: s.lifeMemories,
     })))
 
   const [submitState, setSubmitState] = useState<'idle' | 'submitting' | 'done' | 'error' | 'noauth'>('idle')
@@ -60,6 +70,11 @@ export function GameOverScreen() {
     : LegacyEngine.calculateLegacyScore(store)
   const tierInfo = LEGACY_TIER_INFO[legacyScore.tier]
   const bestChild = LegacyEngine.getBestChild(store)
+  const lifeGrade = getLifeGrade(legacyScore.total)
+  const highlights: LifeMemory[] = (lifeMemories ?? [])
+    .filter(m => m.isImportant)
+    .sort((a, b) => b.age - a.age)
+    .slice(0, 6)
 
   const canUseExtraLife = !extraLifeUsed && AdRewardEngine.canWatch(adRewards).ok
 
@@ -162,6 +177,44 @@ export function GameOverScreen() {
             ))}
           </div>
         </div>
+
+        {/* Life grade */}
+        <div className="card" style={{ width: '100%', marginBottom: 16, textAlign: 'center', padding: '20px 16px' }}>
+          <div style={{
+            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+            width: 72, height: 72, borderRadius: '50%',
+            background: `${lifeGrade.color}22`, border: `3px solid ${lifeGrade.color}`,
+            fontSize: 36, fontWeight: 900, color: lifeGrade.color, marginBottom: 8,
+          }}>
+            {lifeGrade.letter}
+          </div>
+          <p style={{ fontSize: 18, fontWeight: 800, color: lifeGrade.color, margin: '0 0 4px' }}>{lifeGrade.label}</p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+            {identity.name} {identity.surname} · {time.age} anni · {time.year}
+          </p>
+        </div>
+
+        {/* Life highlights */}
+        {highlights.length > 0 && (
+          <div className="card" style={{ width: '100%', marginBottom: 16 }}>
+            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+              Momenti Indimenticabili
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {highlights.map(m => (
+                <div key={m.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{m.emoji}</span>
+                  <div style={{ minWidth: 0 }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>{m.title}</p>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.4 }}>
+                      {m.description.slice(0, 80)}{m.description.length > 80 ? '…' : ''} · età {m.age}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Share */}
         <button

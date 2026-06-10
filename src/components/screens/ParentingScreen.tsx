@@ -1,17 +1,20 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
+import { useToastStore } from '../../store/toastStore'
 import { PARENTING_ACTIONS } from '../../services/ParentingEngine'
+import { haptic } from '../../services/HapticEngine'
 import type { Child } from '../../store/types'
 
 export default function ParentingScreen() {
   const { children, time, haveChild, adoptChild, interactWithChild } = useGameStore()
+  const { showPanel, closePanel } = useToastStore()
   const [selectedChild, setSelectedChild] = useState<Child | null>(null)
-  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
 
-  const act = (fn: () => { success: boolean; message: string }) => {
+  const act = (fn: () => { success: boolean; message: string; effects?: Record<string, number> }, emoji = '👶') => {
     const r = fn()
-    setFeedback({ msg: r.message, ok: r.success })
-    setTimeout(() => setFeedback(null), 3000)
+    haptic(r.success ? 'success' : 'error')
+    showPanel({ title: r.message, emoji, ok: r.success, effects: r.effects ?? {} })
+    setTimeout(() => closePanel(), 3500)
   }
 
   const schoolLabel: Record<string, string> = {
@@ -20,15 +23,14 @@ export default function ParentingScreen() {
     master: 'Magistrale', phd: 'Dottorato',
   }
 
+  const actionEmojis: Record<string, string> = {
+    play: '🎮', help_homework: '📚', talk: '💬', discipline: '⚠️',
+    praise: '🌟', teach: '🏫', read_together: '📖', outdoor_activity: '🏃',
+  }
+
   return (
     <div className="screen-content">
       <h2 className="section-title">👨‍👩‍👧‍👦 Famiglia</h2>
-
-      {feedback && (
-        <div className={`feedback-banner ${feedback.ok ? 'success' : 'error'}`}>
-          {feedback.msg}
-        </div>
-      )}
 
       {/* Azioni principali */}
       <div className="card">
@@ -39,14 +41,14 @@ export default function ParentingScreen() {
         <div className="action-grid">
           <button
             className="action-btn"
-            onClick={() => act(haveChild)}
+            onClick={() => act(haveChild, '👶')}
             disabled={time.age < 18 || time.age > 50 || children.length >= 8}
           >
             👶 Figlio biologico
           </button>
           <button
             className="action-btn"
-            onClick={() => act(adoptChild)}
+            onClick={() => act(adoptChild, '🏠')}
             disabled={time.age < 18 || children.length >= 8}
           >
             🏠 Adotta (€10.000)
@@ -84,6 +86,7 @@ export default function ParentingScreen() {
 
               <p className="child-school">
                 📚 {schoolLabel[child.schoolLevel] ?? child.schoolLevel}
+                {child.careerPath && ` · 🎯 ${child.careerPath}`}
               </p>
 
               {/* Interazioni (espande al click) */}
@@ -97,7 +100,7 @@ export default function ParentingScreen() {
                         className="action-btn small"
                         onClick={(e) => {
                           e.stopPropagation()
-                          act(() => interactWithChild(child.id, def.id))
+                          act(() => interactWithChild(child.id, def.id), actionEmojis[def.id] ?? def.emoji)
                         }}
                         title={def.label}
                       >
@@ -105,6 +108,26 @@ export default function ParentingScreen() {
                       </button>
                     ))}
                   </div>
+
+                  {/* Child personality snapshot */}
+                  {child.personalityTraits && (
+                    <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                      {Object.entries(child.personalityTraits).map(([trait, val]) => {
+                        const labels: Record<string, string> = {
+                          openness: '🎨 Apertura', conscientiousness: '📋 Coscienza',
+                          extraversion: '🗣️ Estr.', agreeableness: '🤝 Amabil.',
+                          neuroticism: '😟 Neuroticismo',
+                        }
+                        const pct = Math.round(val as number)
+                        const color = pct > 66 ? '#10b981' : pct > 33 ? '#f59e0b' : '#ef4444'
+                        return (
+                          <span key={trait} style={{ fontSize: 10, padding: '2px 7px', borderRadius: 20, background: `${color}22`, color, fontWeight: 600 }}>
+                            {labels[trait] ?? trait} {pct}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

@@ -898,6 +898,20 @@ export interface DailyQuestState {
   totalClaimed: number
 }
 
+// ---- Pending Consequences (delayed event effects) ----
+
+export type PendingConsequenceCategory = 'health' | 'work' | 'finance' | 'relationship' | 'life'
+
+export interface PendingConsequence {
+  id: string
+  triggerAge: number
+  title: string
+  description: string
+  emoji: string
+  effects: Effect
+  category: PendingConsequenceCategory
+}
+
 // ---- NPC Agency ----
 
 export type NPCAgencyEventType =
@@ -1101,6 +1115,9 @@ export interface GameState {
   // Autonomous NPC life simulation
   npcAgency: NPCAgencyState
   npcEventQueue: NPCAgencyEvent[]
+
+  // Delayed event consequence queue (choices that have future ripple effects)
+  pendingConsequences: PendingConsequence[]
 
   // Events
   currentEvent: GameEvent | null

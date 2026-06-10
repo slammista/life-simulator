@@ -298,6 +298,37 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 
 ---
 
+## Feature: Sistema conseguenze a lungo termine (catene di eventi)
+**Fix**: Implementato sistema di conseguenze ritardate che si attivano anni dopo una scelta:
+- Nuova interfaccia `PendingConsequence` in types.ts con `triggerAge`, `effects`, `category`
+- `pendingConsequences: PendingConsequence[]` aggiunto a `GameState`
+- `CONSEQUENCE_CHAINS` lookup table in gameStore: 8 eventi con conseguenze differite (burnout, dipendenza, calamità, idea business, lavoro sogni, momento virale, accusa falsa, fiamma passata)
+- `handleChoice()` ora chiama `getEventConsequence()` e accoda la conseguenza
+- `handleInvecchia()` annual tick verifica conseguenze scadute e le applica via `merge()`
+**Stato**: ✅ Fatto
+
+---
+
+## Feature: GameOverScreen con voto vita e momenti indimenticabili
+**Fix**: Schermata fine gioco arricchita con:
+- **Voto vita A–F** (cerchio colorato): A=750+, B=500+, C=300+, D=150+, F=<150 basato su legacy score
+- **Momenti Indimenticabili**: sezione con le ultime 6 `lifeMemories` importanti (emoji + titolo + descrizione + età)
+- Gerarchia visiva migliorata: voto appare subito dopo la morte, prima delle statistiche di vita
+**Stato**: ✅ Fatto
+
+---
+
+## Feature: ParentingScreen migliorata
+**Fix**:
+- Rimosso vecchio `useState<feedback>` e banner inline
+- Usa `showPanel` + `haptic` (success/error) come HealthScreen/CareerScreen
+- Aggiunto pannello **Big Five personality** del figlio (chip colorati: verde/giallo/rosso per ogni tratto)
+- Mostra `careerPath` se già definito
+- Emoji per ogni tipo di interazione (play, talk, praise, discipline, ecc.)
+**Stato**: ✅ Fatto
+
+---
+
 ## Feature: 20 nuovi eventi con scelte ramificate
 **Fix**: Aggiunti 20 eventi + 51 scelte a db.json (totale: 395 eventi, 1499 scelte):
 - Il Capo Tossico (career drama, 3 scelte)

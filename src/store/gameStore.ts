@@ -166,6 +166,76 @@ function computeWeeklyHours(state: Pick<GameState, 'career' | 'education'>): num
 
 export { computeWeeklyHours }
 
+// ---- Consequence chain lookup ----
+// Maps event IDs to a function that returns a delayed consequence based on choice effects
+
+type ConsequenceFn = (fx: Effect, age: number) => import('./types').PendingConsequence | null
+
+const CONSEQUENCE_CHAINS: Record<string, ConsequenceFn> = {
+  ev_burnout_crisis: (fx, age) => (fx.health ?? 0) < 0 ? {
+    id: uid(), triggerAge: age + 1, category: 'health',
+    title: 'Il Burnout Ritorna', emoji: '😮‍💨',
+    description: 'Il sovraccarico dell\'anno scorso ha lasciato tracce profonde. Ti senti ancora esausto nel profondo.',
+    effects: { energy: -15, health: -5, mentalHealth: -8 },
+  } : null,
+  ev_addiction_trigger: (fx, age) => ((fx.money ?? 0) < 0 || (fx.health ?? 0) < 0) ? {
+    id: uid(), triggerAge: age + 2, category: 'health',
+    title: 'La Dipendenza Si Radica', emoji: '⚠️',
+    description: 'Quello che era un vizio occasionale si sta trasformando in qualcosa di più difficile da controllare.',
+    effects: { health: -8, mentalHealth: -10, money: -500 },
+  } : null,
+  ev_natural_disaster_local: (_fx, age) => ({
+    id: uid(), triggerAge: age + 1, category: 'life',
+    title: 'Ricostruzione Post-Calamità', emoji: '🏗️',
+    description: 'Un anno dopo il disastro, la comunità si sta ancora riprendendo. Il tuo contributo conta.',
+    effects: { happiness: 5, reputation: 3 },
+  }),
+  ev_business_idea: (fx, age) => (fx.money ?? 0) >= 0 ? {
+    id: uid(), triggerAge: age + 3, category: 'finance',
+    title: 'L\'Idea Porta Frutti', emoji: '🚀',
+    description: 'L\'intuizione di tre anni fa si è trasformata in un\'opportunità concreta.',
+    effects: { money: 12000, reputation: 6, happiness: 5 },
+  } : null,
+  ev_dream_job_offer: (fx, age) => (fx.money ?? 0) > 0 ? {
+    id: uid(), triggerAge: age + 2, category: 'work',
+    title: 'Il Lavoro dei Sogni Conferma', emoji: '📈',
+    description: 'Due anni fa hai accettato quella grande opportunità. Oggi raccoglieresti i risultati.',
+    effects: { money: 8000, reputation: 5, happiness: 6 },
+  } : null,
+  ev_viral_moment: (fx, age) => (fx.socialReputation ?? 0) > 0 ? {
+    id: uid(), triggerAge: age + 1, category: 'life',
+    title: 'L\'Onda Virale Continua', emoji: '🌊',
+    description: 'La notorietà guadagnata l\'anno scorso ti ha aperto porte inaspettate.',
+    effects: { reputation: 5, socialReputation: 8, money: 2000 },
+  } : null,
+  ev_false_accusation: (fx, age) => {
+    type PC = import('./types').PendingConsequence
+    if ((fx.reputation ?? 0) < 0) return {
+      id: uid(), triggerAge: age + 2, category: 'life' as const,
+      title: 'La Verità Viene a Galla', emoji: '⚖️',
+      description: 'Dopo due anni difficili, la tua innocenza è riconosciuta pubblicamente.',
+      effects: { reputation: 10, happiness: 8, mentalHealth: 5 } as import('./types').Effect,
+    } as PC
+    return {
+      id: uid(), triggerAge: age + 1, category: 'life' as const,
+      title: 'Conseguenze Legali Persistono', emoji: '📋',
+      description: 'La vicenda legale non è ancora chiusa. Nuove spese si aggiungono.',
+      effects: { money: -3000, mentalHealth: -5 } as import('./types').Effect,
+    } as PC
+  },
+  ev_old_flame_return: (_fx, age) => ({
+    id: uid(), triggerAge: age + 1, category: 'relationship',
+    title: 'Il Passato Bussa di Nuovo', emoji: '💌',
+    description: 'Quella persona è tornata nella tua vita con un messaggio inaspettato.',
+    effects: { happiness: Math.random() > 0.5 ? 5 : -3 },
+  }),
+}
+
+function getEventConsequence(eventId: string, fx: Effect, age: number): import('./types').PendingConsequence | null {
+  const fn = CONSEQUENCE_CHAINS[eventId]
+  return fn ? fn(fx, age) : null
+}
+
 function buildInitialState(): GameState {
   return {
     isStarted: false,
@@ -258,6 +328,7 @@ function buildInitialState(): GameState {
     dailyQuests: DailyQuestEngine.initialState(),
     npcAgency: NPCAgencyEngine.initialState(),
     npcEventQueue: [],
+    pendingConsequences: [],
     currentEvent: null,
     availableChoices: [],
     pendingEffects: null,
@@ -549,6 +620,14 @@ export const useGameStore = create<FullStore>()(
           }
         }
 
+        // 11c. Fire any pending consequences due this year
+        const dueConsequences = (state.pendingConsequences ?? []).filter(c => c.triggerAge <= newAge)
+        const remainingConsequences = (state.pendingConsequences ?? []).filter(c => c.triggerAge > newAge)
+        for (const c of dueConsequences) {
+          merge(c.effects)
+          messages.push(`${c.emoji} ${c.title}: ${c.description}`)
+        }
+
         // 12. Pick main event (with choices)
         const allEvents = db.events as unknown as GameEvent[]
         const eligible = allEvents.filter(ev => {
@@ -800,6 +879,7 @@ export const useGameStore = create<FullStore>()(
               ]
             : state.ribbons,
           lifeMemories: yearMemories.length > 0 ? [...state.lifeMemories, ...yearMemories].slice(-200) : state.lifeMemories,
+          pendingConsequences: remainingConsequences,
         })
 
         get().checkGoals()
@@ -837,11 +917,19 @@ export const useGameStore = create<FullStore>()(
           emoji: '✅', category: 'choice', statChanges: choice.effects,
         }
 
+        // Queue a delayed consequence if this event has a chain
+        const consequence = state.currentEvent
+          ? getEventConsequence(state.currentEvent.id, choice.effects, state.time.age)
+          : null
+
         set(s => ({
           ...partial,
           currentEvent: null,
           availableChoices: [],
           eventLog: [logEntry, ...s.eventLog].slice(0, 150),
+          pendingConsequences: consequence
+            ? [...(s.pendingConsequences ?? []), consequence]
+            : (s.pendingConsequences ?? []),
         }))
 
         get().checkGoals()
