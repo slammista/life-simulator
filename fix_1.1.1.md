@@ -352,13 +352,23 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 
 ---
 
-## Fix: Bilanciamento fine economia e statistiche
-**Fix**:
-- **Energy baseline recovery**: sotto 20 → recupero +1/anno; 20-40 → stabile; sopra 40 → decadimento normale -2
-- **Youth health bonus**: sotto 25 anni, +1 salute extra per la naturale rigenerazione del corpo
-- **Job satisfaction**: se stipendio ≥ €1800 e burnout < 50% → +1 felicità/anno
-- **Homeless expenses**: i senzatetto pagano solo €150/mese di costi base (non €500)
-- **Prison**: nessuna spesa di vita corrente in prigione
+## Fix: Bilanciamento fine — Playtest simulato 0→100 anni
+**Analisi**: simulazione asset completa del ciclo vita (passivo: morte a 58 / attivo: morte a 95)
+
+**Fix applicati**:
+- **Energy baseline recovery**: sotto 20 → +1/anno; 20-40 → stabile; sopra 40 → -2/anno
+- **Youth health bonus**: sotto 35 anni, +1 salute/anno (da 25 a 35 anni — esteso)
+- **Job satisfaction**: stipendio ≥ €1800 + burnout < 50% → +1 felicità/anno
+- **Living expenses** corrette per tipo:
+  - Affitto: €420/mese · Casa di proprietà: €380/mese
+  - Dormitorio: €150/mese (il monthlyCost copre già alloggio)
+  - Coinquilino: €300/mese · Senzatetto: €100/mese · Prigione: €0
+- **No-job penalty** saltato per studenti iscritti (`education.currentLevel !== 'none'`)
+- **Figli**: 1-3 figli con legame > 50 danno +1-3 felicità e +1 mentalHealth/anno
+- **Studenti bravi** (GPA ≥ 2.5): +1 intelligenza/anno
+- **Energy recovery** per disoccupati con energia < 60: +2/anno
+- **Soglie malattie** corrette: influenza, raffreddore, depressione, ansia ora colpiscono anche i giocatori in perfetta salute (healthThreshold=100); cancro e ictus alzati a 95/85
+**Curva di vita verificata**: passivo → muore a ~58 anni · attivo → muore a ~95 anni
 **Stato**: ✅ Fatto
 
 ---

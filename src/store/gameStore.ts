@@ -475,12 +475,14 @@ export const useGameStore = create<FullStore>()(
         }
 
         // 2d. Basic living expenses (food, utilities, transport) — excluded if living with parents
-        // Also skipped if already deeply negative (debt spiral protection)
+        // Dormitory already includes board in monthlyCost, so only add food top-up (€150/mo)
         if (newAge >= 18 && state.living.type !== 'parents' && state.living.type !== 'prison') {
-          const baseExpenses = state.living.type === 'renting' ? 420
-            : state.living.type === 'owning' ? 380
-            : state.living.type === 'homeless' ? 150   // minimal subsistence cost
-            : 500
+          const baseExpenses = state.living.type === 'renting'     ? 420   // food + utilities + transport
+            : state.living.type === 'owning'      ? 380   // slightly lower (own washer, etc.)
+            : state.living.type === 'dormitory'   ? 150   // board included — just food extras
+            : state.living.type === 'roommate'    ? 300   // shared utilities + food
+            : state.living.type === 'homeless'    ? 100   // minimal subsistence
+            : 400
           merge({ money: -(baseExpenses * 12) })
         }
 

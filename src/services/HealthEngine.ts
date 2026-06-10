@@ -25,16 +25,17 @@ type DiseaseTemplate = {
 }
 
 const DISEASE_POOL: DiseaseTemplate[] = [
-  { id: 'flu', name: 'Influenza', severity: 1, curable: true, treatmentCost: 50, ageMin: 0, ageMax: 99, healthThreshold: 80, chronic: false, baseChance: 0.15, effects: { health: -5, energy: -10 } },
-  { id: 'cold', name: 'Raffreddore cronico', severity: 1, curable: true, treatmentCost: 30, ageMin: 0, ageMax: 99, healthThreshold: 90, chronic: false, baseChance: 0.20, effects: { health: -3, energy: -5 } },
-  { id: 'back_pain', name: 'Mal di schiena cronico', severity: 2, curable: false, treatmentCost: 200, ageMin: 30, ageMax: 99, healthThreshold: 90, chronic: true, baseChance: 0.08, effects: { health: -3, energy: -8, happiness: -5 } },
-  { id: 'diabetes', name: 'Diabete', severity: 3, curable: false, treatmentCost: 800, ageMin: 35, ageMax: 99, healthThreshold: 70, chronic: true, baseChance: 0.04, effects: { health: -5, energy: -8 } },
-  { id: 'hypertension', name: 'Ipertensione', severity: 2, curable: false, treatmentCost: 400, ageMin: 40, ageMax: 99, healthThreshold: 80, chronic: true, baseChance: 0.06, effects: { health: -4, energy: -5 } },
-  { id: 'depression', name: 'Depressione', severity: 3, curable: true, treatmentCost: 1500, ageMin: 15, ageMax: 99, healthThreshold: 90, chronic: false, baseChance: 0.05, effects: { mentalHealth: -10, happiness: -8, energy: -10 } },
-  { id: 'anxiety', name: 'Disturbo d\'ansia', severity: 2, curable: true, treatmentCost: 1000, ageMin: 15, ageMax: 99, healthThreshold: 90, chronic: false, baseChance: 0.07, effects: { mentalHealth: -8, happiness: -5, energy: -5 } },
-  { id: 'heart_disease', name: 'Cardiopatia', severity: 4, curable: false, treatmentCost: 5000, ageMin: 50, ageMax: 99, healthThreshold: 70, chronic: true, baseChance: 0.03, effects: { health: -8, energy: -12 } },
-  { id: 'cancer', name: 'Cancro', severity: 5, curable: true, treatmentCost: 20000, ageMin: 40, ageMax: 99, healthThreshold: 80, chronic: false, baseChance: 0.015, effects: { health: -15, energy: -20, happiness: -15 } },
-  { id: 'stroke', name: 'Ictus', severity: 4, curable: true, treatmentCost: 8000, ageMin: 55, ageMax: 99, healthThreshold: 70, chronic: false, baseChance: 0.02, effects: { health: -20, energy: -25, happiness: -20 } },
+  // healthThreshold = max health at which disease can appear (100 = anyone can get it)
+  { id: 'flu', name: 'Influenza', severity: 1, curable: true, treatmentCost: 50, ageMin: 0, ageMax: 99, healthThreshold: 100, chronic: false, baseChance: 0.15, effects: { health: -5, energy: -10 } },
+  { id: 'cold', name: 'Raffreddore cronico', severity: 1, curable: true, treatmentCost: 30, ageMin: 0, ageMax: 99, healthThreshold: 100, chronic: false, baseChance: 0.20, effects: { health: -3, energy: -5 } },
+  { id: 'back_pain', name: 'Mal di schiena cronico', severity: 2, curable: false, treatmentCost: 200, ageMin: 30, ageMax: 99, healthThreshold: 100, chronic: true, baseChance: 0.08, effects: { health: -3, energy: -8, happiness: -5 } },
+  { id: 'diabetes', name: 'Diabete', severity: 3, curable: false, treatmentCost: 800, ageMin: 35, ageMax: 99, healthThreshold: 90, chronic: true, baseChance: 0.04, effects: { health: -5, energy: -8 } },
+  { id: 'hypertension', name: 'Ipertensione', severity: 2, curable: false, treatmentCost: 400, ageMin: 40, ageMax: 99, healthThreshold: 95, chronic: true, baseChance: 0.06, effects: { health: -4, energy: -5 } },
+  { id: 'depression', name: 'Depressione', severity: 3, curable: true, treatmentCost: 1500, ageMin: 15, ageMax: 99, healthThreshold: 100, chronic: false, baseChance: 0.05, effects: { mentalHealth: -10, happiness: -8, energy: -10 } },
+  { id: 'anxiety', name: 'Disturbo d\'ansia', severity: 2, curable: true, treatmentCost: 1000, ageMin: 15, ageMax: 99, healthThreshold: 100, chronic: false, baseChance: 0.07, effects: { mentalHealth: -8, happiness: -5, energy: -5 } },
+  { id: 'heart_disease', name: 'Cardiopatia', severity: 4, curable: false, treatmentCost: 5000, ageMin: 50, ageMax: 99, healthThreshold: 85, chronic: true, baseChance: 0.03, effects: { health: -8, energy: -12 } },
+  { id: 'cancer', name: 'Cancro', severity: 5, curable: true, treatmentCost: 20000, ageMin: 40, ageMax: 99, healthThreshold: 95, chronic: false, baseChance: 0.015, effects: { health: -15, energy: -20, happiness: -15 } },
+  { id: 'stroke', name: 'Ictus', severity: 4, curable: true, treatmentCost: 8000, ageMin: 55, ageMax: 99, healthThreshold: 85, chronic: false, baseChance: 0.02, effects: { health: -20, energy: -25, happiness: -20 } },
 ]
 
 // ---- engine ----

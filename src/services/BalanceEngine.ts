@@ -79,8 +79,9 @@ export class BalanceEngine {
       effects.energy       = (effects.energy       ?? 0) - 3
     }
 
-    // No job penalty (adults)
-    if (!career.currentJob && time.age >= 22 && time.age < 65 && !state.retirement.isRetired) {
+    // No job penalty (adults — skipped if currently studying)
+    const isStudent = state.education.currentLevel !== 'none'
+    if (!career.currentJob && time.age >= 22 && time.age < 65 && !state.retirement.isRetired && !isStudent) {
       effects.happiness    = (effects.happiness    ?? 0) - 3
       effects.mentalHealth = (effects.mentalHealth ?? 0) - 2
       effects.reputation   = (effects.reputation   ?? 0) - 1
@@ -160,6 +161,24 @@ export class BalanceEngine {
       if (health.addictions.length >= 3) {
         messages.push('💊 Le dipendenze multiple stanno compromettendo seriamente la salute.')
       }
+    }
+
+    // ─── Parenting happiness ─────────────────────────────────────
+    const children = state.children ?? []
+    const bondedKids = children.filter(c => c.bondWithPlayer > 50)
+    if (bondedKids.length > 0) {
+      effects.happiness    = (effects.happiness    ?? 0) + Math.min(bondedKids.length, 3)
+      effects.mentalHealth = (effects.mentalHealth ?? 0) + 1
+    }
+
+    // ─── Student engagement ──────────────────────────────────────
+    if (isStudent && state.education.gpa >= 2.5) {
+      effects.intelligence = (effects.intelligence ?? 0) + 1
+    }
+
+    // ─── Energy recovery from good sleep when unemployed/studying ─
+    if (!career.currentJob && stats.energy < 60) {
+      effects.energy = (effects.energy ?? 0) + 2
     }
 
     return { effects, messages }
