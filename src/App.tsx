@@ -124,6 +124,18 @@ function App() {
     AudioEngine.setEnabled(soundEnabled)
   }, [soundEnabled])
 
+  // BGM: load once and play when game is active; stop on game over
+  useEffect(() => {
+    if (isStarted && !isGameOver && soundEnabled) {
+      AudioEngine.loadBGM('/sounds/horacio1.mp3').then(() => {
+        if (!AudioEngine.isBGMPlaying()) AudioEngine.playBGM()
+      })
+    } else if (isGameOver) {
+      AudioEngine.fadeBGM(0, 2.0)
+      setTimeout(() => AudioEngine.stopBGM(), 2100)
+    }
+  }, [isStarted, isGameOver, soundEnabled])
+
   const [ageOverlay, setAgeOverlay] = useState<{ visible: boolean; age: number; year: number }>({
     visible: false, age: 0, year: 2000,
   })

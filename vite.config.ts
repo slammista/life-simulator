@@ -55,7 +55,8 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2,json,mp3}'],
+        maximumFileSizeToCacheInBytes: 10 * 1024 * 1024, // 10MB to accommodate audio
         navigateFallback: 'index.html',
         navigateFallbackDenylist: [/^\/auth-confirm/],
       },

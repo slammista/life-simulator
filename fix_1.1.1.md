@@ -329,13 +329,17 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 
 ---
 
-## Feature: Sistema audio Web Audio API
-**Fix**: Implementato `AudioEngine.ts` con sintesi sonora procedurale (nessun file audio richiesto):
-- `playSFX(type)` con 7 tipi: `ageUp` (ding-ding-ding ascendente), `success` (chime), `fail` (buzz discendente), `click` (tap), `event` (notifica), `levelUp` (4 note), `death` (tono solenne)
-- Sintesi via Web Audio API con oscillatori + envelope gain — nessun file binario
-- Sincronizzato a `settings.soundEnabled` via `useEffect` in App.tsx
-- Integrato in: pulsante +1 ETÀ, EventDisplay (all'apparire dell'evento), ActionResultPanel (chiusura)
-**Stato**: ✅ Fatto
+## Feature: Sistema audio Web Audio API + BGM horacio1.mp3
+**Fix**:
+- `AudioEngine.ts` aggiornato con supporto BGM file MP3 + sintesi SFX procedurale
+- **BGM `horacio1.mp3`** (174s, 320kbps) aggiunto in `public/sounds/horacio1.mp3`
+- Caricato via `fetch` + `decodeAudioData`, `AudioBufferSourceNode` con `loop=true`
+- **Loop intro-once**: `loopStart = BGM_LOOP_START_SECONDS` (costante configurabile in cima ad AudioEngine.ts) — al termine del primo ascolto il loop riparte dal punto configurato, saltando l'intro
+- Fade-out 2 secondi su game over, poi stop
+- PWA Workbox `globPatterns` aggiornato con `.mp3` + `maximumFileSizeToCacheInBytes: 10MB` per caching offline
+- `playSFX(type)` con 7 tipi: `ageUp`, `success`, `fail`, `click`, `event`, `levelUp`, `death`
+- Integrato in: pulsante +1 ETÀ, EventDisplay, ActionResultPanel
+**Stato**: ✅ Fatto — per regolare il punto di loop, modificare `BGM_LOOP_START_SECONDS` in `src/services/AudioEngine.ts`
 
 ---
 
