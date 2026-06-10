@@ -329,6 +329,36 @@ Ogni NPC (Relationship, WorkNPC, SchoolNPC) deve avere:
 
 ---
 
+## Feature: Sistema audio Web Audio API
+**Fix**: Implementato `AudioEngine.ts` con sintesi sonora procedurale (nessun file audio richiesto):
+- `playSFX(type)` con 7 tipi: `ageUp` (ding-ding-ding ascendente), `success` (chime), `fail` (buzz discendente), `click` (tap), `event` (notifica), `levelUp` (4 note), `death` (tono solenne)
+- Sintesi via Web Audio API con oscillatori + envelope gain — nessun file binario
+- Sincronizzato a `settings.soundEnabled` via `useEffect` in App.tsx
+- Integrato in: pulsante +1 ETÀ, EventDisplay (all'apparire dell'evento), ActionResultPanel (chiusura)
+**Stato**: ✅ Fatto
+
+---
+
+## Feature: Onboarding contestuale (ContextualHint)
+**Fix**: Nuovo componente `ContextualHint.tsx` con tooltip/banner una-tantum per sezione:
+- Banner dismissable con ×, colore per categoria, messaggio contestuale
+- Persiste in localStorage (`lifesim_hint_{sectionKey}`)
+- Aggiunto a: **Carriera** (cerca lavoro, interagisci), **Salute** (esercizio, psicologo), **Finanze** (investimenti, debito)
+**Stato**: ✅ Fatto
+
+---
+
+## Fix: Bilanciamento fine economia e statistiche
+**Fix**:
+- **Energy baseline recovery**: sotto 20 → recupero +1/anno; 20-40 → stabile; sopra 40 → decadimento normale -2
+- **Youth health bonus**: sotto 25 anni, +1 salute extra per la naturale rigenerazione del corpo
+- **Job satisfaction**: se stipendio ≥ €1800 e burnout < 50% → +1 felicità/anno
+- **Homeless expenses**: i senzatetto pagano solo €150/mese di costi base (non €500)
+- **Prison**: nessuna spesa di vita corrente in prigione
+**Stato**: ✅ Fatto
+
+---
+
 ## Feature: 20 nuovi eventi con scelte ramificate
 **Fix**: Aggiunti 20 eventi + 51 scelte a db.json (totale: 395 eventi, 1499 scelte):
 - Il Capo Tossico (career drama, 3 scelte)

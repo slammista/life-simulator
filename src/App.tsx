@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useCallback } from 'react'
+import { Suspense, lazy, useState, useCallback, useEffect } from 'react'
 import { useGameStore } from './store/gameStore'
 import { HUD } from './components/game/HUD'
 import { EventDisplay } from './components/game/EventDisplay'
@@ -9,6 +9,7 @@ import { GameOverScreen } from './components/screens/GameOverScreen'
 import { AgeGate } from './components/screens/AgeGate'
 import { EmotionalUIEngine } from './services/EmotionalUIEngine'
 import { haptic } from './services/HapticEngine'
+import { AudioEngine } from './services/AudioEngine'
 import { ErrorBoundary } from './components/common/ErrorBoundary'
 import { TutorialOverlay } from './components/game/TutorialOverlay'
 import { InstallBanner } from './components/game/InstallBanner'
@@ -117,6 +118,12 @@ function App() {
 
   const ageDisabled = isGameOver || currentEvent !== null
 
+  const soundEnabled = useGameStore(s => s.settings.soundEnabled)
+
+  useEffect(() => {
+    AudioEngine.setEnabled(soundEnabled)
+  }, [soundEnabled])
+
   const [ageOverlay, setAgeOverlay] = useState<{ visible: boolean; age: number; year: number }>({
     visible: false, age: 0, year: 2000,
   })
@@ -125,6 +132,7 @@ function App() {
     setActiveTab('vita')
     if (!ageDisabled) {
       haptic('heavy')
+      AudioEngine.playSFX('ageUp')
       setAgeOverlay({ visible: true, age: time.age + 1, year: time.year + 1 })
       handleInvecchia()
     }

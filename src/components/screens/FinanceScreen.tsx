@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { getAllAssetDefs, getAllInvestmentDefs, FinanceEngine } from '../../services/FinanceEngine'
+import { ContextualHint } from '../game/ContextualHint'
 
 export function FinanceScreen() {
   const finance = useGameStore(s => s.finance)
@@ -89,6 +90,13 @@ export function FinanceScreen() {
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
       <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginBottom: 12 }}>💰 Finanze</h2>
+
+      <ContextualHint
+        sectionKey="finance"
+        emoji="📈"
+        color="#10b981"
+        message="Investi i risparmi in azioni o ETF per costruire ricchezza a lungo termine. Attenzione al debito: se supera il 50% del patrimonio, la salute mentale ne risente."
+      />
 
       {feedback && (
         <div style={{

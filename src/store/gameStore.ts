@@ -426,20 +426,32 @@ export const useGameStore = create<FullStore>()(
           for (const [k, v] of Object.entries(e)) combined[k] = (combined[k] ?? 0) + v
         }
 
-        // 1. Natural energy/health decay
+        // 1. Natural energy/health decay + baseline recovery
         const ironManMultiplier = state.settings.ironMan ? 1.3 : 1.0
         const hardModeMultiplier = state.settings.mode === 'hard' ? 1.2 : 1.0
         const decayMult = ironManMultiplier * hardModeMultiplier
-        // Energy: -2/year natural decay (was -5 — too aggressive).
         // Happiness penalty scales with poverty level and living situation.
         const happinessPenalty = state.finance.money < 200 ? -3
           : state.finance.money < 500 ? -2
           : state.living.type === 'homeless' ? -5
           : 0
+        // Energy baseline: net zero recovery when very low, slight natural decay otherwise
+        const energyDelta = state.stats.energy < 20
+          ? Math.round(1 * decayMult)       // recovering from crash: net +1
+          : state.stats.energy < 40
+          ? 0                               // hovering low: hold steady
+          : Math.round(-2 * decayMult)      // normal: -2/year
+        // Youth health bonus: under 25 body recovers better
+        const youthBonus = newAge < 25 ? 1 : newAge < 35 ? 0 : 0
+        // Employed happiness bonus: good job + low burnout = fulfilment
+        const jobHappinessBonus =
+          state.career.currentJob &&
+          state.career.currentJob.salary >= 1800 &&
+          state.career.burnoutLevel < 50 ? 1 : 0
         merge({
-          energy: Math.round(-2 * decayMult),
-          health: Math.round((newAge > 50 ? -(newAge - 50) * 0.3 : -1) * decayMult),
-          happiness: happinessPenalty,
+          energy: energyDelta,
+          health: Math.round((newAge > 50 ? -(newAge - 50) * 0.3 : -1) * decayMult) + youthBonus,
+          happiness: happinessPenalty + jobHappinessBonus,
         })
 
         // 2. Monthly salary (12x in one year tick)
@@ -463,8 +475,12 @@ export const useGameStore = create<FullStore>()(
         }
 
         // 2d. Basic living expenses (food, utilities, transport) — excluded if living with parents
-        if (newAge >= 18 && state.living.type !== 'parents') {
-          const baseExpenses = state.living.type === 'renting' ? 420 : state.living.type === 'owning' ? 380 : 500
+        // Also skipped if already deeply negative (debt spiral protection)
+        if (newAge >= 18 && state.living.type !== 'parents' && state.living.type !== 'prison') {
+          const baseExpenses = state.living.type === 'renting' ? 420
+            : state.living.type === 'owning' ? 380
+            : state.living.type === 'homeless' ? 150   // minimal subsistence cost
+            : 500
           merge({ money: -(baseExpenses * 12) })
         }
 

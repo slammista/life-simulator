@@ -1,5 +1,6 @@
 import { useToastStore } from '../../store/toastStore'
 import { haptic } from '../../services/HapticEngine'
+import { AudioEngine } from '../../services/AudioEngine'
 
 const STAT_LABELS: Record<string, string> = {
   health: 'Salute', happiness: 'Felicità', energy: 'Energia',
@@ -19,7 +20,11 @@ export function ActionResultPanel() {
   const { panel } = useToastStore()
   const rawClose = useToastStore(s => s.closePanel)
 
-  const closePanel = () => { haptic(panel?.ok ? 'tap' : 'error'); rawClose() }
+  const closePanel = () => {
+    haptic(panel?.ok ? 'tap' : 'error')
+    AudioEngine.playSFX(panel?.ok ? 'success' : 'fail')
+    rawClose()
+  }
 
   if (!panel) return null
 

@@ -1,6 +1,7 @@
 import { useGameStore } from '../../store/gameStore'
 import { useToastStore } from '../../store/toastStore'
 import { haptic } from '../../services/HapticEngine'
+import { ContextualHint } from '../game/ContextualHint'
 import type { Disease, TraumaEvent } from '../../store/types'
 
 export function HealthScreen() {
@@ -35,6 +36,13 @@ export function HealthScreen() {
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
       <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginBottom: 12 }}>💊 Salute</h2>
+
+      <ContextualHint
+        sectionKey="health"
+        emoji="🏃"
+        color="#22c55e"
+        message="Fai esercizio ogni anno per mantenere salute e fitness. Visita il medico per diagnosi precoce. Lo psicologo migliora la salute mentale anche preventivamente."
+      />
 
       {/* Stats overview */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>

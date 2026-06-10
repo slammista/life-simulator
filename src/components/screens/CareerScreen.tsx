@@ -3,6 +3,7 @@ import { useGameStore } from '../../store/gameStore'
 import { CareerEngine, getAllJobs, getContractLabel, getCategorySkillBonus } from '../../services/CareerEngine'
 import { useToastStore } from '../../store/toastStore'
 import { haptic } from '../../services/HapticEngine'
+import { ContextualHint } from '../game/ContextualHint'
 import type { WorkAction, WorkNPC, WorkReputationStatus, PlayerSkills } from '../../store/types'
 
 const CATEGORY_SKILL_HINTS: Record<string, { key: keyof PlayerSkills; label: string; emoji: string }[]> = {
@@ -203,6 +204,13 @@ export function CareerScreen() {
         <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>💼 Carriera</h2>
         <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{time.year}</span>
       </div>
+
+      <ContextualHint
+        sectionKey="career"
+        emoji="💼"
+        color="#f59e0b"
+        message="Trova un lavoro adatto alla tua età e istruzione. Più studi, meglio pagato sarà il lavoro. Usa 'Interagisci' per costruire relazioni coi colleghi."
+      />
 
       {/* Teen notice */}
       {isMinor && (

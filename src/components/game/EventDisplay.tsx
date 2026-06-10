@@ -1,6 +1,7 @@
 import { memo, useEffect, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { haptic } from '../../services/HapticEngine'
+import { AudioEngine } from '../../services/AudioEngine'
 
 // Category → header color mapping (BitLife-style)
 const CATEGORY_COLORS: Record<string, string> = {
@@ -69,10 +70,17 @@ export const EventDisplay = memo(function EventDisplay() {
   const [cinematic, setCinematic] = useState(false)
 
   useEffect(() => {
-    if (currentEvent && (currentEvent.rarity === 'epic' || currentEvent.rarity === 'legendary')) {
-      setCinematic(true)
-      const t = setTimeout(() => setCinematic(false), 2200)
-      return () => clearTimeout(t)
+    if (currentEvent) {
+      AudioEngine.playSFX(
+        currentEvent.rarity === 'legendary' ? 'levelUp'
+        : currentEvent.rarity === 'epic' ? 'event'
+        : 'event'
+      )
+      if (currentEvent.rarity === 'epic' || currentEvent.rarity === 'legendary') {
+        setCinematic(true)
+        const t = setTimeout(() => setCinematic(false), 2200)
+        return () => clearTimeout(t)
+      }
     }
   }, [currentEvent?.id])
 
