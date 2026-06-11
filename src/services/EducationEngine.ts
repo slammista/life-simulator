@@ -156,8 +156,10 @@ export class EducationEngine {
     const yearsInLevel = state.time.age - (req.minAge)
     const graduated = yearsInLevel >= req.durationYears && edu.gpa >= 1.5
 
-    // Dropout risk: low GPA + low energy
-    const dropoutChance = edu.gpa < 1.0 ? 0.3 : edu.gpa < 1.5 ? 0.10 : 0.02
+    // Dropout risk: low GPA + low energy.
+    // Mandatory schooling (elementari, medie, liceo) cannot be dropped — school is compulsory.
+    const isMandatory = ['elementary', 'middle', 'highschool'].includes(edu.currentLevel)
+    const dropoutChance = isMandatory ? 0 : edu.gpa < 1.0 ? 0.3 : edu.gpa < 1.5 ? 0.10 : 0.02
     const droppedOut = !graduated && Math.random() < dropoutChance
 
     const effects: Effect = {}

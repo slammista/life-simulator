@@ -1,6 +1,13 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { TRAVEL_DESTS, type TravelClass, type TravelCategory } from '../../services/TravelEngine'
+import db from '../../../public/db.json'
+import type { Nation } from '../../store/types'
+
+const NATION_FLAGS: Record<string, string> = {
+  italy: '🇮🇹', usa: '🇺🇸', germany: '🇩🇪', japan: '🇯🇵', brazil: '🇧🇷',
+  sweden: '🇸🇪', ukraine: '🇺🇦', france: '🇫🇷', spain: '🇪🇸', uk: '🇬🇧',
+}
 
 const CLASS_LABELS: Record<TravelClass, string> = {
   economy: '✈️ Economica', business: '💺 Business', luxury: '🛫 Prima Classe',
@@ -13,10 +20,11 @@ const CATEGORY_LABELS: Record<TravelCategory, string> = {
 }
 
 export function TravelScreen() {
-  const { finance, travelHistory, time, criminal, bookTrip } = useGameStore()
+  const { finance, travelHistory, time, criminal, bookTrip, emigrate, nation } = useGameStore()
   const [feedback, setFeedback] = useState('')
   const [travelClass, setTravelClass] = useState<TravelClass>('economy')
   const [filter, setFilter] = useState<TravelCategory | 'all'>('all')
+  const [showEmigrate, setShowEmigrate] = useState(false)
 
   const handleBook = (destId: string) => {
     const r = bookTrip(destId, travelClass)
@@ -58,6 +66,52 @@ export function TravelScreen() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Emigration */}
+      <div className="card" style={{ padding: '12px 14px', border: '1px solid rgba(99,102,241,0.3)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+          <div>
+            <p style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>
+              🛫 Emigra all'estero
+            </p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', margin: 0 }}>
+              Vivi in {NATION_FLAGS[nation?.id ?? 'italy']} {nation?.name ?? 'Italia'} · trasferirsi costa €5.000
+            </p>
+          </div>
+          <button
+            onClick={() => setShowEmigrate(v => !v)}
+            style={{
+              padding: '6px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+              border: '1px solid rgba(99,102,241,0.35)', background: 'rgba(99,102,241,0.12)', color: '#a5b4fc',
+            }}
+          >
+            {showEmigrate ? 'Chiudi' : 'Scegli paese'}
+          </button>
+        </div>
+        {showEmigrate && (
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
+            {(db.nations as Nation[]).filter(n => n.id !== nation?.id).map(n => (
+              <button
+                key={n.id}
+                disabled={finance.money < 5000 || time.age < 18 || criminal.inPrison}
+                onClick={() => {
+                  const r = emigrate(n.id)
+                  setFeedback(r.message)
+                  if (r.success) setShowEmigrate(false)
+                }}
+                style={{
+                  padding: '8px 10px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left',
+                  border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)',
+                  color: finance.money < 5000 || time.age < 18 ? '#475569' : 'var(--color-text)',
+                  opacity: finance.money < 5000 || time.age < 18 ? 0.5 : 1,
+                }}
+              >
+                {NATION_FLAGS[n.id] ?? '🌍'} {n.name}
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Category filter */}

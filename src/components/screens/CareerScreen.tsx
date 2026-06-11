@@ -141,6 +141,7 @@ export function CareerScreen() {
   const applyForJob = useGameStore(s => s.applyForJob)
   const quitJob = useGameStore(s => s.quitJob)
   const attemptPromotion = useGameStore(s => s.attemptPromotion)
+  const askForRaise = useGameStore(s => s.askForRaise)
 
   const workInteract = useGameStore(s => s.workInteract)
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
@@ -170,6 +171,11 @@ export function CareerScreen() {
   const handlePromotion = () => {
     const r = attemptPromotion()
     flash(r.message, r.success, '📈', r.effects as Record<string, number>)
+  }
+
+  const handleAskRaise = () => {
+    const r = askForRaise()
+    flash(r.message, r.success, '💶', r.effects as Record<string, number>)
   }
 
   const handleWorkInteract = (colleagueId: string, action: WorkAction) => {
@@ -266,12 +272,18 @@ export function CareerScreen() {
               </span>
             </div>
 
-            <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
+            <div style={{ display: 'flex', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
               <button
                 onClick={handlePromotion}
-                style={{ flex: 1, padding: '8px 0', borderRadius: 12, background: 'rgba(234,179,8,0.2)', color: '#fde047', fontSize: 13, fontWeight: 500, border: '1px solid rgba(234,179,8,0.3)', cursor: 'pointer' }}
+                style={{ flex: 1, minWidth: 110, padding: '8px 0', borderRadius: 12, background: 'rgba(234,179,8,0.2)', color: '#fde047', fontSize: 13, fontWeight: 500, border: '1px solid rgba(234,179,8,0.3)', cursor: 'pointer' }}
               >
                 📈 Promozione
+              </button>
+              <button
+                onClick={handleAskRaise}
+                style={{ flex: 1, minWidth: 110, padding: '8px 0', borderRadius: 12, background: 'rgba(16,185,129,0.18)', color: '#6ee7b7', fontSize: 13, fontWeight: 500, border: '1px solid rgba(16,185,129,0.3)', cursor: 'pointer' }}
+              >
+                💶 Chiedi aumento
               </button>
               <button
                 onClick={handleQuit}

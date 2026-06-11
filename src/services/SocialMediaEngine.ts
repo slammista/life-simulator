@@ -9,14 +9,14 @@ interface PlatformDef {
 }
 
 const PLATFORMS: PlatformDef[] = [
-  { id: 'instagram', name: 'Instagram', emoji: '📸', minAge: 13, viralMultiplier: 1.2, adsensePer1k: 2,    baseGrowth: 30 },
-  { id: 'tiktok',    name: 'TikTok',    emoji: '🎵', minAge: 13, viralMultiplier: 2.0, adsensePer1k: 1.5,  baseGrowth: 80 },
-  { id: 'youtube',   name: 'YouTube',   emoji: '▶️', minAge: 13, viralMultiplier: 0.8, adsensePer1k: 5,    baseGrowth: 15 },
-  { id: 'twitter',   name: 'Twitter/X', emoji: '🐦', minAge: 13, viralMultiplier: 1.5, adsensePer1k: 0.5,  baseGrowth: 20 },
-  { id: 'facebook',  name: 'Facebook',  emoji: '📘', minAge: 13, viralMultiplier: 0.6, adsensePer1k: 1.0,  baseGrowth: 10 },
-  { id: 'twitch',    name: 'Twitch',    emoji: '🟣', minAge: 16, viralMultiplier: 1.8, adsensePer1k: 3.5,  baseGrowth: 20 },
-  { id: 'podcast',   name: 'Podcast',   emoji: '🎙️', minAge: 16, viralMultiplier: 0.5, adsensePer1k: 8.0,  baseGrowth: 5  },
-  { id: 'onlyfans',  name: 'OnlyFans',  emoji: '🔞', minAge: 18, viralMultiplier: 3.0, adsensePer1k: 50.0, baseGrowth: 40 },
+  { id: 'instagram', name: 'Instagram', emoji: '📸', minAge: 13, viralMultiplier: 1.2, adsensePer1k: 2,    baseGrowth: 8  },
+  { id: 'tiktok',    name: 'TikTok',    emoji: '🎵', minAge: 13, viralMultiplier: 2.0, adsensePer1k: 1.5,  baseGrowth: 20 },
+  { id: 'youtube',   name: 'YouTube',   emoji: '▶️', minAge: 13, viralMultiplier: 0.8, adsensePer1k: 5,    baseGrowth: 4  },
+  { id: 'twitter',   name: 'Twitter/X', emoji: '🐦', minAge: 13, viralMultiplier: 1.5, adsensePer1k: 0.5,  baseGrowth: 5  },
+  { id: 'facebook',  name: 'Facebook',  emoji: '📘', minAge: 13, viralMultiplier: 0.6, adsensePer1k: 1.0,  baseGrowth: 3  },
+  { id: 'twitch',    name: 'Twitch',    emoji: '🟣', minAge: 16, viralMultiplier: 1.8, adsensePer1k: 3.5,  baseGrowth: 5  },
+  { id: 'podcast',   name: 'Podcast',   emoji: '🎙️', minAge: 16, viralMultiplier: 0.5, adsensePer1k: 8.0,  baseGrowth: 2  },
+  { id: 'onlyfans',  name: 'OnlyFans',  emoji: '🔞', minAge: 18, viralMultiplier: 3.0, adsensePer1k: 50.0, baseGrowth: 10 },
 ]
 
 const POST_MULTIPLIERS: Record<PostType, number> = {
@@ -65,17 +65,22 @@ export class SocialMediaEngine {
     const looks = state.stats.looks / 100
     const intelligence = state.stats.intelligence / 100
     const baseGain = def.baseGrowth * POST_MULTIPLIERS[postType]
-    const skillBonus = 1 + (profile.postCount / 200) // more experience = better
+    const skillBonus = 1 + (profile.postCount / 300) // more experience = better, but slowly
     const statBonus = postType === 'educational' ? intelligence * 2 : looks * 1.5
     const randomFactor = 0.5 + Math.random()
 
-    const followerGain = Math.floor(baseGain * skillBonus * randomFactor + statBonus * 10)
+    let followerGain = Math.floor(baseGain * skillBonus * randomFactor + statBonus * 5)
+    // Organic growth is proportional to current audience: small accounts grow slowly.
+    // Cap non-viral growth at ~8% of current followers (min 25 so new accounts aren't stuck at 0).
+    followerGain = Math.min(followerGain, Math.max(25, Math.floor(profile.followers * 0.08)))
 
-    // Viral check (probability based on platform + post type)
-    const viralChance = (def.viralMultiplier * POST_MULTIPLIERS[postType] * (profile.viralScore + 5)) / 1000
+    // Viral check (probability based on platform + post type) — rarer than before
+    const viralChance = (def.viralMultiplier * POST_MULTIPLIERS[postType] * (profile.viralScore + 5)) / 2000
     const isViral = Math.random() < viralChance
 
-    const totalGain = isViral ? followerGain * 50 : followerGain
+    // Viral spikes scale with the audience you already have, not a flat x50
+    const viralGain = Math.min(followerGain * 10 + Math.floor(profile.followers * 0.5), 50000)
+    const totalGain = isViral ? Math.max(500, viralGain) : followerGain
     const newFollowers = profile.followers + totalGain
     const newStage = this._getStage(newFollowers)
     const monthlyIncome = this._calcIncome(newFollowers, def.adsensePer1k)

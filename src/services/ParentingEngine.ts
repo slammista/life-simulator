@@ -1,4 +1,5 @@
 import type { GameState, Effect, Child, Gender, EducationLevel } from '../store/types'
+import { NameEngine } from './NameEngine'
 
 export type ParentingAction =
   | 'read_book'
@@ -42,9 +43,6 @@ const SCHOOL_LEVELS_BY_AGE: Array<{ minAge: number; maxAge: number; level: Educa
   { minAge: 19, maxAge: 23, level: 'bachelor'      },
 ]
 
-const MALE_NAMES = ['Luca', 'Marco', 'Andrea', 'Matteo', 'Davide', 'Francesco', 'Lorenzo', 'Simone', 'Gabriele', 'Riccardo']
-const FEMALE_NAMES = ['Sofia', 'Emma', 'Giulia', 'Martina', 'Sara', 'Valentina', 'Chiara', 'Alice', 'Giorgia', 'Laura']
-
 export interface ParentingResult {
   success: boolean
   message: string
@@ -79,8 +77,7 @@ export class ParentingEngine {
     }
 
     const gender: Gender = Math.random() < 0.51 ? 'female' : 'male'
-    const names = gender === 'female' ? FEMALE_NAMES : MALE_NAMES
-    const name = names[Math.floor(Math.random() * names.length)]
+    const name = NameEngine.firstName(gender, state.identity.nationality)
 
     // Genetics: child inherits from player
     const intelligenceBase = Math.round(stats.intelligence * 0.5 + Math.random() * 30 + 10)

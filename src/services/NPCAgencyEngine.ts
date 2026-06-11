@@ -111,7 +111,11 @@ export class NPCAgencyEngine {
         next = appendMemory({ ...next, love: clamp(next.love + 5), historyFlags: [...next.historyFlags, 'npc_agency_family_talk'] }, event.description, state.time.year)
       }
 
-      if (rel.type !== 'parent' && rel.type !== 'child' && rel.stage !== 'spouse' && Math.random() < (traitAmbitious ? 0.055 : 0.025)) {
+      // One career change per NPC: any career flag already present blocks new ones,
+      // so the banner appears only once instead of every year.
+      if (rel.type !== 'parent' && rel.type !== 'child' && rel.stage !== 'spouse' &&
+          !CAREER_FLAGS.some(f => next.historyFlags.includes(f)) &&
+          Math.random() < (traitAmbitious ? 0.055 : 0.025)) {
         const flag = CAREER_FLAGS[Math.floor(Math.random() * CAREER_FLAGS.length)]
         if (!next.historyFlags.includes(flag)) {
           const event = createEvent({
@@ -157,7 +161,10 @@ export class NPCAgencyEngine {
         next = appendMemory({ ...next, trust: clamp(next.trust + 8), mood: 'nostalgico' }, event.description, state.time.year)
       }
 
-      if (rel.type !== 'parent' && rel.stage !== 'spouse' && Math.random() < 0.018) {
+      // An NPC moves away at most once — never re-announce the same move
+      if (rel.type !== 'parent' && rel.stage !== 'spouse' &&
+          !next.historyFlags.includes('npc_agency_moved_away') &&
+          Math.random() < 0.018) {
         const event = createEvent({
           npcId: rel.id,
           npcName: rel.name,

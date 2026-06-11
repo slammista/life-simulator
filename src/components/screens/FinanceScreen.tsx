@@ -14,7 +14,11 @@ export function FinanceScreen() {
   const maintainAsset = useGameStore(s => s.maintainAsset)
   const takeLoan = useGameStore(s => s.takeLoan)
   const requestMoneyFromParents = useGameStore(s => s.requestMoneyFromParents)
+  const buyScratchCard = useGameStore(s => s.buyScratchCard)
+  const repayNpcLoan = useGameStore(s => s.repayNpcLoan)
+  const npcLoans = useGameStore(s => s.npcLoans)
   const age = useGameStore(s => s.time.age)
+  const year = useGameStore(s => s.time.year)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [parentAmount, setParentAmount] = useState('50')
@@ -166,9 +170,64 @@ export function FinanceScreen() {
         </div>
       )}
 
+      {/* Outstanding loans from friends/family */}
+      {(npcLoans ?? []).filter(l => !l.repaid).length > 0 && (
+        <div className="card" style={{ padding: '14px 16px', marginBottom: 12, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.05)' }}>
+          <p style={{ fontSize: 11, fontWeight: 800, color: '#fca5a5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+            💸 Prestiti da restituire
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {(npcLoans ?? []).filter(l => !l.repaid).map(loan => {
+              const overdue = year > loan.dueYear
+              return (
+                <div key={loan.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
+                  <span style={{ fontSize: 12, color: overdue ? '#fca5a5' : 'var(--color-text-secondary)' }}>
+                    {loan.npcName.split(' ')[0]} · €{loan.amount.toLocaleString('it-IT')} · entro {loan.dueYear}{overdue ? ' ⚠️ SCADUTO' : ''}
+                  </span>
+                  <button
+                    onClick={() => { const r = repayNpcLoan(loan.id); flash(r.message, r.success) }}
+                    disabled={finance.money < loan.amount}
+                    style={{
+                      padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer',
+                      border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.12)',
+                      color: finance.money < loan.amount ? '#475569' : '#6ee7b7',
+                      opacity: finance.money < loan.amount ? 0.5 : 1,
+                    }}
+                  >
+                    Salda
+                  </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Overview tab */}
       {tab === 'overview' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {/* Gratta e Vinci */}
+          {age >= 18 && (
+            <div className="card" style={{ padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10 }}>
+              <div>
+                <p style={{ fontSize: 13, fontWeight: 700, margin: 0 }}>🎫 Gratta e Vinci</p>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', margin: 0 }}>€5-10 a biglietto. La fortuna è cieca.</p>
+              </div>
+              <button
+                onClick={() => { const r = buyScratchCard(); flash(r.message, r.success) }}
+                disabled={finance.money < 10}
+                style={{
+                  padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
+                  border: '1px solid rgba(245,158,11,0.35)', background: 'rgba(245,158,11,0.12)',
+                  color: finance.money < 10 ? '#475569' : '#fcd34d',
+                  opacity: finance.money < 10 ? 0.5 : 1,
+                }}
+              >
+                Gratta
+              </button>
+            </div>
+          )}
+
           {/* Net worth — premium card */}
           <div className="card" style={{
             padding: '18px 16px',

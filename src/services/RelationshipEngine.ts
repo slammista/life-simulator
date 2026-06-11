@@ -10,6 +10,7 @@ import type {
   NPCPersonalityTrait,
 } from '../store/types'
 import { ChainReactionEngine } from './ChainReactionEngine'
+import { NameEngine } from './NameEngine'
 
 // ---- public types ----
 
@@ -49,12 +50,6 @@ export interface RelActionResult {
   memoryEntry?: Omit<NPCMemory, 'id'>
   newRelationship?: Relationship
 }
-
-// ---- name pools ----
-
-const MALE_NAMES = ['Marco', 'Luca', 'Andrea', 'Matteo', 'Francesco', 'Alessandro', 'Davide', 'Simone', 'Riccardo', 'Stefano', 'Giovanni', 'Emanuele', 'Christian', 'Fabio', 'Paolo', 'Roberto', 'Giorgio', 'Antonio', 'Mario', 'Lorenzo']
-const FEMALE_NAMES = ['Sara', 'Giulia', 'Martina', 'Valentina', 'Alessia', 'Chiara', 'Federica', 'Silvia', 'Laura', 'Elena', 'Francesca', 'Michela', 'Roberta', 'Paola', 'Monica', 'Ilaria', 'Serena', 'Daniela', 'Elisa', 'Sofia']
-const SURNAMES = ['Rossi', 'Ferrari', 'Esposito', 'Bianchi', 'Romano', 'Colombo', 'Ricci', 'Marino', 'Greco', 'Bruno', 'Gallo', 'Conti', 'De Luca', 'Mancini', 'Costa', 'Fontana', 'Giordano', 'Russo', 'Barbieri', 'Ferrara']
 
 const GENDER_EMOJIS: Record<Gender, string[]> = {
   male: ['👨', '👦', '🧑', '👴'],
@@ -209,8 +204,7 @@ export class RelationshipEngine {
     const ageGroup = age < 18 ? 0 : age < 40 ? 1 : age < 65 ? 2 : 3
     const emoji = GENDER_EMOJIS[gender][Math.min(ageGroup, GENDER_EMOJIS[gender].length - 1)]
 
-    const namePool = gender === 'male' ? MALE_NAMES : FEMALE_NAMES
-    const name = `${namePool[Math.floor(Math.random() * namePool.length)]} ${SURNAMES[Math.floor(Math.random() * SURNAMES.length)]}`
+    const name = NameEngine.fullName(gender)
 
     const type: RelationshipType = context === 'family' ? 'sibling' : 'acquaintance'
 

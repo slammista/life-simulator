@@ -53,6 +53,7 @@ import { DailyQuestEngine } from '../services/DailyQuestEngine'
 import { NPCAgencyEngine } from '../services/NPCAgencyEngine'
 import { BalanceEngine } from '../services/BalanceEngine'
 import { NarrativeEngine, rollTraits, buildOriginStory } from '../services/NarrativeEngine'
+import { NameEngine } from '../services/NameEngine'
 import { StoryArcEngine } from '../services/StoryArcEngine'
 import { NPCRequestEngine } from '../services/NPCRequestEngine'
 import { LifePhaseEngine } from '../services/LifePhaseEngine'
@@ -335,6 +336,7 @@ function buildInitialState(): GameState {
     npcEventQueue: [],
     pendingConsequences: [],
     narrative: NarrativeEngine.initialState(),
+    npcLoans: [],
     currentEvent: null,
     availableChoices: [],
     pendingEffects: null,
@@ -382,6 +384,9 @@ export const useGameStore = create<FullStore>()(
         const initial = buildInitialState()
         const nation = (db.nations as Nation[]).find(n => n.id === nationId) ?? initial.nation
         const startMoney = BACKGROUND_MONEY[identity.familyBackground] ?? 1000
+
+        // All generated NPC names follow the nation the character lives in
+        NameEngine.setNationality(identity.nationality)
 
         // Random narrative traits: scenario-implied (if any) + 1-2 random surprises
         const traits = rollTraits(scenarioId)
@@ -564,6 +569,19 @@ export const useGameStore = create<FullStore>()(
           }
         }
 
+        // 7-ter. Overdue NPC loans: every unpaid year past due chips away at the relationship
+        for (const loan of (state.npcLoans ?? [])) {
+          if (loan.repaid || newYear <= loan.dueYear) continue
+          for (let i = 0; i < updatedRelationships.length; i++) {
+            const r = updatedRelationships[i]
+            if (r.id === loan.npcId && r.isAlive) {
+              updatedRelationships[i] = { ...r, trust: clamp(r.trust - 6, 0, 100), respect: clamp(r.respect - 4, 0, 100) }
+              messages.push(`💸 ${loan.npcName.split(' ')[0]} aspetta ancora i suoi €${loan.amount.toLocaleString('it-IT')} (scaduto nel ${loan.dueYear}). Il rapporto si incrina.`)
+              break
+            }
+          }
+        }
+
         // 7a. Autonomous NPC agency
         const npcAgencyTick = NPCAgencyEngine.annualTick(state, updatedRelationships)
         merge(npcAgencyTick.effects)
@@ -742,6 +760,12 @@ export const useGameStore = create<FullStore>()(
         if (weeklyHours > 60) {
           const over = weeklyHours - 60
           merge({ energy: -Math.round(over * 0.3), mentalHealth: -Math.round(over * 0.2), health: -1 })
+        }
+
+        // Under 18 you depend on your parents: they absorb the household losses,
+        // so the yearly tick can never drain the player's own pocket money.
+        if (newAge < 18 && (combined.money ?? 0) < 0) {
+          combined.money = 0
         }
 
         // Cap ordinary stat swings per annual tick (non-financial)
@@ -1391,6 +1415,159 @@ export const useGameStore = create<FullStore>()(
           return { success: true, message: `I tuoi genitori accettano! Ti danno €${amount.toLocaleString('it-IT')} per ${reason}.`, effects: { money: amount } }
         }
         return { success: false, message: `I tuoi genitori rifiutano di darti €${amount.toLocaleString('it-IT')}. Il rapporto con loro è troppo teso.`, effects: {} }
+      },
+
+      // ==================== NPC money exchange + loans ====================
+      giveMoneyToNpc: (relId: string, amount: number): ActionResult => {
+        const state = get()
+        const rel = state.relationships.find(r => r.id === relId)
+        if (!rel || !rel.isAlive) return { success: false, message: 'Persona non trovata.', effects: {} }
+        if (amount <= 0) return { success: false, message: 'Importo non valido.', effects: {} }
+        if (state.finance.money < amount) return { success: false, message: 'Non hai abbastanza soldi.', effects: {} }
+
+        // Bigger gifts (relative to NPC expectations) move trust/love more
+        const trustGain = Math.min(15, 3 + Math.floor(amount / 200))
+        const loveGain = Math.min(10, 2 + Math.floor(amount / 400))
+        const isFamily = ['parent', 'sibling', 'child'].includes(rel.type)
+
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - amount },
+          stats: { ...s.stats, karma: clamp(s.stats.karma + 2, -100, 100), happiness: clamp(s.stats.happiness + 2, 0, 100) },
+          relationships: s.relationships.map(r => r.id === relId
+            ? { ...r, trust: clamp(r.trust + trustGain, 0, 100), love: clamp(r.love + loveGain, 0, 100) }
+            : r),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Hai dato €${amount.toLocaleString('it-IT')} a ${rel.name.split(' ')[0]}${isFamily ? ' (famiglia)' : ''}. Gesto apprezzato.`, emoji: '💝', category: 'social', statChanges: { money: -amount } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Hai dato €${amount.toLocaleString('it-IT')} a ${rel.name.split(' ')[0]}. Il vostro legame si rafforza.`, effects: { money: -amount, karma: 2 } }
+      },
+
+      askMoneyFromNpc: (relId: string, amount: number): ActionResult => {
+        const state = get()
+        const rel = state.relationships.find(r => r.id === relId)
+        if (!rel || !rel.isAlive) return { success: false, message: 'Persona non trovata.', effects: {} }
+        if (amount <= 0) return { success: false, message: 'Importo non valido.', effects: {} }
+
+        // Outstanding unpaid loan from the same person? No new money until repaid.
+        const hasUnpaidLoan = (state.npcLoans ?? []).some(l => l.npcId === relId && !l.repaid)
+        if (hasUnpaidLoan) return { success: false, message: `${rel.name.split(' ')[0]} aspetta ancora che tu restituisca il prestito precedente.`, effects: {} }
+
+        const isFamily = ['parent', 'sibling', 'child'].includes(rel.type)
+        const maxAsk = isFamily ? 5000 : 2000
+        if (amount > maxAsk) return { success: false, message: `Non puoi chiedere più di €${maxAsk.toLocaleString('it-IT')} a ${isFamily ? 'un familiare' : 'un amico'}.`, effects: {} }
+
+        // Acceptance based on trust, family bonds are more generous
+        const acceptChance = (rel.trust / 100) * (isFamily ? 0.95 : 0.7) - (amount / maxAsk) * 0.25
+        if (Math.random() > acceptChance) {
+          set(s => ({
+            relationships: s.relationships.map(r => r.id === relId ? { ...r, trust: clamp(r.trust - 3, 0, 100) } : r),
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `${rel.name.split(' ')[0]} non può (o non vuole) prestarti €${amount.toLocaleString('it-IT')}.`, emoji: '🙅', category: 'social', statChanges: {} }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: false, message: `${rel.name.split(' ')[0]} rifiuta. «Mi dispiace, non posso proprio.»`, effects: {} }
+        }
+
+        // Small amounts are gifts; bigger ones become loans due in 3 years
+        const isGift = amount <= 200
+        const loan: import('./types').NpcLoan | null = isGift ? null : {
+          id: uid(), npcId: relId, npcName: rel.name,
+          amount, yearBorrowed: state.time.year, dueYear: state.time.year + 3, repaid: false,
+        }
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money + amount },
+          relationships: s.relationships.map(r => r.id === relId ? { ...r, trust: clamp(r.trust + (isGift ? 2 : 0), 0, 100) } : r),
+          npcLoans: loan ? [...(s.npcLoans ?? []), loan] : (s.npcLoans ?? []),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: isGift ? `${rel.name.split(' ')[0]} ti regala €${amount.toLocaleString('it-IT')}.` : `${rel.name.split(' ')[0]} ti presta €${amount.toLocaleString('it-IT')}. Da restituire entro il ${state.time.year + 3}.`, emoji: '💶', category: 'social', statChanges: { money: amount } }, ...s.eventLog].slice(0, 150),
+        }))
+        return {
+          success: true,
+          message: isGift
+            ? `${rel.name.split(' ')[0]} ti dà €${amount.toLocaleString('it-IT')} senza chiedere nulla in cambio.`
+            : `${rel.name.split(' ')[0]} ti presta €${amount.toLocaleString('it-IT')}. Restituiscili entro il ${state.time.year + 3} o il rapporto ne soffrirà.`,
+          effects: { money: amount },
+        }
+      },
+
+      repayNpcLoan: (loanId: string): ActionResult => {
+        const state = get()
+        const loan = (state.npcLoans ?? []).find(l => l.id === loanId && !l.repaid)
+        if (!loan) return { success: false, message: 'Prestito non trovato.', effects: {} }
+        if (state.finance.money < loan.amount) return { success: false, message: `Ti servono €${loan.amount.toLocaleString('it-IT')} per saldare il debito.`, effects: {} }
+
+        const onTime = state.time.year <= loan.dueYear
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - loan.amount },
+          npcLoans: (s.npcLoans ?? []).map(l => l.id === loanId ? { ...l, repaid: true } : l),
+          relationships: s.relationships.map(r => r.id === loan.npcId
+            ? { ...r, trust: clamp(r.trust + (onTime ? 10 : 5), 0, 100), respect: clamp(r.respect + 5, 0, 100) }
+            : r),
+          stats: { ...s.stats, karma: clamp(s.stats.karma + 3, -100, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Hai restituito €${loan.amount.toLocaleString('it-IT')} a ${loan.npcName.split(' ')[0]}${onTime ? ' nei tempi' : ' (in ritardo)'}.`, emoji: '🤝', category: 'social', statChanges: { money: -loan.amount } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Debito saldato con ${loan.npcName.split(' ')[0]}. ${onTime ? 'Parola mantenuta.' : 'Meglio tardi che mai.'}`, effects: { money: -loan.amount } }
+      },
+
+      // ==================== BitLife-style extras ====================
+      askForRaise: (): ActionResult => {
+        const state = get()
+        const job = state.career.currentJob
+        if (!job) return { success: false, message: 'Non hai un lavoro.', effects: {} }
+        if ((state.career.lastRaiseYear ?? 0) >= state.time.year) return { success: false, message: 'Hai già chiesto un aumento quest\'anno. Riprova l\'anno prossimo.', effects: {} }
+
+        // Chance based on work reputation, burnout and promotions
+        const repBonus = ['genio', 'leader'].includes(state.career.workReputation) ? 0.30
+          : ['affidabile', 'ambizioso'].includes(state.career.workReputation) ? 0.15
+          : ['pigro', 'tossico', 'problematico'].includes(state.career.workReputation) ? -0.20
+          : state.career.workReputation === 'nuovo' ? -0.10 : 0
+        const chance = 0.35 + repBonus - (state.career.burnoutLevel / 300)
+        const granted = Math.random() < chance
+
+        if (granted) {
+          const raisePct = 0.05 + Math.random() * 0.10
+          const newSalary = Math.round(job.salary * (1 + raisePct))
+          set(s => ({
+            career: { ...s.career, currentJob: s.career.currentJob ? { ...s.career.currentJob, salary: newSalary } : null, lastRaiseYear: state.time.year },
+            stats: { ...s.stats, happiness: clamp(s.stats.happiness + 6, 0, 100) },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `📈 Aumento ottenuto! Stipendio: €${job.salary.toLocaleString('it-IT')} → €${newSalary.toLocaleString('it-IT')}/mese (+${Math.round(raisePct * 100)}%).`, emoji: '📈', category: 'career', statChanges: {} }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: true, message: `Il capo accetta! Stipendio aumentato a €${newSalary.toLocaleString('it-IT')}/mese (+${Math.round(raisePct * 100)}%).`, effects: {} }
+        }
+        set(s => ({
+          career: { ...s.career, lastRaiseYear: state.time.year },
+          stats: { ...s.stats, happiness: clamp(s.stats.happiness - 3, 0, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: '📉 Richiesta di aumento respinta. «Magari l\'anno prossimo.»', emoji: '📉', category: 'career', statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: false, message: 'Il capo rifiuta: «Non è il momento giusto.» Riprova l\'anno prossimo.', effects: {} }
+      },
+
+      emigrate: (nationId: string): ActionResult => {
+        const state = get()
+        const COST = 5000
+        if (state.time.age < 18) return { success: false, message: 'Devi essere maggiorenne per emigrare.', effects: {} }
+        if (state.criminal.inPrison) return { success: false, message: 'Non puoi emigrare dalla prigione.', effects: {} }
+        if (state.nation?.id === nationId) return { success: false, message: 'Vivi già in questo paese.', effects: {} }
+        if (state.finance.money < COST) return { success: false, message: `Trasferirsi all'estero costa €${COST.toLocaleString('it-IT')} (volo, documenti, caparra).`, effects: {} }
+
+        const newNation = (db.nations as Nation[]).find(n => n.id === nationId)
+        if (!newNation) return { success: false, message: 'Paese non trovato.', effects: {} }
+
+        // NPCs you'll meet from now on have names from the new country
+        NameEngine.setNationality(nationId)
+
+        const memory = makeMemory(state.time, `Trasferimento in ${newNation.name}`, `Hai lasciato tutto e sei volato in ${newNation.name}. Una nuova vita inizia.`, '🛫', 'life', [], true)
+        set(s => ({
+          nation: newNation,
+          finance: { ...s.finance, money: s.finance.money - COST },
+          living: { ...s.living, location: newNation.name, type: 'renting' as const, monthlyCost: Math.max(400, s.living.monthlyCost) },
+          stats: { ...s.stats, happiness: clamp(s.stats.happiness + 8, 0, 100), mentalHealth: clamp(s.stats.mentalHealth - 3, 0, 100) },
+          // Distance strains non-family bonds a little
+          relationships: s.relationships.map(r =>
+            ['parent', 'sibling', 'child', 'spouse'].includes(r.type) || !r.isAlive
+              ? r
+              : { ...r, trust: clamp(r.trust - 8, 0, 100) }),
+          lifeMemories: [...s.lifeMemories, memory].slice(-200),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🛫 Ti sei trasferito/a in ${newNation.name}! Nuovo paese, nuova vita.`, emoji: '🛫', category: 'life', statChanges: { money: -COST } }, ...s.eventLog].slice(0, 150),
+        }))
+        get().checkGoals()
+        return { success: true, message: `Benvenuto/a in ${newNation.name}! La tua nuova vita inizia ora.`, effects: { money: -COST, happiness: 8 } }
       },
 
       // ==================== Social activities (outside work/school) ====================
@@ -3067,6 +3244,7 @@ export const useGameStore = create<FullStore>()(
       // Merge loaded state with current defaults to handle missing slices in old saves
       merge: (persistedState: unknown, currentState: FullStore): FullStore => {
         const ps = persistedState as Partial<FullStore>
+        NameEngine.setNationality(ps.nation?.id ?? ps.identity?.nationality)
         return {
           ...currentState,
           ...ps,
@@ -3077,6 +3255,7 @@ export const useGameStore = create<FullStore>()(
           lifeMemories: ps.lifeMemories ?? currentState.lifeMemories,
           pendingConsequences: ps.pendingConsequences ?? currentState.pendingConsequences,
           skills: ps.skills ?? currentState.skills,
+          npcLoans: ps.npcLoans ?? currentState.npcLoans,
         }
       },
       partialize: (state) => ({
@@ -3129,6 +3308,7 @@ export const useGameStore = create<FullStore>()(
         lifeMemories: state.lifeMemories.slice(-200),
         pendingConsequences: state.pendingConsequences,
         skills: state.skills,
+        npcLoans: state.npcLoans,
       }),
     }
   )

@@ -1,4 +1,5 @@
 import type { Effect, GameState, NPCMood, NPCPersonalityTrait, PlayerSkills, CoreStats, Relationship } from '../store/types'
+import { NameEngine } from './NameEngine'
 
 export type DatingApp = 'tinder' | 'bumble' | 'hinge' | 'okCupid'
 
@@ -14,8 +15,6 @@ const APPS: DatingAppDef[] = [
   { id: 'okCupid', name: 'OkCupid',  emoji: '💌', premium: 20, ageRange: [18, 45], matchRate: 0.15 },
 ]
 
-const NAMES_MALE = ['Marco', 'Luca', 'Andrea', 'Matteo', 'Lorenzo', 'Davide', 'Riccardo', 'Francesco', 'Simone', 'Roberto']
-const NAMES_FEMALE = ['Sofia', 'Chiara', 'Giulia', 'Anna', 'Elena', 'Laura', 'Valentina', 'Alice', 'Martina', 'Sara']
 const DATING_TRAITS: NPCPersonalityTrait[] = ['ambizioso', 'geloso', 'generoso', 'sensibile', 'sicuro', 'leale', 'empatico', 'impulsivo']
 
 export interface DatingResult {
@@ -52,8 +51,7 @@ export class DatingEngine {
     const targetGender = isOppositeGender
       ? (state.identity.gender === 'male' ? 'female' : 'male')
       : state.identity.gender
-    const names = targetGender === 'female' ? NAMES_FEMALE : NAMES_MALE
-    const name = names[Math.floor(Math.random() * names.length)]
+    const name = NameEngine.fullName(targetGender, state.identity.nationality)
     const ageDiff = Math.floor(Math.random() * 10) - 3
     const matchAge = Math.max(18, state.time.age + ageDiff)
 

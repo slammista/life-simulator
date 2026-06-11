@@ -9,9 +9,7 @@ import type {
   PlayerIdentity,
   Relationship,
 } from '../store/types'
-
-const MALE_NAMES = ['Marco', 'Luca', 'Andrea', 'Matteo', 'Francesco', 'Alessandro', 'Davide', 'Riccardo', 'Stefano', 'Lorenzo']
-const FEMALE_NAMES = ['Sara', 'Giulia', 'Martina', 'Valentina', 'Alessia', 'Chiara', 'Federica', 'Laura', 'Elena', 'Sofia']
+import { NameEngine } from './NameEngine'
 
 const TRAITS: NPCPersonalityTrait[] = [
   'introverso',
@@ -44,10 +42,6 @@ const uid = (prefix: string) => `${prefix}_${Math.random().toString(36).slice(2,
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value))
-}
-
-function pick<T>(items: T[]): T {
-  return items[Math.floor(Math.random() * items.length)]
 }
 
 function randomTraits(preferred: NPCPersonalityTrait[] = []): NPCPersonalityTrait[] {
@@ -159,8 +153,12 @@ export class FamilyEngine {
     const motherTraits = randomTraits(['empatico'])
     const fatherTraits = randomTraits(background === 'rich' || background === 'elite' ? ['ambizioso'] : ['leale'])
 
+    // Mother keeps her maiden surname (realistic — different from father's)
+    let motherMaidenSurname = NameEngine.surname(identity.nationality)
+    while (motherMaidenSurname === surname) motherMaidenSurname = NameEngine.surname(identity.nationality)
+
     const mother = makeRelationship({
-      name: `${pick(FEMALE_NAMES)} ${surname}`,
+      name: `${NameEngine.firstName('female', identity.nationality)} ${motherMaidenSurname}`,
       age: motherAgeAtBirth,
       gender: 'female',
       type: 'parent',
@@ -173,7 +171,7 @@ export class FamilyEngine {
     })
 
     const father = makeRelationship({
-      name: `${pick(MALE_NAMES)} ${surname}`,
+      name: `${NameEngine.firstName('male', identity.nationality)} ${surname}`,
       age: Math.max(18, fatherAgeAtBirth),
       gender: 'male',
       type: 'parent',
@@ -203,7 +201,7 @@ export class FamilyEngine {
       const age = 1 + Math.floor(Math.random() * 9)
       const traits = randomTraits()
       const sibling = makeRelationship({
-        name: `${pick(gender === 'female' ? FEMALE_NAMES : MALE_NAMES)} ${surname}`,
+        name: `${NameEngine.firstName(gender, identity.nationality)} ${surname}`,
         age,
         gender,
         type: 'sibling',

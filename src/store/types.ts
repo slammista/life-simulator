@@ -220,6 +220,7 @@ export interface CareerState {
   businessOwned: Business | null
   colleagues: WorkNPC[]
   workReputation: WorkReputationStatus
+  lastRaiseYear?: number   // last year the player asked for a raise (one ask per year)
 }
 
 export interface Business {
@@ -949,6 +950,17 @@ export interface PhaseRecap {
   summary: string
 }
 
+// Loan taken from a relative or friend — must be repaid or the relationship sours
+export interface NpcLoan {
+  id: string
+  npcId: string        // Relationship id of the lender
+  npcName: string
+  amount: number
+  yearBorrowed: number
+  dueYear: number
+  repaid: boolean
+}
+
 export interface NarrativeState {
   traits: NarrativeTraitId[]
   originStory: { scenarioId: string; text: string; seen: boolean } | null
@@ -1168,6 +1180,9 @@ export interface GameState {
   // Narrative layer: traits, origin story, story arcs, NPC requests, life phases
   narrative: NarrativeState
 
+  // Outstanding loans from relatives/friends (unpaid past due = relationship damage)
+  npcLoans: NpcLoan[]
+
   // Events
   currentEvent: GameEvent | null
   availableChoices: Choice[]
@@ -1255,6 +1270,15 @@ export interface GameActions {
   joinClub: (clubId: string) => ActionResult
   leaveClub: (clubId: string) => ActionResult
   requestMoneyFromParents: (amount: number, reason: string) => ActionResult
+
+  // NPC money exchange + loans from relatives/friends
+  giveMoneyToNpc: (relId: string, amount: number) => ActionResult
+  askMoneyFromNpc: (relId: string, amount: number) => ActionResult
+  repayNpcLoan: (loanId: string) => ActionResult
+
+  // BitLife-style extras
+  askForRaise: () => ActionResult
+  emigrate: (nationId: string) => ActionResult
 
   // Social activities outside work/school
   socializeOutside: (location: import('../services/WorkSchoolEngine').SocialLocation) => ActionResult

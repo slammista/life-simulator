@@ -17,12 +17,7 @@ import type {
   PoliticalOrientation,
   Religion,
 } from '../store/types'
-
-// ---- name pools ----
-
-const MALE_NAMES = ['Marco', 'Luca', 'Andrea', 'Matteo', 'Francesco', 'Alessandro', 'Davide', 'Simone', 'Riccardo', 'Stefano', 'Giovanni', 'Paolo', 'Roberto', 'Giorgio', 'Antonio', 'Lorenzo', 'Federico', 'Nicola', 'Filippo', 'Enrico']
-const FEMALE_NAMES = ['Sara', 'Giulia', 'Martina', 'Valentina', 'Alessia', 'Chiara', 'Federica', 'Silvia', 'Laura', 'Elena', 'Francesca', 'Michela', 'Roberta', 'Paola', 'Monica', 'Ilaria', 'Serena', 'Daniela', 'Elisa', 'Sofia']
-const SURNAMES = ['Rossi', 'Ferrari', 'Esposito', 'Bianchi', 'Romano', 'Colombo', 'Ricci', 'Marino', 'Greco', 'Bruno', 'Gallo', 'Conti', 'De Luca', 'Mancini', 'Costa', 'Fontana', 'Giordano', 'Russo', 'Barbieri', 'Ferrara']
+import { NameEngine } from './NameEngine'
 
 const PERSONALITY_TRAITS: NPCPersonalityTrait[] = [
   'introverso', 'ambizioso', 'geloso', 'generoso', 'sensibile',
@@ -74,8 +69,7 @@ export interface SocializeResult {
 function uid() { return Math.random().toString(36).slice(2, 10) }
 
 function randomName(gender: Gender): string {
-  const pool = gender === 'male' ? MALE_NAMES : FEMALE_NAMES
-  return `${pool[Math.floor(Math.random() * pool.length)]} ${SURNAMES[Math.floor(Math.random() * SURNAMES.length)]}`
+  return NameEngine.fullName(gender)
 }
 
 function randomGender(): Gender {
