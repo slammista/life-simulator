@@ -655,7 +655,7 @@ export const useGameStore = create<FullStore>()(
         const npcAgencyTick = NPCAgencyEngine.annualTick(state, updatedRelationships)
         merge(npcAgencyTick.effects)
         messages.push(...npcAgencyTick.messages)
-        const newNpcEvents = npcAgencyTick.agency.events.slice(0, 5) // max 5 queued per year
+        const newNpcEvents = npcAgencyTick.newEvents.slice(0, 5) // only this year's events
 
         // 7b. Trauma & grief annual burden
         const traumaTick = TraumaEngine.annualTick(state)

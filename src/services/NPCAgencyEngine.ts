@@ -5,6 +5,7 @@ export interface NPCAgencyTickResult {
   agency: NPCAgencyState
   effects: Effect
   messages: string[]
+  newEvents: NPCAgencyEvent[]
 }
 
 const CAREER_FLAGS = ['npc_teacher', 'npc_artist', 'npc_nurse', 'npc_founder', 'npc_manager', 'npc_freelancer']
@@ -190,6 +191,7 @@ export class NPCAgencyEngine {
       },
       effects,
       messages,
+      newEvents: events,
     }
   }
 }
