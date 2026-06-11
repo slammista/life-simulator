@@ -42,19 +42,23 @@ export function BottomTabs({ active, onChange, onAge, ageDisabled, hasEvent, cur
       {/* Center Age / Vita button */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingBottom: 4 }}>
         <button
-          onClick={onAge}
-          disabled={ageDisabled && !hasEvent}
-          className={ageReady ? 'pulse' : ''}
+          onClick={() => active !== 'vita' ? onChange('vita') : onAge()}
+          disabled={active === 'vita' && ageDisabled && !hasEvent}
+          className={active === 'vita' && ageReady ? 'pulse' : ''}
           style={{
             width: 60, height: 60,
             borderRadius: '50%',
-            border: hasEvent
+            border: active !== 'vita'
+              ? '2px solid rgba(148,163,184,0.4)'
+              : hasEvent
               ? '2px solid rgba(255,176,32,0.5)'
               : ageReady
               ? '2px solid rgba(124,92,255,0.5)'
               : '2px solid rgba(255,255,255,0.08)',
-            cursor: ageDisabled && !hasEvent ? 'not-allowed' : 'pointer',
-            background: hasEvent
+            cursor: active === 'vita' && ageDisabled && !hasEvent ? 'not-allowed' : 'pointer',
+            background: active !== 'vita'
+              ? 'linear-gradient(135deg, #334155, #475569)'
+              : hasEvent
               ? 'linear-gradient(135deg, #FFB020, #f59e0b)'
               : ageDisabled
               ? 'rgba(124,92,255,0.2)'
@@ -64,7 +68,9 @@ export function BottomTabs({ active, onChange, onAge, ageDisabled, hasEvent, cur
             flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: hasEvent
+            boxShadow: active !== 'vita'
+              ? 'none'
+              : hasEvent
               ? '0 0 24px rgba(255,176,32,0.45), 0 4px 16px rgba(0,0,0,0.4)'
               : ageReady
               ? '0 0 28px rgba(124,92,255,0.55), 0 4px 16px rgba(0,0,0,0.4)'
@@ -77,9 +83,14 @@ export function BottomTabs({ active, onChange, onAge, ageDisabled, hasEvent, cur
           onPointerDown={e => { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-10px) scale(0.93)' }}
           onPointerUp={e =>   { (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-10px) scale(1)'    }}
           onPointerLeave={e =>{ (e.currentTarget as HTMLButtonElement).style.transform = 'translateY(-10px) scale(1)'    }}
-          title={hasEvent ? 'Risolvi evento' : `Invecchia a ${currentAge + 1} anni`}
+          title={active !== 'vita' ? 'Torna alla vita' : hasEvent ? 'Risolvi evento' : `Invecchia a ${currentAge + 1} anni`}
         >
-          {hasEvent ? (
+          {active !== 'vita' ? (
+            <>
+              <span style={{ fontSize: 19 }}>🏠</span>
+              <span style={{ fontSize: 8, fontWeight: 700, marginTop: 1, letterSpacing: 0.5 }}>VITA</span>
+            </>
+          ) : hasEvent ? (
             <>
               <span style={{ fontSize: 19 }}>⏳</span>
               <span style={{ fontSize: 8, fontWeight: 800, marginTop: 1, letterSpacing: 0.5 }}>EVENT</span>
