@@ -17,6 +17,8 @@ export function FinanceScreen() {
   const buyScratchCard = useGameStore(s => s.buyScratchCard)
   const repayNpcLoan = useGameStore(s => s.repayNpcLoan)
   const playLottery = useGameStore(s => s.playLottery)
+  const buyHealthInsurance = useGameStore(s => s.buyHealthInsurance)
+  const cancelHealthInsurance = useGameStore(s => s.cancelHealthInsurance)
   const npcLoans = useGameStore(s => s.npcLoans)
   const age = useGameStore(s => s.time.age)
   const year = useGameStore(s => s.time.year)
@@ -376,6 +378,40 @@ export function FinanceScreen() {
               )
             })}
           </div>
+
+          {/* Insurance section */}
+          {age >= 18 && (
+            <div className="card" style={{ padding: 14, border: '1px solid rgba(16,185,129,0.2)' }}>
+              <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 10 }}>🛡️ Assicurazioni</p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12, marginBottom: 10 }}>
+                <div>
+                  <p style={{ fontSize: 13, fontWeight: 600 }}>🏥 Assicurazione Sanitaria</p>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                    €120/mese · Riduce spese mediche del 50%
+                  </p>
+                </div>
+                <span style={{ fontSize: 12, fontWeight: 700, color: finance.healthInsurance ? '#10b981' : '#64748b', flexShrink: 0 }}>
+                  {finance.healthInsurance ? '✅ Attiva' : '❌ Non attiva'}
+                </span>
+              </div>
+              {finance.healthInsurance ? (
+                <button
+                  onClick={() => { const r = cancelHealthInsurance(); flash(r.message, r.success) }}
+                  style={{ width: '100%', padding: '8px 0', borderRadius: 10, background: 'rgba(239,68,68,0.1)', color: '#fca5a5', fontSize: 12, fontWeight: 600, border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}
+                >
+                  Cancella assicurazione
+                </button>
+              ) : (
+                <button
+                  onClick={() => { const r = buyHealthInsurance(); flash(r.message, r.success) }}
+                  disabled={finance.money < 1440}
+                  style={{ width: '100%', padding: '8px 0', borderRadius: 10, background: finance.money >= 1440 ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)', color: finance.money >= 1440 ? '#6ee7b7' : 'var(--color-text-secondary)', fontSize: 12, fontWeight: 600, border: '1px solid rgba(16,185,129,0.2)', cursor: finance.money >= 1440 ? 'pointer' : 'default' }}
+                >
+                  Sottoscrivi (€1.440/anno)
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Loan section */}
           <div className="card" style={{ padding: 14 }}>

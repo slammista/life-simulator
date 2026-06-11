@@ -252,7 +252,7 @@ function buildInitialState(): GameState {
     time: { year: 2000, month: 1, age: 0 },
     identity: { name: 'Giocatore', surname: 'Demo', gender: 'male', nationality: 'italy', birthYear: 2000, familyBackground: 'middle', religion: 'catholicism', sexualOrientation: 'heterosexual', emoji: '🙂', avatar: getDefaultAvatar('male') },
     stats: { health: 80, mentalHealth: 80, happiness: 70, intelligence: 50, looks: 50, energy: 80, karma: 0, reputation: 50, socialReputation: 50 },
-    finance: { money: 1000, bankBalance: 0, debt: 0, creditScore: 650, monthlyIncome: 0, monthlyExpenses: 0, investments: [], assets: [] },
+    finance: { money: 1000, bankBalance: 0, debt: 0, creditScore: 650, monthlyIncome: 0, monthlyExpenses: 0, investments: [], assets: [], healthInsurance: false, homeInsurance: false },
     market: FinanceEngine.initialMarketState(),
     education: { currentLevel: 'none', completedLevels: [], gpa: 0, scholarships: [], clubs: [], dropOut: false, studentLoan: 0, university: null, major: null, graduationYear: null, classmates: [], schoolReputation: 'invisibile' },
     career: { currentJob: null, jobHistory: [], promotions: 0, firings: 0, burnoutLevel: 0, pensionContributions: 0, licenses: [], businessOwned: null, colleagues: [], workReputation: 'nuovo' },
@@ -529,6 +529,11 @@ export const useGameStore = create<FullStore>()(
             : state.living.type === 'homeless'    ? 100   // minimal subsistence
             : 400
           merge({ money: -(baseExpenses * 12) })
+        }
+
+        // 2e. Health insurance annual premium
+        if (state.finance.healthInsurance) {
+          merge({ money: -(120 * 12) })
         }
 
         // 3. Nation effect
@@ -2105,6 +2110,29 @@ export const useGameStore = create<FullStore>()(
         return { success: true, message: result.message, effects: result.effects }
       },
 
+      buyHealthInsurance: (): ActionResult => {
+        const state = get()
+        if (state.finance.healthInsurance) return { success: false, message: "Hai già un'assicurazione sanitaria attiva.", effects: {} }
+        const monthlyCost = 120
+        const annualCost = monthlyCost * 12
+        if (state.finance.money < annualCost) return { success: false, message: `L'assicurazione costa €${annualCost.toLocaleString('it-IT')}/anno.`, effects: {} }
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - annualCost, healthInsurance: true },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🏥 Hai sottoscritto un'assicurazione sanitaria (€${monthlyCost}/mese). Le spese mediche saranno ridotte del 50%.`, emoji: '🏥', category: 'finance' as const, statChanges: { money: -annualCost } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Assicurazione sanitaria attiva! Paghi €${monthlyCost}/mese e le spese mediche sono ridotte.`, effects: { money: -annualCost } }
+      },
+
+      cancelHealthInsurance: (): ActionResult => {
+        const state = get()
+        if (!state.finance.healthInsurance) return { success: false, message: "Non hai un'assicurazione sanitaria attiva.", effects: {} }
+        set(s => ({
+          finance: { ...s.finance, healthInsurance: false },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: "❌ Hai cancellato l'assicurazione sanitaria.", emoji: '❌', category: 'finance' as const, statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: "Assicurazione sanitaria cancellata.", effects: {} }
+      },
+
       // ==================== Social Media actions ====================
       createSocialProfile: (platform: string): ActionResult => {
         const state = get()
@@ -2217,6 +2245,23 @@ export const useGameStore = create<FullStore>()(
           }
         })
         return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      enterRehab: (): ActionResult => {
+        const state = get()
+        if (state.time.age < 16) return { success: false, message: 'Devi avere almeno 16 anni.', effects: {} }
+        const addictions = state.health?.addictions ?? []
+        if (addictions.length === 0) return { success: false, message: 'Non hai dipendenze attive.', effects: {} }
+        const cost = 3000
+        if (state.finance.money < cost) return { success: false, message: `La riabilitazione costa €${cost.toLocaleString('it-IT')}. Non hai abbastanza soldi.`, effects: {} }
+        const names = addictions.map((a: { substance: string }) => a.substance).join(', ')
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - cost },
+          health: s.health ? { ...s.health, addictions: [] } : s.health,
+          stats: { ...s.stats, health: clamp(s.stats.health + 10, 0, 100), mentalHealth: clamp(s.stats.mentalHealth + 15, 0, 100), happiness: clamp(s.stats.happiness + 8, 0, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🏥 Hai completato la riabilitazione. Dipendenze eliminate: ${names}. Un nuovo inizio.`, emoji: '🏥', category: 'health' as const, statChanges: { money: -cost, health: 10, mentalHealth: 15 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Riabilitazione completata! Hai superato le dipendenze da ${names}. Salute e mente recuperate.`, effects: { money: -cost, health: 10, mentalHealth: 15 } }
       },
 
       // ==================== Pet actions ====================
@@ -2397,6 +2442,21 @@ export const useGameStore = create<FullStore>()(
         return { success: true, message: result.message, effects: result.effects }
       },
 
+      fileForDivorce: (): ActionResult => {
+        const state = get()
+        const spouse = state.relationships.find(r => (r.type === 'spouse' || r.type === 'partner') && r.isAlive)
+        if (!spouse) return { success: false, message: 'Non sei sposato/a o in una relazione stabile.', effects: {} }
+        const cost = 2000
+        if (state.finance.money < cost) return { success: false, message: `Le pratiche di divorzio costano €${cost.toLocaleString('it-IT')}.`, effects: {} }
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - cost },
+          relationships: s.relationships.map(r => r.id === spouse.id ? { ...r, type: 'ex_partner' as const, trust: clamp(r.trust - 30, 0, 100), love: 0 } : r),
+          stats: { ...s.stats, happiness: clamp(s.stats.happiness - 10, 0, 100), mentalHealth: clamp(s.stats.mentalHealth - 5, 0, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `💔 Hai depositato le pratiche di divorzio da ${spouse.name.split(' ')[0]}. Un capitolo si chiude.`, emoji: '💔', category: 'relationship' as const, statChanges: { money: -cost, happiness: -10 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Divorzio da ${spouse.name.split(' ')[0]} avviato. Le pratiche costano €${cost.toLocaleString('it-IT')}.`, effects: { money: -cost, happiness: -10 } }
+      },
+
       // ==================== Parenting actions ====================
       haveChild: (): ActionResult => {
         const state = get()
@@ -2415,8 +2475,36 @@ export const useGameStore = create<FullStore>()(
         return { success: true, message: result.message, effects: result.effects }
       },
 
-      adoptChild: (): ActionResult => {
+      adoptChild: (gender?: 'male' | 'female', childAge?: number): ActionResult => {
         const state = get()
+        // If specific gender/age provided, use the rich adoption flow
+        if (gender !== undefined || childAge !== undefined) {
+          const resolvedGender: 'male' | 'female' = gender ?? (Math.random() < 0.5 ? 'male' : 'female')
+          const resolvedAge = childAge ?? 0
+          if (state.time.age < 21) return { success: false, message: 'Devi avere almeno 21 anni per adottare.', effects: {} }
+          const existingChildren = state.relationships.filter(r => r.type === 'child').length + state.children.length
+          if (existingChildren >= 5) return { success: false, message: 'Non puoi avere più di 5 figli.', effects: {} }
+          const cost = 8000 + resolvedAge * 500
+          if (state.finance.money < cost) return { success: false, message: `L'adozione costa €${cost.toLocaleString('it-IT')} (pratiche legali e spese).`, effects: {} }
+          const childName = NameEngine.firstName(resolvedGender)
+          const newChild = {
+            id: uid(), name: childName, age: resolvedAge, gender: resolvedGender,
+            intelligence: 50, looks: 50, health: 80, happiness: 70,
+            personalityTraits: { openness: 50, conscientiousness: 50, extraversion: 50, agreeableness: 60, neuroticism: 30 },
+            bondWithPlayer: 80, respectForPlayer: 50,
+            schoolLevel: resolvedAge === 0 ? 'none' as const : resolvedAge < 6 ? 'kindergarten' as const : resolvedAge < 11 ? 'elementary' as const : 'middle' as const,
+            careerPath: null, relationshipStatus: 'single', specialNeeds: [], isAdopted: true,
+          }
+          set(s => ({
+            finance: { ...s.finance, money: s.finance.money - cost },
+            children: [...s.children, newChild],
+            stats: { ...s.stats, happiness: clamp(s.stats.happiness + 15, 0, 100), karma: clamp(s.stats.karma + 10, -100, 100) },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `👶 Hai adottato ${childName}, ${resolvedAge === 0 ? 'neonato/a' : `${resolvedAge} anni`}. Una famiglia cresce.`, emoji: '👨‍👩‍👧', category: 'life' as const, statChanges: { money: -cost, happiness: 15 } }, ...s.eventLog].slice(0, 150),
+          }))
+          get().checkGoals()
+          return { success: true, message: `Hai adottato ${childName}! La vostra famiglia si allarga.`, effects: { money: -cost, happiness: 15, karma: 10 } }
+        }
+        // Original simple adoption flow
         const result = ParentingEngine.haveChild(state, true)
         if (!result.success) return { success: false, message: result.message, effects: {} }
         const partial = applyEffects(state, result.effects)
@@ -2808,6 +2896,7 @@ export const useGameStore = create<FullStore>()(
             bankBalance: 0, debt: 0, creditScore: 650,
             monthlyIncome: 0, monthlyExpenses: 500,
             investments: [], assets: [],
+            healthInsurance: false, homeInsurance: false,
           },
           market: FinanceEngine.initialMarketState(),
           relationships: state.relationships.filter(r => r.isAlive).slice(0, 3),
@@ -3397,6 +3486,12 @@ export const useGameStore = create<FullStore>()(
           pendingConsequences: ps.pendingConsequences ?? currentState.pendingConsequences,
           skills: ps.skills ?? currentState.skills,
           npcLoans: ps.npcLoans ?? currentState.npcLoans,
+          // Backfill insurance flags for old saves
+          finance: ps.finance ? {
+            ...ps.finance,
+            healthInsurance: ps.finance.healthInsurance ?? false,
+            homeInsurance: ps.finance.homeInsurance ?? false,
+          } : currentState.finance,
         }
       },
       partialize: (state) => ({

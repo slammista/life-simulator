@@ -8,7 +8,7 @@ const MIN_AGE_CANNABIS = 16
 const MIN_AGE_ALCOHOL  = 16
 
 export function SubstanceScreen() {
-  const { stats, finance, health, time, drinkAlcohol, smokeCigarette, quitSubstance } = useGameStore()
+  const { stats, finance, health, time, drinkAlcohol, smokeCigarette, quitSubstance, enterRehab } = useGameStore()
   const [feedback, setFeedback] = useState('')
   const age = time.age
 
@@ -25,6 +25,11 @@ export function SubstanceScreen() {
   }
   const handleQuit = (substance: string) => {
     const r = quitSubstance(substance)
+    setFeedback(r.message)
+  }
+
+  const handleRehab = () => {
+    const r = enterRehab()
     setFeedback(r.message)
   }
 
@@ -146,6 +151,29 @@ export function SubstanceScreen() {
               )
             })}
           </div>
+        </div>
+      )}
+
+      {/* Centro Riabilitazione */}
+      {hasAddiction && (
+        <div className="card" style={{ padding: '14px 16px', border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.05)' }}>
+          <p style={{ fontSize: 11, fontWeight: 800, color: '#6ee7b7', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+            🏥 Centro Riabilitazione
+          </p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
+            Costo fisso €3.000 · Elimina tutte le dipendenze attive · Richiede 16 anni
+          </p>
+          <button
+            className="btn-secondary"
+            style={{ width: '100%', padding: '9px 0', fontSize: 13, fontWeight: 700, borderColor: 'rgba(16,185,129,0.4)', color: '#6ee7b7' }}
+            onClick={handleRehab}
+            disabled={age < 16 || finance.money < 3000}
+          >
+            🏥 Entra in riabilitazione (€3.000)
+          </button>
+          {finance.money < 3000 && (
+            <p style={{ fontSize: 11, color: '#fca5a5', marginTop: 6 }}>Fondi insufficienti per la riabilitazione.</p>
+          )}
         </div>
       )}
 

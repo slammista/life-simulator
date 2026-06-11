@@ -35,6 +35,8 @@ export interface FinanceState {
   monthlyExpenses: number
   investments: Investment[]
   assets: Asset[]
+  healthInsurance: boolean
+  homeInsurance: boolean
 }
 
 export interface Investment {
@@ -1308,6 +1310,8 @@ export interface GameActions {
   insureAsset: (assetId: string) => ActionResult
   maintainAsset: (assetId: string) => ActionResult
   takeLoan: (amount: number) => ActionResult
+  buyHealthInsurance: () => ActionResult
+  cancelHealthInsurance: () => ActionResult
 
   // Social media actions
   createSocialProfile: (platform: string) => ActionResult
@@ -1317,6 +1321,7 @@ export interface GameActions {
   drinkAlcohol: (type: string) => ActionResult
   smokeCigarette: (type: string) => ActionResult
   quitSubstance: (substance: string) => ActionResult
+  enterRehab: () => ActionResult
 
   // Pet actions
   adoptPet: (petDefId: string, method: 'adopt' | 'buy') => ActionResult
@@ -1331,10 +1336,11 @@ export interface GameActions {
   proposeToPartner: (npcId: string, ringValue: number) => ActionResult
   getMarried: (npcId: string, weddingBudget: number) => ActionResult
   getDivorced: (npcId: string) => ActionResult
+  fileForDivorce: () => ActionResult
 
   // Parenting actions
   haveChild: () => ActionResult
-  adoptChild: () => ActionResult
+  adoptChild: (gender?: 'male' | 'female', age?: number) => ActionResult
   interactWithChild: (childId: string, action: string) => ActionResult
 
   // Military actions

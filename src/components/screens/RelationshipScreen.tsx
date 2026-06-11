@@ -134,6 +134,7 @@ export function RelationshipScreen() {
   const family = useGameStore(s => s.family)
   const playerAge = useGameStore(s => s.time.age)
   const interactWithNPC = useGameStore(s => s.interactWithNPC)
+  const fileForDivorce = useGameStore(s => s.fileForDivorce)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
@@ -156,6 +157,7 @@ export function RelationshipScreen() {
 
   const activeRels = relationships.filter(r => r.isAlive && r.type !== 'ex_partner')
   const historicRels = relationships.filter(r => !r.isAlive || r.type === 'ex_partner')
+  const spouseOrPartner = activeRels.find(r => r.type === 'spouse' || r.type === 'partner')
 
   const groupedRels: Record<string, Relationship[]> = {
     Famiglia: activeRels.filter(r => ['parent', 'sibling', 'child'].includes(r.type)),
@@ -243,6 +245,27 @@ export function RelationshipScreen() {
           <div style={{ borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 12, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', color: '#a5b4fc' }}>
             💡 Per incontrare nuove persone vai su <strong>Attività → Socializza</strong>. Colleghi e compagni emergono automaticamente da Lavoro e Scuola.
           </div>
+
+          {spouseOrPartner && playerAge >= 18 && (
+            <div className="card" style={{ padding: '12px 14px', marginBottom: 12, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.06)' }}>
+              <p style={{ fontSize: 11, fontWeight: 700, color: '#fca5a5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+                💔 Divorzio
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
+                Stai con {spouseOrPartner.name.split(' ')[0]}. Puoi richiedere il divorzio (€2.000 di pratiche legali).
+              </p>
+              <button
+                className="btn-secondary"
+                style={{ width: '100%', padding: '8px 0', fontSize: 13, fontWeight: 700, borderColor: 'rgba(239,68,68,0.4)', color: '#fca5a5', cursor: 'pointer' }}
+                onClick={() => {
+                  const r = fileForDivorce()
+                  flash(r.message, r.success)
+                }}
+              >
+                💔 Chiedi divorzio (€2.000)
+              </button>
+            </div>
+          )}
 
           {activeRels.length === 0 && (
             <div className="card" style={{ textAlign: 'center', padding: 28 }}>

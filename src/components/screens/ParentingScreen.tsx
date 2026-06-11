@@ -56,6 +56,44 @@ export default function ParentingScreen() {
         </div>
       </div>
 
+      {/* Adozione avanzata */}
+      {time.age >= 21 && children.length < 8 && (
+        <div className="card">
+          <h3 className="card-title">👨‍👩‍👧 Adotta un bambino</h3>
+          <p className="card-subtitle">
+            Scegli età e sesso del bambino da adottare. Il costo varia in base all'età.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginTop: 8 }}>
+            {[
+              { label: 'Neonato/a', age: 0, emoji: '👶', cost: 8000 },
+              { label: 'Bambino/a (5)', age: 5, emoji: '🧒', cost: 10500 },
+              { label: 'Adolescente (12)', age: 12, emoji: '🧑', cost: 14000 },
+            ].map(({ label, age: childAge, emoji, cost }) => (
+              <div key={childAge} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textAlign: 'center', marginBottom: 4 }}>
+                  {emoji} {label}<br />
+                  <span style={{ color: '#f59e0b' }}>€{cost.toLocaleString('it-IT')}</span>
+                </p>
+                <button
+                  className="action-btn small"
+                  onClick={() => act(() => adoptChild('male', childAge), emoji)}
+                  disabled={children.length >= 8}
+                >
+                  ♂ Maschio
+                </button>
+                <button
+                  className="action-btn small"
+                  onClick={() => act(() => adoptChild('female', childAge), emoji)}
+                  disabled={children.length >= 8}
+                >
+                  ♀ Femmina
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Lista figli */}
       {children.length === 0 ? (
         <div className="card empty-state">
