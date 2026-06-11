@@ -16,6 +16,7 @@ export function FinanceScreen() {
   const requestMoneyFromParents = useGameStore(s => s.requestMoneyFromParents)
   const buyScratchCard = useGameStore(s => s.buyScratchCard)
   const repayNpcLoan = useGameStore(s => s.repayNpcLoan)
+  const playLottery = useGameStore(s => s.playLottery)
   const npcLoans = useGameStore(s => s.npcLoans)
   const age = useGameStore(s => s.time.age)
   const year = useGameStore(s => s.time.year)
@@ -170,14 +171,14 @@ export function FinanceScreen() {
         </div>
       )}
 
-      {/* Outstanding loans from friends/family */}
-      {(npcLoans ?? []).filter(l => !l.repaid).length > 0 && (
+      {/* Loans player owes to NPCs */}
+      {(npcLoans ?? []).filter(l => !l.repaid && l.direction !== 'player_lent').length > 0 && (
         <div className="card" style={{ padding: '14px 16px', marginBottom: 12, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.05)' }}>
           <p style={{ fontSize: 11, fontWeight: 800, color: '#fca5a5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
             💸 Prestiti da restituire
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {(npcLoans ?? []).filter(l => !l.repaid).map(loan => {
+            {(npcLoans ?? []).filter(l => !l.repaid && l.direction !== 'player_lent').map(loan => {
               const overdue = year > loan.dueYear
               return (
                 <div key={loan.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
@@ -196,6 +197,30 @@ export function FinanceScreen() {
                   >
                     Salda
                   </button>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Loans NPCs owe to player */}
+      {(npcLoans ?? []).filter(l => !l.repaid && l.direction === 'player_lent').length > 0 && (
+        <div className="card" style={{ padding: '14px 16px', marginBottom: 12, border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.05)' }}>
+          <p style={{ fontSize: 11, fontWeight: 800, color: '#6ee7b7', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+            💰 Crediti verso altri
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {(npcLoans ?? []).filter(l => !l.repaid && l.direction === 'player_lent').map(loan => {
+              const overdue = year > loan.dueYear
+              return (
+                <div key={loan.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8 }}>
+                  <div>
+                    <p style={{ fontSize: 12, color: 'var(--color-text)' }}>💰 {loan.npcName.split(' ')[0]} ti deve €{loan.amount.toLocaleString('it-IT')}</p>
+                    <p style={{ fontSize: 11, color: overdue ? '#ef4444' : 'var(--color-text-secondary)' }}>
+                      Scadenza: {loan.dueYear}{overdue ? ' (scaduto)' : ''}
+                    </p>
+                  </div>
                 </div>
               )
             })}
@@ -224,6 +249,24 @@ export function FinanceScreen() {
                 }}
               >
                 Gratta
+              </button>
+            </div>
+          )}
+
+          {/* Lotteria Nazionale */}
+          {age >= 18 && (
+            <div className="card" style={{ padding: '12px 14px' }}>
+              <p style={{ fontSize: 13, fontWeight: 700 }}>🎟️ Lotteria Nazionale</p>
+              <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
+                Biglietto €5 · jackpot fino a €1.000.000 · probabilità bassissime ma chi non tenta non vince!
+              </p>
+              <button
+                className="btn-primary"
+                style={{ width: '100%', padding: '7px 0', fontSize: 12 }}
+                onClick={() => { const r = playLottery(); flash(r.message, r.success) }}
+                disabled={finance.money < 5}
+              >
+                Gioca (€5)
               </button>
             </div>
           )}

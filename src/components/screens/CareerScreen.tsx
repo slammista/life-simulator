@@ -142,6 +142,7 @@ export function CareerScreen() {
   const quitJob = useGameStore(s => s.quitJob)
   const attemptPromotion = useGameStore(s => s.attemptPromotion)
   const askForRaise = useGameStore(s => s.askForRaise)
+  const writeBook = useGameStore(s => s.writeBook)
 
   const workInteract = useGameStore(s => s.workInteract)
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
@@ -305,6 +306,20 @@ export function CareerScreen() {
           </div>
         )}
       </div>
+
+      {/* Attività creative */}
+      {time.age >= 18 && (
+        <div className="card" style={{ padding: '12px 14px', marginBottom: 12 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, marginBottom: 4 }}>📚 Attività creative</p>
+          <button
+            className="btn-secondary"
+            style={{ width: '100%', padding: '7px 0', fontSize: 12 }}
+            onClick={() => { const r = writeBook(); flash(r.message, r.success, '📚', r.effects as Record<string, number>) }}
+          >
+            📚 Scrivi un libro
+          </button>
+        </div>
+      )}
 
       {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8, marginBottom: 14 }}>

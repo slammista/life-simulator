@@ -959,6 +959,7 @@ export interface NpcLoan {
   yearBorrowed: number
   dueYear: number
   repaid: boolean
+  direction?: 'player_borrowed' | 'player_lent'  // undefined/'player_borrowed' = player owes NPC; 'player_lent' = NPC owes player
 }
 
 export interface NarrativeState {
@@ -1279,6 +1280,10 @@ export interface GameActions {
   // BitLife-style extras
   askForRaise: () => ActionResult
   emigrate: (nationId: string) => ActionResult
+  playLottery: () => ActionResult
+  writeBook: () => ActionResult
+  terminatePregnancy: () => ActionResult
+  adoptOutPregnancy: () => ActionResult
 
   // Social activities outside work/school
   socializeOutside: (location: import('../services/WorkSchoolEngine').SocialLocation) => ActionResult

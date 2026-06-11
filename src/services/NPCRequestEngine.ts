@@ -1,5 +1,5 @@
 import type {
-  GameState, Effect, GameEvent, Choice, Relationship, PendingConsequence, NPCRequestRecord,
+  GameState, Effect, GameEvent, Choice, Relationship, PendingConsequence, NPCRequestRecord, NpcLoan,
 } from '../store/types'
 
 // NPC requests flow through the normal event modal as synthetic events.
@@ -70,19 +70,6 @@ const REQUEST_DEFS: NPCRequestDef[] = [
       effects: { money: -amount, karma: 3, happiness: 2 },
       logText: `Hai prestato €${amount} a una persona cara in difficoltà.`,
       relDelta: { trust: 12, love: 5 },
-      consequence: (age, meta) => Math.random() < 0.6
-        ? {
-            id: uid(), triggerAge: age + 2,
-            title: 'Il debito ripagato',
-            description: `${meta.npcName.split(' ')[0]} ti restituisce i soldi prestati, con gli interessi della gratitudine.`,
-            emoji: '💶', effects: { money: Math.round(meta.amount * 1.1), happiness: 3 } as Effect, category: 'relationship' as const,
-          }
-        : {
-            id: uid(), triggerAge: age + 2,
-            title: 'Il prestito dimenticato',
-            description: `${meta.npcName.split(' ')[0]} non ti ha mai restituito i soldi. Meglio non parlarne più.`,
-            emoji: '🙄', effects: { happiness: -2 } as Effect, category: 'relationship' as const,
-          },
     }),
     refuse: () => ({
       effects: { mentalHealth: -1 },
@@ -248,6 +235,7 @@ export interface NPCRequestResult {
   logText: string
   relationshipPatch: { npcId: string; trust?: number; love?: number; respect?: number }
   consequence: PendingConsequence | null
+  npcLoan?: NpcLoan
   record: NPCRequestRecord
 }
 
@@ -311,11 +299,26 @@ export class NPCRequestEngine {
     const accepted = choiceId === 'npcreq_accept'
     const outcome = accepted ? def.accept(meta.amount) : def.refuse()
 
+    // For money_loan accepted: create a formal NpcLoan record (NPC owes player)
+    const npcLoan: NpcLoan | undefined = (accepted && meta.requestType === 'money_loan')
+      ? {
+          id: uid(),
+          npcId: meta.npcId,
+          npcName: meta.npcName,
+          amount: meta.amount,
+          yearBorrowed: state.time.year,
+          dueYear: state.time.year + 2,
+          repaid: false,
+          direction: 'player_lent' as const,
+        }
+      : undefined
+
     return {
       effects: outcome.effects,
       logText: outcome.logText,
       relationshipPatch: { npcId: meta.npcId, ...outcome.relDelta },
       consequence: outcome.consequence ? outcome.consequence(state.time.age, meta) : null,
+      npcLoan,
       record: {
         id: uid(),
         npcId: meta.npcId,

@@ -570,14 +570,42 @@ export const useGameStore = create<FullStore>()(
         }
 
         // 7-ter. Overdue NPC loans: every unpaid year past due chips away at the relationship
-        for (const loan of (state.npcLoans ?? [])) {
+        const updatedNpcLoans = [...(state.npcLoans ?? [])]
+        for (let li = 0; li < updatedNpcLoans.length; li++) {
+          const loan = updatedNpcLoans[li]
           if (loan.repaid || newYear <= loan.dueYear) continue
-          for (let i = 0; i < updatedRelationships.length; i++) {
-            const r = updatedRelationships[i]
-            if (r.id === loan.npcId && r.isAlive) {
-              updatedRelationships[i] = { ...r, trust: clamp(r.trust - 6, 0, 100), respect: clamp(r.respect - 4, 0, 100) }
-              messages.push(`💸 ${loan.npcName.split(' ')[0]} aspetta ancora i suoi €${loan.amount.toLocaleString('it-IT')} (scaduto nel ${loan.dueYear}). Il rapporto si incrina.`)
-              break
+          if (loan.direction === 'player_lent') {
+            // NPC owes player: 30% annual chance of repayment; otherwise NPC trust decreases
+            if (Math.random() < 0.3) {
+              updatedNpcLoans[li] = { ...loan, repaid: true }
+              merge({ money: loan.amount })
+              for (let i = 0; i < updatedRelationships.length; i++) {
+                const r = updatedRelationships[i]
+                if (r.id === loan.npcId && r.isAlive) {
+                  updatedRelationships[i] = { ...r, trust: clamp(r.trust + 8, 0, 100) }
+                  break
+                }
+              }
+              messages.push(`💰 ${loan.npcName.split(' ')[0]} ti ha restituito €${loan.amount.toLocaleString('it-IT')}! Il debito è saldato.`)
+            } else {
+              for (let i = 0; i < updatedRelationships.length; i++) {
+                const r = updatedRelationships[i]
+                if (r.id === loan.npcId && r.isAlive) {
+                  updatedRelationships[i] = { ...r, trust: clamp(r.trust - 5, 0, 100) }
+                  break
+                }
+              }
+              messages.push(`😒 ${loan.npcName.split(' ')[0]} non ti ha ancora restituito €${loan.amount.toLocaleString('it-IT')} (scaduto nel ${loan.dueYear}).`)
+            }
+          } else {
+            // Player owes NPC: damage relationship
+            for (let i = 0; i < updatedRelationships.length; i++) {
+              const r = updatedRelationships[i]
+              if (r.id === loan.npcId && r.isAlive) {
+                updatedRelationships[i] = { ...r, trust: clamp(r.trust - 6, 0, 100), respect: clamp(r.respect - 4, 0, 100) }
+                messages.push(`💸 ${loan.npcName.split(' ')[0]} aspetta ancora i suoi €${loan.amount.toLocaleString('it-IT')} (scaduto nel ${loan.dueYear}). Il rapporto si incrina.`)
+                break
+              }
             }
           }
         }
@@ -1017,6 +1045,7 @@ export const useGameStore = create<FullStore>()(
             : state.ribbons,
           lifeMemories: yearMemories.length > 0 ? [...state.lifeMemories, ...yearMemories].slice(-200) : state.lifeMemories,
           pendingConsequences: remainingConsequences,
+          npcLoans: updatedNpcLoans,
           narrative: {
             ...(state.narrative ?? NarrativeEngine.initialState()),
             arcs: arcTick.updatedArcs,
@@ -1094,6 +1123,9 @@ export const useGameStore = create<FullStore>()(
             pendingConsequences: reqResult.consequence
               ? [...(s.pendingConsequences ?? []), reqResult.consequence]
               : (s.pendingConsequences ?? []),
+            npcLoans: reqResult.npcLoan
+              ? [...(s.npcLoans ?? []), reqResult.npcLoan]
+              : (s.npcLoans ?? []),
             eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: reqResult.logText, emoji: '🤝', category: 'life' as const, statChanges: reqResult.effects }, ...s.eventLog].slice(0, 150),
           }))
           get().checkGoals()
@@ -1538,6 +1570,108 @@ export const useGameStore = create<FullStore>()(
         return { success: false, message: 'Il capo rifiuta: «Non è il momento giusto.» Riprova l\'anno prossimo.', effects: {} }
       },
 
+      playLottery: (): ActionResult => {
+        const state = get()
+        const TICKET_PRICE = 5
+        if (state.finance.money < TICKET_PRICE) return { success: false, message: 'Non hai abbastanza soldi per un biglietto (€5).', effects: {} }
+
+        const key = `lottery_${state.time.year}`
+        const timesThisYear = state.diminishingReturns[key] ?? 0
+        if (timesThisYear >= 10) return { success: false, message: 'Hai già giocato abbastanza alla lotteria quest\'anno. Aspetta il prossimo.', effects: {} }
+
+        const roll = Math.random()
+        let winAmount = 0
+        let winMsg = ''
+
+        if (roll < 0.000001) { winAmount = 1_000_000; winMsg = '🎉🎉🎉 JACKPOT! HAI VINTO €1.000.000! La tua vita cambia per sempre!' }
+        else if (roll < 0.00001) { winAmount = 100_000; winMsg = '🎊 PRIMO PREMIO! Hai vinto €100.000! Incredibile!' }
+        else if (roll < 0.0003) { winAmount = 5_000; winMsg = '✨ Hai vinto €5.000 alla lotteria! Che fortuna!' }
+        else if (roll < 0.005) { winAmount = 500; winMsg = '🎟️ Hai vinto €500! Niente male.' }
+        else if (roll < 0.03) { winAmount = 50; winMsg = '🎟️ Hai vinto €50 — recuperi il biglietto e guadagni un po\'.' }
+        else { winMsg = `🎟️ Niente questa volta. Il biglietto da €5 è andato. Ma la fortuna ci prova sempre.` }
+
+        const netEffect = winAmount - TICKET_PRICE
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money + netEffect },
+          stats: winAmount > 0 ? { ...s.stats, happiness: clamp(s.stats.happiness + Math.min(20, Math.floor(winAmount / 5000) + 1), 0, 100) } : s.stats,
+          diminishingReturns: { ...s.diminishingReturns, [key]: timesThisYear + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: winMsg, emoji: '🎟️', category: 'finance' as const, statChanges: { money: netEffect } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: winMsg, effects: { money: netEffect } }
+      },
+
+      writeBook: (): ActionResult => {
+        const state = get()
+        if (state.time.age < 18) return { success: false, message: 'Devi essere maggiorenne per pubblicare un libro.', effects: {} }
+
+        const key = `writebook_${state.time.year}`
+        if (state.diminishingReturns[key]) return { success: false, message: 'Hai già scritto un libro quest\'anno. La creatività ha bisogno di tempo.', effects: {} }
+
+        const writing = state.skills.creativity ?? 0
+        const intelligence = state.stats.intelligence ?? 50
+        const quality = (writing * 0.6 + intelligence * 0.4) / 100
+
+        const cost = quality > 0.7 ? 0 : 200
+        if (cost > 0 && state.finance.money < cost) return { success: false, message: `Autopubblicare costa €${cost} (editing base).`, effects: {} }
+
+        const baseRoyalties = Math.floor(quality * 2000 + Math.random() * 1500)
+        const copies = Math.floor(quality * 5000 + Math.random() * 2000)
+
+        let msg = ''
+        let repGain = 0
+        let happyGain = 0
+
+        if (quality > 0.75) {
+          msg = `📚 Il tuo libro ha un successo straordinario! ${copies.toLocaleString('it-IT')} copie vendute, €${baseRoyalties.toLocaleString('it-IT')} di royalty. La critica ti elogia.`
+          repGain = 15; happyGain = 15
+        } else if (quality > 0.5) {
+          msg = `📚 Il tuo libro ottiene buone recensioni. ${copies.toLocaleString('it-IT')} copie vendute, €${baseRoyalties.toLocaleString('it-IT')} di royalty.`
+          repGain = 8; happyGain = 10
+        } else if (quality > 0.3) {
+          msg = `📚 Il tuo libro viene pubblicato. Non un bestseller, ma qualcuno lo legge: €${baseRoyalties.toLocaleString('it-IT')} di royalty.`
+          repGain = 3; happyGain = 8
+        } else {
+          msg = `📚 Hai scritto un libro. Le vendite sono modeste (${copies.toLocaleString('it-IT')} copie). Esperienza comunque preziosa.`
+          repGain = 1; happyGain = 5
+        }
+
+        const net = baseRoyalties - cost
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money + net },
+          stats: { ...s.stats, reputation: clamp(s.stats.reputation + repGain, 0, 100), happiness: clamp(s.stats.happiness + happyGain, 0, 100) },
+          skills: { ...s.skills, creativity: Math.min(100, s.skills.creativity + 2) },
+          diminishingReturns: { ...s.diminishingReturns, [key]: 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: '📚', category: 'career' as const, statChanges: { money: net, reputation: repGain } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: msg, effects: { money: net, reputation: repGain } }
+      },
+
+      terminatePregnancy: (): ActionResult => {
+        const state = get()
+        if (!state.sexualHealth.isPregnant) return { success: false, message: 'Non sei incinta.', effects: {} }
+        if (state.sexualHealth.pregnancyTrimester > 2) return { success: false, message: 'È troppo tardi per interrompere la gravidanza.', effects: {} }
+        const cost = 500
+        if (state.finance.money < cost) return { success: false, message: `L'intervento costa €${cost}.`, effects: {} }
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - cost },
+          sexualHealth: { ...s.sexualHealth, isPregnant: false, pregnancyTrimester: 0 as const, pregnancyPartnerName: null },
+          stats: { ...s.stats, mentalHealth: clamp(s.stats.mentalHealth - 8, 0, 100), happiness: clamp(s.stats.happiness - 5, 0, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: '🏥 Hai interrotto la gravidanza. Una decisione difficile, presa con consapevolezza.', emoji: '🏥', category: 'health' as const, statChanges: { money: -cost, mentalHealth: -8 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: 'La gravidanza è stata interrotta. Prenditi cura di te.', effects: { money: -cost, mentalHealth: -8 } }
+      },
+
+      adoptOutPregnancy: (): ActionResult => {
+        const state = get()
+        if (!state.sexualHealth.isPregnant) return { success: false, message: 'Non sei incinta.', effects: {} }
+        set(s => ({
+          sexualHealth: { ...s.sexualHealth, isPregnant: false, pregnancyTrimester: 0 as const, pregnancyPartnerName: null },
+          stats: { ...s.stats, mentalHealth: clamp(s.stats.mentalHealth - 5, 0, 100), karma: clamp(s.stats.karma + 5, -100, 100), happiness: clamp(s.stats.happiness - 3, 0, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: '🤱 Hai dato il bambino in adozione. Una scelta d\'amore difficile.', emoji: '🤱', category: 'life' as const, statChanges: { karma: 5, mentalHealth: -5 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: 'Il bambino è stato dato in adozione ad una famiglia pronta ad accoglierlo.', effects: { karma: 5 } }
+      },
+
       emigrate: (nationId: string): ActionResult => {
         const state = get()
         const COST = 5000
@@ -1552,22 +1686,29 @@ export const useGameStore = create<FullStore>()(
         // NPCs you'll meet from now on have names from the new country
         NameEngine.setNationality(nationId)
 
-        const memory = makeMemory(state.time, `Trasferimento in ${newNation.name}`, `Hai lasciato tutto e sei volato in ${newNation.name}. Una nuova vita inizia.`, '🛫', 'life', [], true)
+        const memory = makeMemory(state.time, `Trasferimento in ${newNation.name}`, `Hai lasciato lavoro, casa e amici. Una vera ripartenza da zero in ${newNation.name}.`, '🛫', 'life', [], true)
         set(s => ({
           nation: newNation,
           finance: { ...s.finance, money: s.finance.money - COST },
-          living: { ...s.living, location: newNation.name, type: 'renting' as const, monthlyCost: Math.max(400, s.living.monthlyCost) },
+          living: { ...s.living, location: newNation.name, type: 'renting' as const, monthlyCost: 0, mortgageRemaining: 0 },
+          career: s.career.currentJob
+            ? { ...s.career, currentJob: null, lastRaiseYear: 0, jobHistory: [...(s.career.jobHistory ?? []), s.career.currentJob] }
+            : { ...s.career, lastRaiseYear: 0 },
+          education: s.education.currentLevel !== 'none' && !s.education.completedLevels.includes(s.education.currentLevel)
+            ? { ...s.education, dropOut: false, currentLevel: 'none' as const }
+            : s.education,
           stats: { ...s.stats, happiness: clamp(s.stats.happiness + 8, 0, 100), mentalHealth: clamp(s.stats.mentalHealth - 3, 0, 100) },
-          // Distance strains non-family bonds a little
-          relationships: s.relationships.map(r =>
-            ['parent', 'sibling', 'child', 'spouse'].includes(r.type) || !r.isAlive
-              ? r
-              : { ...r, trust: clamp(r.trust - 8, 0, 100) }),
+          // Heavy social cost: non-family lose -25 trust and -15 love; family lose -5 trust (distance)
+          relationships: s.relationships.map(r => {
+            if (!r.isAlive) return r
+            if (['parent', 'sibling', 'child', 'spouse'].includes(r.type)) return { ...r, trust: clamp(r.trust - 5, 0, 100) }
+            return { ...r, trust: clamp(r.trust - 25, 0, 100), love: clamp(r.love - 15, 0, 100) }
+          }),
           lifeMemories: [...s.lifeMemories, memory].slice(-200),
-          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🛫 Ti sei trasferito/a in ${newNation.name}! Nuovo paese, nuova vita.`, emoji: '🛫', category: 'life', statChanges: { money: -COST } }, ...s.eventLog].slice(0, 150),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🛫 Hai lasciato lavoro, casa e amici. Una vera ripartenza da zero in ${newNation.name}.`, emoji: '🛫', category: 'life', statChanges: { money: -COST } }, ...s.eventLog].slice(0, 150),
         }))
         get().checkGoals()
-        return { success: true, message: `Benvenuto/a in ${newNation.name}! La tua nuova vita inizia ora.`, effects: { money: -COST, happiness: 8 } }
+        return { success: true, message: `Benvenuto/a in ${newNation.name}! Hai lasciato tutto. Una nuova vita inizia da zero.`, effects: { money: -COST, happiness: 8 } }
       },
 
       // ==================== Social activities (outside work/school) ====================

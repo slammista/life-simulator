@@ -22,7 +22,7 @@ const STI_LABELS: Record<STIType, string> = {
 
 export default function SexualHealthScreen() {
   const store = useGameStore()
-  const { sexualHealth, finance, time, setContraception, haveSex, takePregnancyTest, getAbortion, getSTDTest, treatSTI, doIVF } = store
+  const { sexualHealth, finance, time, setContraception, haveSex, takePregnancyTest, getAbortion, getSTDTest, treatSTI, doIVF, terminatePregnancy, adoptOutPregnancy } = store
   const [lastMsg, setLastMsg] = useState('')
 
   const trimesterLabel = ['', '1° Trimestre', '2° Trimestre', '3° Trimestre'][sexualHealth.pregnancyTrimester]
@@ -41,11 +41,20 @@ export default function SexualHealthScreen() {
       {sexualHealth.isPregnant && (
         <div className="card" style={{ marginBottom: 12, borderLeft: '3px solid #f59e0b' }}>
           <p style={{ fontSize: 14, fontWeight: 600 }}>🤰 Sei incinta — {trimesterLabel}</p>
-          <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+          <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             <button onClick={() => { const r = getAbortion(); setLastMsg(r.message) }}
               disabled={sexualHealth.pregnancyTrimester > 2}
-              style={{ flex: 1, padding: '6px 0', borderRadius: 8, fontSize: 12, border: 'none', cursor: 'pointer', background: '#ef4444', color: '#fff' }}>
+              style={{ flex: 1, minWidth: 100, padding: '6px 0', borderRadius: 8, fontSize: 12, border: 'none', cursor: 'pointer', background: '#ef4444', color: '#fff' }}>
               IVG (Aborto)
+            </button>
+            <button onClick={() => { const r = terminatePregnancy(); setLastMsg(r.message) }}
+              disabled={sexualHealth.pregnancyTrimester > 2 || finance.money < 500}
+              style={{ flex: 1, minWidth: 100, padding: '6px 0', borderRadius: 8, fontSize: 12, border: 'none', cursor: 'pointer', background: '#f97316', color: '#fff', opacity: sexualHealth.pregnancyTrimester > 2 || finance.money < 500 ? 0.5 : 1 }}>
+              Interrompi (€500)
+            </button>
+            <button onClick={() => { const r = adoptOutPregnancy(); setLastMsg(r.message) }}
+              style={{ flex: 1, minWidth: 100, padding: '6px 0', borderRadius: 8, fontSize: 12, border: 'none', cursor: 'pointer', background: '#8b5cf6', color: '#fff' }}>
+              Dai in adozione
             </button>
           </div>
         </div>
