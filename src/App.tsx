@@ -17,6 +17,7 @@ import { ToastContainer } from './components/game/ToastNotification'
 import { ActionResultPanel } from './components/game/ActionResultPanel'
 import { NPCEventNotifications } from './components/game/NPCEventNotifications'
 import { VitaWidgets } from './components/game/VitaWidgets'
+import { OriginStoryScreen } from './components/screens/OriginStoryScreen'
 import { ShareLifeButton } from './components/game/ShareLifeButton'
 import { FirstPlayHint } from './components/game/FirstPlayHint'
 import { ActivitiesNav, ACTIVITIES_ITEM_MAP, type ActivitiesSubTab as ActivitiesSubTabBase } from './components/game/ActivitiesNav'
@@ -131,6 +132,7 @@ function SectionBackBar({ label, itemLabel, onBack }: { label: string; itemLabel
 function App() {
   const isStarted  = useGameStore(s => s.isStarted)
   const isGameOver = useGameStore(s => s.isGameOver)
+  const narrative  = useGameStore(s => s.narrative)
   const { handleInvecchia, currentEvent, time } = useGameStore(
     useShallow(s => ({ handleInvecchia: s.handleInvecchia, currentEvent: s.currentEvent, time: s.time }))
   )
@@ -201,6 +203,7 @@ function App() {
   if (!ageConfirmed) return <AgeGate onConfirm={() => setAgeConfirmed(true)} />
   if (!isStarted)    return <NewGameScreen />
   if (isGameOver)    return <GameOverScreen />
+  if (narrative?.originStory && !narrative.originStory.seen) return <OriginStoryScreen />
 
   return (
     <div className={`app-shell ${emotionalUI.className}`} data-emotion={emotionalUI.state}>

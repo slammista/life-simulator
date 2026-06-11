@@ -5,6 +5,7 @@ import { LegacyEngine } from '../../services/LegacyEngine'
 import { CloudSaveService } from '../../services/CloudSaveService'
 import { AdRewardEngine } from '../../services/AdRewardEngine'
 import { AdRewardButton } from '../game/AdRewardButton'
+import { RegretEngine } from '../../services/RegretEngine'
 import type { LifeMemory } from '../../store/types'
 
 function getLifeGrade(score: number): { letter: string; color: string; label: string } {
@@ -85,6 +86,8 @@ export function GameOverScreen() {
     .slice(0, 6)
 
   const canUseExtraLife = !extraLifeUsed && AdRewardEngine.canWatch(adRewards).ok
+  const regrets = RegretEngine.computeRegrets(store)
+  const epitaph = RegretEngine.computeEpitaph(store)
 
   async function handleSubmitLeaderboard() {
     const user = await CloudSaveService.getCurrentUser()
@@ -223,6 +226,30 @@ export function GameOverScreen() {
             </div>
           </div>
         )}
+
+        {/* Epitaph */}
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <p style={{ fontSize: 13, fontStyle: 'italic', color: '#9ca3af', lineHeight: 1.6 }}>{epitaph}</p>
+        </div>
+
+        {/* Regrets */}
+        <div className="card" style={{ width: '100%', marginBottom: 16 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+            💭 Rimpianti
+          </p>
+          {regrets.length === 0 ? (
+            <p style={{ fontSize: 13, color: '#10b981', fontStyle: 'italic' }}>Nessun rimpianto: hai vissuto pienamente.</p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {regrets.map(r => (
+                <div key={r.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                  <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{r.emoji}</span>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.5 }}>{r.text}</p>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
 
         {/* Share */}
         <button

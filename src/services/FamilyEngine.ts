@@ -148,7 +148,7 @@ function makeMember(params: {
 }
 
 export class FamilyEngine {
-  static createStartingFamily(identity: PlayerIdentity): StartingFamilyResult {
+  static createStartingFamily(identity: PlayerIdentity, opts?: { forceSibling?: boolean }): StartingFamilyResult {
     const familyId = uid('family')
     const birthYear = identity.birthYear
     const surname = identity.surname
@@ -197,7 +197,7 @@ export class FamilyEngine {
       relation: 'spouse_of',
     }]
 
-    const siblings = siblingCount(background)
+    const siblings = Math.max(opts?.forceSibling ? 1 : 0, siblingCount(background))
     for (let i = 0; i < siblings; i += 1) {
       const gender: Gender = Math.random() < 0.5 ? 'male' : 'female'
       const age = 1 + Math.floor(Math.random() * 9)

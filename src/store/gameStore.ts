@@ -52,6 +52,10 @@ import { ChaosEngine } from '../services/ChaosEngine'
 import { DailyQuestEngine } from '../services/DailyQuestEngine'
 import { NPCAgencyEngine } from '../services/NPCAgencyEngine'
 import { BalanceEngine } from '../services/BalanceEngine'
+import { NarrativeEngine, rollTraits, buildOriginStory } from '../services/NarrativeEngine'
+import { StoryArcEngine } from '../services/StoryArcEngine'
+import { NPCRequestEngine } from '../services/NPCRequestEngine'
+import { LifePhaseEngine } from '../services/LifePhaseEngine'
 import { WorkSchoolEngine, type SocialLocation } from '../services/WorkSchoolEngine'
 import type { WorkAction, SchoolAction, PlayerSkills, WorkNPC, SchoolNPC } from './types'
 import type { Addiction, TravelMemory, Religion, Child, LivingType, AvatarConfig, AvatarAccessory } from './types'
@@ -116,11 +120,12 @@ function evaluateTrigger(condition: string, state: GameState): boolean {
       return condition.split('&&').every(c => evaluateTrigger(c.trim(), state))
     }
 
+    const traits = state.narrative?.traits ?? []
     const fn = new Function(
-      'age', 'year', 'money', 'health', 'happiness', 'intelligence', 'hasJob', 'hasRecord',
+      'age', 'year', 'money', 'health', 'happiness', 'intelligence', 'hasJob', 'hasRecord', 'traits',
       `return (${condition})`
     )
-    return fn(age, year, money, health, happiness, intelligence, hasJob, hasRecord)
+    return fn(age, year, money, health, happiness, intelligence, hasJob, hasRecord, traits)
   } catch {
     return false
   }
@@ -329,6 +334,7 @@ function buildInitialState(): GameState {
     npcAgency: NPCAgencyEngine.initialState(),
     npcEventQueue: [],
     pendingConsequences: [],
+    narrative: NarrativeEngine.initialState(),
     currentEvent: null,
     availableChoices: [],
     pendingEffects: null,
@@ -372,23 +378,37 @@ export const useGameStore = create<FullStore>()(
       ...buildInitialState(),
 
       // ==================== newGame ====================
-      newGame: (identity: PlayerIdentity, nationId: string, mode = 'normal' as import('./types').GameMode, ironMan = false, startingBonus?: Effect) => {
+      newGame: (identity: PlayerIdentity, nationId: string, mode = 'normal' as import('./types').GameMode, ironMan = false, startingBonus?: Effect, scenarioId = 'normal') => {
         const initial = buildInitialState()
         const nation = (db.nations as Nation[]).find(n => n.id === nationId) ?? initial.nation
         const startMoney = BACKGROUND_MONEY[identity.familyBackground] ?? 1000
-        const startingFamily = FamilyEngine.createStartingFamily(identity)
+
+        // Random narrative traits: scenario-implied (if any) + 1-2 random surprises
+        const traits = rollTraits(scenarioId)
+        const startingFamily = FamilyEngine.createStartingFamily(identity, {
+          forceSibling: traits.includes('fratello_rivale'),
+        })
         const siblingCount = startingFamily.relationships.filter(rel => rel.type === 'sibling').length
 
-        const bonusStats = startingBonus ? {
-          health:       clamp((initial.stats.health        ?? 100) + (startingBonus.health        ?? 0), 0, 100),
-          happiness:    clamp((initial.stats.happiness     ?? 80)  + (startingBonus.happiness     ?? 0), 0, 100),
-          intelligence: clamp((initial.stats.intelligence  ?? 50)  + (startingBonus.intelligence  ?? 0), 0, 100),
-          looks:        clamp((initial.stats.looks         ?? 50)  + (startingBonus.looks         ?? 0), 0, 100),
-          energy:       clamp((initial.stats.energy        ?? 80)  + (startingBonus.energy        ?? 0), 0, 100),
-          mentalHealth: clamp((initial.stats.mentalHealth  ?? 80)  + (startingBonus.mentalHealth  ?? 0), 0, 100),
-          karma:        clamp((initial.stats.karma         ?? 50)  + (startingBonus.karma         ?? 0), 0, 100),
-          reputation:   clamp((initial.stats.reputation    ?? 30)  + (startingBonus.reputation    ?? 0), 0, 100),
-        } : {}
+        const traitEffects = NarrativeEngine.applyStartEffects(traits)
+        const combinedBonus: Effect = { ...(startingBonus ?? {}) }
+        for (const [k, v] of Object.entries(traitEffects)) {
+          combinedBonus[k] = (combinedBonus[k] ?? 0) + v
+        }
+
+        const bonusStats = {
+          health:       clamp((initial.stats.health        ?? 100) + (combinedBonus.health        ?? 0), 0, 100),
+          happiness:    clamp((initial.stats.happiness     ?? 80)  + (combinedBonus.happiness     ?? 0), 0, 100),
+          intelligence: clamp((initial.stats.intelligence  ?? 50)  + (combinedBonus.intelligence  ?? 0), 0, 100),
+          looks:        clamp((initial.stats.looks         ?? 50)  + (combinedBonus.looks         ?? 0), 0, 100),
+          energy:       clamp((initial.stats.energy        ?? 80)  + (combinedBonus.energy        ?? 0), 0, 100),
+          mentalHealth: clamp((initial.stats.mentalHealth  ?? 80)  + (combinedBonus.mentalHealth  ?? 0), 0, 100),
+          karma:        clamp((initial.stats.karma         ?? 0)   + (combinedBonus.karma         ?? 0), -100, 100),
+          reputation:   clamp((initial.stats.reputation    ?? 50)  + (combinedBonus.reputation    ?? 0), 0, 100),
+          socialReputation: clamp((initial.stats.socialReputation ?? 50) + (combinedBonus.socialReputation ?? 0), 0, 100),
+        }
+
+        const originText = buildOriginStory(identity, scenarioId, traits, startingFamily.relationships)
 
         set({
           ...initial,
@@ -398,14 +418,34 @@ export const useGameStore = create<FullStore>()(
           nation,
           settings: { ...initial.settings, mode, ironMan },
           stats: { ...initial.stats, ...bonusStats },
-          finance: { ...initial.finance, money: startMoney + (startingBonus?.money ?? 0) },
+          finance: { ...initial.finance, money: Math.max(0, startMoney + (combinedBonus.money ?? 0)) },
+          skills: { ...initial.skills, music: initial.skills.music + NarrativeEngine.startMusicSkill(traits) },
           relationships: startingFamily.relationships,
           family: startingFamily.family,
+          narrative: {
+            traits,
+            originStory: { scenarioId, text: originText, seen: false },
+            arcs: StoryArcEngine.initArcs(traits, startingFamily.relationships, identity.birthYear),
+            npcRequestHistory: [],
+            lastNpcRequestAge: 0,
+            phaseRecaps: [],
+          },
           eventLog: [{
             id: uid(), year: identity.birthYear, age: 0,
             text: `${identity.name} ${identity.surname} è venuto/a al mondo in ${nation?.name ?? 'Italia'} con ${startingFamily.relationships.length - siblingCount} genitori e ${siblingCount} fratelli/sorelle già registrati nell'albero familiare.`,
             emoji: '👶', category: 'life', statChanges: {},
           }],
+        })
+      },
+
+      markOriginStorySeen: () => {
+        const state = get()
+        if (!state.narrative?.originStory) return
+        set({
+          narrative: {
+            ...state.narrative,
+            originStory: { ...state.narrative.originStory, seen: true },
+          },
         })
       },
 
@@ -508,6 +548,21 @@ export const useGameStore = create<FullStore>()(
 
         // 7. Relationship decay
         const updatedRelationships = RelationshipEngine.annualDecay(state.relationships, state)
+
+        // 7-bis. Narrative trait annual tick (prodigio, malattia cronica, quartiere...)
+        const narrativeTick = NarrativeEngine.annualTick(state, newAge)
+        merge(narrativeTick.effects)
+        messages.push(...narrativeTick.messages)
+        if (narrativeTick.parentTrustDelta !== 0 || narrativeTick.siblingTrustDelta !== 0) {
+          for (let i = 0; i < updatedRelationships.length; i++) {
+            const r = updatedRelationships[i]
+            if (r.type === 'parent' && narrativeTick.parentTrustDelta !== 0) {
+              updatedRelationships[i] = { ...r, trust: clamp(r.trust + narrativeTick.parentTrustDelta, 0, 100) }
+            } else if (r.type === 'sibling' && narrativeTick.siblingTrustDelta !== 0) {
+              updatedRelationships[i] = { ...r, trust: clamp(r.trust + narrativeTick.siblingTrustDelta, 0, 100) }
+            }
+          }
+        }
 
         // 7a. Autonomous NPC agency
         const npcAgencyTick = NPCAgencyEngine.annualTick(state, updatedRelationships)
@@ -646,18 +701,41 @@ export const useGameStore = create<FullStore>()(
           messages.push(`${c.emoji} ${c.title}: ${c.description}`)
         }
 
-        // 12. Pick main event (with choices)
-        const allEvents = db.events as unknown as GameEvent[]
-        const eligible = allEvents.filter(ev => {
-          if (ev.minAge > newAge || ev.maxAge < newAge) return false
-          if (ev.isHistorical && ev.year !== newYear) return false
-          if (!ev.isHistorical && Math.random() > ev.probability) return false
-          return evaluateTrigger(ev.triggerCondition, { ...state, time: newTime })
-        })
-        const picked = eligible.length > 0 ? eligible[Math.floor(Math.random() * eligible.length)] : null
-        const choices = picked
-          ? (db.choices as unknown as Choice[]).filter(c => c.eventId === picked.id)
-          : []
+        // 12. Pick main event (with choices) — priority: story arc > NPC request > random db event
+        const arcTick = StoryArcEngine.getDueEvent(state, newAge)
+        let picked: GameEvent | null = null
+        let choices: Choice[] = []
+        let npcRequestFired = false
+
+        if (arcTick.due) {
+          picked = arcTick.due.event
+          choices = arcTick.due.choices
+        } else if (
+          newAge >= 14 &&
+          newAge - (state.narrative?.lastNpcRequestAge ?? 0) >= 3 &&
+          Math.random() < 0.25
+        ) {
+          const req = NPCRequestEngine.maybeBuildRequest(state, newAge)
+          if (req) {
+            picked = req.event
+            choices = req.choices
+            npcRequestFired = true
+          }
+        }
+
+        if (!picked) {
+          const allEvents = db.events as unknown as GameEvent[]
+          const eligible = allEvents.filter(ev => {
+            if (ev.minAge > newAge || ev.maxAge < newAge) return false
+            if (ev.isHistorical && ev.year !== newYear) return false
+            if (!ev.isHistorical && Math.random() > ev.probability) return false
+            return evaluateTrigger(ev.triggerCondition, { ...state, time: newTime })
+          })
+          picked = eligible.length > 0 ? eligible[Math.floor(Math.random() * eligible.length)] : null
+          choices = picked
+            ? (db.choices as unknown as Choice[]).filter(c => c.eventId === picked!.id)
+            : []
+        }
 
         // Weekly hours overload stress
         const weeklyHours = computeWeeklyHours(state)
@@ -766,8 +844,25 @@ export const useGameStore = create<FullStore>()(
           }
         }
 
+        // Life-phase transition: build recap for the chapter that just ended
+        let newPhaseRecap: import('./types').PhaseRecap | null = null
+        const oldPhase = LifePhaseEngine.getPhase(state.time.age)
+        const newPhase = LifePhaseEngine.getPhase(newAge)
+        if (oldPhase.id !== newPhase.id) {
+          newPhaseRecap = LifePhaseEngine.buildRecap(oldPhase.id, state, newYear, newAge)
+          messages.push(`📖 ${newPhaseRecap.summary}`)
+        }
+
         // Build life memories for major milestones this year
         const yearMemories: import('./types').LifeMemory[] = []
+        if (newPhaseRecap) {
+          yearMemories.push(makeMemory(
+            { year: newYear, age: newAge },
+            LifePhaseEngine.phaseEndTitle(oldPhase.id),
+            newPhaseRecap.summary,
+            newPhase.emoji, 'life', [], true,
+          ))
+        }
         const ageMilestones: Record<number, string> = {
           18: 'Sei diventato/a maggiorenne. Il mondo si apre davanti a te.',
           30: 'Trenta anni. La vita adulta è pienamente iniziata.',
@@ -898,6 +993,14 @@ export const useGameStore = create<FullStore>()(
             : state.ribbons,
           lifeMemories: yearMemories.length > 0 ? [...state.lifeMemories, ...yearMemories].slice(-200) : state.lifeMemories,
           pendingConsequences: remainingConsequences,
+          narrative: {
+            ...(state.narrative ?? NarrativeEngine.initialState()),
+            arcs: arcTick.updatedArcs,
+            lastNpcRequestAge: npcRequestFired ? newAge : (state.narrative?.lastNpcRequestAge ?? 0),
+            phaseRecaps: newPhaseRecap
+              ? [...(state.narrative?.phaseRecaps ?? []), newPhaseRecap]
+              : (state.narrative?.phaseRecaps ?? []),
+          },
         })
 
         get().checkGoals()
@@ -907,6 +1010,73 @@ export const useGameStore = create<FullStore>()(
       // ==================== handleChoice ====================
       handleChoice: (choiceId: string) => {
         const state = get()
+
+        // Dispatch arc choices
+        if (choiceId.startsWith('arc_c')) {
+          const arcResult = StoryArcEngine.applyChoice(state, choiceId)
+          if (!arcResult) { set({ currentEvent: null, availableChoices: [] }); return }
+          const partial = applyEffects(state, arcResult.effects)
+          const memory = arcResult.memory
+            ? makeMemory(state.time, arcResult.memory.title, arcResult.memory.description, arcResult.memory.emoji, 'life', [], true)
+            : null
+          const updatedArcs = (state.narrative?.arcs ?? []).map(a =>
+            a.arcId === arcResult.updatedArc.arcId ? arcResult.updatedArc : a
+          )
+          const newNarrative = { ...(state.narrative ?? NarrativeEngine.initialState()), arcs: updatedArcs }
+          const newRel = arcResult.newRelationship
+          const relPatch = arcResult.relationshipPatch
+          set(s => ({
+            ...partial,
+            currentEvent: null,
+            availableChoices: [],
+            narrative: newNarrative,
+            relationships: newRel
+              ? [...s.relationships.map(r => relPatch && r.id === relPatch.npcId
+                  ? { ...r, trust: relPatch.trust !== undefined ? clamp(r.trust + (relPatch.trust ?? 0), 0, 100) : r.trust, love: relPatch.love !== undefined ? clamp(r.love + (relPatch.love ?? 0), 0, 100) : r.love, type: relPatch.typeChange ?? r.type }
+                  : r), newRel]
+              : relPatch
+                ? s.relationships.map(r => r.id === relPatch.npcId
+                    ? { ...r, trust: relPatch.trust !== undefined ? clamp(r.trust + (relPatch.trust ?? 0), 0, 100) : r.trust, love: relPatch.love !== undefined ? clamp(r.love + (relPatch.love ?? 0), 0, 100) : r.love, type: relPatch.typeChange ?? r.type }
+                    : r)
+                : s.relationships,
+            lifeMemories: memory ? [...s.lifeMemories, memory].slice(-200) : s.lifeMemories,
+            pendingConsequences: arcResult.consequence
+              ? [...(s.pendingConsequences ?? []), arcResult.consequence]
+              : (s.pendingConsequences ?? []),
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: arcResult.logText, emoji: '📖', category: 'life' as const, statChanges: arcResult.effects }, ...s.eventLog].slice(0, 150),
+          }))
+          get().checkGoals()
+          get().checkMorte()
+          return
+        }
+
+        // Dispatch NPC request choices
+        if (choiceId.startsWith('npcreq_')) {
+          const reqResult = NPCRequestEngine.applyChoice(state, choiceId)
+          if (!reqResult) { set({ currentEvent: null, availableChoices: [] }); return }
+          const partial = applyEffects(state, reqResult.effects)
+          const relPatch = reqResult.relationshipPatch
+          const newHistory = [...(state.narrative?.npcRequestHistory ?? []), reqResult.record].slice(-50)
+          set(s => ({
+            ...partial,
+            currentEvent: null,
+            availableChoices: [],
+            narrative: { ...(s.narrative ?? NarrativeEngine.initialState()), npcRequestHistory: newHistory },
+            relationships: relPatch
+              ? s.relationships.map(r => r.id === relPatch.npcId
+                  ? { ...r, trust: relPatch.trust !== undefined ? clamp(r.trust + (relPatch.trust ?? 0), 0, 100) : r.trust, love: relPatch.love !== undefined ? clamp(r.love + (relPatch.love ?? 0), 0, 100) : r.love }
+                  : r)
+              : s.relationships,
+            pendingConsequences: reqResult.consequence
+              ? [...(s.pendingConsequences ?? []), reqResult.consequence]
+              : (s.pendingConsequences ?? []),
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: reqResult.logText, emoji: '🤝', category: 'life' as const, statChanges: reqResult.effects }, ...s.eventLog].slice(0, 150),
+          }))
+          get().checkGoals()
+          get().checkMorte()
+          return
+        }
+
         const choice = state.availableChoices.find(c => c.id === choiceId)
         if (!choice) return
 
@@ -2903,6 +3073,10 @@ export const useGameStore = create<FullStore>()(
           // Guarantee new slices exist even in old saves
           minigameStats: ps.minigameStats ?? currentState.minigameStats,
           adRewards: ps.adRewards ?? currentState.adRewards,
+          narrative: NarrativeEngine.ensure(ps.narrative),
+          lifeMemories: ps.lifeMemories ?? currentState.lifeMemories,
+          pendingConsequences: ps.pendingConsequences ?? currentState.pendingConsequences,
+          skills: ps.skills ?? currentState.skills,
         }
       },
       partialize: (state) => ({
@@ -2951,6 +3125,10 @@ export const useGameStore = create<FullStore>()(
         npcAgency: state.npcAgency,
         minigameStats: state.minigameStats,
         adRewards: state.adRewards,
+        narrative: state.narrative,
+        lifeMemories: state.lifeMemories.slice(-200),
+        pendingConsequences: state.pendingConsequences,
+        skills: state.skills,
       }),
     }
   )

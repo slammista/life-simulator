@@ -912,6 +912,52 @@ export interface PendingConsequence {
   category: PendingConsequenceCategory
 }
 
+// ---- Narrative (traits, story arcs, NPC requests, life phases) ----
+
+export type NarrativeTraitId =
+  | 'bambino_prodigio' | 'famiglia_instabile' | 'nato_in_poverta'
+  | 'genitori_famosi' | 'malattia_cronica' | 'famiglia_religiosa'
+  | 'quartiere_pericoloso' | 'talento_musicale' | 'fratello_rivale'
+
+export type LifePhaseId = 'infanzia' | 'adolescenza' | 'giovinezza' | 'maturita' | 'vecchiaia'
+
+export interface StoryArcState {
+  arcId: string
+  stageIndex: number
+  flags: Record<string, boolean | number | string>
+  npcId: string | null
+  status: 'active' | 'completed' | 'abandoned'
+  startedYear: number
+}
+
+export interface NPCRequestRecord {
+  id: string
+  npcId: string
+  npcName: string
+  requestType: string
+  year: number
+  age: number
+  accepted: boolean
+}
+
+export interface PhaseRecap {
+  phaseId: LifePhaseId
+  year: number
+  age: number
+  completedObjectives: string[]
+  missedObjectives: string[]
+  summary: string
+}
+
+export interface NarrativeState {
+  traits: NarrativeTraitId[]
+  originStory: { scenarioId: string; text: string; seen: boolean } | null
+  arcs: StoryArcState[]
+  npcRequestHistory: NPCRequestRecord[]
+  lastNpcRequestAge: number
+  phaseRecaps: PhaseRecap[]
+}
+
 // ---- NPC Agency ----
 
 export type NPCAgencyEventType =
@@ -1119,6 +1165,9 @@ export interface GameState {
   // Delayed event consequence queue (choices that have future ripple effects)
   pendingConsequences: PendingConsequence[]
 
+  // Narrative layer: traits, origin story, story arcs, NPC requests, life phases
+  narrative: NarrativeState
+
   // Events
   currentEvent: GameEvent | null
   availableChoices: Choice[]
@@ -1182,7 +1231,8 @@ export interface GameActions {
   salvaGioco: () => void
   caricaGioco: () => void
   resetGiorno: () => void
-  newGame: (identity: PlayerIdentity, nationId: string, mode?: import('./types').GameMode, ironMan?: boolean, startingBonus?: Effect) => void
+  newGame: (identity: PlayerIdentity, nationId: string, mode?: import('./types').GameMode, ironMan?: boolean, startingBonus?: Effect, scenarioId?: string) => void
+  markOriginStorySeen: () => void
 
   // Career engine actions
   applyForJob: (jobId: string) => ActionResult

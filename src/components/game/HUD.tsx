@@ -2,6 +2,7 @@ import { memo, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore, computeWeeklyHours } from '../../store/gameStore'
 import { AvatarRenderer } from '../avatar/AvatarRenderer'
+import { TRAIT_DEFS } from '../../services/NarrativeEngine'
 
 function useWeeklyHoursData() {
   const contractType = useGameStore(s => s.career.currentJob?.contractType ?? null)
@@ -125,8 +126,16 @@ function usePlayerTraits() {
   const career = useGameStore(s => s.career)
   const relationships = useGameStore(s => s.relationships)
   const children = useGameStore(s => s.children)
+  const narrativeTraits = useGameStore(s => s.narrative?.traits ?? [])
 
   const traits: { emoji: string; label: string; color: string }[] = []
+
+  // Prepend narrative traits (origin story surprises)
+  for (const traitId of narrativeTraits) {
+    const def = TRAIT_DEFS[traitId]
+    if (def) traits.push({ emoji: def.emoji, label: def.label, color: def.color })
+  }
+
   if (skills.academicSkill >= 40 && stats.intelligence >= 55) traits.push({ emoji: '📚', label: 'Studioso', color: '#60a5fa' })
   if (skills.athleticism >= 40 && stats.health >= 65) traits.push({ emoji: '💪', label: 'Atletico', color: '#4ade80' })
   if (skills.creativity >= 40) traits.push({ emoji: '🎨', label: 'Creativo', color: '#fbbf24' })

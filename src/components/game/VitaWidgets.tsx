@@ -1,5 +1,6 @@
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../../store/gameStore'
+import { LifePhaseWidget } from './LifePhaseWidget'
 import { AdRewardEngine } from '../../services/AdRewardEngine'
 import { AdRewardButton } from './AdRewardButton'
 import { DailyQuestEngine } from '../../services/DailyQuestEngine'
@@ -193,6 +194,7 @@ function SuggestedActions(props: Props) {
 export function VitaWidgets(props: Props) {
   return (
     <>
+      <LifePhaseWidget />
       <RewardBanner />
       <SuggestedActions {...props} />
     </>

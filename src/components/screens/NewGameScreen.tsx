@@ -147,7 +147,7 @@ export function NewGameScreen() {
       sexualOrientation: orientation,
       emoji: '👶',
       avatar,
-    }, nationId, gameMode, ironMan, scenario?.bonus)
+    }, nationId, gameMode, ironMan, scenario?.bonus, scenario?.id)
   }
 
   const inputStyle = {
