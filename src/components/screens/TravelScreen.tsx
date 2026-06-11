@@ -20,7 +20,7 @@ const CATEGORY_LABELS: Record<TravelCategory, string> = {
 }
 
 export function TravelScreen() {
-  const { finance, travelHistory, time, criminal, bookTrip, emigrate, nation } = useGameStore()
+  const { finance, travelHistory, time, criminal, bookTrip, emigrate, applyForCitizenship, nation, citizenships } = useGameStore()
   const [feedback, setFeedback] = useState('')
   const [travelClass, setTravelClass] = useState<TravelClass>('economy')
   const [filter, setFilter] = useState<TravelCategory | 'all'>('all')
@@ -113,6 +113,38 @@ export function TravelScreen() {
           </div>
         )}
       </div>
+
+      {/* Dual citizenship */}
+      {time.age >= 18 && nation && !(citizenships ?? []).includes(nation.id) && (
+        <div className="card" style={{ padding: '10px 14px', border: '1px solid rgba(251,191,36,0.25)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
+            <p style={{ fontSize: 13, fontWeight: 600 }}>🛂 Cittadinanza {nation.flag} {nation.name}</p>
+            <p style={{ fontSize: 11, color: '#fbbf24' }}>€500</p>
+          </div>
+          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
+            Hai già la cittadinanza di: {(citizenships ?? ['italy']).map(c => NATION_FLAGS[c] ?? c).join(' ')}
+          </p>
+          <button
+            onClick={() => { const r = applyForCitizenship(nation.id); setFeedback(r.message) }}
+            disabled={finance.money < 500 || criminal.inPrison}
+            style={{ width: '100%', padding: '6px 0', borderRadius: 8, fontSize: 12, fontWeight: 600,
+              border: '1px solid rgba(251,191,36,0.3)', cursor: 'pointer',
+              background: 'rgba(251,191,36,0.12)', color: '#fbbf24' }}>
+            Richiedi naturalizzazione (€500)
+          </button>
+        </div>
+      )}
+      {(citizenships ?? []).length > 1 && (
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
+          {(citizenships ?? []).map(c => (
+            <span key={c} style={{ fontSize: 12, padding: '3px 10px', borderRadius: 20,
+              background: 'rgba(99,102,241,0.15)', color: '#a5b4fc',
+              border: '1px solid rgba(99,102,241,0.25)' }}>
+              {NATION_FLAGS[c] ?? '🌍'} Cittadinanza {c}
+            </span>
+          ))}
+        </div>
+      )}
 
       {/* Category filter */}
       <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>

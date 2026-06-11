@@ -135,10 +135,24 @@ export class CareerEngine {
     const hired = Math.random() < chance
 
     if (!hired) {
-      const skillMsg = skillBonus >= 0.08 ? ' Nonostante le tue skill, la concorrenza era alta.' : ''
+      const company = generateCompanyName(jobDef.category)
+      const REJECTION_INTROS = [
+        `Dopo il colloquio con ${company}, ti informano che hanno scelto un altro candidato.`,
+        `${company} ti ha contattato: il processo di selezione per ${jobDef.title} è terminato — non sei stato scelto.`,
+        `Il colloquio con ${company} è andato discretamente, ma il profilo selezionato aveva più esperienza.`,
+        `Hai superato il primo screening per ${jobDef.title}, ma il colloquio finale con ${company} non ha convinto la commissione.`,
+        `Lettera di rifiuto da ${company}: "Siamo stati colpiti dal tuo profilo, ma abbiamo proceduto con altri candidati."`,
+      ]
+      const tip = state.stats.reputation < 40
+        ? ' Costruisci la tua reputazione per migliorare le chances future.'
+        : state.stats.intelligence < 40
+        ? ' Considerare ulteriori studi potrebbe aiutare.'
+        : skillBonus < 0.04
+        ? ' Allenati nelle skill specifiche per questo settore.'
+        : ''
       return {
         success: false,
-        message: `Non sei stato selezionato per ${jobDef.title}. Riprova più tardi.${skillMsg}`,
+        message: REJECTION_INTROS[Math.floor(Math.random() * REJECTION_INTROS.length)] + tip,
         effects: { happiness: -3, mentalHealth: -2 },
       }
     }
@@ -146,11 +160,19 @@ export class CareerEngine {
     const salary = Math.round(
       jobDef.salaryMin + Math.random() * (jobDef.salaryMax - jobDef.salaryMin)
     )
+    const company = generateCompanyName(jobDef.category)
+
+    const SUCCESS_INTROS = [
+      `Offerta accettata! Dopo un colloquio brillante, inizi come ${jobDef.title} in ${company} a €${salary.toLocaleString('it-IT')}/mese.`,
+      `${company} ti ha fatto un'offerta: ${jobDef.title} a €${salary.toLocaleString('it-IT')}/mese. Il selezionatore era entusiasta.`,
+      `Benvenuto nel team! ${company} ti assume come ${jobDef.title} con uno stipendio di €${salary.toLocaleString('it-IT')}/mese.`,
+      `Il colloquio con ${company} è andato alla grande — sei assunto come ${jobDef.title} a €${salary.toLocaleString('it-IT')}/mese!`,
+    ]
 
     const newJob: Job = {
       id: jobDef.id,
       title: jobDef.title,
-      company: generateCompanyName(jobDef.category),
+      company,
       salary,
       stressLevel: jobDef.stressLevel,
       contractType: jobDef.contractType as ContractType,
@@ -161,7 +183,7 @@ export class CareerEngine {
 
     return {
       success: true,
-      message: `Assunto come ${jobDef.title} a €${salary.toLocaleString('it-IT')}/mese!`,
+      message: SUCCESS_INTROS[Math.floor(Math.random() * SUCCESS_INTROS.length)],
       effects: { happiness: 12, reputation: 3, energy: -5 },
       newJob,
     }

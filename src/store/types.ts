@@ -1282,6 +1282,9 @@ export interface GameState {
 
   // Last will & testament
   will: Will | null
+
+  // Citizenships (nation IDs)
+  citizenships: string[]
 }
 
 // ---- Action Result (shared) ----
@@ -1396,6 +1399,7 @@ export interface GameActions {
   // Parenting actions
   haveChild: () => ActionResult
   adoptChild: (gender?: 'male' | 'female', age?: number) => ActionResult
+  adoptInternational: (country: string, gender: 'male' | 'female') => ActionResult
   interactWithChild: (childId: string, action: string) => ActionResult
 
   // Military actions
@@ -1521,6 +1525,7 @@ export interface GameActions {
   changeLegalName: (newFirstName: string, newLastName?: string) => ActionResult
   toggleOrganDonor: () => void
   updateWill: (will: Will) => void
+  applyForCitizenship: (nationId: string) => ActionResult
 
   // Band actions
   formBand: (name: string, genre: string) => ActionResult

@@ -125,19 +125,49 @@ export class SocialMediaEngine {
     }
   }
 
-  static annualTick(state: GameState): { updatedProfiles: SocialMediaProfile[]; effects: Effect } {
+  static annualTick(state: GameState): { updatedProfiles: SocialMediaProfile[]; effects: Effect; sponsorMessages: string[] } {
     let totalIncome = 0
+    const sponsorMessages: string[] = []
     const updatedProfiles = state.socialMedia.map(profile => {
       const def = PLATFORMS.find(p => p.id === profile.platform)
       if (!def) return profile
-      // Natural decay if not posting
       const decayRate = profile.postCount === 0 ? 0.1 : 0.02
       const decayedFollowers = Math.floor(profile.followers * (1 - decayRate))
-      const income = this._calcIncome(decayedFollowers, def.adsensePer1k)
+      const adsenseIncome = this._calcIncome(decayedFollowers, def.adsensePer1k)
+      const sponsorIncome = this._calcSponsorIncome(decayedFollowers, def.emoji, def.name, sponsorMessages)
+      const income = adsenseIncome + Math.floor(sponsorIncome / 12)
       totalIncome += income
       return { ...profile, followers: decayedFollowers, monthlyIncome: income, stage: this._getStage(decayedFollowers) }
     })
-    return { updatedProfiles, effects: { money: totalIncome, socialReputation: totalIncome > 1000 ? 3 : 1 } }
+    return { updatedProfiles, effects: { money: totalIncome, socialReputation: totalIncome > 1000 ? 3 : 1 }, sponsorMessages }
+  }
+
+  private static _calcSponsorIncome(followers: number, emoji: string, platformName: string, messages: string[]): number {
+    if (followers >= 10_000_000) {
+      const deal = Math.floor(200000 + Math.random() * 800000)
+      messages.push(`🤝 ${emoji} Accordo MEGA su ${platformName}! Un brand internazionale ti offre €${deal.toLocaleString('it-IT')}/anno.`)
+      return deal
+    }
+    if (followers >= 1_000_000) {
+      if (Math.random() < 0.6) {
+        const deal = Math.floor(50000 + Math.random() * 150000)
+        messages.push(`💼 ${emoji} Brand deal su ${platformName}: €${deal.toLocaleString('it-IT')}/anno da un'azienda nazionale.`)
+        return deal
+      }
+    } else if (followers >= 100_000) {
+      if (Math.random() < 0.45) {
+        const deal = Math.floor(5000 + Math.random() * 15000)
+        messages.push(`📦 ${emoji} Hai ricevuto una proposta di sponsorizzazione su ${platformName}: €${deal.toLocaleString('it-IT')}/anno.`)
+        return deal
+      }
+    } else if (followers >= 10_000) {
+      if (Math.random() < 0.25) {
+        const deal = Math.floor(500 + Math.random() * 1500)
+        messages.push(`🎁 ${emoji} Un piccolo brand ti contatta su ${platformName} per una collaborazione: €${deal.toLocaleString('it-IT')}.`)
+        return deal
+      }
+    }
+    return 0
   }
 
   private static _getStage(followers: number): SocialMediaProfile['stage'] {

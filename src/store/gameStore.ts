@@ -363,6 +363,7 @@ function buildInitialState(): GameState {
     rentalProperties: [],
     band: null,
     will: null,
+    citizenships: ['italy'],
   }
 }
 
@@ -440,6 +441,7 @@ export const useGameStore = create<FullStore>()(
             lastNpcRequestAge: 0,
             phaseRecaps: [],
           },
+          citizenships: [identity.nationality ?? nationId ?? 'italy'],
           eventLog: [{
             id: uid(), year: identity.birthYear, age: 0,
             text: `${identity.name} ${identity.surname} è venuto/a al mondo in ${nation?.name ?? 'Italia'} con ${startingFamily.relationships.length - siblingCount} genitori e ${siblingCount} fratelli/sorelle già registrati nell'albero familiare.`,
@@ -684,8 +686,9 @@ export const useGameStore = create<FullStore>()(
         messages.push(...assetMessages)
 
         // 11. Social media annual tick
-        const { updatedProfiles, effects: socialFx } = SocialMediaEngine.annualTick(state)
+        const { updatedProfiles, effects: socialFx, sponsorMessages } = SocialMediaEngine.annualTick(state)
         merge(socialFx)
+        messages.push(...sponsorMessages)
 
         // 11b. Fame annual tick (fanbase, sponsors, public image decay)
         const fameTick = FameEngine.annualTick({
@@ -2968,6 +2971,65 @@ export const useGameStore = create<FullStore>()(
         return { success: true, message: result.message, effects: result.effects }
       },
 
+      adoptInternational: (country: string, gender: 'male' | 'female'): ActionResult => {
+        const state = get()
+        if (state.time.age < 25) return { success: false, message: 'Devi avere almeno 25 anni per adottare internazionalmente.', effects: {} }
+        if (state.children.length >= 8) return { success: false, message: 'Non puoi avere più di 8 figli.', effects: {} }
+        const INTL_ADOPTION: Record<string, { flag: string; cost: number; namePool: Record<'male'|'female', string[]> }> = {
+          cina: { flag: '🇨🇳', cost: 20000, namePool: { male: ['Wei', 'Lei', 'Jun', 'Hao', 'Ming'], female: ['Mei', 'Hua', 'Ling', 'Fang', 'Xiu'] } },
+          etiopia: { flag: '🇪🇹', cost: 15000, namePool: { male: ['Abebe', 'Dawit', 'Yonas', 'Getnet', 'Tadesse'], female: ['Tigist', 'Hiwot', 'Mekdes', 'Selam', 'Almaz'] } },
+          colombia: { flag: '🇨🇴', cost: 16000, namePool: { male: ['Santiago', 'Mateo', 'Andrés', 'Felipe', 'Diego'], female: ['Valentina', 'Camila', 'Sofía', 'Isabella', 'Daniela'] } },
+          india: { flag: '🇮🇳', cost: 18000, namePool: { male: ['Arjun', 'Rohan', 'Vivek', 'Sanjay', 'Kiran'], female: ['Priya', 'Ananya', 'Deepa', 'Kavya', 'Nisha'] } },
+        }
+        const cfg = INTL_ADOPTION[country]
+        if (!cfg) return { success: false, message: 'Paese non supportato.', effects: {} }
+        if (state.finance.money < cfg.cost) return { success: false, message: `L'adozione internazionale da ${country} costa €${cfg.cost.toLocaleString('it-IT')} (pratiche legali, volo, traduttore).`, effects: {} }
+        const pool = cfg.namePool[gender]
+        const childName = pool[Math.floor(Math.random() * pool.length)]
+        const childAge = Math.floor(Math.random() * 4) // 0-3 anni
+        const newChild: Child = {
+          id: uid(), name: childName, age: childAge, gender,
+          intelligence: 50, looks: 50, health: 80, happiness: 65,
+          personalityTraits: { openness: 65, conscientiousness: 50, extraversion: 50, agreeableness: 70, neuroticism: 35 },
+          bondWithPlayer: 75, respectForPlayer: 50,
+          schoolLevel: childAge < 6 ? 'none' as const : 'kindergarten' as const,
+          isAdopted: true, careerPath: null,
+          relationshipStatus: 'single', specialNeeds: [],
+        }
+        const effects: Effect = { money: -cfg.cost, happiness: 18, karma: 15 }
+        const partial = applyEffects(state, effects)
+        const memory = makeMemory(state.time, `Adozione di ${childName} ${cfg.flag}`, `Hai adottato ${childName}, ${childAge === 0 ? 'neonato/a' : `${childAge} anni`}, dalla ${country.charAt(0).toUpperCase() + country.slice(1)}. Un viaggio che cambierà due vite.`, '🌍', 'life', [childName], true)
+        set(s => ({
+          ...partial,
+          children: [...s.children, newChild],
+          lifeMemories: [...s.lifeMemories, memory].slice(-200),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🌍 Hai adottato ${childName} ${cfg.flag} dalla ${country}.`, emoji: '🌍', category: 'life' as const, statChanges: effects }, ...s.eventLog].slice(0, 150),
+        }))
+        get().checkGoals()
+        return { success: true, message: `Benvenuto/a a casa, ${childName}! ${cfg.flag} Un percorso lungo e bellissimo.`, effects }
+      },
+
+      applyForCitizenship: (nationId: string): ActionResult => {
+        const state = get()
+        if (state.nation?.id !== nationId) return { success: false, message: 'Devi vivere nel paese per richiedere la cittadinanza.', effects: {} }
+        if ((state.citizenships ?? []).includes(nationId)) return { success: false, message: 'Hai già la cittadinanza di questo paese.', effects: {} }
+        const COST = 500
+        if (state.finance.money < COST) return { success: false, message: `La pratica di naturalizzazione costa €${COST.toLocaleString('it-IT')}.`, effects: {} }
+        const yearsLived = state.travelHistory.filter(t => t.destination === state.nation?.name).length
+        if (yearsLived < 2 && (state.citizenships ?? []).includes(state.identity.nationality)) {
+          // Need at least 2 "visits" (emigrations count) or already have it by birth
+          return { success: false, message: 'Non hai ancora sufficienti anni di residenza per richiedere la naturalizzazione.', effects: {} }
+        }
+        const effects: Effect = { money: -COST, reputation: 5, happiness: 8 }
+        const partial = applyEffects(state, effects)
+        set(s => ({
+          ...partial,
+          citizenships: [...(s.citizenships ?? [state.identity.nationality]), nationId],
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🛂 Hai ottenuto la cittadinanza ${state.nation?.flag ?? ''} ${state.nation?.name ?? nationId}!`, emoji: '🛂', category: 'life' as const, statChanges: effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `🎉 Congratulazioni! Hai ottenuto la doppia cittadinanza ${state.nation?.flag ?? ''} ${state.nation?.name ?? nationId}.`, effects }
+      },
+
       // ==================== Military actions ====================
       enlistMilitary: (branch: string): ActionResult => {
         const state = get()
@@ -3923,6 +3985,7 @@ export const useGameStore = create<FullStore>()(
           rentalProperties: ps.rentalProperties ?? [],
           band: ps.band ?? null,
           will: ps.will ?? null,
+          citizenships: ps.citizenships ?? [ps.identity?.nationality ?? 'italy'],
           // Backfill insurance flags for old saves
           finance: ps.finance ? {
             ...ps.finance,
@@ -3985,6 +4048,7 @@ export const useGameStore = create<FullStore>()(
         rentalProperties: state.rentalProperties,
         band: state.band,
         will: state.will,
+        citizenships: state.citizenships,
       }),
     }
   )

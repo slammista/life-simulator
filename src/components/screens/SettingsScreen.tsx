@@ -257,6 +257,159 @@ function LegalNamePanel() {
   )
 }
 
+// ─── Will Editor ─────────────────────────────────────────────────
+
+function WillEditorPanel() {
+  const will = useGameStore(s => s.will)
+  const updateWill = useGameStore(s => s.updateWill)
+  const relationships = useGameStore(s => s.relationships)
+  const time = useGameStore(s => s.time)
+  const [open, setOpen] = useState(false)
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
+
+  const livingRels = relationships.filter(r => r.isAlive && !['acquaintance'].includes(r.type))
+
+  const currentWill = will ?? {
+    beneficiaries: [],
+    donationCharity: 0,
+    funeralType: 'normal' as const,
+    organDonor: false,
+    note: '',
+  }
+
+  const [beneficiaries, setBeneficiaries] = useState(currentWill.beneficiaries)
+  const [charityPct, setCharityPct] = useState(currentWill.donationCharity)
+  const [funeralType, setFuneralType] = useState<'simple' | 'normal' | 'luxury'>(currentWill.funeralType)
+  const [organDonor, setOrganDonor] = useState(currentWill.organDonor)
+  const [note, setNote] = useState(currentWill.note)
+
+  if (time.age < 18) return null
+
+  const totalPct = beneficiaries.reduce((s, b) => s + b.share, 0) + charityPct
+
+  function setBenefShare(relId: string, share: number) {
+    setBeneficiaries(prev => {
+      const existing = prev.find(b => b.relId === relId)
+      if (share === 0) return prev.filter(b => b.relId !== relId)
+      const rel = livingRels.find(r => r.id === relId)
+      if (!rel) return prev
+      if (existing) return prev.map(b => b.relId === relId ? { ...b, share } : b)
+      return [...prev, { relId, name: rel.name, share }]
+    })
+  }
+
+  function handleSave() {
+    if (totalPct > 100) {
+      setMsg({ text: `La somma delle quote supera il 100% (${totalPct}%). Riduci alcuni valori.`, ok: false })
+      return
+    }
+    updateWill({ beneficiaries, donationCharity: charityPct, funeralType, organDonor, note })
+    setMsg({ text: '✅ Testamento aggiornato.', ok: true })
+    setTimeout(() => setMsg(null), 3000)
+  }
+
+  const inputStyle: React.CSSProperties = {
+    padding: '5px 8px', borderRadius: 6, fontSize: 12, width: '64px', textAlign: 'right',
+    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--color-text)',
+  }
+
+  return (
+    <div className="card" style={{ marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <p style={{ fontSize: 12, color: '#a78bfa', fontWeight: 600 }}>📜 Testamento</p>
+        <button onClick={() => setOpen(v => !v)}
+          style={{ fontSize: 11, padding: '3px 10px', borderRadius: 8, border: 'none', cursor: 'pointer',
+            background: 'rgba(167,139,250,0.15)', color: '#a78bfa' }}>
+          {open ? 'Chiudi' : will ? 'Modifica' : 'Redigi'}
+        </button>
+      </div>
+      {!open && will && (
+        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 4 }}>
+          {will.beneficiaries.length} beneficiari · Funerale: {will.funeralType} · Donazione: {will.donationCharity}%
+          {will.organDonor ? ' · 💚 Donatore organi' : ''}
+        </p>
+      )}
+      {open && (
+        <div style={{ marginTop: 10 }}>
+          {msg && (
+            <div style={{ padding: '6px 10px', borderRadius: 8, marginBottom: 8, fontSize: 12,
+              background: msg.ok ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+              color: msg.ok ? '#10b981' : '#ef4444' }}>
+              {msg.text}
+            </div>
+          )}
+
+          {/* Beneficiaries */}
+          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 6 }}>Beneficiari (%)</p>
+          {livingRels.slice(0, 8).map(rel => {
+            const current = beneficiaries.find(b => b.relId === rel.id)?.share ?? 0
+            return (
+              <div key={rel.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 5 }}>
+                <span style={{ fontSize: 12 }}>{rel.name} <span style={{ color: 'var(--color-text-secondary)', fontSize: 10 }}>({rel.type})</span></span>
+                <input type="number" min={0} max={100} value={current}
+                  onChange={e => setBenefShare(rel.id, Math.min(100, Math.max(0, Number(e.target.value))))}
+                  style={inputStyle} />
+              </div>
+            )
+          })}
+
+          {/* Charity */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4, marginBottom: 8 }}>
+            <span style={{ fontSize: 12 }}>💚 Beneficenza</span>
+            <input type="number" min={0} max={100} value={charityPct}
+              onChange={e => setCharityPct(Math.min(100, Math.max(0, Number(e.target.value))))}
+              style={inputStyle} />
+          </div>
+
+          <div style={{ fontSize: 11, marginBottom: 8, color: totalPct > 100 ? '#ef4444' : '#10b981' }}>
+            Totale assegnato: {totalPct}% {totalPct > 100 ? '⚠️ supera 100%' : totalPct < 100 ? `(${100 - totalPct}% non assegnato → stato)` : '✅'}
+          </div>
+
+          {/* Funeral type */}
+          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 4 }}>Tipo di funerale</p>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 8 }}>
+            {(['simple', 'normal', 'luxury'] as const).map(t => (
+              <button key={t} onClick={() => setFuneralType(t)}
+                style={{ flex: 1, padding: '5px 0', borderRadius: 8, fontSize: 11, border: 'none', cursor: 'pointer',
+                  background: funeralType === t ? '#a78bfa' : 'rgba(255,255,255,0.07)',
+                  color: funeralType === t ? '#fff' : 'var(--color-text-secondary)' }}>
+                {t === 'simple' ? '🪦 Semplice' : t === 'normal' ? '⚱️ Tradizionale' : '👑 Lussuoso'}
+              </button>
+            ))}
+          </div>
+
+          {/* Organ donor */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <span style={{ fontSize: 12 }}>💚 Donatore d'organi</span>
+            <button onClick={() => setOrganDonor(v => !v)}
+              style={{ padding: '4px 12px', borderRadius: 20, fontSize: 11, border: 'none', cursor: 'pointer',
+                background: organDonor ? 'rgba(16,185,129,0.25)' : 'rgba(255,255,255,0.07)',
+                color: organDonor ? '#10b981' : 'var(--color-text-secondary)' }}>
+              {organDonor ? '✅ Sì' : '❌ No'}
+            </button>
+          </div>
+
+          {/* Note */}
+          <textarea
+            value={note} onChange={e => setNote(e.target.value)}
+            placeholder="Note o ultime volontà..."
+            rows={2}
+            style={{ width: '100%', padding: '6px 10px', borderRadius: 8, fontSize: 12, marginBottom: 8, boxSizing: 'border-box',
+              background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)',
+              color: 'var(--color-text)', resize: 'none' }}
+          />
+
+          <button onClick={handleSave}
+            style={{ width: '100%', padding: '7px 0', borderRadius: 8, fontSize: 13, border: 'none',
+              cursor: 'pointer', background: '#a78bfa', color: '#fff', fontWeight: 600 }}>
+            📜 Salva testamento
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ─── Main SettingsScreen ─────────────────────────────────────────
 
 export function SettingsScreen() {
@@ -347,6 +500,9 @@ export function SettingsScreen() {
 
       {/* Legal name change */}
       {time.age >= 18 && <LegalNamePanel />}
+
+      {/* Will editor */}
+      {time.age >= 18 && <WillEditorPanel />}
 
       {/* Game mode */}
       <div className="card" style={{ marginBottom: 12 }}>

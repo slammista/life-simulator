@@ -189,6 +189,115 @@ function SuggestedActions(props: Props) {
   )
 }
 
+// ─── Short-term objective card ───────────────────────────────────────────────
+
+function CurrentObjective(props: Props) {
+  const { setActiveTab, setActivitiesSub, setLavoroSub, setRelazioniSub } = props
+  const { time, stats, career, education, finance, relationships, children, criminal } =
+    useGameStore(useShallow(s => ({
+      time: s.time,
+      stats: s.stats,
+      career: s.career,
+      education: s.education,
+      finance: s.finance,
+      relationships: s.relationships,
+      children: s.children,
+      criminal: s.criminal,
+    })))
+
+  if (criminal.inPrison) return null
+
+  interface Obj { emoji: string; label: string; done: boolean; onClick: () => void }
+  let objectives: Obj[] = []
+
+  if (time.age < 13) {
+    // Infanzia
+    const hasFriend = relationships.some(r => r.type === 'friend' && r.isAlive)
+    const goodGpa = education.gpa >= 3.0
+    const hasHobby = false // placeholder
+    objectives = [
+      { emoji: '👫', label: 'Fatti un amico', done: hasFriend, onClick: () => { setActiveTab('relazioni'); setRelazioniSub('relationships') } },
+      { emoji: '📚', label: 'GPA ≥ 3.0', done: goodGpa, onClick: () => { setActiveTab('lavoro'); setLavoroSub('education') } },
+      { emoji: '🎮', label: 'Coltiva un hobby', done: hasHobby, onClick: () => { setActiveTab('activities'); setActivitiesSub('hobby') } },
+    ]
+  } else if (time.age < 20) {
+    // Adolescenza
+    const hasDiploma = education.completedLevels.includes('highschool')
+    const hasLove = relationships.some(r => ['partner','spouse'].includes(r.stage ?? '') && r.isAlive)
+    const hasJob = !!career.currentJob || career.jobHistory.length > 0
+    objectives = [
+      { emoji: '🎓', label: 'Diploma di liceo', done: hasDiploma, onClick: () => { setActiveTab('lavoro'); setLavoroSub('education') } },
+      { emoji: '❤️', label: 'Primo amore', done: hasLove, onClick: () => { setActiveTab('relazioni'); setRelazioniSub('relationships') } },
+      { emoji: '💼', label: 'Primo lavoro', done: hasJob, onClick: () => { setActiveTab('lavoro'); setLavoroSub('career') } },
+    ]
+  } else if (time.age < 40) {
+    // Giovinezza
+    const livesAlone = true // simplified
+    const hasJob = !!career.currentJob
+    const hasSavings = finance.money >= 10000
+    objectives = [
+      { emoji: '🏠', label: 'Indipendenza economica', done: livesAlone && hasJob, onClick: () => { setActiveTab('lavoro'); setLavoroSub('career') } },
+      { emoji: '💰', label: 'Risparmia €10.000', done: hasSavings, onClick: () => { setActiveTab('lavoro'); setLavoroSub('finance') } },
+      { emoji: '💍', label: 'Relazione stabile', done: relationships.some(r => ['partner','spouse'].includes(r.stage ?? '') && r.isAlive), onClick: () => { setActiveTab('relazioni'); setRelazioniSub('relationships') } },
+    ]
+  } else if (time.age < 65) {
+    // Maturità
+    const hasWealth = finance.money >= 100000
+    const hasFamily = children.length > 0
+    const healthOk = stats.health >= 50
+    objectives = [
+      { emoji: '💰', label: 'Patrimonio €100.000', done: hasWealth, onClick: () => { setActiveTab('lavoro'); setLavoroSub('finance') } },
+      { emoji: '👨‍👩‍👧', label: 'Costruisci una famiglia', done: hasFamily, onClick: () => { setActiveTab('relazioni'); setRelazioniSub('parenting') } },
+      { emoji: '❤️', label: 'Salute ≥ 50', done: healthOk, onClick: () => { setActiveTab('activities'); setActivitiesSub('health') } },
+    ]
+  } else {
+    // Vecchiaia
+    const liveRels = relationships.filter(r => r.isAlive && !['parent'].includes(r.type)).length
+    const healthOk = stats.health >= 40
+    objectives = [
+      { emoji: '👥', label: '≥ 2 legami vivi', done: liveRels >= 2, onClick: () => { setActiveTab('relazioni'); setRelazioniSub('relationships') } },
+      { emoji: '❤️', label: 'Salute ≥ 40', done: healthOk, onClick: () => { setActiveTab('activities'); setActivitiesSub('health') } },
+      { emoji: '😊', label: 'Felicità ≥ 60', done: stats.happiness >= 60, onClick: () => { setActiveTab('activities'); setActivitiesSub('hobby') } },
+    ]
+  }
+
+  const done = objectives.filter(o => o.done).length
+  const total = objectives.length
+
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>
+          🎯 Obiettivi di fase
+        </p>
+        <p style={{ fontSize: 11, color: done === total ? '#10b981' : 'var(--color-text-secondary)' }}>
+          {done}/{total}
+        </p>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+        {objectives.map((o, i) => (
+          <button key={i} onClick={o.done ? undefined : o.onClick}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 8,
+              padding: '7px 10px', borderRadius: 10,
+              border: `1px solid ${o.done ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.08)'}`,
+              background: o.done ? 'rgba(16,185,129,0.07)' : 'rgba(255,255,255,0.03)',
+              cursor: o.done ? 'default' : 'pointer', textAlign: 'left', width: '100%',
+            }}
+          >
+            <span style={{ fontSize: 16, flexShrink: 0 }}>{o.done ? '✅' : o.emoji}</span>
+            <p style={{ fontSize: 12, fontWeight: 500, color: o.done ? '#6ee7b7' : 'var(--color-text)', margin: 0,
+              textDecoration: o.done ? 'line-through' : 'none' }}>
+              {o.label}
+            </p>
+            {!o.done && <span style={{ marginLeft: 'auto', fontSize: 12, color: 'var(--color-text-secondary)' }}>›</span>}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Combined export ─────────────────────────────────────────────────────────
 
 export function VitaWidgets(props: Props) {
@@ -196,6 +305,7 @@ export function VitaWidgets(props: Props) {
     <>
       <LifePhaseWidget />
       <RewardBanner />
+      <CurrentObjective {...props} />
       <SuggestedActions {...props} />
     </>
   )

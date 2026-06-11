@@ -3,10 +3,17 @@ import { useGameStore } from '../../store/gameStore'
 import { useToastStore } from '../../store/toastStore'
 import { PARENTING_ACTIONS } from '../../services/ParentingEngine'
 import { haptic } from '../../services/HapticEngine'
+
+const INTL_OPTIONS = [
+  { country: 'cina',     flag: '🇨🇳', label: 'Cina',     cost: 20000, desc: 'Processo ~18 mesi, bambino 0-3 anni' },
+  { country: 'etiopia',  flag: '🇪🇹', label: 'Etiopia',  cost: 15000, desc: 'Processo ~12 mesi, bambino 0-4 anni' },
+  { country: 'colombia', flag: '🇨🇴', label: 'Colombia', cost: 16000, desc: 'Processo ~15 mesi, bambino 0-3 anni' },
+  { country: 'india',    flag: '🇮🇳', label: 'India',    cost: 18000, desc: 'Processo ~24 mesi, bambino 0-3 anni' },
+]
 import type { Child } from '../../store/types'
 
 export default function ParentingScreen() {
-  const { children, time, haveChild, adoptChild, interactWithChild } = useGameStore()
+  const { children, time, haveChild, adoptChild, adoptInternational, interactWithChild } = useGameStore()
   const { showPanel, closePanel } = useToastStore()
   const [selectedChild, setSelectedChild] = useState<Child | null>(null)
 
@@ -88,6 +95,41 @@ export default function ParentingScreen() {
                 >
                   ♀ Femmina
                 </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Adozione internazionale */}
+      {time.age >= 25 && children.length < 8 && (
+        <div className="card">
+          <h3 className="card-title">🌍 Adozione Internazionale</h3>
+          <p className="card-subtitle">
+            Percorso più lungo e costoso, ma porta un bambino da lontano nella tua famiglia.
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>
+            {INTL_OPTIONS.map(opt => (
+              <div key={opt.country} style={{ borderRadius: 10, padding: '10px 12px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
+                  <div>
+                    <p style={{ fontSize: 13, fontWeight: 600 }}>{opt.flag} {opt.label}</p>
+                    <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{opt.desc}</p>
+                  </div>
+                  <p style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600, flexShrink: 0 }}>€{opt.cost.toLocaleString('it-IT')}</p>
+                </div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  <button className="action-btn small"
+                    onClick={() => act(() => adoptInternational(opt.country, 'male'), opt.flag)}
+                    disabled={children.length >= 8}>
+                    ♂ Maschio
+                  </button>
+                  <button className="action-btn small"
+                    onClick={() => act(() => adoptInternational(opt.country, 'female'), opt.flag)}
+                    disabled={children.length >= 8}>
+                    ♀ Femmina
+                  </button>
+                </div>
               </div>
             ))}
           </div>
