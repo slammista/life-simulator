@@ -51,6 +51,7 @@ const BodyModScreen       = lazy(() => import('./components/screens/BodyModScree
 const BeautyScreen        = lazy(() => import('./components/screens/BeautyScreen'))
 const BarberScreen        = lazy(() => import('./components/screens/BarberScreen').then(m => ({ default: m.BarberScreen })))
 const RetirementScreen    = lazy(() => import('./components/screens/RetirementScreen'))
+const BusinessScreen      = lazy(() => import('./components/screens/BusinessScreen').then(m => ({ default: m.BusinessScreen })))
 const GamblingScreen      = lazy(() => import('./components/screens/GamblingScreen'))
 const SexualHealthScreen  = lazy(() => import('./components/screens/SexualHealthScreen'))
 const CosmeticSurgeryScreen = lazy(() => import('./components/screens/CosmeticSurgeryScreen'))
@@ -285,6 +286,7 @@ function App() {
             {activeTab === 'lavoro' && lavoroSub === 'education' && <EducationScreen />}
             {activeTab === 'lavoro' && lavoroSub === 'military'  && <MilitaryScreen />}
             {activeTab === 'lavoro' && lavoroSub === 'pension'   && <RetirementScreen />}
+            {activeTab === 'lavoro' && lavoroSub === 'business'  && <BusinessScreen />}
 
             {/* ASSETS */}
             {activeTab === 'assets' && assetsSub === 'finance'  && <FinanceScreen />}

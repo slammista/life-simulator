@@ -15,6 +15,8 @@ export function CriminalScreen() {
   const criminal = useGameStore(s => s.criminal)
   const state = useGameStore(s => s)
   const commitCrime = useGameStore(s => s.commitCrime)
+  const robSomeone = useGameStore(s => s.robSomeone)
+  const bribeOfficial = useGameStore(s => s.bribeOfficial)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [tab, setTab] = useState<'status' | 'crimes'>('status')
@@ -165,6 +167,35 @@ export function CriminalScreen() {
                   </button>
                 </div>
               ))}
+
+              {/* Street robbery */}
+              <div style={{ background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)', borderRadius: 12, padding: '10px 12px', marginTop: 4 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600 }}>🦹 Rapina di strada</p>
+                  <p style={{ fontSize: 11, color: '#fca5a5' }}>Arresto 40%</p>
+                </div>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>Rapina un passante. Guadagno €50–€500 se riesce.</p>
+                <button onClick={() => { const r = robSomeone(); flash(r.message, r.success) }}
+                  style={{ width: '100%', padding: '8px 0', borderRadius: 12, background: 'rgba(239,68,68,0.15)', color: '#fca5a5', fontSize: 13, fontWeight: 500, border: '1px solid rgba(239,68,68,0.3)', cursor: 'pointer' }}
+                  disabled={state.criminal.inPrison}>
+                  Esegui
+                </button>
+              </div>
+
+              {/* Bribe */}
+              {(criminal.inPrison || criminal.hasRecord) && (
+                <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12, padding: '10px 12px', marginTop: 4 }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                    <p style={{ fontSize: 13, fontWeight: 600 }}>🤝 Corrompi un funzionario</p>
+                    <p style={{ fontSize: 11, color: '#fcd34d' }}>Successo 55%</p>
+                  </div>
+                  <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>Paga una tangente per far cadere le accuse o uscire di prigione. Costo €2.000–€5.000.</p>
+                  <button onClick={() => { const r = bribeOfficial(); flash(r.message, r.success) }}
+                    style={{ width: '100%', padding: '8px 0', borderRadius: 12, background: 'rgba(245,158,11,0.15)', color: '#fcd34d', fontSize: 13, fontWeight: 500, border: '1px solid rgba(245,158,11,0.3)', cursor: 'pointer' }}>
+                    Proponi tangente
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>

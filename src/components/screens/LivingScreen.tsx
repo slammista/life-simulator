@@ -5,13 +5,22 @@ import type { LivingType } from '../../store/types'
 
 const LIVING_ORDER: LivingType[] = ['parents', 'dormitory', 'roommate', 'renting', 'owning']
 
+const RENTAL_TIERS = [
+  { id: 'studio', label: 'Monolocale', emoji: '🏠', price: 80000, rent: 600, desc: 'Piccolo appartamento da affittare. Reddito stabile.' },
+  { id: 'bilocale', label: 'Bilocale', emoji: '🏢', price: 150000, rent: 1100, desc: 'Appartamento con due locali. Affitto più alto.' },
+  { id: 'villa', label: 'Villa', emoji: '🏡', price: 350000, rent: 2500, desc: 'Immobile di pregio. Massimo rendimento.' },
+]
+
 export default function LivingScreen() {
   const state = useGameStore(s => s)
+  const rentalProperties = useGameStore(s => s.rentalProperties)
   const upgradeLiving = useGameStore(s => s.upgradeLiving)
   const buyHouseWithMortgage = useGameStore(s => s.buyHouseWithMortgage)
+  const buyRentalProperty = useGameStore(s => s.buyRentalProperty)
+  const sellRentalProperty = useGameStore(s => s.sellRentalProperty)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
-  const [tab, setTab] = useState<'status' | 'upgrade' | 'buy'>('status')
+  const [tab, setTab] = useState<'status' | 'upgrade' | 'buy' | 'rentals'>('status')
   const [selectedHouse, setSelectedHouse] = useState<string | null>(null)
 
   const flash = (msg: string, ok: boolean) => {
@@ -50,18 +59,18 @@ export default function LivingScreen() {
       )}
 
       {/* Tabs */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
-        {(['status', 'upgrade', 'buy'] as const).map(t => (
+      <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+        {(['status', 'upgrade', 'buy', 'rentals'] as const).map(t => (
           <button
             key={t}
             onClick={() => setTab(t)}
             style={{
-              flex: 1, padding: '8px 0', borderRadius: 12, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: 'none',
+              flex: 1, minWidth: 60, padding: '8px 4px', borderRadius: 12, fontSize: 11, fontWeight: 500, cursor: 'pointer', border: 'none',
               background: tab === t ? 'var(--color-cta)' : 'rgba(255,255,255,0.05)',
               color: tab === t ? '#fff' : 'var(--color-text-secondary)',
             }}
           >
-            {t === 'status' ? '📍 Situazione' : t === 'upgrade' ? '📦 Sposta' : '🏡 Acquista'}
+            {t === 'status' ? '📍 Stato' : t === 'upgrade' ? '📦 Sposta' : t === 'buy' ? '🏡 Compra' : `🏘️ Affitti (${rentalProperties.length})`}
           </button>
         ))}
       </div>
@@ -258,6 +267,72 @@ export default function LivingScreen() {
               </button>
             </>
           )}
+        </div>
+      )}
+
+      {/* RENTALS TAB */}
+      {tab === 'rentals' && (
+        <div>
+          <div style={{ fontSize: 12, color: '#94a3b8', marginBottom: 12 }}>
+            Compra immobili da affittare. Il reddito viene incassato ogni anno automaticamente.
+          </div>
+
+          {rentalProperties.filter(p => p.isActive).length > 0 && (
+            <>
+              <p style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Immobili in portafoglio</p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
+                {rentalProperties.filter(p => p.isActive).map(prop => (
+                  <div key={prop.id} style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: 12 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                      <div>
+                        <p style={{ fontWeight: 600, fontSize: 14 }}>{prop.name}</p>
+                        <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>
+                          Acquistato nel {prop.purchaseYear} · €{prop.monthlyRent.toLocaleString()}/mese
+                        </p>
+                        <p style={{ fontSize: 11, color: '#4ade80', marginTop: 2 }}>
+                          Valore: €{prop.purchasePrice.toLocaleString()}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => { const r = sellRentalProperty(prop.id); flash(r.message, r.success) }}
+                        style={{ padding: '6px 12px', borderRadius: 8, fontSize: 12, fontWeight: 600, border: '1px solid rgba(239,68,68,0.3)', cursor: 'pointer', background: 'rgba(239,68,68,0.1)', color: '#fca5a5', flexShrink: 0, marginLeft: 8 }}>
+                        Vendi
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+
+          <p style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Acquista immobile</p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            {RENTAL_TIERS.map(tier => {
+              const canAfford = state.finance.money >= tier.price
+              return (
+                <div key={tier.id} style={{ background: 'rgba(255,255,255,0.03)', border: `1px solid ${canAfford ? 'rgba(34,197,94,0.25)' : 'rgba(255,255,255,0.07)'}`, borderRadius: 10, padding: 12 }}>
+                  <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
+                    <div style={{ fontSize: 28 }}>{tier.emoji}</div>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontWeight: 700, fontSize: 14 }}>{tier.label}</p>
+                      <p style={{ fontSize: 12, color: '#94a3b8', marginTop: 2 }}>{tier.desc}</p>
+                      <div style={{ display: 'flex', gap: 10, marginTop: 4, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 11, color: '#fbbf24' }}>Prezzo: €{tier.price.toLocaleString()}</span>
+                        <span style={{ fontSize: 11, color: '#4ade80' }}>Affitto: €{tier.rent.toLocaleString()}/mese</span>
+                      </div>
+                      {!canAfford && <p style={{ fontSize: 11, color: '#f87171', marginTop: 4 }}>⛔ Fondi insufficienti</p>}
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { const r = buyRentalProperty(tier.id); flash(r.message, r.success) }}
+                    disabled={!canAfford}
+                    style={{ marginTop: 10, width: '100%', padding: '8px 0', borderRadius: 10, fontSize: 12, fontWeight: 600, border: 'none', cursor: canAfford ? 'pointer' : 'not-allowed', background: canAfford ? 'rgba(34,197,94,0.2)' : 'rgba(255,255,255,0.05)', color: canAfford ? '#4ade80' : '#475569' }}>
+                    {canAfford ? '🏘️ Acquista' : `Servono €${tier.price.toLocaleString()}`}
+                  </button>
+                </div>
+              )
+            })}
+          </div>
         </div>
       )}
     </div>

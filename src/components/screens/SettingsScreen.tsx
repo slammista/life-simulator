@@ -207,6 +207,56 @@ function BackupPanel() {
   )
 }
 
+// ─── Legal Name Change ───────────────────────────────────────────
+
+function LegalNamePanel() {
+  const changeLegalName = useGameStore(s => s.changeLegalName)
+  const identity = useGameStore(s => s.identity)
+  const [firstName, setFirstName] = useState('')
+  const [lastName, setLastName] = useState('')
+  const [msg, setMsg] = useState<{ text: string; ok: boolean } | null>(null)
+
+  function handle() {
+    if (!firstName.trim() && !lastName.trim()) {
+      setMsg({ text: 'Inserisci almeno un nome o cognome.', ok: false }); return
+    }
+    const r = changeLegalName(firstName.trim() || identity.name, lastName.trim() || undefined)
+    setMsg({ text: r.message, ok: r.success })
+    if (r.success) { setFirstName(''); setLastName('') }
+    setTimeout(() => setMsg(null), 4000)
+  }
+
+  const inputStyle: React.CSSProperties = {
+    width: '100%', padding: '7px 10px', borderRadius: 8, fontSize: 13, marginBottom: 8,
+    background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)',
+    color: 'var(--color-text)', boxSizing: 'border-box',
+  }
+
+  return (
+    <div className="card" style={{ marginBottom: 12 }}>
+      <p style={{ fontSize: 12, color: '#f59e0b', fontWeight: 600, marginBottom: 8 }}>📝 Cambio nome legale</p>
+      {msg && (
+        <div style={{ padding: '6px 10px', borderRadius: 8, marginBottom: 8, fontSize: 12,
+          background: msg.ok ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
+          color: msg.ok ? '#10b981' : '#ef4444',
+        }}>
+          {msg.text}
+        </div>
+      )}
+      <input type="text" placeholder={`Nuovo nome (attuale: ${identity.name})`} value={firstName}
+        onChange={e => setFirstName(e.target.value)} style={inputStyle} />
+      <input type="text" placeholder={`Nuovo cognome (attuale: ${identity.surname})`} value={lastName}
+        onChange={e => setLastName(e.target.value)} style={inputStyle} />
+      <button
+        onClick={handle}
+        style={{ width: '100%', padding: '7px 0', borderRadius: 8, fontSize: 13, border: 'none',
+          cursor: 'pointer', background: '#f59e0b', color: '#fff' }}>
+        📝 Cambia nome (€300)
+      </button>
+    </div>
+  )
+}
+
 // ─── Main SettingsScreen ─────────────────────────────────────────
 
 export function SettingsScreen() {
@@ -294,6 +344,9 @@ export function SettingsScreen() {
           ))}
         </div>
       </div>
+
+      {/* Legal name change */}
+      {time.age >= 18 && <LegalNamePanel />}
 
       {/* Game mode */}
       <div className="card" style={{ marginBottom: 12 }}>

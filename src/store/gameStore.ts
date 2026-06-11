@@ -48,6 +48,8 @@ import { LivingEngine } from '../services/LivingEngine'
 import { FamilyEngine } from '../services/FamilyEngine'
 import { TraumaEngine } from '../services/TraumaEngine'
 import { FameEngine } from '../services/FameEngine'
+import { BusinessEngine, SECTOR_DEFS } from '../services/BusinessEngine'
+import type { BusinessSector, RentalProperty, Will } from './types'
 import { ChaosEngine } from '../services/ChaosEngine'
 import { DailyQuestEngine } from '../services/DailyQuestEngine'
 import { NPCAgencyEngine } from '../services/NPCAgencyEngine'
@@ -358,6 +360,9 @@ function buildInitialState(): GameState {
     diminishingReturns: {},
     skills: { athleticism: 0, music: 0, acting: 0, creativity: 0, charisma: 0, discipline: 0, leadership: 0, academicSkill: 0, socialSkill: 0 },
     lifeMemories: [],
+    rentalProperties: [],
+    band: null,
+    will: null,
   }
 }
 
@@ -536,6 +541,18 @@ export const useGameStore = create<FullStore>()(
           merge({ money: -(120 * 12) })
         }
 
+        // 2f. Rental properties income
+        for (const prop of (state.rentalProperties ?? [])) {
+          if (!prop.isActive) continue
+          const netMonthly = (prop.monthlyRent * prop.occupancyRate) - prop.maintenanceCost
+          merge({ money: Math.round(netMonthly * 12) })
+          if (Math.random() < 0.05) {
+            const repairCost = 500 + Math.floor(Math.random() * 1500)
+            merge({ money: -repairCost })
+            messages.push(`🔧 ${prop.name}: riparazione urgente −€${repairCost}.`)
+          }
+        }
+
         // 3. Nation effect
         if (state.nation) {
           merge({ health: state.nation.healthRecoveryBonus * 0.1 })
@@ -610,6 +627,25 @@ export const useGameStore = create<FullStore>()(
                 updatedRelationships[i] = { ...r, trust: clamp(r.trust - 6, 0, 100), respect: clamp(r.respect - 4, 0, 100) }
                 messages.push(`💸 ${loan.npcName.split(' ')[0]} aspetta ancora i suoi €${loan.amount.toLocaleString('it-IT')} (scaduto nel ${loan.dueYear}). Il rapporto si incrina.`)
                 break
+              }
+            }
+          }
+        }
+
+        // 7-quater. Partner infidelity annual check
+        {
+          const partner = updatedRelationships.find(r => (r.type === 'spouse' || r.type === 'partner') && r.isAlive && !r.historyFlags.includes('cheated_on_player'))
+          if (partner) {
+            const cheatChance = 0.02 + (partner.love < 40 ? 0.08 : 0) + (partner.trust < 40 ? 0.05 : 0)
+            if (Math.random() < Math.min(cheatChance, 0.12)) {
+              const idx = updatedRelationships.indexOf(partner)
+              const found = Math.random() < 0.6
+              if (found) {
+                updatedRelationships[idx] = { ...partner, trust: clamp(partner.trust - 35, 0, 100), love: clamp(partner.love - 30, 0, 100), historyFlags: [...partner.historyFlags, 'cheated_on_player'] }
+                merge({ happiness: -10, mentalHealth: -8 })
+                messages.push(`💔 Hai scoperto che ${partner.name.split(' ')[0]} ti ha tradito/a. Un colpo durissimo.`)
+              } else {
+                updatedRelationships[idx] = { ...partner, historyFlags: [...partner.historyFlags, 'cheated_secretly'] }
               }
             }
           }
@@ -698,6 +734,14 @@ export const useGameStore = create<FullStore>()(
         // 21. Sexual health annual tick (pregnancy progression, STI costs)
         const { effects: sexFx, updatedSexualHealth: sexTickUpdate } = SexualHealthEngine.annualTick(state)
         merge(sexFx)
+
+        // 21b. Business annual tick
+        let bizTickResult: ReturnType<typeof BusinessEngine.annualTick> | null = null
+        if (state.career.businessOwned?.isActive) {
+          bizTickResult = BusinessEngine.annualTick(state)
+          merge({ money: bizTickResult.profitEffect })
+          messages.push(...bizTickResult.messages)
+        }
 
         // 22. World events annual tick (historical events, home repairs)
         const worldResult = WorldEventsEngine.annualTick(state)
@@ -984,7 +1028,9 @@ export const useGameStore = create<FullStore>()(
           time: newTime,
           stats: newStats,
           identity: newIdentity,
-          career: careerUpdate,
+          career: bizTickResult?.updatedBusiness
+            ? { ...careerUpdate, businessOwned: bizTickResult.updatedBusiness }
+            : careerUpdate,
           health: {
             ...healthUpdate,
             addictions: updatedAddictions,
@@ -2457,6 +2503,324 @@ export const useGameStore = create<FullStore>()(
         return { success: true, message: `Divorzio da ${spouse.name.split(' ')[0]} avviato. Le pratiche costano €${cost.toLocaleString('it-IT')}.`, effects: { money: -cost, happiness: -10 } }
       },
 
+      // ==================== Business actions ====================
+
+      foundBusiness: (sector: BusinessSector, name: string): ActionResult => {
+        const state = get()
+        const def = SECTOR_DEFS.find(d => d.id === sector)!
+        const result = BusinessEngine.found(state, sector, name)
+        if (!result.success || !result.business) return { success: false, message: result.message, effects: {} }
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - def.startupCost },
+          career: { ...s.career, businessOwned: result.business! },
+          stats: { ...s.stats, happiness: clamp(s.stats.happiness + 10, 0, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🚀', category: 'career' as const, statChanges: { money: -def.startupCost } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: { money: -def.startupCost } }
+      },
+
+      hireBizEmployee: (): ActionResult => {
+        const state = get()
+        const biz = state.career.businessOwned
+        if (!biz?.isActive) return { success: false, message: 'Nessuna azienda attiva.', effects: {} }
+        const result = BusinessEngine.hire(biz)
+        if (!result.success || !result.updatedBusiness) return { success: false, message: result.message, effects: {} }
+        set(s => ({ career: { ...s.career, businessOwned: result.updatedBusiness! } }))
+        return { success: true, message: result.message, effects: {} }
+      },
+
+      fireBizEmployee: (): ActionResult => {
+        const state = get()
+        const biz = state.career.businessOwned
+        if (!biz?.isActive) return { success: false, message: 'Nessuna azienda attiva.', effects: {} }
+        const result = BusinessEngine.fire(biz)
+        if (!result.success || !result.updatedBusiness) return { success: false, message: result.message, effects: {} }
+        set(s => ({ career: { ...s.career, businessOwned: result.updatedBusiness! } }))
+        return { success: true, message: result.message, effects: {} }
+      },
+
+      sellBusiness: (): ActionResult => {
+        const state = get()
+        const biz = state.career.businessOwned
+        if (!biz?.isActive) return { success: false, message: 'Nessuna azienda da vendere.', effects: {} }
+        const { proceeds, message } = BusinessEngine.sell(biz)
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money + proceeds },
+          career: { ...s.career, businessOwned: { ...biz, isActive: false } },
+          stats: { ...s.stats, happiness: clamp(s.stats.happiness + 5, 0, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: message, emoji: '💰', category: 'career' as const, statChanges: { money: proceeds } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message, effects: { money: proceeds } }
+      },
+
+      // ==================== Cheating / jealousy ====================
+
+      cheatOnPartner: (): ActionResult => {
+        const state = get()
+        if (state.time.age < 16) return { success: false, message: 'Non applicabile.', effects: {} }
+        const partner = state.relationships.find(r => (r.type === 'spouse' || r.type === 'partner') && r.isAlive)
+        if (!partner) return { success: false, message: 'Non sei in una relazione stabile.', effects: {} }
+        const discovered = Math.random() < 0.35
+        if (discovered) {
+          const breaks = Math.random() < 0.5
+          set(s => ({
+            stats: { ...s.stats, karma: clamp(s.stats.karma - 10, -100, 100), happiness: clamp(s.stats.happiness - 8, 0, 100), mentalHealth: clamp(s.stats.mentalHealth - 5, 0, 100) },
+            relationships: s.relationships.map(r => r.id === partner.id
+              ? { ...r, trust: clamp(r.trust - 40, 0, 100), love: clamp(r.love - 35, 0, 100), type: breaks ? 'ex_partner' as const : r.type, historyFlags: [...r.historyFlags, 'was_cheated_on'] }
+              : r),
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: breaks ? `💔 ${partner.name.split(' ')[0]} ti ha scoperto/a e ti ha lasciato!` : `😡 ${partner.name.split(' ')[0]} ha scoperto il tradimento. Il rapporto soffre gravemente.`, emoji: '💔', category: 'relationship' as const, statChanges: { karma: -10 } }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: true, message: breaks ? `Scoperto/a: ${partner.name.split(' ')[0]} ti ha lasciato.` : `Scoperto/a: il rapporto è gravemente compromesso.`, effects: { karma: -10 } }
+        }
+        set(s => ({
+          stats: { ...s.stats, karma: clamp(s.stats.karma - 10, -100, 100), mentalHealth: clamp(s.stats.mentalHealth - 3, 0, 100) },
+          relationships: s.relationships.map(r => r.id === partner.id ? { ...r, historyFlags: r.historyFlags.includes('cheated_secretly') ? r.historyFlags : [...r.historyFlags, 'cheated_secretly'] } : r),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🤫 Hai tradito ${partner.name.split(' ')[0]}. Per ora nessuno lo sa.`, emoji: '🤫', category: 'relationship' as const, statChanges: { karma: -10 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Hai tradito ${partner.name.split(' ')[0]}. Per ora è un segreto.`, effects: { karma: -10 } }
+      },
+
+      confrontPartner: (): ActionResult => {
+        const state = get()
+        const partner = state.relationships.find(r => (r.type === 'spouse' || r.type === 'partner') && r.isAlive)
+        if (!partner) return { success: false, message: 'Non sei in una relazione stabile.', effects: {} }
+        if (partner.historyFlags.includes('cheated_secretly')) {
+          set(s => ({
+            stats: { ...s.stats, happiness: clamp(s.stats.happiness - 10, 0, 100), mentalHealth: clamp(s.stats.mentalHealth - 8, 0, 100) },
+            relationships: s.relationships.map(r => r.id === partner.id
+              ? { ...r, trust: clamp(r.trust - 35, 0, 100), love: clamp(r.love - 30, 0, 100), historyFlags: r.historyFlags.filter(f => f !== 'cheated_secretly').concat(['cheated_on_player']) }
+              : r),
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `💔 ${partner.name.split(' ')[0]} confessa: ti ha tradito. Una ferita difficile da rimarginare.`, emoji: '💔', category: 'relationship' as const, statChanges: {} }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: true, message: `${partner.name.split(' ')[0]} ha confessato il tradimento.`, effects: {} }
+        }
+        set(s => ({
+          relationships: s.relationships.map(r => r.id === partner.id ? { ...r, trust: clamp(r.trust - 8, 0, 100), love: clamp(r.love - 5, 0, 100) } : r),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `😤 ${partner.name.split(' ')[0]} è offeso/a dalla tua mancanza di fiducia.`, emoji: '😤', category: 'relationship' as const, statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: false, message: `${partner.name.split(' ')[0]} nega. Non c'è nulla da rivelare.`, effects: {} }
+      },
+
+      // ==================== Criminal extras ====================
+
+      robSomeone: (): ActionResult => {
+        const state = get()
+        if (state.time.age < 14) return { success: false, message: 'Non applicabile.', effects: {} }
+        const caught = Math.random() < 0.40
+        const amount = 50 + Math.floor(Math.random() * 450)
+        if (caught) {
+          set(s => ({
+            criminal: { ...s.criminal, crimes: [...s.criminal.crimes, { id: uid(), type: 'theft', year: state.time.year, convicted: true, sentence: 0, served: 0 }], hasRecord: true },
+            stats: { ...s.stats, karma: clamp(s.stats.karma - 15, -100, 100), reputation: clamp(s.stats.reputation - 10, 0, 100) },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🚔 Sei stato/a arrestato/a durante una rapina!`, emoji: '🚔', category: 'crime' as const, statChanges: { karma: -15 } }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: false, message: 'Arrestato/a. Fedina criminale aggravata.', effects: { karma: -15 } }
+        }
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money + amount },
+          stats: { ...s.stats, karma: clamp(s.stats.karma - 8, -100, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `💰 Rapina riuscita: €${amount} intascati. Nessun testimone.`, emoji: '🦹', category: 'crime' as const, statChanges: { money: amount, karma: -8 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Rapina riuscita: €${amount} ottenuti.`, effects: { money: amount, karma: -8 } }
+      },
+
+      muggingDefense: (action: 'fight' | 'comply' | 'flee'): ActionResult => {
+        const state = get()
+        if (action === 'comply') {
+          const lost = Math.min(state.finance.money, 50 + Math.floor(Math.random() * 200))
+          set(s => ({
+            finance: { ...s.finance, money: s.finance.money - lost },
+            stats: { ...s.stats, happiness: clamp(s.stats.happiness - 5, 0, 100) },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `😰 Hai ceduto il portafoglio: −€${lost}. Nessuno si è fatto male.`, emoji: '😰', category: 'crime' as const, statChanges: { money: -lost } }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: true, message: `Hai ceduto €${lost}. Nessuno si è fatto male.`, effects: { money: -lost } }
+        }
+        if (action === 'fight') {
+          const won = Math.random() < 0.45
+          if (won) {
+            set(s => ({
+              stats: { ...s.stats, happiness: clamp(s.stats.happiness + 3, 0, 100) },
+              eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `💪 Hai reagito e messo in fuga l'aggressore!`, emoji: '💪', category: 'crime' as const, statChanges: {} }, ...s.eventLog].slice(0, 150),
+            }))
+            return { success: true, message: "Hai respinto l'aggressore!", effects: {} }
+          }
+          const dmg = 10 + Math.floor(Math.random() * 15)
+          set(s => ({
+            stats: { ...s.stats, health: clamp(s.stats.health - dmg, 0, 100), happiness: clamp(s.stats.happiness - 8, 0, 100) },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🤕 Hai tentato di reagire ma sei stato/a picchiato/a: −${dmg} salute.`, emoji: '🤕', category: 'crime' as const, statChanges: { health: -dmg } }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: false, message: `Hai perso lo scontro: −${dmg} salute.`, effects: { health: -dmg } }
+        }
+        // flee
+        const escaped = Math.random() < 0.7
+        if (escaped) {
+          set(s => ({
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🏃 Sei riuscito/a a scappare dall'aggressore!`, emoji: '🏃', category: 'crime' as const, statChanges: {} }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: true, message: "Sei riuscito/a a scappare!", effects: {} }
+        }
+        const lost2 = Math.min(state.finance.money, 80 + Math.floor(Math.random() * 150))
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - lost2 },
+          stats: { ...s.stats, happiness: clamp(s.stats.happiness - 6, 0, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `😓 Non sei riuscito/a a fuggire: −€${lost2}.`, emoji: '😓', category: 'crime' as const, statChanges: { money: -lost2 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: false, message: `Non sei riuscito/a a fuggire: −€${lost2}.`, effects: { money: -lost2 } }
+      },
+
+      bribeOfficial: (): ActionResult => {
+        const state = get()
+        if (!state.criminal.inPrison && !state.criminal.hasRecord) return { success: false, message: 'Nessun procedimento penale in corso da corrompere.', effects: {} }
+        const cost = 2000 + Math.floor(Math.random() * 3000)
+        if (state.finance.money < cost) return { success: false, message: `La tangente richiesta è €${cost.toLocaleString('it-IT')}. Non hai abbastanza soldi.`, effects: {} }
+        const success = Math.random() < 0.55
+        if (success) {
+          set(s => ({
+            finance: { ...s.finance, money: s.finance.money - cost },
+            criminal: { ...s.criminal, inPrison: false },
+            stats: { ...s.stats, karma: clamp(s.stats.karma - 12, -100, 100) },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🤝 Tangente da €${cost.toLocaleString('it-IT')} pagata. Le accuse sono cadute.`, emoji: '🤝', category: 'crime' as const, statChanges: { money: -cost, karma: -12 } }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: true, message: `Corruzione riuscita: −€${cost.toLocaleString('it-IT')}. Libero/a da ogni accusa.`, effects: { money: -cost, karma: -12 } }
+        }
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - cost },
+          stats: { ...s.stats, karma: clamp(s.stats.karma - 15, -100, 100), reputation: clamp(s.stats.reputation - 10, 0, 100) },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🚔 Il tentativo di corruzione è stato scoperto! −€${cost.toLocaleString('it-IT')}.`, emoji: '🚔', category: 'crime' as const, statChanges: { money: -cost, karma: -15 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: false, message: 'Corruzione scoperta! Situazione peggiore.', effects: { money: -cost, karma: -15 } }
+      },
+
+      // ==================== Life extras ====================
+
+      volunteerCommunity: (): ActionResult => {
+        const state = get()
+        if (state.time.age < 14) return { success: false, message: 'Devi avere almeno 14 anni.', effects: {} }
+        const key = `volunteer_community_${state.time.year}`
+        if ((state.diminishingReturns[key] ?? 0) >= 2) return { success: false, message: 'Hai già fatto volontariato abbastanza quest\'anno.', effects: {} }
+        const causes = ['banco alimentare', 'croce rossa', 'rifugio animali', 'biblioteca comunale', 'ospedale']
+        const cause = causes[Math.floor(Math.random() * causes.length)]
+        set(s => ({
+          stats: { ...s.stats, karma: clamp(s.stats.karma + 8, -100, 100), happiness: clamp(s.stats.happiness + 5, 0, 100), mentalHealth: clamp(s.stats.mentalHealth + 3, 0, 100) },
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🤲 Hai fatto volontariato al ${cause}. Qualcosa di buono rimane sempre.`, emoji: '🤲', category: 'life' as const, statChanges: { karma: 8, happiness: 5 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Volontariato al ${cause}: +8 karma, +5 felicità.`, effects: { karma: 8, happiness: 5 } }
+      },
+
+      changeLegalName: (newFirstName: string, newLastName?: string): ActionResult => {
+        const state = get()
+        if (state.time.age < 18) return { success: false, message: 'Devi essere maggiorenne per cambiare nome.', effects: {} }
+        const cost = 300
+        if (state.finance.money < cost) return { success: false, message: `Il cambio nome legale costa €${cost}.`, effects: {} }
+        const parts = state.identity.name.split(' ')
+        const newName = newLastName ? `${newFirstName} ${newLastName}` : `${newFirstName} ${parts.slice(1).join(' ')}`
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - cost },
+          identity: { ...s.identity, name: newName },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `📝 Cambio nome: "${state.identity.name}" → "${newName}" (−€${cost}).`, emoji: '📝', category: 'life' as const, statChanges: { money: -cost } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Nome cambiato in "${newName}".`, effects: { money: -cost } }
+      },
+
+      toggleOrganDonor: () => {
+        const state = get()
+        const current = state.will?.organDonor ?? false
+        const newWill: Will = state.will
+          ? { ...state.will, organDonor: !current }
+          : { beneficiaries: [], donationCharity: 0, funeralType: 'normal', organDonor: true, note: '' }
+        set({ will: newWill })
+      },
+
+      updateWill: (will: Will) => {
+        set({ will })
+      },
+
+      // ==================== Band actions ====================
+
+      formBand: (name: string, genre: string): ActionResult => {
+        const state = get()
+        if (state.time.age < 14) return { success: false, message: 'Troppo giovane per formare una band.', effects: {} }
+        if (state.band?.isActive) return { success: false, message: 'Sei già in una band.', effects: {} }
+        if (state.skills.music < 20) return { success: false, message: 'Hai bisogno di almeno 20 punti in musica per formare una band.', effects: {} }
+        const cost = 500
+        if (state.finance.money < cost) return { success: false, message: `Servono €${cost} per strumenti e attrezzatura.`, effects: {} }
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - cost },
+          band: { id: uid(), name, genre, members: 1, popularity: 5, formed: state.time.year, totalEarnings: 0, isActive: true },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🎸 Hai fondato "${name}" (${genre})! Il viaggio musicale comincia.`, emoji: '🎸', category: 'life' as const, statChanges: { money: -cost } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Band "${name}" fondata!`, effects: { money: -cost } }
+      },
+
+      performConcert: (): ActionResult => {
+        const state = get()
+        const band = state.band
+        if (!band?.isActive) return { success: false, message: 'Non sei in una band attiva.', effects: {} }
+        const key = `concert_${state.time.year}`
+        if ((state.diminishingReturns[key] ?? 0) >= 3) return { success: false, message: 'Troppi concerti quest\'anno. Riposati.', effects: {} }
+        const quality = (state.skills.music * 0.7 + band.popularity * 0.3) / 100
+        const attendance = Math.floor(quality * 500 + Math.random() * 300) + 20
+        const earnings = Math.floor(attendance * 3)
+        const popGain = Math.floor(quality * 8 + Math.random() * 5)
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money + earnings },
+          band: s.band ? { ...s.band, popularity: clamp(s.band.popularity + popGain, 0, 100), totalEarnings: s.band.totalEarnings + earnings } : null,
+          stats: { ...s.stats, happiness: clamp(s.stats.happiness + 8, 0, 100) },
+          skills: { ...s.skills, music: Math.min(100, s.skills.music + 1) },
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🎤 Concerto di "${band.name}": ${attendance} presenti, €${earnings} incassati.`, emoji: '🎤', category: 'life' as const, statChanges: { money: earnings, happiness: 8 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Concerto riuscito: ${attendance} persone, €${earnings}!`, effects: { money: earnings } }
+      },
+
+      disbandBand: (): ActionResult => {
+        const state = get()
+        if (!state.band?.isActive) return { success: false, message: 'Non sei in una band.', effects: {} }
+        const bandName = state.band.name
+        set(s => ({
+          band: s.band ? { ...s.band, isActive: false } : null,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🎸 La band "${bandName}" si scioglie. Un capitolo musicale si chiude.`, emoji: '🎸', category: 'life' as const, statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: 'La band si è sciolta.', effects: {} }
+      },
+
+      // ==================== Rental property actions ====================
+
+      buyRentalProperty: (propertyId: string): ActionResult => {
+        const state = get()
+        if (state.time.age < 18) return { success: false, message: 'Devi essere maggiorenne.', effects: {} }
+        const PROPS: RentalProperty[] = [
+          { id: 'studio', name: 'Monolocale centro', purchasePrice: 80000, monthlyRent: 500, maintenanceCost: 80, occupancyRate: 0.9, purchaseYear: state.time.year, isActive: true },
+          { id: 'apt2',   name: 'Bilocale quartiere', purchasePrice: 150000, monthlyRent: 900, maintenanceCost: 130, occupancyRate: 0.85, purchaseYear: state.time.year, isActive: true },
+          { id: 'villa',  name: 'Villa periferica', purchasePrice: 350000, monthlyRent: 1800, maintenanceCost: 300, occupancyRate: 0.8, purchaseYear: state.time.year, isActive: true },
+        ]
+        const def = PROPS.find(p => p.id === propertyId)
+        if (!def) return { success: false, message: 'Proprietà non trovata.', effects: {} }
+        if ((state.rentalProperties ?? []).some(p => p.id === propertyId && p.isActive)) return { success: false, message: 'Possiedi già questa proprietà.', effects: {} }
+        if (state.finance.money < def.purchasePrice) return { success: false, message: `Servono €${def.purchasePrice.toLocaleString('it-IT')}.`, effects: {} }
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money - def.purchasePrice },
+          rentalProperties: [...(s.rentalProperties ?? []), { ...def, purchaseYear: state.time.year }],
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🏠 Acquistato "${def.name}" per €${def.purchasePrice.toLocaleString('it-IT')}. Affitto mensile atteso: €${def.monthlyRent}.`, emoji: '🏠', category: 'finance' as const, statChanges: { money: -def.purchasePrice } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `"${def.name}" acquistata!`, effects: { money: -def.purchasePrice } }
+      },
+
+      sellRentalProperty: (propertyId: string): ActionResult => {
+        const state = get()
+        const prop = (state.rentalProperties ?? []).find(p => p.id === propertyId && p.isActive)
+        if (!prop) return { success: false, message: 'Proprietà non trovata.', effects: {} }
+        const appreciation = (state.time.year - prop.purchaseYear) * 0.03
+        const salePrice = Math.round(prop.purchasePrice * (1 + appreciation))
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money + salePrice },
+          rentalProperties: (s.rentalProperties ?? []).map(p => p.id === propertyId ? { ...p, isActive: false } : p),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `💰 Venduto "${prop.name}" per €${salePrice.toLocaleString('it-IT')} (+${Math.round(appreciation * 100)}% valore).`, emoji: '💰', category: 'finance' as const, statChanges: { money: salePrice } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `"${prop.name}" venduta per €${salePrice.toLocaleString('it-IT')}.`, effects: { money: salePrice } }
+      },
+
       // ==================== Parenting actions ====================
       haveChild: (): ActionResult => {
         const state = get()
@@ -3486,6 +3850,9 @@ export const useGameStore = create<FullStore>()(
           pendingConsequences: ps.pendingConsequences ?? currentState.pendingConsequences,
           skills: ps.skills ?? currentState.skills,
           npcLoans: ps.npcLoans ?? currentState.npcLoans,
+          rentalProperties: ps.rentalProperties ?? [],
+          band: ps.band ?? null,
+          will: ps.will ?? null,
           // Backfill insurance flags for old saves
           finance: ps.finance ? {
             ...ps.finance,
@@ -3545,6 +3912,9 @@ export const useGameStore = create<FullStore>()(
         pendingConsequences: state.pendingConsequences,
         skills: state.skills,
         npcLoans: state.npcLoans,
+        rentalProperties: state.rentalProperties,
+        band: state.band,
+        will: state.will,
       }),
     }
   )

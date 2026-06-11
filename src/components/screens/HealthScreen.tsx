@@ -266,6 +266,45 @@ export function HealthScreen() {
           </div>
         </>
       )}
+
+      {/* Organ donor */}
+      <OrganDonorSection />
+    </div>
+  )
+}
+
+function OrganDonorSection() {
+  const will = useGameStore(s => s.will)
+  const toggleOrganDonor = useGameStore(s => s.toggleOrganDonor)
+  const isDonor = will?.organDonor ?? false
+
+  return (
+    <div style={{ marginTop: 16 }}>
+      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+        Donazione organi
+      </p>
+      <div
+        className="card"
+        style={{ padding: '12px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
+        onClick={toggleOrganDonor}
+      >
+        <div>
+          <p style={{ fontSize: 14, fontWeight: 600 }}>🫀 Donatore d'organi</p>
+          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>
+            {isDonor ? 'Hai scelto di donare gli organi dopo la morte.' : 'Attiva per lasciare un lascito di vita.'}
+          </p>
+        </div>
+        <div style={{
+          width: 44, height: 24, borderRadius: 12, transition: 'background 0.2s',
+          background: isDonor ? '#10b981' : 'rgba(255,255,255,0.1)',
+          position: 'relative', flexShrink: 0,
+        }}>
+          <div style={{
+            position: 'absolute', top: 3, left: isDonor ? 23 : 3,
+            width: 18, height: 18, borderRadius: 9, background: '#fff', transition: 'left 0.2s',
+          }} />
+        </div>
+      </div>
     </div>
   )
 }

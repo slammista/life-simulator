@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import { WorkSchoolEngine, type SocialLocation } from '../../services/WorkSchoolEngine'
+import { type SocialLocation } from '../../services/WorkSchoolEngine'
 import { useToastStore } from '../../store/toastStore'
 
 const LOCATION_CONFIG: Array<{
@@ -23,6 +23,7 @@ const LOCATION_CONFIG: Array<{
 
 export function SocializeScreen() {
   const socializeOutside = useGameStore(s => s.socializeOutside)
+  const volunteerCommunity = useGameStore(s => s.volunteerCommunity)
   const skills = useGameStore(s => s.skills)
   const playerAge = useGameStore(s => s.time.age)
 
@@ -91,6 +92,28 @@ export function SocializeScreen() {
               <span style={{ color: 'var(--color-text-secondary)' }}>{label} {(skills as unknown as Record<string, number>)[key] ?? 0}</span>
             </div>
           ))}
+        </div>
+      </div>
+
+      {/* Community volunteering */}
+      <div style={{ marginBottom: 14 }}>
+        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Volontariato</p>
+        <div
+          className="card tap-scale"
+          style={{ padding: '14px', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, var(--bg-card) 70%)', border: '1px solid rgba(16,185,129,0.22)', cursor: 'pointer' }}
+          onClick={() => { const r = volunteerCommunity(); flash(r.message, r.success) }}
+        >
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(16,185,129,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>🤲</div>
+            <div style={{ flex: 1 }}>
+              <p style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text)', marginBottom: 2 }}>Volontariato comunitario</p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Aiuta la comunità locale. Max 2 volte per anno.</p>
+            </div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}>
+              <p style={{ fontSize: 12, color: '#86efac', fontWeight: 600 }}>+Karma</p>
+              <p style={{ fontSize: 11, color: '#86efac' }}>+Felicità</p>
+            </div>
+          </div>
         </div>
       </div>
 

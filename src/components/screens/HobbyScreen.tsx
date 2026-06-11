@@ -7,12 +7,18 @@ import { haptic } from '../../services/HapticEngine'
 export function HobbyScreen() {
   const hobbies = useGameStore(s => s.hobbies)
   const finance = useGameStore(s => s.finance)
+  const band = useGameStore(s => s.band)
   const addHobby = useGameStore(s => s.addHobby)
   const practiceHobby = useGameStore(s => s.practiceHobby)
+  const formBand = useGameStore(s => s.formBand)
+  const performConcert = useGameStore(s => s.performConcert)
+  const disbandBand = useGameStore(s => s.disbandBand)
   const showPanel = useToastStore(s => s.showPanel)
   const closePanel = useToastStore(s => s.closePanel)
 
-  const [tab, setTab] = useState<'mine' | 'discover'>('mine')
+  const [tab, setTab] = useState<'mine' | 'discover' | 'band'>('mine')
+  const [bandName, setBandName] = useState('')
+  const [bandGenre, setBandGenre] = useState('rock')
 
   const flash = (msg: string, ok: boolean, emoji = '🎸', effects: Record<string, number> = {}) => {
     haptic(ok ? 'success' : 'error')
@@ -41,13 +47,13 @@ export function HobbyScreen() {
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 8, marginBottom: 14 }}>
-        {(['mine', 'discover'] as const).map(t => (
+        {(['mine', 'discover', 'band'] as const).map(t => (
           <button key={t} onClick={() => setTab(t)}
             style={{ flex: 1, padding: '8px 0', borderRadius: 12, fontSize: 13, fontWeight: 500, cursor: 'pointer', border: 'none',
               background: tab === t ? 'var(--color-cta)' : 'rgba(255,255,255,0.05)',
               color: tab === t ? '#fff' : 'var(--color-text-secondary)' }}
           >
-            {t === 'mine' ? `🎯 I miei (${hobbies.length})` : '🔍 Scopri'}
+            {t === 'mine' ? `🎯 I miei (${hobbies.length})` : t === 'discover' ? '🔍 Scopri' : '🎸 Band'}
           </button>
         ))}
       </div>
@@ -123,6 +129,98 @@ export function HobbyScreen() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Band */}
+      {tab === 'band' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {band && band.isActive ? (
+            <>
+              <div className="card" style={{ padding: 14, background: 'linear-gradient(135deg, rgba(168,85,247,0.1) 0%, var(--bg-card) 70%)', border: '1px solid rgba(168,85,247,0.25)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
+                  <div>
+                    <p style={{ fontWeight: 700, fontSize: 16 }}>🎸 {band.name}</p>
+                    <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', textTransform: 'capitalize' }}>{band.genre} · {band.members} membri</p>
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: '#c4b5fd' }}>Popolarità</p>
+                    <p style={{ fontSize: 18, fontWeight: 900, color: '#a78bfa' }}>{band.popularity}/100</p>
+                  </div>
+                </div>
+                <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden', marginBottom: 10 }}>
+                  <div style={{ height: '100%', width: `${band.popularity}%`, background: 'linear-gradient(90deg, #7c3aed, #a78bfa)', borderRadius: 4 }} />
+                </div>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 99, background: 'rgba(255,255,255,0.07)', color: 'var(--color-text-secondary)' }}>
+                    Fondata nel {band.formed}
+                  </span>
+                  <span style={{ fontSize: 11, padding: '3px 8px', borderRadius: 99, background: 'rgba(34,197,94,0.1)', color: '#86efac' }}>
+                    💰 €{band.totalEarnings.toLocaleString('it-IT')} totali
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={() => { const r = performConcert(); flash(r.message, r.success, '🎤', r.effects as Record<string, number>) }}
+                className="tap-scale"
+                style={{ width: '100%', padding: '12px 0', borderRadius: 14, border: 'none', cursor: 'pointer',
+                  background: 'linear-gradient(135deg, rgba(168,85,247,0.2) 0%, rgba(99,102,241,0.2) 100%)',
+                  color: '#c4b5fd', fontSize: 14, fontWeight: 700 }}>
+                🎤 Suona dal vivo
+              </button>
+
+              <button
+                onClick={() => { const r = disbandBand(); flash(r.message, r.success, '💔') }}
+                style={{ width: '100%', padding: '10px 0', borderRadius: 12, border: '1px solid rgba(239,68,68,0.3)', cursor: 'pointer',
+                  background: 'rgba(239,68,68,0.08)', color: '#fca5a5', fontSize: 13, fontWeight: 500 }}>
+                💔 Scioglie la band
+              </button>
+            </>
+          ) : (
+            <>
+              {band && !band.isActive && (
+                <div className="card" style={{ padding: '12px 14px', marginBottom: 4, background: 'rgba(239,68,68,0.07)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                  <p style={{ fontSize: 13, color: '#fca5a5' }}>💔 La tua ex band "{band.name}" si è sciolta.</p>
+                </div>
+              )}
+              <div className="card" style={{ padding: 14 }}>
+                <p style={{ fontSize: 14, fontWeight: 600, marginBottom: 10 }}>🎸 Forma una band</p>
+                <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
+                  Serve musica ≥ 20 e almeno 14 anni. Costo €500.
+                </p>
+                <input
+                  type="text" placeholder="Nome della band…" value={bandName}
+                  onChange={e => setBandName(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 10, fontSize: 13, marginBottom: 8,
+                    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                    color: 'var(--color-text)', boxSizing: 'border-box' as const }}
+                />
+                <select
+                  value={bandGenre} onChange={e => setBandGenre(e.target.value)}
+                  style={{ width: '100%', padding: '8px 10px', borderRadius: 10, fontSize: 13, marginBottom: 12,
+                    background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.12)',
+                    color: 'var(--color-text)', boxSizing: 'border-box' as const }}>
+                  {['rock', 'pop', 'jazz', 'metal', 'indie', 'rap', 'elettronica', 'folk'].map(g => (
+                    <option key={g} value={g} style={{ background: '#1a1a2e' }}>{g}</option>
+                  ))}
+                </select>
+                <button
+                  onClick={() => {
+                    if (!bandName.trim()) { flash('Dai un nome alla band!', false, '❌'); return }
+                    const r = formBand(bandName.trim(), bandGenre)
+                    flash(r.message, r.success, '🎸', r.effects as Record<string, number>)
+                    if (r.success) setBandName('')
+                  }}
+                  className="tap-scale"
+                  style={{ width: '100%', padding: '10px 0', borderRadius: 12, border: 'none', cursor: 'pointer',
+                    background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%)',
+                    color: '#fff', fontSize: 13, fontWeight: 700, boxShadow: '0 3px 12px rgba(124,92,255,0.3)' }}>
+                  🎸 Forma la band (€500)
+                </button>
+              </div>
+            </>
+          )}
         </div>
       )}
 

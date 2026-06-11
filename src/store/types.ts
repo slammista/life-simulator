@@ -225,15 +225,61 @@ export interface CareerState {
   lastRaiseYear?: number   // last year the player asked for a raise (one ask per year)
 }
 
+export type BusinessSector = 'tech' | 'food' | 'retail' | 'consulting' | 'fitness' | 'fashion'
+
 export interface Business {
   id: string
   name: string
   type: string
+  sector?: BusinessSector
   employees: number
   revenue: number
   expenses: number
   founded: number
   reputation: number
+  // Extended fields for startup system
+  capitalInvested?: number
+  annualRevenue?: number
+  annualProfit?: number
+  valuation?: number
+  isActive?: boolean
+  lossYears?: number
+}
+
+export interface RentalProperty {
+  id: string
+  name: string
+  purchasePrice: number
+  monthlyRent: number
+  maintenanceCost: number
+  occupancyRate: number
+  purchaseYear: number
+  isActive: boolean
+}
+
+export interface Band {
+  id: string
+  name: string
+  genre: string
+  members: number
+  popularity: number
+  formed: number
+  totalEarnings: number
+  isActive: boolean
+}
+
+export interface WillBeneficiary {
+  relId: string
+  name: string
+  share: number
+}
+
+export interface Will {
+  beneficiaries: WillBeneficiary[]
+  donationCharity: number
+  funeralType: 'simple' | 'normal' | 'luxury'
+  organDonor: boolean
+  note: string
 }
 
 // ---- Relationships ----
@@ -1227,6 +1273,15 @@ export interface GameState {
 
   // Life memories (important events)
   lifeMemories: LifeMemory[]
+
+  // Rental investment properties
+  rentalProperties: RentalProperty[]
+
+  // Music band
+  band: Band | null
+
+  // Last will & testament
+  will: Will | null
 }
 
 // ---- Action Result (shared) ----
@@ -1442,6 +1497,36 @@ export interface GameActions {
   conductCampaign: () => ActionResult
   runForOffice: (role: string) => ActionResult
   engageInCorruption: () => ActionResult
+
+  // Business actions
+  foundBusiness: (sector: BusinessSector, name: string) => ActionResult
+  hireBizEmployee: () => ActionResult
+  fireBizEmployee: () => ActionResult
+  sellBusiness: () => ActionResult
+
+  // Cheating/jealousy
+  cheatOnPartner: () => ActionResult
+  confrontPartner: () => ActionResult
+
+  // Criminal actions
+  robSomeone: () => ActionResult
+  muggingDefense: (action: 'fight' | 'comply' | 'flee') => ActionResult
+  bribeOfficial: () => ActionResult
+
+  // Life actions
+  volunteerCommunity: () => ActionResult
+  changeLegalName: (newFirstName: string, newLastName?: string) => ActionResult
+  toggleOrganDonor: () => void
+  updateWill: (will: Will) => void
+
+  // Band actions
+  formBand: (name: string, genre: string) => ActionResult
+  performConcert: () => ActionResult
+  disbandBand: () => ActionResult
+
+  // Rental property actions
+  buyRentalProperty: (propertyId: string) => ActionResult
+  sellRentalProperty: (propertyId: string) => ActionResult
 
   // Validation
   checkGoals: () => void

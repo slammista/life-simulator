@@ -1,4 +1,4 @@
-export type CarreraSubTab = 'career' | 'education' | 'military' | 'pension'
+export type CarreraSubTab = 'career' | 'education' | 'military' | 'pension' | 'business'
 
 interface ItemDef {
   id: CarreraSubTab
@@ -13,6 +13,7 @@ const ITEMS: ItemDef[] = [
   { id: 'education', emoji: '📚', label: 'Istruzione', subtitle: 'Scuola, università e club',           color: '#3b82f6' },
   { id: 'military',  emoji: '🪖', label: 'Militare',   subtitle: 'Servizio militare e leva',            color: '#6b7280' },
   { id: 'pension',   emoji: '🎗️', label: 'Pensione',   subtitle: 'Pensione anticipata o ordinaria',     color: '#10b981' },
+  { id: 'business',  emoji: '🚀', label: 'La tua Azienda', subtitle: 'Fonda e gestisci la tua società',   color: '#8b5cf6' },
 ]
 
 export { ITEMS as CARRERA_ITEMS }

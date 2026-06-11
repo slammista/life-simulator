@@ -136,6 +136,8 @@ export function RelationshipScreen() {
   const interactWithNPC = useGameStore(s => s.interactWithNPC)
   const fileForDivorce = useGameStore(s => s.fileForDivorce)
 
+  const confrontPartner = useGameStore(s => s.confrontPartner)
+
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
   const [view, setView] = useState<'attivi' | 'storia'>('attivi')
@@ -249,10 +251,22 @@ export function RelationshipScreen() {
           {spouseOrPartner && playerAge >= 18 && (
             <div className="card" style={{ padding: '12px 14px', marginBottom: 12, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.06)' }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#fca5a5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
-                💔 Divorzio
+                💔 Relazione con {spouseOrPartner.name.split(' ')[0]}
               </p>
+              {spouseOrPartner.historyFlags.includes('cheated_secretly') && (
+                <button
+                  className="btn-secondary"
+                  style={{ width: '100%', padding: '8px 0', fontSize: 13, fontWeight: 700, marginBottom: 8, borderColor: 'rgba(251,191,36,0.4)', color: '#fcd34d', cursor: 'pointer' }}
+                  onClick={() => {
+                    const r = confrontPartner()
+                    flash(r.message, r.success)
+                  }}
+                >
+                  🔎 Confronta sul tradimento
+                </button>
+              )}
               <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
-                Stai con {spouseOrPartner.name.split(' ')[0]}. Puoi richiedere il divorzio (€2.000 di pratiche legali).
+                Puoi richiedere il divorzio (€2.000 di pratiche legali).
               </p>
               <button
                 className="btn-secondary"
