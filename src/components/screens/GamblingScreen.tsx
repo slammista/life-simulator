@@ -46,6 +46,18 @@ export default function GamblingScreen() {
         ))}
       </div>
 
+      {/* Addiction warning */}
+      {gambling.addictionLevel >= 50 && (
+        <div style={{ borderRadius: 12, padding: '10px 14px', marginBottom: 12, background: gambling.addictionLevel >= 70 ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.1)', border: `1px solid ${gambling.addictionLevel >= 70 ? 'rgba(239,68,68,0.3)' : 'rgba(245,158,11,0.25)'}` }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: gambling.addictionLevel >= 70 ? '#fca5a5' : '#fcd34d' }}>
+            {gambling.addictionLevel >= 70 ? '🚨 Dipendenza grave — il gioco controlla la tua vita.' : '⚠️ Stai sviluppando una dipendenza dal gioco.'}
+          </p>
+          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 3 }}>
+            {gambling.addictionLevel >= 70 ? 'Ogni anno c\'è il rischio di perdere soldi involontariamente. Considera la terapia.' : 'Limitati e valuta l\'aiuto di un professionista.'}
+          </p>
+        </div>
+      )}
+
       {/* Stats card */}
       <div className="card" style={{ marginBottom: 12 }}>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>

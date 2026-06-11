@@ -1512,6 +1512,9 @@ export interface GameActions {
   robSomeone: () => ActionResult
   muggingDefense: (action: 'fight' | 'comply' | 'flee') => ActionResult
   bribeOfficial: () => ActionResult
+  workInPrison: () => ActionResult
+  studyInPrison: () => ActionResult
+  fightInPrison: () => ActionResult
 
   // Life actions
   volunteerCommunity: () => ActionResult

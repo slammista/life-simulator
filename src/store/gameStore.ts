@@ -743,6 +743,30 @@ export const useGameStore = create<FullStore>()(
           messages.push(...bizTickResult.messages)
         }
 
+        // 21c. Physical decline messages at 70+
+        if (newAge === 70) messages.push('👴 Hai 70 anni. Il corpo inizia a rallentare — prenditi cura della salute.')
+        else if (newAge === 75) messages.push('⏳ 75 anni. Ogni anno è un dono prezioso. Goditi il tempo con i tuoi cari.')
+        else if (newAge === 80) messages.push("🌅 Ottant'anni. Sei nell'ultima stagione della tua vita — splendida e intensa.")
+        else if (newAge === 85) messages.push('🕰️ 85 anni. Pochi ce la fanno. Sei uno di quei pochi.')
+        else if (newAge > 70 && newAge < 85 && Math.random() < 0.3) {
+          const declineMsgs = ['🦴 Le articolazioni fanno più fatica di prima.', '😴 Ti stanchi prima. Il corpo ha i suoi ritmi.', '💊 La tua salute richiede sempre più attenzione.', '🧠 Alcune cose le ricordi meno bene di una volta.']
+          messages.push(declineMsgs[Math.floor(Math.random() * declineMsgs.length)])
+        }
+
+        // 21d. Skill milestone notifications (probabilistic, in-range)
+        const sk = state.skills as unknown as Record<string, number>
+        if ((sk.music ?? 0) >= 58 && (sk.music ?? 0) < 68 && Math.random() < 0.18) messages.push('🎸 La tua abilità musicale raggiunge un livello professionale. Qualcuno inizia ad accorgersene.')
+        if ((sk.intelligence ?? 0) >= 74 && (sk.intelligence ?? 0) < 85 && Math.random() < 0.15) messages.push('🧠 La tua intelligenza fuori dal comune ti apre porte che altri non vedono nemmeno.')
+        if ((sk.athleticism ?? 0) >= 68 && (sk.athleticism ?? 0) < 80 && Math.random() < 0.15) messages.push('💪 Le tue capacità atletiche ti mettono tra i migliori della regione.')
+        if ((sk.creativity ?? 0) >= 65 && (sk.creativity ?? 0) < 78 && Math.random() < 0.15) messages.push('🎨 La tua creatività raggiunge vette artistiche riconoscibili.')
+
+        // 21e. Gambling addiction relapse (forced loss when severely addicted)
+        if ((state.gambling?.addictionLevel ?? 0) >= 70 && Math.random() < 0.4) {
+          const lostToGambling = Math.round(300 + Math.random() * 1200)
+          merge({ money: -lostToGambling, happiness: -8, mentalHealth: -5 })
+          messages.push(`🎰 La dipendenza dal gioco ha avuto il sopravvento — hai perso €${lostToGambling.toLocaleString('it-IT')} senza volerlo.`)
+        }
+
         // 22. World events annual tick (historical events, home repairs)
         const worldResult = WorldEventsEngine.annualTick(state)
         merge(worldResult.effects)
@@ -2689,6 +2713,52 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `🚔 Il tentativo di corruzione è stato scoperto! −€${cost.toLocaleString('it-IT')}.`, emoji: '🚔', category: 'crime' as const, statChanges: { money: -cost, karma: -15 } }, ...s.eventLog].slice(0, 150),
         }))
         return { success: false, message: 'Corruzione scoperta! Situazione peggiore.', effects: { money: -cost, karma: -15 } }
+      },
+
+      workInPrison: (): ActionResult => {
+        const state = get()
+        if (!state.criminal.inPrison) return { success: false, message: 'Non sei in prigione.', effects: {} }
+        const key = `prison_work_${state.time.year}`
+        if ((state.diminishingReturns[key] ?? 0) >= 3) return { success: false, message: 'Hai già lavorato abbastanza oggi.', effects: {} }
+        const earned = Math.round(50 + Math.random() * 150)
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money + earned },
+          stats: { ...s.stats, energy: clamp(s.stats.energy - 8, 0, 100) },
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `⛏️ Lavoro carcerario: guadagnati €${earned}.`, emoji: '⛏️', category: 'crime' as const, statChanges: { money: earned } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `⛏️ Hai lavorato nel laboratorio del carcere. Guadagnati €${earned}.`, effects: { money: earned, energy: -8 } }
+      },
+
+      studyInPrison: (): ActionResult => {
+        const state = get()
+        if (!state.criminal.inPrison) return { success: false, message: 'Non sei in prigione.', effects: {} }
+        const key = `prison_study_${state.time.year}`
+        if ((state.diminishingReturns[key] ?? 0) >= 2) return { success: false, message: 'Hai già studiato abbastanza oggi.', effects: {} }
+        set(s => ({
+          stats: { ...s.stats, intelligence: clamp(s.stats.intelligence + 3, 0, 100), mentalHealth: clamp(s.stats.mentalHealth + 2, 0, 100) },
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: '📚 Studio in carcere: +intelligenza, +benessere mentale.', emoji: '📚', category: 'crime' as const, statChanges: { intelligence: 3 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: '📚 Hai studiato nella biblioteca del carcere. +3 intelligenza, +2 benessere.', effects: { intelligence: 3, mentalHealth: 2 } }
+      },
+
+      fightInPrison: (): ActionResult => {
+        const state = get()
+        if (!state.criminal.inPrison) return { success: false, message: 'Non sei in prigione.', effects: {} }
+        const key = `prison_fight_${state.time.year}`
+        if ((state.diminishingReturns[key] ?? 0) >= 1) return { success: false, message: 'Hai già combattuto oggi. Aspetta il prossimo anno.', effects: {} }
+        const win = Math.random() > 0.45
+        set(s => ({
+          stats: win
+            ? { ...s.stats, reputation: clamp(s.stats.reputation + 8, 0, 100), health: clamp(s.stats.health - 5, 0, 100) }
+            : { ...s.stats, health: clamp(s.stats.health - 15, 0, 100), energy: clamp(s.stats.energy - 10, 0, 100) },
+          diminishingReturns: { ...s.diminishingReturns, [key]: 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: win ? '🥊 Rissa vinta: rispetto guadagnato.' : '🤕 Rissa persa: ferite e umiliazione.', emoji: win ? '🥊' : '🤕', category: 'crime' as const, statChanges: win ? { reputation: 8 } : { health: -15 } }, ...s.eventLog].slice(0, 150),
+        }))
+        return win
+          ? { success: true, message: '🥊 Hai vinto la rissa. Rispetto guadagnato tra i detenuti.', effects: { reputation: 8, health: -5 } }
+          : { success: false, message: '🤕 Hai perso la rissa. Ferite e umiliazione.', effects: { health: -15, energy: -10 } }
       },
 
       // ==================== Life extras ====================

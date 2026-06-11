@@ -17,6 +17,9 @@ export function CriminalScreen() {
   const commitCrime = useGameStore(s => s.commitCrime)
   const robSomeone = useGameStore(s => s.robSomeone)
   const bribeOfficial = useGameStore(s => s.bribeOfficial)
+  const workInPrison = useGameStore(s => s.workInPrison)
+  const studyInPrison = useGameStore(s => s.studyInPrison)
+  const fightInPrison = useGameStore(s => s.fightInPrison)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [tab, setTab] = useState<'status' | 'crimes'>('status')
@@ -116,12 +119,45 @@ export function CriminalScreen() {
       {tab === 'crimes' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {criminal.inPrison ? (
-            <div className="card card-locked" style={{ padding: '24px 16px', textAlign: 'center' }}>
-              <div style={{ fontSize: 32, marginBottom: 8 }}>🔒</div>
-              <p style={{ fontSize: 14, fontWeight: 600, color: '#fca5a5', marginBottom: 4 }}>Sei in prigione</p>
-              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-                Non puoi commettere crimini mentre sconti la pena. Rifletti sulle tue scelte.
-              </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ borderRadius: 12, padding: '12px 14px', background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
+                <p style={{ fontSize: 13, fontWeight: 600, color: '#fca5a5', marginBottom: 2 }}>🔒 Sei in carcere — {criminal.prisonSentence - criminal.prisonServed} anni rimasti</p>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Usa il tempo per migliorarti o per sopravvivere.</p>
+              </div>
+
+              {/* Prison activities */}
+              {[
+                { label: '⛏️ Lavoro carcerario', desc: 'Guadagna €50–€200. Max 3 volte/anno.', color: '#f59e0b', action: workInPrison },
+                { label: '📚 Studia in carcere', desc: '+3 intelligenza, +2 benessere. Max 2 volte/anno.', color: '#3b82f6', action: studyInPrison },
+                { label: '🥊 Provoca una rissa', desc: '55% vinci (+ rispetto), 45% perdi (− salute). 1 volta/anno.', color: '#ef4444', action: fightInPrison },
+              ].map(({ label, desc, color, action }) => (
+                <div key={label} style={{ borderRadius: 12, padding: '12px 14px', background: `${color}10`, border: `1px solid ${color}30` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
+                    <div>
+                      <p style={{ fontWeight: 600, fontSize: 14 }}>{label}</p>
+                      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>{desc}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => { const r = action(); flash(r.message, r.success) }}
+                    style={{ width: '100%', padding: '8px 0', borderRadius: 10, background: `${color}20`, color, fontSize: 13, fontWeight: 500, border: `1px solid ${color}40`, cursor: 'pointer' }}>
+                    Esegui
+                  </button>
+                </div>
+              ))}
+
+              {/* Bribe from prison */}
+              <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12, padding: '10px 12px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600 }}>🤝 Corrompi un funzionario</p>
+                  <p style={{ fontSize: 11, color: '#fcd34d' }}>Successo 55%</p>
+                </div>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>Paga una tangente per uscire di prigione. Costo €2.000–€5.000.</p>
+                <button onClick={() => { const r = bribeOfficial(); flash(r.message, r.success) }}
+                  style={{ width: '100%', padding: '8px 0', borderRadius: 12, background: 'rgba(245,158,11,0.15)', color: '#fcd34d', fontSize: 13, fontWeight: 500, border: '1px solid rgba(245,158,11,0.3)', cursor: 'pointer' }}>
+                  Proponi tangente
+                </button>
+              </div>
             </div>
           ) : (
             <>
@@ -182,8 +218,8 @@ export function CriminalScreen() {
                 </button>
               </div>
 
-              {/* Bribe */}
-              {(criminal.inPrison || criminal.hasRecord) && (
+              {/* Bribe (when outside prison but has record) */}
+              {(!criminal.inPrison && criminal.hasRecord) && (
                 <div style={{ background: 'rgba(245,158,11,0.07)', border: '1px solid rgba(245,158,11,0.2)', borderRadius: 12, padding: '10px 12px', marginTop: 4 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                     <p style={{ fontSize: 13, fontWeight: 600 }}>🤝 Corrompi un funzionario</p>
