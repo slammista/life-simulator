@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "mcp__10092c0b-cc69-4954-8575-3475b0d9756b__list_teams",
+      "mcp__10092c0b-cc69-4954-8575-3475b0d9756b__list_projects",
+      "mcp__10092c0b-cc69-4954-8575-3475b0d9756b__list_deployments"
+    ]
+  }
+}
