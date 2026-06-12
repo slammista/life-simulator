@@ -59,6 +59,7 @@ export interface RelActionResult {
   relationshipEnded?: boolean
   memoryEntry?: Omit<NPCMemory, 'id'>
   newRelationship?: Relationship
+  lentAmount?: number   // set by lend_money: the store turns it into a tracked NpcLoan
 }
 
 const GENDER_EMOJIS: Record<Gender, string[]> = {
@@ -1022,7 +1023,7 @@ export class RelationshipEngine {
     }
     return {
       success: true,
-      message: `Hai fatto un\'attività con ${rel.name}. Momenti piacevoli! 🎯`,
+      message: `Hai fatto un'attività con ${rel.name}. Momenti piacevoli! 🎯`,
       effects: { happiness: 7, energy: -8, money: -cost },
       updatedRel: {
         trust: Math.min(100, rel.trust + 5),
@@ -1035,14 +1036,13 @@ export class RelationshipEngine {
     if (state.finance.money < amount) {
       return { success: false, message: `Non hai abbastanza soldi da prestare (servono €${amount}).`, effects: {} }
     }
-    const debtFlag = `debt_${rel.id}_${state.time.year}`
     return {
       success: true,
       message: `Hai prestato €${amount.toLocaleString('it-IT')} a ${rel.name}. 💸`,
       effects: { money: -amount, karma: 5 },
+      lentAmount: amount,
       updatedRel: {
         trust: Math.min(100, rel.trust + 15),
-        historyFlags: [...rel.historyFlags, debtFlag],
       },
     }
   }

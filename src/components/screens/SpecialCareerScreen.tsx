@@ -43,6 +43,7 @@ export function SpecialCareerScreen() {
   const diminishingReturns = useGameStore(s => s.diminishingReturns)
   const startSpecialCareer = useGameStore(s => s.startSpecialCareer)
   const performSpecialCareerAction = useGameStore(s => s.performSpecialCareerAction)
+  const quitSpecialCareer = useGameStore(s => s.quitSpecialCareer)
   const showPanel = useToastStore(s => s.showPanel)
   const closePanel = useToastStore(s => s.closePanel)
 
@@ -62,13 +63,20 @@ export function SpecialCareerScreen() {
     flash(r.message, r.success, emoji, r.effects as Record<string, number>)
   }
 
-  // Best sport hint for the pro athlete card
+  const handleQuit = () => {
+    if (!window.confirm('Vuoi davvero abbandonare la carriera? Perderai fama e progressi.')) return
+    const r = quitSpecialCareer()
+    flash(r.message, r.success, '🚪', r.effects as Record<string, number>)
+  }
+
+  // Real gate for the pro athlete card: at least one sport at skill >= 60
   const bestSport = sports.length > 0
     ? [...sports].sort((a, b) => b.skillLevel - a.skillLevel)[0]
     : null
-  const athleteHint = bestSport && bestSport.skillLevel >= 50
-    ? `Ottimo: pratichi ${bestSport.name} a livello ${Math.round(bestSport.skillLevel)}. Hai le carte in regola!`
-    : 'Funziona meglio se pratichi uno sport con abilità alta (almeno 50). Allenati prima nella sezione Sport.'
+  const athleteQualifies = !!bestSport && bestSport.skillLevel >= 60
+  const athleteHint = athleteQualifies
+    ? `Ottimo: pratichi ${bestSport!.name} a livello ${Math.round(bestSport!.skillLevel)}. Hai le carte in regola!`
+    : 'Requisito: almeno 60 di abilità in uno sport. Allenati prima nella sezione Sport.'
 
   // ---- Chooser view (no career yet) ----
   if (!career) {
@@ -83,15 +91,20 @@ export function SpecialCareerScreen() {
           {CAREER_ORDER.map(type => {
             const meta = CAREER_META[type]
             const ageOk = age >= meta.minAge
+            const sportOk = type !== 'pro_athlete' || athleteQualifies
+            const canStart = ageOk && sportOk
             const hint = type === 'pro_athlete'
               ? athleteHint
               : `Disponibile dai ${meta.minAge} anni.`
+            const blockedLabel = !ageOk
+              ? `Min ${meta.minAge} anni (hai ${age})`
+              : 'Serve abilità ≥ 60 in uno sport'
             return (
               <div key={type} className="card" style={{
                 padding: 14,
                 background: `linear-gradient(135deg, ${meta.color}10 0%, var(--bg-card) 70%)`,
                 border: `1px solid ${meta.color}30`,
-                opacity: ageOk ? 1 : 0.6,
+                opacity: canStart ? 1 : 0.6,
               }}>
                 <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', marginBottom: 8 }}>
                   <div style={{
@@ -113,19 +126,19 @@ export function SpecialCareerScreen() {
 
                 <button
                   onClick={() => handleStart(type)}
-                  disabled={!ageOk}
-                  className={ageOk ? 'tap-scale' : undefined}
+                  disabled={!canStart}
+                  className={canStart ? 'tap-scale' : undefined}
                   style={{
                     width: '100%', padding: '10px 0', borderRadius: 12, fontSize: 13, fontWeight: 700, border: 'none',
-                    cursor: ageOk ? 'pointer' : 'not-allowed',
-                    background: ageOk
+                    cursor: canStart ? 'pointer' : 'not-allowed',
+                    background: canStart
                       ? 'linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%)'
                       : 'rgba(255,255,255,0.05)',
-                    color: ageOk ? '#fff' : 'var(--color-text-secondary)',
-                    boxShadow: ageOk ? '0 4px 16px rgba(124,92,255,0.3)' : 'none',
+                    color: canStart ? '#fff' : 'var(--color-text-secondary)',
+                    boxShadow: canStart ? '0 4px 16px rgba(124,92,255,0.3)' : 'none',
                   }}
                 >
-                  {ageOk ? `Inizia carriera da ${meta.label}` : `Min ${meta.minAge} anni (hai ${age})`}
+                  {canStart ? `Inizia carriera da ${meta.label}` : blockedLabel}
                 </button>
               </div>
             )
@@ -168,7 +181,7 @@ export function SpecialCareerScreen() {
                 fontSize: 10, fontWeight: 700, color: meta.color, background: `${meta.color}18`,
                 padding: '1px 8px', borderRadius: 99, border: `1px solid ${meta.color}30`,
               }}>
-                {SpecialCareerEngine._phaseLabel(career.phase)}
+                {SpecialCareerEngine._phaseLabel(career.phase, career.type)}
               </span>
               <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>dal {career.startYear}</span>
             </div>
@@ -286,6 +299,19 @@ export function SpecialCareerScreen() {
               })}
             </div>
           )}
+
+          {/* Abandon career */}
+          <button
+            onClick={handleQuit}
+            className="tap-scale"
+            style={{
+              width: '100%', marginTop: 18, padding: '12px 0', borderRadius: 12,
+              fontSize: 13, fontWeight: 700, cursor: 'pointer',
+              background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5',
+            }}
+          >
+            🚪 Abbandona carriera
+          </button>
         </>
       )}
     </div>

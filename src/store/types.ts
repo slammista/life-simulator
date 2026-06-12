@@ -1395,6 +1395,7 @@ export interface GameActions {
   // Special career actions
   startSpecialCareer: (type: import('../services/SpecialCareerEngine').SpecialCareerType) => ActionResult
   performSpecialCareerAction: (actionId: string) => ActionResult
+  quitSpecialCareer: () => ActionResult
 
   // Criminal engine actions
   commitCrime: (crimeId: string) => ActionResult

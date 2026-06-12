@@ -129,11 +129,15 @@ function evaluateTrigger(condition: string, state: GameState): boolean {
     }
 
     const traits = state.narrative?.traits ?? []
+    const scType = state.specialCareer?.type ?? null
+    const scPhase = state.specialCareer?.phase ?? null
+    const scFame = state.specialCareer?.fame ?? 0
+    const career = state.career
     const fn = new Function(
-      'age', 'year', 'money', 'health', 'happiness', 'intelligence', 'hasJob', 'hasRecord', 'traits',
+      'age', 'year', 'money', 'health', 'happiness', 'intelligence', 'hasJob', 'hasRecord', 'traits', 'scType', 'scPhase', 'scFame', 'career',
       `return (${condition})`
     )
-    return fn(age, year, money, health, happiness, intelligence, hasJob, hasRecord, traits)
+    return fn(age, year, money, health, happiness, intelligence, hasJob, hasRecord, traits, scType, scPhase, scFame, career)
   } catch {
     return false
   }
@@ -2001,12 +2005,23 @@ export const useGameStore = create<FullStore>()(
           ? (s: GameState) => ({ career: { ...s.career, burnoutLevel: clamp(s.career.burnoutLevel + careerBurnoutDelta, 0, 100) } })
           : null
 
+        // Lending money to a friend creates a real tracked loan (the annual
+        // tick handles 'player_lent' repayments), consistent with askMoneyFromNpc.
+        const newLoan: import('./types').NpcLoan | null = action === 'lend_money' && result.success && result.lentAmount
+          ? {
+              id: uid(), npcId: rel.id, npcName: rel.name,
+              amount: result.lentAmount, yearBorrowed: state.time.year,
+              dueYear: state.time.year + 3, repaid: false, direction: 'player_lent',
+            }
+          : null
+
         if (result.relationshipEnded) {
           set(s => ({
             ...partial,
             ...(careerUpdate ? careerUpdate(s) : {}),
             health: { ...(partial.health ?? s.health), traumas: nextTraumas },
             relationships: s.relationships.map(r => r.id === npcId ? updatedRel : r),
+            npcLoans: newLoan ? [...(s.npcLoans ?? []), newLoan] : (s.npcLoans ?? []),
             diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
             eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: resultMessage, emoji: '💔', category: 'social', statChanges: combinedEffects }, ...s.eventLog].slice(0, 150),
           }))
@@ -2016,6 +2031,7 @@ export const useGameStore = create<FullStore>()(
             ...(careerUpdate ? careerUpdate(s) : {}),
             health: { ...(partial.health ?? s.health), traumas: nextTraumas },
             relationships: s.relationships.map(r => r.id === npcId ? updatedRel : r),
+            npcLoans: newLoan ? [...(s.npcLoans ?? []), newLoan] : (s.npcLoans ?? []),
             diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
             eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: resultMessage, emoji: traumaResult.trauma ? '🧠' : result.stageAdvanced ? '⭐' : '💬', category: 'social', statChanges: combinedEffects }, ...s.eventLog].slice(0, 150),
           }))
@@ -2274,13 +2290,22 @@ export const useGameStore = create<FullStore>()(
         if (state.time.age < 16) {
           return { success: false, message: 'Devi avere almeno 16 anni per intraprendere questa carriera.', effects: {} }
         }
-        const career = initialSpecialCareer(type, state.time.year)
         const typeLabels: Record<SpecialCareerType, string> = {
           actor: 'Attore/Attrice',
           musician: 'Musicista',
           pro_athlete: 'Atleta Professionista',
           politician: 'Politico/a',
           criminal: 'Criminale',
+        }
+        const career = initialSpecialCareer(type, state.time.year)
+        if (type === 'pro_athlete') {
+          // Real-sport gate: requires at least one practiced sport at skill >= 60
+          const qualifying = (state.sports ?? []).filter(s => s.skillLevel >= 60)
+          if (qualifying.length === 0) {
+            return { success: false, message: 'Per diventare atleta professionista serve almeno 60 di abilità in uno sport. Allenati di più!', effects: {} }
+          }
+          const bestSport = [...qualifying].sort((a, b) => b.skillLevel - a.skillLevel)[0]
+          career.flags = { ...career.flags, linkedSportId: bestSport.id }
         }
         set(s => ({
           specialCareer: career,
@@ -2315,9 +2340,17 @@ export const useGameStore = create<FullStore>()(
           lastActionYear: state.time.year,
         }
 
+        // Athlete <-> sport integration: once the career leaves the aspiring
+        // phase, the linked sport officially becomes professional.
+        const linkedSportId = updatedCareer.type === 'pro_athlete' ? updatedCareer.flags.linkedSportId : undefined
+        const markSportPro = typeof linkedSportId === 'string' && updatedCareer.phase !== 'aspiring'
+
         set(s => ({
           ...partial,
           specialCareer: updatedCareer,
+          ...(markSportPro ? {
+            sports: (s.sports ?? []).map(sp => sp.id === linkedSportId && !sp.isProfessional ? { ...sp, isProfessional: true } : sp),
+          } : {}),
           diminishingReturns: {
             ...s.diminishingReturns,
             [scKey]: (s.diminishingReturns[scKey] ?? 0) + 1,
@@ -2331,6 +2364,37 @@ export const useGameStore = create<FullStore>()(
           }, ...s.eventLog].slice(0, 150),
         }))
         return { success: result.success, message: result.message, effects: result.effects }
+      },
+
+      quitSpecialCareer: (): ActionResult => {
+        const state = get()
+        if (!state.specialCareer) {
+          return { success: false, message: 'Non hai una carriera speciale attiva.', effects: {} }
+        }
+        const career = state.specialCareer
+        const typeLabels: Record<SpecialCareerType, string> = {
+          actor: 'Attore/Attrice',
+          musician: 'Musicista',
+          pro_athlete: 'Atleta Professionista',
+          politician: 'Politico/a',
+          criminal: 'Criminale',
+        }
+        // Walking away from glory hurts; leaving a dead-end career is a relief.
+        const happinessDelta = ['successful', 'superstar'].includes(career.phase) ? -5
+          : ['declining', 'aspiring'].includes(career.phase) ? 3
+            : 0
+        const effects: Effect = happinessDelta !== 0 ? { happiness: happinessDelta } : {}
+        const partial = applyEffects(state, effects)
+        const message = `Hai abbandonato la carriera da ${typeLabels[career.type]}.`
+        set(s => ({
+          ...partial,
+          specialCareer: null,
+          eventLog: [{
+            id: uid(), year: state.time.year, age: state.time.age,
+            text: message, emoji: '🚪', category: 'work', statChanges: effects,
+          }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message, effects }
       },
 
       // ==================== Criminal actions ====================

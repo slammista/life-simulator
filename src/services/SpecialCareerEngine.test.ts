@@ -7,11 +7,13 @@ function makeState(opts: {
   age?: number
   year?: number
   diminishingReturns?: Record<string, number>
+  sports?: Array<{ id: string; name: string; skillLevel: number }>
 } = {}): GameState {
   return {
     time: { age: opts.age ?? 25, year: opts.year ?? 2024, month: 1 },
     stats: { health: 80, energy: 70, happiness: 60, socialReputation: 50 },
     diminishingReturns: opts.diminishingReturns ?? {},
+    sports: opts.sports ?? [],
   } as unknown as GameState
 }
 
@@ -88,6 +90,60 @@ describe('SpecialCareerEngine.performAction', () => {
     const r = SpecialCareerEngine.performAction(career, 'actor_audition', makeState())
     expect(r.phaseAdvanced).toBe(true)
     expect(r.newPhase).toBe('emerging')
+  })
+})
+
+describe('pro athlete linked sport integration', () => {
+  // Base chance for a fresh pro_athlete career with health 80:
+  // 0.45 + (rep 10/100)*0.3 + (fame 0/100)*0.2 + (health 80/100)*0.1 = 0.56
+  // A linked sport at skill 80 adds (80/100)*0.15 = 0.12 -> 0.68
+
+  it('boosts athlete_tryout success chance via the linked sport skill', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.60) // between 0.56 and 0.68
+    const career = makeCareer('pro_athlete', { flags: { linkedSportId: 'calcio' } })
+    const state = makeState({ sports: [{ id: 'calcio', name: 'Calcio', skillLevel: 80 }] })
+    const r = SpecialCareerEngine.performAction(career, 'athlete_tryout', state)
+    expect(r.success).toBe(true)
+  })
+
+  it('fails the same roll without a linked sport', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.60)
+    const career = makeCareer('pro_athlete') // no linkedSportId flag
+    const r = SpecialCareerEngine.performAction(career, 'athlete_tryout', makeState())
+    expect(r.success).toBe(false)
+  })
+
+  it('does not apply the sport bonus to non-tryout/contract actions', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.60)
+    const career = makeCareer('pro_athlete', { phase: 'emerging', flags: { linkedSportId: 'calcio' } })
+    const state = makeState({ sports: [{ id: 'calcio', name: 'Calcio', skillLevel: 80 }] })
+    const r = SpecialCareerEngine.performAction(career, 'athlete_sponsorship', state)
+    // emerging base: 0.45 + 0.1*0.3(rep 10) + 0 + 0.08 = 0.56 < 0.60 -> failure
+    expect(r.success).toBe(false)
+  })
+
+  it('boosts athlete_contract as well', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.60)
+    const career = makeCareer('pro_athlete', { phase: 'emerging', flags: { linkedSportId: 'calcio' } })
+    const state = makeState({ sports: [{ id: 'calcio', name: 'Calcio', skillLevel: 80 }] })
+    const r = SpecialCareerEngine.performAction(career, 'athlete_contract', state)
+    expect(r.success).toBe(true)
+  })
+
+  it('does not crash when the linked sport no longer exists', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0.60)
+    const career = makeCareer('pro_athlete', { flags: { linkedSportId: 'sport_rimosso' } })
+    const r = SpecialCareerEngine.performAction(career, 'athlete_tryout', makeState({ sports: [] }))
+    expect(r.success).toBe(false) // no bonus applied, roll fails
+  })
+
+  it('does not crash when state.sports is undefined', () => {
+    vi.spyOn(Math, 'random').mockReturnValue(0)
+    const career = makeCareer('pro_athlete', { flags: { linkedSportId: 'calcio' } })
+    const state = makeState()
+    delete (state as unknown as Record<string, unknown>).sports
+    const r = SpecialCareerEngine.performAction(career, 'athlete_tryout', state)
+    expect(r.success).toBe(true)
   })
 })
 

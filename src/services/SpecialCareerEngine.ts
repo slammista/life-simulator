@@ -161,10 +161,10 @@ export class SpecialCareerEngine {
     const successBase = this._successChance(career, action, state)
     const isSuccess = Math.random() < successBase
 
-    let reputationChange = 0
-    let fameChange = 0
+    let reputationChange: number
+    let fameChange: number
     let incomeChange = 0
-    let message = ''
+    let message: string
     let phaseAdvanced = false
     let newPhase: SpecialCareerPhase | undefined
 
@@ -184,7 +184,9 @@ export class SpecialCareerEngine {
         if (idx < PHASE_ORDER.indexOf('superstar')) {
           newPhase = PHASE_ORDER[idx + 1] as SpecialCareerPhase
           phaseAdvanced = true
-          message += ` Sei passato/a alla fase: ${this._phaseLabel(newPhase)}!`
+          message += career.type === 'criminal'
+            ? ` Sei salito di grado: ora sei ${this._phaseLabel(newPhase, 'criminal')}!`
+            : ` Sei passato/a alla fase: ${this._phaseLabel(newPhase)}!`
           incomeChange = (CAREER_INCOME[career.type][newPhase] ?? 0) - career.income
         }
       }
@@ -215,14 +217,25 @@ export class SpecialCareerEngine {
     }
     if (career.type === 'pro_athlete') {
       base += (state.stats.health / 100) * 0.1
+      base += this._linkedSportBonus(career, action, state)
     }
     if (career.type === 'criminal') {
       // A darker past (negative karma) means more underworld experience.
       base += Math.min(0.1, Math.max(0, -(state.stats.karma ?? 0)) / 100 * 0.1)
     }
-    // suppress unused param warning
-    void action
     return Math.min(0.9, Math.max(0.1, base))
+  }
+
+  // Real-sport integration: the skill of the sport linked at career start
+  // boosts tryouts and contract negotiations (up to +15%).
+  private static _linkedSportBonus(career: SpecialCareer, action: SpecialCareerAction, state: GameState): number {
+    if (career.type !== 'pro_athlete') return 0
+    if (action.id !== 'athlete_tryout' && action.id !== 'athlete_contract') return 0
+    const linkedSportId = career.flags.linkedSportId
+    if (typeof linkedSportId !== 'string') return 0
+    const sport = (state.sports ?? []).find(s => s.id === linkedSportId)
+    if (!sport) return 0
+    return (sport.skillLevel / 100) * 0.15
   }
 
   private static _successRewards(
@@ -340,7 +353,20 @@ export class SpecialCareerEngine {
     return career.projectsCompleted >= thresholds[career.phase]
   }
 
-  static _phaseLabel(phase: SpecialCareerPhase): string {
+  static _phaseLabel(phase: SpecialCareerPhase, type?: SpecialCareerType): string {
+    // The criminal ladder reads as a gang hierarchy instead of showbiz fame.
+    if (type === 'criminal') {
+      const gangRanks: Record<SpecialCareerPhase, string> = {
+        aspiring:    'Recluta',
+        emerging:    'Soldato',
+        established: 'Capo-zona',
+        successful:  'Luogotenente',
+        superstar:   'Boss',
+        declining:   'In Disgrazia',
+        retired:     'Fuori dal giro',
+      }
+      return gangRanks[phase]
+    }
     const labels: Record<SpecialCareerPhase, string> = {
       aspiring:    'Aspirante',
       emerging:    'Emergente',
