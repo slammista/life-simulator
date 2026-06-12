@@ -27,6 +27,13 @@ import { RelazioniNav, RELAZIONI_ITEMS, type RelazioniSubTabId } from './compone
 import { AgeTransitionOverlay } from './components/game/AgeTransitionOverlay'
 import { useShallow } from 'zustand/react/shallow'
 
+// Auto-reload when a new SW takes control (fixes stale chunk MIME error)
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    window.location.reload()
+  })
+}
+
 // ---- Lazy screens ----
 const CareerScreen        = lazy(() => import('./components/screens/CareerScreen').then(m => ({ default: m.CareerScreen })))
 const RelationshipScreen  = lazy(() => import('./components/screens/RelationshipScreen').then(m => ({ default: m.RelationshipScreen })))
