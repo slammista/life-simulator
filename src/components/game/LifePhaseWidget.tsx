@@ -32,10 +32,24 @@ export function LifePhaseWidget() {
         <div style={{
           fontSize: 12, fontWeight: 700, color: doneCount === objectives.length ? '#10b981' : '#f59e0b',
           background: doneCount === objectives.length ? 'rgba(16,185,129,0.12)' : 'rgba(245,158,11,0.12)',
-          borderRadius: 8, padding: '3px 8px', flexShrink: 0,
+          border: `1px solid ${doneCount === objectives.length ? 'rgba(16,185,129,0.3)' : 'rgba(245,158,11,0.3)'}`,
+          borderRadius: 'var(--radius-pill)', padding: '3px 10px', flexShrink: 0,
         }}>
           {doneCount}/{objectives.length}
         </div>
+      </div>
+
+      {/* Progress pill */}
+      <div className="stat-bar" style={{ marginBottom: 10 }}>
+        <div
+          className="stat-bar-fill"
+          style={{
+            width: `${objectives.length ? (doneCount / objectives.length) * 100 : 0}%`,
+            background: doneCount === objectives.length
+              ? 'linear-gradient(180deg, #3CE6B4 0%, #10B083 100%)'
+              : 'linear-gradient(180deg, #FFB020 0%, #d98a0e 100%)',
+          }}
+        />
       </div>
 
       {/* Objectives */}

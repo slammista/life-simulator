@@ -1,7 +1,9 @@
+import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { SpecialCareerEngine, type SpecialCareerType } from '../../services/SpecialCareerEngine'
 import { useToastStore } from '../../store/toastStore'
 import { haptic } from '../../services/HapticEngine'
+import { ConfirmDialog } from '../common/ConfirmDialog'
 
 const CAREER_META: Record<SpecialCareerType, {
   emoji: string
@@ -63,8 +65,10 @@ export function SpecialCareerScreen() {
     flash(r.message, r.success, emoji, r.effects as Record<string, number>)
   }
 
-  const handleQuit = () => {
-    if (!window.confirm('Vuoi davvero abbandonare la carriera? Perderai fama e progressi.')) return
+  const [confirmQuit, setConfirmQuit] = useState(false)
+
+  const doQuit = () => {
+    setConfirmQuit(false)
     const r = quitSpecialCareer()
     flash(r.message, r.success, '🚪', r.effects as Record<string, number>)
   }
@@ -302,10 +306,10 @@ export function SpecialCareerScreen() {
 
           {/* Abandon career */}
           <button
-            onClick={handleQuit}
+            onClick={() => setConfirmQuit(true)}
             className="tap-scale"
             style={{
-              width: '100%', marginTop: 18, padding: '12px 0', borderRadius: 12,
+              width: '100%', marginTop: 18, padding: '12px 0', borderRadius: 'var(--radius-pill)',
               fontSize: 13, fontWeight: 700, cursor: 'pointer',
               background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.35)', color: '#fca5a5',
             }}
@@ -314,6 +318,17 @@ export function SpecialCareerScreen() {
           </button>
         </>
       )}
+
+      <ConfirmDialog
+        open={confirmQuit}
+        title="Abbandonare la carriera?"
+        message="Perderai fama e progressi accumulati. Questa scelta è definitiva."
+        confirmLabel="Abbandona"
+        cancelLabel="Resta"
+        danger
+        onConfirm={doQuit}
+        onCancel={() => setConfirmQuit(false)}
+      />
     </div>
   )
 }

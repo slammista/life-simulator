@@ -89,13 +89,9 @@ export function OriginStoryScreen() {
         {/* CTA */}
         {allVisible && (
           <button
+            className="btn-candy btn-candy--primary"
             onClick={markOriginStorySeen}
-            style={{
-              width: '100%', padding: '14px 0', borderRadius: 14,
-              background: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
-              color: '#fff', fontSize: 16, fontWeight: 700, border: 'none', cursor: 'pointer',
-              boxShadow: '0 4px 20px rgba(99,102,241,0.4)',
-            }}
+            style={{ fontSize: 16, padding: '15px 0' }}
           >
             Inizia la tua vita →
           </button>

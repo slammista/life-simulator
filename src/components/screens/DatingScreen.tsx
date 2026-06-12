@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { DatingEngine, type DatingApp } from '../../services/DatingEngine'
+import { ConfirmDialog } from '../common/ConfirmDialog'
 
 function CompatChip({ value }: { value: number }) {
   const color = value >= 75 ? '#f472b6' : value >= 55 ? '#f59e0b' : '#94a3b8'
@@ -45,9 +46,12 @@ export function DatingScreen() {
     const r = getMarried(npcId, weddingBudget)
     setFeedback(r.message)
   }
-  const handleDivorce = (npcId: string) => {
-    if (!confirm('Sei sicuro/a di voler divorziare?')) return
-    const r = getDivorced(npcId)
+  const [divorceId, setDivorceId] = useState<string | null>(null)
+  const handleDivorce = (npcId: string) => setDivorceId(npcId)
+  const confirmDivorce = () => {
+    if (!divorceId) return
+    const r = getDivorced(divorceId)
+    setDivorceId(null)
     setFeedback(r.message)
   }
 
@@ -249,6 +253,17 @@ export function DatingScreen() {
           )}
         </div>
       )}
+
+      <ConfirmDialog
+        open={divorceId !== null}
+        title="Divorziare?"
+        message="Sei sicuro/a di voler divorziare? Avrà conseguenze economiche ed emotive."
+        confirmLabel="Divorzia"
+        cancelLabel="Annulla"
+        danger
+        onConfirm={confirmDivorce}
+        onCancel={() => setDivorceId(null)}
+      />
     </div>
   )
 }

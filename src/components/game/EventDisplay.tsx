@@ -162,21 +162,23 @@ export const EventDisplay = memo(function EventDisplay() {
       }}>
         {/* Modal card */}
         <div style={{
-          background: '#ffffff',
-          borderRadius: 16,
+          background: 'linear-gradient(160deg, #2A2150 0%, #1B1733 100%)',
+          borderRadius: 22,
           width: '100%',
           maxWidth: 380,
           overflow: 'hidden',
+          border: `1px solid ${headerColor}55`,
           boxShadow: isEpicPlus
-            ? rarityGlow[currentEvent.rarity] ?? '0 8px 40px rgba(0,0,0,0.4)'
-            : '0 8px 40px rgba(0,0,0,0.4)',
+            ? `${rarityGlow[currentEvent.rarity] ?? '0 8px 40px rgba(0,0,0,0.5)'}, inset 0 1px 0 rgba(255,255,255,0.16)`
+            : '0 18px 48px rgba(0,0,0,0.55), inset 0 1px 0 rgba(255,255,255,0.16)',
           animation: 'slideUpModal 0.22s cubic-bezier(0.34,1.2,0.64,1)',
         }}>
           {/* Colored header banner */}
           <div style={{
-            background: headerColor,
-            padding: '14px 16px 12px',
+            background: `linear-gradient(180deg, ${headerColor} 0%, ${headerColor}33 100%)`,
+            padding: '14px 16px 14px',
             position: 'relative',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.22)',
           }}>
             {/* Category pill top-right */}
             <span style={{
@@ -227,7 +229,7 @@ export const EventDisplay = memo(function EventDisplay() {
             {/* Title */}
             <p style={{
               fontWeight: 700, fontSize: 16,
-              color: '#1a1a2e',
+              color: '#F4F7FB',
               textAlign: 'center', marginBottom: 8,
             }}>
               {currentEvent.title}
@@ -235,7 +237,7 @@ export const EventDisplay = memo(function EventDisplay() {
 
             {/* Description */}
             <p style={{
-              fontSize: 13, color: '#4a5568',
+              fontSize: 13, color: '#B6BFD4',
               lineHeight: 1.55, textAlign: 'center',
               marginBottom: 16,
             }}>
@@ -248,18 +250,12 @@ export const EventDisplay = memo(function EventDisplay() {
                 availableChoices.map(choice => (
                   <button
                     key={choice.id}
-                    className="tap-scale"
+                    className="btn-candy btn-candy--primary"
                     onClick={() => { haptic('tap'); handleChoice(choice.id) }}
                     style={{
-                      width: '100%', padding: '12px 14px',
-                      borderRadius: 10,
-                      background: '#2563eb',
-                      color: '#ffffff',
-                      fontSize: 13, fontWeight: 600,
-                      border: 'none', cursor: 'pointer',
-                      textAlign: 'center', lineHeight: 1.4,
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                      gap: 8,
+                      fontSize: 13,
+                      textAlign: 'left', lineHeight: 1.4,
+                      justifyContent: 'space-between',
                     }}
                   >
                     <span style={{ flex: 1 }}>{choice.text}</span>
@@ -268,16 +264,8 @@ export const EventDisplay = memo(function EventDisplay() {
                 ))
               ) : (
                 <button
-                  className="tap-scale"
+                  className="btn-candy btn-candy--primary"
                   onClick={() => { haptic('tap'); handleChoice('') }}
-                  style={{
-                    width: '100%', padding: '12px 0',
-                    borderRadius: 10,
-                    background: '#2563eb',
-                    color: '#ffffff',
-                    fontSize: 14, fontWeight: 700,
-                    border: 'none', cursor: 'pointer',
-                  }}
                 >
                   OK
                 </button>

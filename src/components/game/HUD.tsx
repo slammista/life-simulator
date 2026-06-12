@@ -317,7 +317,7 @@ export const HUD = memo(function HUD() {
               <div className="stat-bar">
                 <div
                   className="stat-bar-fill"
-                  style={{ width: `${val}%`, backgroundColor: barColor }}
+                  style={{ width: `${val}%`, background: `linear-gradient(180deg, ${barColor} 0%, color-mix(in srgb, ${barColor} 75%, #000) 100%)` }}
                 />
               </div>
               {/* Floating delta indicators */}
