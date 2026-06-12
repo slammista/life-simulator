@@ -7,7 +7,11 @@ import { haptic } from '../../services/HapticEngine'
 export function HobbyScreen() {
   const hobbies = useGameStore(s => s.hobbies)
   const finance = useGameStore(s => s.finance)
+  const age = useGameStore(s => s.time.age)
+  const relationships = useGameStore(s => s.relationships)
   const band = useGameStore(s => s.band)
+  const isMinor = age < 18
+  const hasParents = relationships.some(r => r.type === 'parent' && r.isAlive)
   const addHobby = useGameStore(s => s.addHobby)
   const practiceHobby = useGameStore(s => s.practiceHobby)
   const formBand = useGameStore(s => s.formBand)
@@ -237,7 +241,8 @@ export function HobbyScreen() {
             </div>
           )}
           {discoverable.map(def => {
-            const canAfford = finance.money >= def.costToStart
+            // Adults pay from their own balance; minors get parental funding (subject to approval).
+            const canAfford = isMinor ? hasParents : finance.money >= def.costToStart
             const benefits = Object.entries(def.statBenefits).filter(([, v]) => v !== 0)
             return (
               <div
@@ -296,7 +301,7 @@ export function HobbyScreen() {
                     boxShadow: canAfford ? '0 4px 16px rgba(124,92,255,0.3)' : 'none',
                   }}
                 >
-                  {canAfford ? 'Inizia' : `Servono €${def.costToStart.toLocaleString('it-IT')}`}
+                  {isMinor && hasParents ? 'Chiedi ai genitori' : canAfford ? 'Inizia' : `Servono €${def.costToStart.toLocaleString('it-IT')}`}
                 </button>
               </div>
             )

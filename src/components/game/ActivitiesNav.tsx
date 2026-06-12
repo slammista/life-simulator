@@ -16,7 +16,7 @@ function savePins(pins: string[]) {
 }
 
 export type ActivitiesSubTab =
-  | 'health' | 'hobby' | 'criminal' | 'substances' | 'religion'
+  | 'health' | 'hobby' | 'sport' | 'criminal' | 'substances' | 'religion'
   | 'body' | 'beauty' | 'barber' | 'gambling' | 'sex_health' | 'cosmetic'
   | 'travel' | 'politics' | 'goals' | 'challenges' | 'ribbons'
   | 'timeline' | 'minigames' | 'leaderboard' | 'settings' | 'privacy'
@@ -33,6 +33,7 @@ interface ActivityDef {
 const ALL_ITEMS: ActivityDef[] = [
   { id: 'health',      emoji: '💊', label: 'Salute',             subtitle: 'Cura salute e benessere',        color: '#10b981' },
   { id: 'hobby',       emoji: '🎸', label: 'Hobby',              subtitle: 'Coltiva le tue passioni',        color: '#f59e0b' },
+  { id: 'sport',       emoji: '🏅', label: 'Sport',              subtitle: 'Discipline e attività sportive', color: '#22c55e' },
   { id: 'beauty',      emoji: '💄', label: 'Beauty',             subtitle: 'Look e bellezza',                color: '#ec4899' },
   { id: 'barber',      emoji: '💈', label: 'Barbiere',           subtitle: 'Taglio e grooming',              color: '#8b5cf6' },
   { id: 'cosmetic',    emoji: '💉', label: 'Chirurgia Estetica', subtitle: 'Operazioni e modifiche fisiche', color: '#6366f1' },
@@ -59,7 +60,7 @@ const ITEM_MAP = Object.fromEntries(ALL_ITEMS.map(i => [i.id, i])) as Record<Act
 export { ITEM_MAP as ACTIVITIES_ITEM_MAP }
 
 const CATEGORIES: { label: string; ids: ActivitiesSubTab[] }[] = [
-  { label: 'Corpo & Salute',  ids: ['health', 'hobby', 'beauty', 'barber', 'cosmetic', 'body', 'sex_health'] },
+  { label: 'Corpo & Salute',  ids: ['health', 'hobby', 'sport', 'beauty', 'barber', 'cosmetic', 'body', 'sex_health'] },
   { label: 'Rischio',         ids: ['criminal', 'substances', 'gambling'] },
   { label: 'Socialità',       ids: ['socialize', 'religion', 'politics', 'travel'] },
   { label: 'Svago & Goals',   ids: ['goals', 'challenges', 'ribbons', 'minigames'] },

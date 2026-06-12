@@ -626,6 +626,28 @@ export interface Hobby {
   packId: string
 }
 
+// ---- Sports ----
+// Separate from Hobby. Designed for future expansion: training, competitions,
+// championships, prizes, injuries, professional careers and sport fame.
+
+export type SportCategory =
+  | 'team' | 'individual' | 'combat' | 'water' | 'winter' | 'racket' | 'extreme'
+
+export interface Sport {
+  id: string
+  name: string
+  skillLevel: number               // 0-100
+  practiceHoursPerWeek: number
+  yearStarted: number
+  // Forward-looking fields (scaffolding for future systems)
+  competitionsEntered: number      // competitions / championships
+  competitionsWon: number          // prizes / titles
+  injuries: number                 // injury history count
+  isProfessional: boolean          // pro career flag
+  fame: number                     // 0-100 sport fame
+  packId: string
+}
+
 // ---- Social Media ----
 
 export type SocialPlatform = 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'facebook' | 'twitch' | 'podcast' | 'onlyfans'
@@ -1162,6 +1184,9 @@ export interface GameState {
   // Hobbies
   hobbies: Hobby[]
 
+  // Sports (separate category from hobbies)
+  sports: Sport[]
+
   // Social media
   socialMedia: SocialMediaProfile[]
 
@@ -1357,6 +1382,11 @@ export interface GameActions {
   // Hobby engine actions
   addHobby: (hobbyId: string) => ActionResult
   practiceHobby: (hobbyId: string) => ActionResult
+
+  // Sport engine actions
+  startSport: (sportId: string) => ActionResult
+  practiceSport: (sportId: string) => ActionResult
+  quitSport: (sportId: string) => ActionResult
 
   // Criminal engine actions
   commitCrime: (crimeId: string) => ActionResult

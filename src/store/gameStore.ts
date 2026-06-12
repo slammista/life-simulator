@@ -19,6 +19,8 @@ import { RelationshipEngine, type NPCContext, type NPCAction } from '../services
 import { EducationEngine, getEducationLabel } from '../services/EducationEngine'
 import { HealthEngine } from '../services/HealthEngine'
 import { HobbyEngine } from '../services/HobbyEngine'
+import { SportEngine } from '../services/SportEngine'
+import { MinorEconomyEngine } from '../services/MinorEconomyEngine'
 import { CriminalEngine } from '../services/CriminalEngine'
 import { FinanceEngine, type AssetType } from '../services/FinanceEngine'
 import { SocialMediaEngine, type SocialPlatform, type PostType } from '../services/SocialMediaEngine'
@@ -60,7 +62,7 @@ import { StoryArcEngine } from '../services/StoryArcEngine'
 import { NPCRequestEngine } from '../services/NPCRequestEngine'
 import { LifePhaseEngine } from '../services/LifePhaseEngine'
 import { WorkSchoolEngine, type SocialLocation } from '../services/WorkSchoolEngine'
-import type { WorkAction, SchoolAction, PlayerSkills, WorkNPC, SchoolNPC } from './types'
+import type { WorkAction, SchoolAction, PlayerSkills } from './types'
 import type { Addiction, TravelMemory, Religion, Child, LivingType, AvatarConfig, AvatarAccessory } from './types'
 import { getDefaultAvatar, getBarberServices, getAccessoryShop, wardrobeTierToClothesStyle, beautyHairToAvatarStyle, beautyHairToAvatarColor } from '../services/AvatarEngine'
 import type { PoliticsState } from '../services/PoliticsEngine'
@@ -151,6 +153,76 @@ function applyEffects(state: GameState, effects: Effect): Partial<GameState> {
     },
     finance: { ...f, money: f.money + (effects.money ?? 0) },
   }
+}
+
+// ---- Minor expense gateway ----
+// Centralised entry point for ANY discretionary expense that a minor could make.
+// Adults pay normally; minors must have the cost approved (and paid) by a parent.
+// Returns the (possibly adjusted) effects to apply, plus an outcome message.
+interface MinorExpenseOutcome {
+  approved: boolean
+  message: string
+  effects: Effect
+  paidByParents: boolean
+}
+
+function resolveMinorExpense(state: GameState, effects: Effect, label: string): MinorExpenseOutcome {
+  const cost = -(effects.money ?? 0) // positive number when the action costs money
+  const verdict = MinorEconomyEngine.evaluateExpense(state, cost, label)
+
+  if (!verdict.approved) {
+    return { approved: false, message: verdict.message, effects: {}, paidByParents: false }
+  }
+
+  return {
+    approved: true,
+    message: verdict.message,
+    effects: MinorEconomyEngine.adjustEffects(effects, verdict.paidByParents),
+    paidByParents: verdict.paidByParents,
+  }
+}
+
+// ---- Legacy sport migration ----
+// Sports used to live inside the hobby list. Old saves may still carry them as
+// hobbies; move them into the dedicated `sports` slice (avoiding duplicates).
+const LEGACY_SPORT_HOBBY_MAP: Record<string, string> = {
+  running: 'atletica',
+  swimming: 'nuoto',
+  martial_arts: 'arti_marziali',
+}
+
+function migrateLegacySports(
+  hobbies: import('./types').Hobby[] | undefined,
+  sports: import('./types').Sport[] | undefined,
+): { hobbies: import('./types').Hobby[]; sports: import('./types').Sport[] } {
+  const srcHobbies = hobbies ?? []
+  const existingSports = sports ?? []
+  const existingSportIds = new Set(existingSports.map(s => s.id))
+
+  const keptHobbies: import('./types').Hobby[] = []
+  const migrated: import('./types').Sport[] = []
+
+  for (const h of srcHobbies) {
+    const sportId = LEGACY_SPORT_HOBBY_MAP[h.id]
+    if (!sportId) { keptHobbies.push(h); continue }
+    // Skip if the player already has this sport tracked.
+    if (existingSportIds.has(sportId) || migrated.some(m => m.id === sportId)) continue
+    migrated.push({
+      id: sportId,
+      name: h.name,
+      skillLevel: h.skillLevel ?? 5,
+      practiceHoursPerWeek: h.practiceHoursPerWeek ?? 3,
+      yearStarted: h.yearStarted ?? 0,
+      competitionsEntered: 0,
+      competitionsWon: 0,
+      injuries: 0,
+      isProfessional: false,
+      fame: 0,
+      packId: h.packId ?? 'base',
+    })
+  }
+
+  return { hobbies: keptHobbies, sports: [...existingSports, ...migrated] }
 }
 
 // Compute total weekly hours occupied by work + school + clubs
@@ -279,6 +351,7 @@ function buildInitialState(): GameState {
       traumas: [], therapySessions: 0, resilience: 20,
     },
     hobbies: [],
+    sports: [],
     socialMedia: [],
     fame: FameEngine.initialState(),
     chaos: ChaosEngine.initialState(),
@@ -673,6 +746,10 @@ export const useGameStore = create<FullStore>()(
         const { effects: hobbyFx, updates: hobbyUpdates } = HobbyEngine.annualTick(state)
         merge(hobbyFx)
 
+        // 8b. Sport annual tick
+        const { effects: sportFx, updates: sportUpdates } = SportEngine.annualTick(state)
+        merge(sportFx)
+
         // 9. Criminal annual tick (prison sentence)
         const { effects: criminalFx, message: criminalMsg, updatedCriminal } =
           CriminalEngine.annualTick(state)
@@ -1032,6 +1109,12 @@ export const useGameStore = create<FullStore>()(
           }
         })
 
+        const updatedSports = (state.sports ?? []).map(sp => {
+          const upd = sportUpdates.find(u => u.id === sp.id)
+          if (!upd) return sp
+          return { ...sp, skillLevel: clamp(sp.skillLevel + upd.skillDelta, 0, 100) }
+        })
+
         const baseFinance = partial.finance ?? state.finance
         const financeWithInvestments = {
           ...baseFinance,
@@ -1072,6 +1155,7 @@ export const useGameStore = create<FullStore>()(
           npcEventQueue: [...(state.npcEventQueue ?? []), ...newNpcEvents].slice(-10),
           criminal: updatedCriminal,
           hobbies: updatedHobbies,
+          sports: updatedSports,
           socialMedia: updatedProfiles.length > 0 ? updatedProfiles : state.socialMedia,
           fame: fameWithChaos,
           chaos: chaosTick.chaos,
@@ -2049,28 +2133,95 @@ export const useGameStore = create<FullStore>()(
         const state = get()
         const result = HobbyEngine.addHobby(hobbyId, state)
         if (!result.success) return { success: false, message: result.message, effects: result.effects }
-        const partial = applyEffects(state, result.effects)
+
+        // Minors need a parent to approve & pay for the hobby.
+        const exp = resolveMinorExpense(state, result.effects, result.newHobby?.name ?? 'questo hobby')
+        if (!exp.approved) return { success: false, message: exp.message, effects: {} }
+
+        const partial = applyEffects(state, exp.effects)
+        const message = exp.paidByParents ? `${result.message} ${exp.message}` : result.message
         set(s => ({
           ...partial,
           hobbies: result.newHobby ? [...s.hobbies, result.newHobby] : s.hobbies,
-          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: '🎯', category: 'hobby', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: message, emoji: '🎯', category: 'hobby', statChanges: exp.effects }, ...s.eventLog].slice(0, 150),
         }))
-        return { success: true, message: result.message, effects: result.effects }
+        return { success: true, message, effects: exp.effects }
       },
 
       practiceHobby: (hobbyId: string): ActionResult => {
         const state = get()
         const result = HobbyEngine.practiceHobby(hobbyId, state)
-        const partial = applyEffects(state, result.effects)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+
+        // Recurring practice cost also passes through the parental gateway for minors.
+        const hobbyName = state.hobbies.find(h => h.id === hobbyId)?.name ?? 'questo hobby'
+        const exp = resolveMinorExpense(state, result.effects, hobbyName)
+        if (!exp.approved) return { success: false, message: exp.message, effects: {} }
+
+        const partial = applyEffects(state, exp.effects)
         const key = `hobby_${hobbyId}_${state.time.year}`
         const gain = result.skillGain ?? 0
+        const message = exp.paidByParents ? `${result.message} ${exp.message}` : result.message
         set(s => ({
           ...partial,
           hobbies: s.hobbies.map(h => h.id === hobbyId ? { ...h, skillLevel: clamp(h.skillLevel + gain, 0, 100) } : h),
           diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
-          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: result.message, emoji: result.success ? '🎯' : '😴', category: 'hobby', statChanges: result.effects }, ...s.eventLog].slice(0, 150),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: message, emoji: result.success ? '🎯' : '😴', category: 'hobby', statChanges: exp.effects }, ...s.eventLog].slice(0, 150),
         }))
-        return { success: result.success, message: result.message, effects: result.effects }
+        return { success: result.success, message, effects: exp.effects }
+      },
+
+      // ==================== Sport actions ====================
+      startSport: (sportId: string): ActionResult => {
+        const state = get()
+        const result = SportEngine.startSport(sportId, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+
+        // Membership / equipment for a minor is approved & paid by the parents.
+        const exp = resolveMinorExpense(state, result.effects, result.newSport?.name ?? 'questo sport')
+        if (!exp.approved) return { success: false, message: exp.message, effects: {} }
+
+        const partial = applyEffects(state, exp.effects)
+        const message = exp.paidByParents ? `${result.message} ${exp.message}` : result.message
+        set(s => ({
+          ...partial,
+          sports: result.newSport ? [...(s.sports ?? []), result.newSport] : (s.sports ?? []),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: message, emoji: '🏅', category: 'hobby', statChanges: exp.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message, effects: exp.effects }
+      },
+
+      practiceSport: (sportId: string): ActionResult => {
+        const state = get()
+        const result = SportEngine.practiceSport(sportId, state)
+        if (!result.success) return { success: false, message: result.message, effects: result.effects }
+
+        const sportName = (state.sports ?? []).find(s => s.id === sportId)?.name ?? 'questo sport'
+        const exp = resolveMinorExpense(state, result.effects, sportName)
+        if (!exp.approved) return { success: false, message: exp.message, effects: {} }
+
+        const partial = applyEffects(state, exp.effects)
+        const key = `sport_${sportId}_${state.time.year}`
+        const gain = result.skillGain ?? 0
+        const message = exp.paidByParents ? `${result.message} ${exp.message}` : result.message
+        set(s => ({
+          ...partial,
+          sports: (s.sports ?? []).map(sp => sp.id === sportId ? { ...sp, skillLevel: clamp(sp.skillLevel + gain, 0, 100) } : sp),
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: message, emoji: '🏅', category: 'hobby', statChanges: exp.effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message, effects: exp.effects }
+      },
+
+      quitSport: (sportId: string): ActionResult => {
+        const state = get()
+        const sport = (state.sports ?? []).find(s => s.id === sportId)
+        if (!sport) return { success: false, message: 'Non pratichi questo sport.', effects: {} }
+        set(s => ({
+          sports: (s.sports ?? []).filter(sp => sp.id !== sportId),
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Hai smesso di praticare ${sport.name}.`, emoji: '🚫', category: 'hobby', statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Hai smesso di praticare ${sport.name}.`, effects: {} }
       },
 
       // ==================== Criminal actions ====================
@@ -3971,10 +4122,14 @@ export const useGameStore = create<FullStore>()(
       merge: (persistedState: unknown, currentState: FullStore): FullStore => {
         const ps = persistedState as Partial<FullStore>
         NameEngine.setNationality(ps.nation?.id ?? ps.identity?.nationality)
+        // Migrate any legacy sport-hobbies into the dedicated sports slice.
+        const { hobbies: migratedHobbies, sports: migratedSports } = migrateLegacySports(ps.hobbies, ps.sports)
         return {
           ...currentState,
           ...ps,
           // Guarantee new slices exist even in old saves
+          hobbies: migratedHobbies,
+          sports: migratedSports,
           minigameStats: ps.minigameStats ?? currentState.minigameStats,
           adRewards: ps.adRewards ?? currentState.adRewards,
           narrative: NarrativeEngine.ensure(ps.narrative),
@@ -4012,6 +4167,7 @@ export const useGameStore = create<FullStore>()(
         criminal: state.criminal,
         health: state.health,
         hobbies: state.hobbies,
+        sports: state.sports,
         socialMedia: state.socialMedia,
         fame: state.fame,
         chaos: state.chaos,

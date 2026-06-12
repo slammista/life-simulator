@@ -35,6 +35,7 @@ const SettingsScreen      = lazy(() => import('./components/screens/SettingsScre
 const EducationScreen     = lazy(() => import('./components/screens/EducationScreen').then(m => ({ default: m.EducationScreen })))
 const HealthScreen        = lazy(() => import('./components/screens/HealthScreen').then(m => ({ default: m.HealthScreen })))
 const HobbyScreen         = lazy(() => import('./components/screens/HobbyScreen').then(m => ({ default: m.HobbyScreen })))
+const SportScreen         = lazy(() => import('./components/screens/SportScreen').then(m => ({ default: m.SportScreen })))
 const FinanceScreen       = lazy(() => import('./components/screens/FinanceScreen').then(m => ({ default: m.FinanceScreen })))
 const CriminalScreen      = lazy(() => import('./components/screens/CriminalScreen').then(m => ({ default: m.CriminalScreen })))
 const SocialMediaScreen   = lazy(() => import('./components/screens/SocialMediaScreen').then(m => ({ default: m.SocialMediaScreen })))
@@ -303,6 +304,7 @@ function App() {
             {/* ACTIVITIES */}
             {activeTab === 'activities' && activitiesSub === 'health'      && <HealthScreen />}
             {activeTab === 'activities' && activitiesSub === 'hobby'       && <HobbyScreen />}
+            {activeTab === 'activities' && activitiesSub === 'sport'       && <SportScreen />}
             {activeTab === 'activities' && activitiesSub === 'substances'  && <SubstanceScreen />}
             {activeTab === 'activities' && activitiesSub === 'criminal'    && <CriminalScreen />}
             {activeTab === 'activities' && activitiesSub === 'religion'    && <ReligionScreen />}
