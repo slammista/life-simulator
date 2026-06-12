@@ -11,11 +11,11 @@ interface Props {
 
 const SIDE_TABS: { id: Tab; emoji: string; label: string }[] = [
   { id: 'lavoro',  emoji: '💼', label: 'Carriera' },
-  { id: 'assets',  emoji: '🏦', label: 'Assets'  },
+  { id: 'assets',  emoji: '🏦', label: 'Patrimonio' },
 ]
 const SIDE_TABS_RIGHT: { id: Tab; emoji: string; label: string }[] = [
   { id: 'relazioni',  emoji: '❤️',  label: 'Relazioni'  },
-  { id: 'activities', emoji: '🎯', label: 'Activities' },
+  { id: 'activities', emoji: '🎯', label: 'Attività' },
 ]
 
 export function BottomTabs({ active, onChange, onAge, ageDisabled, hasEvent, currentAge }: Props) {

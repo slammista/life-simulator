@@ -849,3 +849,60 @@ body {
   .stat-bar-fill,
   .rel-affection-fill { transition: none !important; }
 }
+
+/* ============================================================================
+   Emoji sprites (Twemoji) — consistent game-icon look on every platform
+   ========================================================================== */
+
+img.emoji-sprite {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: -0.125em;
+  margin: 0 0.02em;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* ============================================================================
+   Per-section theming — each main tab gets its own accent + page gradient
+   ========================================================================== */
+
+.app-shell {
+  --section-accent: var(--primary);
+  --section-glow:   rgba(124, 92, 255, 0.16);
+  background-image:
+    radial-gradient(ellipse 90% 46% at 50% -12%, var(--section-glow) 0%, transparent 72%),
+    linear-gradient(180deg, transparent 0%, rgba(0, 0, 0, 0.22) 100%);
+  transition: background 480ms ease;
+}
+
+/* Vita — violet (identity, the life itself) */
+.app-shell[data-section='vita'] {
+  --section-accent: #7C5CFF;
+  --section-glow:   rgba(124, 92, 255, 0.18);
+}
+
+/* Lavoro — blue/cyan (career, study, ambition) */
+.app-shell[data-section='lavoro'] {
+  --section-accent: #38BDF8;
+  --section-glow:   rgba(56, 189, 248, 0.15);
+}
+
+/* Assets — emerald/gold (money, property) */
+.app-shell[data-section='assets'] {
+  --section-accent: #18D39E;
+  --section-glow:   rgba(24, 211, 158, 0.14);
+}
+
+/* Relazioni — rose (love, family, friends) */
+.app-shell[data-section='relazioni'] {
+  --section-accent: #FB7185;
+  --section-glow:   rgba(251, 113, 133, 0.15);
+}
+
+/* Attività — amber (play, hobbies, risk) */
+.app-shell[data-section='activities'] {
+  --section-accent: #FBBF24;
+  --section-glow:   rgba(251, 191, 36, 0.13);
+}

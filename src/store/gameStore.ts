@@ -2280,6 +2280,7 @@ export const useGameStore = create<FullStore>()(
           musician: 'Musicista',
           pro_athlete: 'Atleta Professionista',
           politician: 'Politico/a',
+          criminal: 'Criminale',
         }
         set(s => ({
           specialCareer: career,

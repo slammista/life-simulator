@@ -1,6 +1,6 @@
 import type { GameState, Effect } from '../store/types'
 
-export type SpecialCareerType = 'actor' | 'musician' | 'pro_athlete' | 'politician'
+export type SpecialCareerType = 'actor' | 'musician' | 'pro_athlete' | 'politician' | 'criminal'
 
 export type SpecialCareerPhase = 
   | 'aspiring'      // just starting, no recognition
@@ -89,11 +89,23 @@ const POLITICIAN_ACTIONS: SpecialCareerAction[] = [
   { id: 'politician_minister',  label: 'Candidatura Ministro', emoji: '🏅', description: 'Candidati a ruolo ministeriale', energyCost: 30, moneyCost: 20000, minPhase: 'successful', maxUsesPerYear: 1 },
 ]
 
+// ---- Criminal career (organized crime) ----
+
+const CRIMINAL_ACTIONS: SpecialCareerAction[] = [
+  { id: 'criminal_join_gang',  label: 'Entra nella Gang',    emoji: '🤝', description: 'Fatti accettare da una banda locale',      energyCost: 15, moneyCost: 0,     minPhase: 'aspiring',    maxUsesPerYear: 2 },
+  { id: 'criminal_small_job',  label: 'Lavoretto Sporco',    emoji: '🕶️', description: 'Esegui un piccolo incarico per la banda',  energyCost: 20, moneyCost: 0,     minPhase: 'aspiring',    maxUsesPerYear: 4 },
+  { id: 'criminal_racket',     label: 'Giro di Racket',      emoji: '💼', description: 'Gestisci un giro di protezione',           energyCost: 25, moneyCost: 1000,  minPhase: 'emerging',    maxUsesPerYear: 2 },
+  { id: 'criminal_heist',      label: 'Colpo Grosso',        emoji: '💎', description: 'Pianifica una rapina di alto profilo',     energyCost: 35, moneyCost: 5000,  minPhase: 'established', maxUsesPerYear: 1 },
+  { id: 'criminal_corruption', label: 'Corrompi Funzionari', emoji: '🤫', description: 'Compra protezione dalle autorità',         energyCost: 15, moneyCost: 10000, minPhase: 'established', maxUsesPerYear: 1 },
+  { id: 'criminal_boss',       label: 'Scala al Vertice',    emoji: '👑', description: "Sfida il boss per il controllo dell'organizzazione", energyCost: 40, moneyCost: 20000, minPhase: 'successful', maxUsesPerYear: 1 },
+]
+
 const CAREER_ACTIONS: Record<SpecialCareerType, SpecialCareerAction[]> = {
   actor: ACTOR_ACTIONS,
   musician: MUSICIAN_ACTIONS,
   pro_athlete: PRO_ATHLETE_ACTIONS,
   politician: POLITICIAN_ACTIONS,
+  criminal: CRIMINAL_ACTIONS,
 }
 
 const PHASE_ORDER: SpecialCareerPhase[] = ['aspiring', 'emerging', 'established', 'successful', 'superstar', 'declining', 'retired']
@@ -104,6 +116,7 @@ const CAREER_INCOME: Record<SpecialCareerType, Partial<Record<SpecialCareerPhase
   musician:    { aspiring: 0, emerging: 300, established: 2000, successful: 12000, superstar: 60000 },
   pro_athlete: { aspiring: 0, emerging: 2000, established: 8000, successful: 30000, superstar: 150000 },
   politician:  { aspiring: 0, emerging: 1500, established: 4000, successful: 7000, superstar: 12000 },
+  criminal:    { aspiring: 0, emerging: 1000, established: 5000, successful: 20000, superstar: 100000 },
 }
 
 export function initialSpecialCareer(type: SpecialCareerType, year: number): SpecialCareer {
@@ -142,6 +155,7 @@ export class SpecialCareerEngine {
       energy: -action.energyCost,
       money: -action.moneyCost,
     }
+    if (career.type === 'criminal') effects.karma = -3
 
     // Base success chance influenced by reputation, fame, relevant stats
     const successBase = this._successChance(career, action, state)
@@ -202,6 +216,10 @@ export class SpecialCareerEngine {
     if (career.type === 'pro_athlete') {
       base += (state.stats.health / 100) * 0.1
     }
+    if (career.type === 'criminal') {
+      // A darker past (negative karma) means more underworld experience.
+      base += Math.min(0.1, Math.max(0, -(state.stats.karma ?? 0)) / 100 * 0.1)
+    }
     // suppress unused param warning
     void action
     return Math.min(0.9, Math.max(0.1, base))
@@ -243,6 +261,14 @@ export class SpecialCareerEngine {
         politician_scandal: 'Hai respinto lo scandalo con abilità. Reputazione intatta! 📰',
         politician_law: 'La tua proposta di legge è stata approvata! 📜✅',
         politician_minister: 'Nominato/a Ministro/a! Il tuo potere cresce! 🏅🏛️',
+      },
+      criminal: {
+        criminal_join_gang: 'La banda ti ha accettato. Ora sei uno di loro. 🤝',
+        criminal_small_job: "L'incarico è andato liscio. La banda inizia a fidarsi. 🕶️",
+        criminal_racket: 'Il giro di protezione frutta bene. Il quartiere ti rispetta (e ti teme). 💼',
+        criminal_heist: 'Colpo perfetto! Nessuna traccia, bottino enorme. 💎',
+        criminal_corruption: 'I funzionari giusti ora chiudono un occhio. 🤫',
+        criminal_boss: "Hai preso il controllo dell'organizzazione. Sei il nuovo boss. 👑",
       },
     }
     return {
@@ -289,6 +315,14 @@ export class SpecialCareerEngine {
         politician_scandal: 'Lo scandalo ti ha travolto! Reputazione in caduta libera! 📰💥',
         politician_law: 'La proposta di legge è stata bocciata in Parlamento.',
         politician_minister: 'La candidatura a ministro è stata respinta.',
+      },
+      criminal: {
+        criminal_join_gang: 'La banda non si fida di te. "Torna quando avrai dimostrato qualcosa."',
+        criminal_small_job: "L'incarico è andato male. Per poco non ti beccavano. 🚔",
+        criminal_racket: 'Un commerciante ha denunciato. Il giro è saltato.',
+        criminal_heist: 'Il colpo è fallito! Sei dovuto fuggire a mani vuote. 🚨',
+        criminal_corruption: 'Il funzionario ha preso i soldi ed è sparito. Beffato.',
+        criminal_boss: 'Il boss ha scoperto il tuo piano. Sei fortunato a essere ancora vivo. ☠️',
       },
     }
     return {

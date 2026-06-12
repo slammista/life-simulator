@@ -64,6 +64,7 @@ const MinigamesScreen     = lazy(() => import('./components/screens/MinigamesScr
 const PrivacyPolicyScreen = lazy(() => import('./components/screens/PrivacyPolicyScreen').then(m => ({ default: m.PrivacyPolicyScreen })))
 const LeaderboardScreen   = lazy(() => import('./components/screens/LeaderboardScreen').then(m => ({ default: m.LeaderboardScreen })))
 const SocializeScreen     = lazy(() => import('./components/screens/SocializeScreen').then(m => ({ default: m.SocializeScreen })))
+const SpecialCareerScreen = lazy(() => import('./components/screens/SpecialCareerScreen').then(m => ({ default: m.SpecialCareerScreen })))
 
 // ---- Sub-tab types ----
 type LavoroSubTab    = 'home' | CarreraSubTab
@@ -208,7 +209,7 @@ function App() {
   if (narrative?.originStory && !narrative.originStory.seen) return <OriginStoryScreen />
 
   return (
-    <div className={`app-shell ${emotionalUI.className}`} data-emotion={emotionalUI.state}>
+    <div className={`app-shell ${emotionalUI.className}`} data-emotion={emotionalUI.state} data-section={activeTab}>
       <TutorialOverlay />
       <HUD />
 
@@ -325,6 +326,7 @@ function App() {
             {activeTab === 'activities' && activitiesSub === 'settings'    && <SettingsScreen />}
             {activeTab === 'activities' && activitiesSub === 'privacy'     && <PrivacyPolicyScreen />}
             {activeTab === 'activities' && activitiesSub === 'socialize'   && <SocializeScreen />}
+            {activeTab === 'activities' && activitiesSub === 'special_career' && <SpecialCareerScreen />}
           </Suspense>
         </ErrorBoundary>
       </div>

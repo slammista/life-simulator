@@ -75,25 +75,39 @@ const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: string;
   ],
   friend: [
     { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
+    { action: 'do_activity', label: 'Attività insieme', emoji: '🎳' },
+    { action: 'spend_time', label: 'Tempo insieme', emoji: '🕰️' },
     { action: 'compliment', label: 'Complimento', emoji: '😊' },
     { action: 'gift', label: 'Regalo', emoji: '🎁' },
+    { action: 'lend_money', label: 'Presta soldi', emoji: '💸' },
+    { action: 'ask_money', label: 'Chiedi soldi', emoji: '💶' },
     { action: 'ask_date', label: 'Appuntamento', emoji: '💑' },
     { action: 'confess_feelings', label: 'Confessa', emoji: '💕' },
+    { action: 'make_peace', label: 'Fai pace', emoji: '🕊️' },
     { action: 'fight', label: 'Litigate', emoji: '😠' },
   ],
   close_friend: [
     { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
+    { action: 'do_activity', label: 'Attività insieme', emoji: '🎳' },
+    { action: 'spend_time', label: 'Tempo insieme', emoji: '🕰️' },
     { action: 'gift', label: 'Regalo', emoji: '🎁' },
+    { action: 'lend_money', label: 'Presta soldi', emoji: '💸' },
+    { action: 'ask_money', label: 'Chiedi soldi', emoji: '💶' },
     { action: 'ask_date', label: 'Appuntamento', emoji: '💑' },
     { action: 'kiss', label: 'Bacio', emoji: '😘' },
     { action: 'confess_feelings', label: 'Confessa', emoji: '💕' },
+    { action: 'make_peace', label: 'Fai pace', emoji: '🕊️' },
     { action: 'fight', label: 'Litigate', emoji: '😠' },
     { action: 'apologize', label: 'Chiedi scusa', emoji: '🙏' },
   ],
   partner: [
     { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
+    { action: 'romantic_outing', label: 'Uscita romantica', emoji: '🌹' },
+    { action: 'surprise', label: 'Sorpresa', emoji: '🎉' },
+    { action: 'vacation_together', label: 'Vacanza insieme', emoji: '✈️' },
     { action: 'gift', label: 'Regalo', emoji: '🎁' },
     { action: 'kiss', label: 'Bacio', emoji: '😘' },
+    { action: 'propose_cohabitation', label: 'Convivenza', emoji: '🏠' },
     { action: 'propose', label: 'Proposta', emoji: '💍' },
     { action: 'cheat', label: 'Tradisci', emoji: '😈' },
     { action: 'fight', label: 'Litigate', emoji: '😠' },
@@ -102,6 +116,9 @@ const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: string;
   ],
   spouse: [
     { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
+    { action: 'romantic_outing', label: 'Uscita romantica', emoji: '🌹' },
+    { action: 'surprise', label: 'Sorpresa', emoji: '🎉' },
+    { action: 'vacation_together', label: 'Vacanza insieme', emoji: '✈️' },
     { action: 'gift', label: 'Regalo', emoji: '🎁' },
     { action: 'kiss', label: 'Bacio', emoji: '😘' },
     { action: 'cheat', label: 'Tradisci', emoji: '😈' },
@@ -111,15 +128,29 @@ const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: string;
   ],
 }
 
+// Family members (parent/sibling/child) get a dedicated action list,
+// independent of their relationship stage.
+const FAMILY_ACTIONS: Array<{ action: NPCAction; label: string; emoji: string }> = [
+  { action: 'spend_time', label: 'Tempo insieme', emoji: '🕰️' },
+  { action: 'gift', label: 'Regalo', emoji: '🎁' },
+  { action: 'ask_money', label: 'Chiedi soldi', emoji: '💶' },
+  { action: 'thank', label: 'Ringrazia', emoji: '🙏' },
+  { action: 'surprise', label: 'Sorpresa', emoji: '🎉' },
+  { action: 'make_peace', label: 'Fai pace', emoji: '🕊️' },
+  { action: 'fight', label: 'Litiga', emoji: '😠' },
+]
+
 // Actions that are romantic or sexual in nature — never allowed with family or minors
-const ROMANTIC_ACTIONS: NPCAction[] = ['confess_feelings', 'ask_date', 'kiss', 'propose', 'cheat', 'break_up', 'divorce']
+const ROMANTIC_ACTIONS: NPCAction[] = ['confess_feelings', 'ask_date', 'kiss', 'propose', 'cheat', 'break_up', 'divorce', 'romantic_outing', 'propose_cohabitation']
 const FAMILY_TYPES = ['parent', 'sibling', 'child']
 
 function getAllowedActions(
   rel: Relationship,
   playerAge: number,
 ): Array<{ action: NPCAction; label: string; emoji: string }> {
-  const base = ACTIONS_BY_STAGE[rel.stage] ?? ACTIONS_BY_STAGE.stranger
+  const base = FAMILY_TYPES.includes(rel.type)
+    ? FAMILY_ACTIONS
+    : ACTIONS_BY_STAGE[rel.stage] ?? ACTIONS_BY_STAGE.stranger
   return base.filter(({ action }) => {
     if (FAMILY_TYPES.includes(rel.type) && ROMANTIC_ACTIONS.includes(action)) return false
     if (rel.age < 18 && ROMANTIC_ACTIONS.includes(action)) return false
