@@ -5,6 +5,7 @@ import { MinorEconomyEngine } from '../../services/MinorEconomyEngine'
 import { useToastStore } from '../../store/toastStore'
 import { haptic } from '../../services/HapticEngine'
 import type { SportCategory } from '../../store/types'
+import { SportCompetitionEngine } from '../../services/SportCompetitionEngine'
 
 const CATEGORY_LABELS: Record<SportCategory, string> = {
   team: '👥 Squadra',
@@ -26,6 +27,9 @@ export function SportScreen() {
   const startSport = useGameStore(s => s.startSport)
   const practiceSport = useGameStore(s => s.practiceSport)
   const quitSport = useGameStore(s => s.quitSport)
+  const enterSportCompetition = useGameStore(s => s.enterSportCompetition)
+  const diminishingReturns = useGameStore(s => s.diminishingReturns)
+  const year = useGameStore(s => s.time.year)
   const showPanel = useToastStore(s => s.showPanel)
   const closePanel = useToastStore(s => s.closePanel)
 
@@ -54,6 +58,15 @@ export function SportScreen() {
   const handleQuit = (id: string) => {
     const r = quitSport(id)
     flash(r.message, r.success, '🚫')
+  }
+
+  const handleCompete = (id: string) => {
+    const r = enterSportCompetition(id)
+    const emoji = r.message?.includes('VINTO') || r.message?.includes('LEGGENDARIA') ? '🏆'
+      : r.message?.includes('PODIO') ? '🥈'
+      : r.message?.includes('infortunato') ? '🤕'
+      : '🏅'
+    flash(r.message, r.success, emoji, r.effects as Record<string, number>)
   }
 
   const allDefs = getAllSportDefs()
@@ -115,6 +128,14 @@ export function SportScreen() {
             const def = getSportDef(sport.id)
             const skillColor = sport.skillLevel >= 70 ? '#10b981' : sport.skillLevel >= 40 ? '#f59e0b' : '#6366f1'
             const skillLabel = sport.skillLevel >= 80 ? 'Atleta' : sport.skillLevel >= 55 ? 'Avanzato' : sport.skillLevel >= 30 ? 'Intermedio' : 'Principiante'
+            const compKey = `competition_${sport.id}_${year}`
+            const compUsed = diminishingReturns[compKey] ?? 0
+            const canCompete = sport.skillLevel >= 10 && compUsed < 2
+            const compLevel = SportCompetitionEngine.getLevelForSkill(sport.skillLevel)
+            const compLevelLabels: Record<string, string> = {
+              locale: 'Locale', regionale: 'Regionale', nazionale: 'Nazionale',
+              internazionale: 'Internazionale', olimpico: 'Olimpico',
+            }
             return (
               <div key={sport.id} className="card" style={{
                 padding: '14px',
@@ -133,6 +154,16 @@ export function SportScreen() {
                       </span>
                       <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>dal {sport.yearStarted}</span>
                     </div>
+                    {(sport.competitionsEntered > 0) && (
+                      <div style={{ marginTop: 4, display: 'flex', gap: 8 }}>
+                        <span style={{ fontSize: 10, color: 'var(--text-faint)' }}>
+                          🏅 {sport.competitionsEntered} gare
+                        </span>
+                        <span style={{ fontSize: 10, color: '#fcd34d' }}>
+                          🏆 {sport.competitionsWon} vittorie
+                        </span>
+                      </div>
+                    )}
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <p style={{ fontWeight: 900, fontSize: 20, color: skillColor, lineHeight: 1 }}>{Math.round(sport.skillLevel)}</p>
@@ -146,12 +177,12 @@ export function SportScreen() {
                   </div>
                 </div>
 
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                   <button
                     onClick={() => handlePractice(sport.id)}
                     className="tap-scale"
                     style={{
-                      flex: 1, padding: '8px 0', borderRadius: 12,
+                      flex: 1, minWidth: 80, padding: '8px 0', borderRadius: 12,
                       background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%)',
                       color: '#fff', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer',
                       boxShadow: '0 3px 12px rgba(124,92,255,0.3)',
@@ -159,6 +190,27 @@ export function SportScreen() {
                   >
                     Allenati
                   </button>
+                  {sport.skillLevel >= 10 && (
+                    <button
+                      onClick={() => handleCompete(sport.id)}
+                      disabled={!canCompete}
+                      className={canCompete ? 'tap-scale' : undefined}
+                      style={{
+                        flex: 1, minWidth: 80, padding: '8px 0', borderRadius: 12,
+                        background: canCompete
+                          ? 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'
+                          : 'rgba(255,255,255,0.05)',
+                        color: canCompete ? '#fff' : 'var(--color-text-secondary)',
+                        fontSize: 12, fontWeight: 700, border: 'none',
+                        cursor: canCompete ? 'pointer' : 'not-allowed',
+                        boxShadow: canCompete ? '0 3px 12px rgba(245,158,11,0.3)' : 'none',
+                      }}
+                    >
+                      {canCompete
+                        ? `🏆 Gareggia (${compLevelLabels[compLevel]})`
+                        : compUsed >= 2 ? '🏆 Max gare' : '🏆 Gareggia'}
+                    </button>
+                  )}
                   <button
                     onClick={() => handleQuit(sport.id)}
                     style={{

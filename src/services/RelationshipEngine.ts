@@ -39,6 +39,16 @@ export type NPCAction =
   | 'apologize'
   | 'gift'
   | 'insult'
+  | 'spend_time'
+  | 'ask_money'
+  | 'make_peace'
+  | 'thank'
+  | 'surprise'
+  | 'romantic_outing'
+  | 'vacation_together'
+  | 'propose_cohabitation'
+  | 'do_activity'
+  | 'lend_money'
 
 export interface RelActionResult {
   success: boolean
@@ -176,7 +186,10 @@ export class RelationshipEngine {
 
     const previewRel = { ...rel, ...updatedRel }
     updatedRel.mood = updatedRel.mood ?? this._inferMood(previewRel)
-    const chainedRel = ChainReactionEngine.applyAction(rel, action, updatedRel)
+    // New actions not in ChainReactionEngine — map them to the closest chain action
+    const NEW_ACTIONS = new Set(['spend_time', 'ask_money', 'make_peace', 'thank', 'surprise', 'romantic_outing', 'vacation_together', 'propose_cohabitation', 'do_activity', 'lend_money'])
+    const chainAction = NEW_ACTIONS.has(action) ? 'greet' : action
+    const chainedRel = ChainReactionEngine.applyAction(rel, chainAction as import('./ChainReactionEngine').RelationshipChainAction, updatedRel)
 
     return {
       ...result,
@@ -334,6 +347,26 @@ export class RelationshipEngine {
         return this._withHumanReaction(rel, action, this._apologize(rel, state))
       case 'insult':
         return this._withHumanReaction(rel, action, this._insult(rel, state))
+      case 'spend_time':
+        return this._withHumanReaction(rel, action, this._spendTime(rel, dr, state))
+      case 'ask_money':
+        return this._withHumanReaction(rel, action, this._askMoney(rel, dr, state))
+      case 'make_peace':
+        return this._withHumanReaction(rel, action, this._makePeace(rel, state))
+      case 'thank':
+        return this._withHumanReaction(rel, action, this._thank(rel, state))
+      case 'surprise':
+        return this._withHumanReaction(rel, action, this._surprise(rel, state))
+      case 'romantic_outing':
+        return this._withHumanReaction(rel, action, this._romanticOuting(rel, state))
+      case 'vacation_together':
+        return this._withHumanReaction(rel, action, this._vacationTogether(rel, state))
+      case 'propose_cohabitation':
+        return this._withHumanReaction(rel, action, this._proposeCohabitation(rel, state))
+      case 'do_activity':
+        return this._withHumanReaction(rel, action, this._doActivity(rel, state))
+      case 'lend_money':
+        return this._withHumanReaction(rel, action, this._lendMoney(rel, state))
       default:
         return { success: false, message: 'Azione non riconosciuta.', effects: {} }
     }
@@ -759,5 +792,258 @@ export class RelationshipEngine {
     }
 
     return { advanced: false }
+  }
+
+  // ---- new action methods ----
+
+  private static _spendTime(rel: Relationship, dr: number, state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void state
+    const chance = 0.7 + (rel.trust / 100) * 0.3
+    const success = Math.random() < chance
+    if (!success) {
+      return { success: false, message: 'Troppo occupato/a.', effects: {} }
+    }
+    const trustGain = Math.round(8 * dr)
+    return {
+      success: true,
+      message: `Hai trascorso del tempo di qualità con ${rel.name}. 💛`,
+      effects: { happiness: 6, energy: -5 },
+      updatedRel: { trust: Math.min(100, rel.trust + trustGain) },
+    }
+  }
+
+  private static _askMoney(rel: Relationship, _dr: number, state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _dr
+    const validTypes: RelationshipType[] = ['parent', 'sibling', 'partner', 'spouse']
+    if (!validTypes.includes(rel.type)) {
+      return { success: false, message: `Non puoi chiedere soldi a ${rel.name}.`, effects: {} }
+    }
+    if (rel.trust < 40) {
+      return { success: false, message: `${rel.name} non si fida abbastanza di te.`, effects: {} }
+    }
+    const isParent = rel.type === 'parent'
+    const amount = isParent
+      ? 100 + Math.floor(Math.random() * 400)
+      : 50 + Math.floor(Math.random() * 150)
+    const chance = 0.6
+    const success = Math.random() < chance
+    if (!success) {
+      return {
+        success: false,
+        message: `${rel.name} non ha potuto aiutarti questa volta.`,
+        effects: { happiness: -2 },
+        updatedRel: { trust: Math.max(0, rel.trust - 8) },
+      }
+    }
+    void state
+    return {
+      success: true,
+      message: `${rel.name} ti ha prestato €${amount.toLocaleString('it-IT')}. 💰`,
+      effects: { money: amount, happiness: 3 },
+      updatedRel: { trust: Math.max(0, rel.trust - 5) },
+    }
+  }
+
+  private static _makePeace(rel: Relationship, _state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _state
+    if (rel.trust >= 50) {
+      return { success: false, message: `Non c'è nulla da riconciliare con ${rel.name}.`, effects: {} }
+    }
+    const success = Math.random() < 0.7
+    if (!success) {
+      return {
+        success: false,
+        message: `${rel.name} non è ancora pronto/a a riconciliarsi.`,
+        effects: {},
+        updatedRel: { trust: Math.max(0, rel.trust - 5) },
+      }
+    }
+    return {
+      success: true,
+      message: `Hai fatto pace con ${rel.name}. 🕊️`,
+      effects: { happiness: 5 },
+      updatedRel: {
+        trust: Math.min(100, rel.trust + 15),
+        love: Math.min(100, rel.love + 8),
+      },
+    }
+  }
+
+  private static _thank(rel: Relationship, _state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void _state
+    const isRomantic = rel.type === 'partner' || rel.type === 'spouse'
+    return {
+      success: true,
+      message: `Hai espresso gratitudine a ${rel.name}. Si è sentito/a apprezzato/a. 🙏`,
+      effects: { happiness: 4 },
+      updatedRel: {
+        trust: Math.min(100, rel.trust + 6),
+        love: isRomantic ? Math.min(100, rel.love + 3) : rel.love,
+      },
+    }
+  }
+
+  private static _surprise(rel: Relationship, state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    const closeness = STAGE_ORDER.indexOf(rel.stage)
+    const cost = 50 + Math.round(closeness * 30)
+    if (state.finance.money < cost) {
+      return { success: false, message: 'Non hai abbastanza soldi per una sorpresa.', effects: {} }
+    }
+    const success = Math.random() < 0.65
+    if (!success) {
+      return {
+        success: false,
+        message: `La sorpresa non è andata come pianificato con ${rel.name}.`,
+        effects: { happiness: -3, money: -cost },
+      }
+    }
+    return {
+      success: true,
+      message: `La sorpresa ha emozionato ${rel.name}! 🎁✨`,
+      effects: { happiness: 10, money: -cost },
+      updatedRel: {
+        trust: Math.min(100, rel.trust + 12),
+        love: Math.min(100, rel.love + 8),
+      },
+    }
+  }
+
+  private static _romanticOuting(rel: Relationship, state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    if (rel.type !== 'partner' && rel.type !== 'spouse') {
+      return { success: false, message: 'Questa azione è riservata al tuo partner o coniuge.', effects: {} }
+    }
+    const cost = 80 + Math.floor(Math.random() * 170)
+    if (state.finance.money < cost) {
+      return { success: false, message: `Non hai abbastanza soldi (servono ~€${cost}).`, effects: {} }
+    }
+    const chance = Math.min(0.9, 0.75 + (rel.love / 100) * 0.2)
+    const success = Math.random() < chance
+    if (!success) {
+      return {
+        success: false,
+        message: `L'uscita romantica non è andata come speravi.`,
+        effects: { happiness: -2, energy: -8, money: -cost },
+      }
+    }
+    return {
+      success: true,
+      message: `Una serata romantica meravigliosa con ${rel.name}! 💕`,
+      effects: { happiness: 12, energy: -8, money: -cost },
+      updatedRel: {
+        love: Math.min(100, rel.love + 10),
+      },
+      memoryEntry: {
+        category: 'romantic',
+        description: `Uscita romantica con ${rel.name}`,
+        year: 0,
+        weight: 2,
+        decayFactor: 0.05,
+        unforgettable: false,
+      },
+    }
+  }
+
+  private static _vacationTogether(rel: Relationship, state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    const allowed = rel.type === 'partner' || rel.type === 'spouse' || rel.stage === 'close_friend'
+    if (!allowed) {
+      return { success: false, message: 'Puoi fare vacanze con il partner, coniuge o amici stretti.', effects: {} }
+    }
+    const cost = 500 + Math.floor(Math.random() * 1500)
+    if (state.finance.money < cost) {
+      return { success: false, message: `Non hai abbastanza soldi per la vacanza (servono ~€${cost}).`, effects: {} }
+    }
+    const success = Math.random() < 0.8
+    if (!success) {
+      return {
+        success: false,
+        message: `La vacanza con ${rel.name} è stata deludente.`,
+        effects: { happiness: -3, energy: -10, money: -cost },
+      }
+    }
+    return {
+      success: true,
+      message: `Vacanza indimenticabile con ${rel.name}! 🌴✈️`,
+      effects: { happiness: 20, energy: -10, money: -cost },
+      updatedRel: {
+        trust: Math.min(100, rel.trust + 10),
+        love: Math.min(100, rel.love + 15),
+      },
+      memoryEntry: {
+        category: 'romantic',
+        description: `Vacanza insieme a ${rel.name}`,
+        year: 0,
+        weight: 4,
+        decayFactor: 0.01,
+        unforgettable: true,
+      },
+    }
+  }
+
+  private static _proposeCohabitation(rel: Relationship, state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    void state
+    if (rel.stage !== 'partner') {
+      return { success: false, message: 'Puoi proporre la convivenza solo al tuo partner.', effects: {} }
+    }
+    if (rel.historyFlags.includes('cohabitation_proposed')) {
+      return { success: false, message: `Hai già proposto la convivenza a ${rel.name}.`, effects: {} }
+    }
+    if (rel.love < 60) {
+      return { success: false, message: `${rel.name} non si sente ancora pronto/a per convivere.`, effects: {} }
+    }
+    const chance = Math.min(0.85, 0.4 + (rel.love / 100) * 0.45 + (rel.trust / 100) * 0.2)
+    const success = Math.random() < chance
+    if (!success) {
+      return {
+        success: false,
+        message: `${rel.name} ha declinato la proposta di convivenza. Ci vuole più tempo.`,
+        effects: { happiness: -5 },
+        updatedRel: {
+          love: Math.max(0, rel.love - 5),
+          historyFlags: [...rel.historyFlags, 'cohabitation_proposed'],
+        },
+      }
+    }
+    return {
+      success: true,
+      message: `${rel.name} ha accettato! Vivrete insieme! 🏠💑`,
+      effects: { happiness: 15 },
+      updatedRel: {
+        historyFlags: [...rel.historyFlags, 'cohabitation_proposed', 'cohabiting'],
+        love: Math.min(100, rel.love + 5),
+        trust: Math.min(100, rel.trust + 8),
+      },
+    }
+  }
+
+  private static _doActivity(rel: Relationship, state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    const cost = 20 + Math.floor(Math.random() * 60)
+    if (state.finance.money < cost) {
+      return { success: false, message: 'Non hai abbastanza soldi per l\'attività.', effects: {} }
+    }
+    return {
+      success: true,
+      message: `Hai fatto un\'attività con ${rel.name}. Momenti piacevoli! 🎯`,
+      effects: { happiness: 7, energy: -8, money: -cost },
+      updatedRel: {
+        trust: Math.min(100, rel.trust + 5),
+      },
+    }
+  }
+
+  private static _lendMoney(rel: Relationship, state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    const amount = 100 + Math.floor(Math.random() * 400)
+    if (state.finance.money < amount) {
+      return { success: false, message: `Non hai abbastanza soldi da prestare (servono €${amount}).`, effects: {} }
+    }
+    const debtFlag = `debt_${rel.id}_${state.time.year}`
+    return {
+      success: true,
+      message: `Hai prestato €${amount.toLocaleString('it-IT')} a ${rel.name}. 💸`,
+      effects: { money: -amount, karma: 5 },
+      updatedRel: {
+        trust: Math.min(100, rel.trust + 15),
+        historyFlags: [...rel.historyFlags, debtFlag],
+      },
+    }
   }
 }

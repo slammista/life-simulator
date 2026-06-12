@@ -20,6 +20,9 @@ import { EducationEngine, getEducationLabel } from '../services/EducationEngine'
 import { HealthEngine } from '../services/HealthEngine'
 import { HobbyEngine } from '../services/HobbyEngine'
 import { SportEngine } from '../services/SportEngine'
+import { SportCompetitionEngine } from '../services/SportCompetitionEngine'
+import { SpecialCareerEngine, initialSpecialCareer } from '../services/SpecialCareerEngine'
+import type { SpecialCareerType } from '../services/SpecialCareerEngine'
 import { MinorEconomyEngine } from '../services/MinorEconomyEngine'
 import { CriminalEngine } from '../services/CriminalEngine'
 import { FinanceEngine, type AssetType } from '../services/FinanceEngine'
@@ -437,6 +440,7 @@ function buildInitialState(): GameState {
     band: null,
     will: null,
     citizenships: ['italy'],
+    specialCareer: null,
   }
 }
 
@@ -749,6 +753,14 @@ export const useGameStore = create<FullStore>()(
         // 8b. Sport annual tick
         const { effects: sportFx, updates: sportUpdates } = SportEngine.annualTick(state)
         merge(sportFx)
+
+        // 8c. Special career annual tick
+        let updatedSpecialCareer = state.specialCareer
+        if (state.specialCareer && state.specialCareer.phase !== 'retired') {
+          const { effects: scFx, updatedCareer: scUpdated } = SpecialCareerEngine.annualTick(state.specialCareer, state)
+          merge(scFx)
+          updatedSpecialCareer = scUpdated
+        }
 
         // 9. Criminal annual tick (prison sentence)
         const { effects: criminalFx, message: criminalMsg, updatedCriminal } =
@@ -1208,6 +1220,7 @@ export const useGameStore = create<FullStore>()(
           lifeMemories: yearMemories.length > 0 ? [...state.lifeMemories, ...yearMemories].slice(-200) : state.lifeMemories,
           pendingConsequences: remainingConsequences,
           npcLoans: updatedNpcLoans,
+          specialCareer: updatedSpecialCareer ?? state.specialCareer,
           narrative: {
             ...(state.narrative ?? NarrativeEngine.initialState()),
             arcs: arcTick.updatedArcs,
@@ -2222,6 +2235,101 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Hai smesso di praticare ${sport.name}.`, emoji: '🚫', category: 'hobby', statChanges: {} }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message: `Hai smesso di praticare ${sport.name}.`, effects: {} }
+      },
+
+      enterSportCompetition: (sportId: string): ActionResult => {
+        const state = get()
+        const check = SportCompetitionEngine.canEnter(sportId, state)
+        if (!check.can) return { success: false, message: check.reason!, effects: {} }
+        const result = SportCompetitionEngine.enterCompetition(sportId, state)
+        const partial = applyEffects(state, result.effects)
+        const key = `competition_${sportId}_${state.time.year}`
+        set(s => ({
+          ...partial,
+          sports: (s.sports ?? []).map(sp => sp.id === sportId ? {
+            ...sp,
+            skillLevel: clamp(sp.skillLevel + result.skillGain, 0, 100),
+            competitionsEntered: sp.competitionsEntered + 1,
+            competitionsWon: sp.competitionsWon + (['vittoria', 'eccezionale'].includes(result.outcome) ? 1 : 0),
+            injuries: sp.injuries + (result.outcome === 'infortunio' ? 1 : 0),
+            fame: clamp(sp.fame + (result.effects.fame ?? 0), 0, 100),
+          } : sp),
+          diminishingReturns: { ...s.diminishingReturns, [key]: (s.diminishingReturns[key] ?? 0) + 1 },
+          eventLog: [{
+            id: uid(), year: state.time.year, age: state.time.age,
+            text: result.message,
+            emoji: result.outcome === 'vittoria' ? '🥇' : result.outcome === 'eccezionale' ? '🏆' : result.outcome === 'podio' ? '🥈' : result.outcome === 'infortunio' ? '🤕' : '🏅',
+            category: 'hobby',
+            statChanges: result.effects,
+          }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: result.message, effects: result.effects }
+      },
+
+      startSpecialCareer: (type: SpecialCareerType): ActionResult => {
+        const state = get()
+        if (state.specialCareer) {
+          return { success: false, message: 'Hai già una carriera speciale in corso.', effects: {} }
+        }
+        if (state.time.age < 16) {
+          return { success: false, message: 'Devi avere almeno 16 anni per intraprendere questa carriera.', effects: {} }
+        }
+        const career = initialSpecialCareer(type, state.time.year)
+        const typeLabels: Record<SpecialCareerType, string> = {
+          actor: 'Attore/Attrice',
+          musician: 'Musicista',
+          pro_athlete: 'Atleta Professionista',
+          politician: 'Politico/a',
+        }
+        set(s => ({
+          specialCareer: career,
+          eventLog: [{
+            id: uid(), year: state.time.year, age: state.time.age,
+            text: `Hai iniziato la carriera da ${typeLabels[type]}! 🌟`,
+            emoji: '🌟', category: 'work', statChanges: {},
+          }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Carriera da ${typeLabels[type]} iniziata!`, effects: {} }
+      },
+
+      performSpecialCareerAction: (actionId: string): ActionResult => {
+        const state = get()
+        if (!state.specialCareer) {
+          return { success: false, message: 'Non hai una carriera speciale attiva.', effects: {} }
+        }
+        const career = { ...state.specialCareer }
+        const result = SpecialCareerEngine.performAction(career, actionId, state)
+        const partial = applyEffects(state, result.effects)
+        const scKey = `sc_action_${state.time.year}`
+        const actionKey = `sc_${actionId}_${state.time.year}`
+
+        const updatedCareer: import('../services/SpecialCareerEngine').SpecialCareer = {
+          ...career,
+          projectsCompleted: result.success ? career.projectsCompleted + 1 : career.projectsCompleted,
+          projectsFailed: !result.success ? career.projectsFailed + 1 : career.projectsFailed,
+          fame: clamp(career.fame + result.fameChange, 0, 100),
+          reputation: clamp(career.reputation + result.reputationChange, 0, 100),
+          income: result.phaseAdvanced ? career.income + result.incomeChange : career.income,
+          phase: result.newPhase ?? career.phase,
+          lastActionYear: state.time.year,
+        }
+
+        set(s => ({
+          ...partial,
+          specialCareer: updatedCareer,
+          diminishingReturns: {
+            ...s.diminishingReturns,
+            [scKey]: (s.diminishingReturns[scKey] ?? 0) + 1,
+            [actionKey]: (s.diminishingReturns[actionKey] ?? 0) + 1,
+          },
+          eventLog: [{
+            id: uid(), year: state.time.year, age: state.time.age,
+            text: result.message,
+            emoji: result.success ? '🌟' : '❌',
+            category: 'work', statChanges: result.effects,
+          }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: result.success, message: result.message, effects: result.effects }
       },
 
       // ==================== Criminal actions ====================
@@ -4141,6 +4249,7 @@ export const useGameStore = create<FullStore>()(
           band: ps.band ?? null,
           will: ps.will ?? null,
           citizenships: ps.citizenships ?? [ps.identity?.nationality ?? 'italy'],
+          specialCareer: ps.specialCareer ?? null,
           // Backfill insurance flags for old saves
           finance: ps.finance ? {
             ...ps.finance,
@@ -4205,6 +4314,7 @@ export const useGameStore = create<FullStore>()(
         band: state.band,
         will: state.will,
         citizenships: state.citizenships,
+        specialCareer: state.specialCareer,
       }),
     }
   )

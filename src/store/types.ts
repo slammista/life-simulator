@@ -1310,6 +1310,9 @@ export interface GameState {
 
   // Citizenships (nation IDs)
   citizenships: string[]
+
+  // Special career (actor, musician, pro_athlete, politician)
+  specialCareer: import('../services/SpecialCareerEngine').SpecialCareer | null
 }
 
 // ---- Action Result (shared) ----
@@ -1387,6 +1390,11 @@ export interface GameActions {
   startSport: (sportId: string) => ActionResult
   practiceSport: (sportId: string) => ActionResult
   quitSport: (sportId: string) => ActionResult
+  enterSportCompetition: (sportId: string) => ActionResult
+
+  // Special career actions
+  startSpecialCareer: (type: import('../services/SpecialCareerEngine').SpecialCareerType) => ActionResult
+  performSpecialCareerAction: (actionId: string) => ActionResult
 
   // Criminal engine actions
   commitCrime: (crimeId: string) => ActionResult
