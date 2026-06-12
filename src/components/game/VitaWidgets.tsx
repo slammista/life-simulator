@@ -9,6 +9,7 @@ import type { DailyQuest } from '../../store/types'
 
 interface Props {
   setActiveTab: (tab: Tab) => void
+  setVitaSection: (section: 'home' | 'shop' | 'account' | 'rewards') => void
   setActivitiesSub: (sub: string) => void
   setLavoroSub: (sub: string) => void
   setRelazioniSub: (sub: string) => void
@@ -298,12 +299,48 @@ function CurrentObjective(props: Props) {
   )
 }
 
+// ─── Vita Hub Navigation ─────────────────────────────────────────────────────
+
+function VitaHubNav({ setVitaSection }: Pick<Props, 'setVitaSection'>) {
+  return (
+    <div style={{ marginBottom: 12 }}>
+      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+        🎮 Hub Principale
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+        {([
+          { section: 'shop'    as const, emoji: '🛒', label: 'Shop',    color: '#a78bfa', border: 'rgba(168,85,247,0.2)',  bg: 'rgba(168,85,247,0.05)',  hoverBg: 'rgba(168,85,247,0.1)'  },
+          { section: 'account' as const, emoji: '👤', label: 'Account', color: '#60a5fa', border: 'rgba(59,130,246,0.2)',  bg: 'rgba(59,130,246,0.05)',  hoverBg: 'rgba(59,130,246,0.1)'  },
+          { section: 'rewards' as const, emoji: '🎁', label: 'Rewards', color: '#4ade80', border: 'rgba(34,197,94,0.2)',   bg: 'rgba(34,197,94,0.05)',   hoverBg: 'rgba(34,197,94,0.1)'   },
+        ]).map(({ section, emoji, label, color, border, bg, hoverBg }) => (
+          <button
+            key={section}
+            onClick={() => setVitaSection(section)}
+            onMouseOver={e => (e.currentTarget.style.background = hoverBg)}
+            onMouseOut={e  => (e.currentTarget.style.background = bg)}
+            style={{
+              padding: '12px 8px', borderRadius: 12,
+              border: `1px solid ${border}`, background: bg,
+              cursor: 'pointer', textAlign: 'center', fontSize: 13, fontWeight: 600,
+              color, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4,
+            }}
+          >
+            <span style={{ fontSize: 20 }}>{emoji}</span>
+            {label}
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Combined export ─────────────────────────────────────────────────────────
 
 export function VitaWidgets(props: Props) {
   return (
     <>
       <LifePhaseWidget />
+      <VitaHubNav setVitaSection={props.setVitaSection} />
       <RewardBanner />
       <CurrentObjective {...props} />
       <SuggestedActions {...props} />
