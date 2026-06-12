@@ -1,7 +1,59 @@
-// AdRewardEngine — Rewarded ad simulation + prize pool
-// In production: replace watchAd() body with real AdMob/AdSense SDK call.
+// AdRewardEngine — Rewarded ads with real AdMob SDK (native) + web simulation fallback.
 
+import { Capacitor } from '@capacitor/core'
+import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob'
 import type { GameState } from '../store/types'
+
+export const ADMOB_IDS = {
+  APP_ID: 'ca-app-pub-6813603804166976',
+  REWARDED_GEMS: 'ca-app-pub-6813603804166976/1656665359',   // "Rewarded gemme" — prizes gems
+  REWARDED_MONEY: 'ca-app-pub-6813603804166976/7499479978',  // "Rewarded" — prizes money
+  BANNER: 'ca-app-pub-6813603804166976/4665972077',
+} as const
+
+/**
+ * Shows a rewarded ad and resolves with true when the reward is granted.
+ * On web/PWA falls back to a 5-second simulated delay (always grants reward).
+ * Returns false if the native ad fails to load or the user dismisses early.
+ */
+export async function showRewardedAd(adUnitId: string): Promise<boolean> {
+  if (!Capacitor.isNativePlatform()) {
+    // Web/PWA simulation: pretend a 5-second ad played
+    await new Promise(resolve => setTimeout(resolve, 5000))
+    return true
+  }
+  try {
+    await AdMob.initialize()
+    await AdMob.prepareRewardVideoAd({ adId: adUnitId })
+
+    return await new Promise<boolean>((resolve) => {
+      let rewarded = false
+      let settled = false
+      function finish(result: boolean) {
+        if (!settled) { settled = true; resolve(result) }
+      }
+
+      Promise.all([
+        AdMob.addListener(RewardAdPluginEvents.Rewarded, () => { rewarded = true }),
+        AdMob.addListener(RewardAdPluginEvents.Dismissed, () => finish(rewarded)),
+        AdMob.addListener(RewardAdPluginEvents.FailedToShow, () => finish(false)),
+      ]).then(([rH, dH, fH]) => {
+        AdMob.showRewardVideoAd().catch(() => {
+          rH.remove(); dH.remove(); fH.remove()
+          finish(false)
+        })
+        // Safety timeout after 2 min
+        setTimeout(() => {
+          rH.remove(); dH.remove(); fH.remove()
+          finish(false)
+        }, 120_000)
+      }).catch(() => finish(false))
+    })
+  } catch (e) {
+    console.error('AdMob showRewardedAd error:', e)
+    return false
+  }
+}
 
 export interface AdRewardState {
   watchedToday: number      // reset daily (real-time day)

@@ -10,6 +10,10 @@ const config: CapacitorConfig = {
     allowNavigation: ['joxlweyrhopeqllkftrm.supabase.co'],
   },
   plugins: {
+    AdMob: {
+      appId: 'ca-app-pub-6813603804166976',
+      testingDevices: [],
+    },
     SplashScreen: {
       launchAutoHide: true,
       splashFullScreen: true,

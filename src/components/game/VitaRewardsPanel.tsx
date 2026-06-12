@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { CloudSaveService } from '../../services/CloudSaveService'
 import { useWalletStore } from '../../store/walletStore'
+import { showRewardedAd, ADMOB_IDS } from '../../services/AdRewardEngine'
 
 interface Props {
   onBack: () => void
@@ -100,6 +101,15 @@ export function VitaRewardsPanel({ onBack }: Props) {
     setWatching(true)
     setMessage(null)
     try {
+      // Show real ad (native) or 5-second simulation (web/PWA)
+      const watched = await showRewardedAd(ADMOB_IDS.REWARDED_GEMS)
+      if (!watched) {
+        setMessage({ text: 'Ad non disponibile. Riprova tra poco.', ok: false })
+        return
+      }
+
+      const rewardId = crypto.randomUUID()
+
       // Try server-side reward first
       const isConfigured = CloudSaveService.isConfigured()
       if (isConfigured) {
@@ -109,7 +119,7 @@ export function VitaRewardsPanel({ onBack }: Props) {
           const res = await fetch(`${supabaseUrl}/functions/v1/ad-reward`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ user_id: user.id, ad_type: 'gem_video' }),
+            body: JSON.stringify({ user_id: user.id, ad_type: 'gem_video', reward_id: rewardId }),
           })
           if (res.ok) {
             const { gems_granted } = await res.json() as { gems_granted: number }
