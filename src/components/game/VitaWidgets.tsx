@@ -1,3 +1,4 @@
+import { lazy, Suspense, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../../store/gameStore'
 import { LifePhaseWidget } from './LifePhaseWidget'
@@ -6,6 +7,8 @@ import { AdRewardButton } from './AdRewardButton'
 import { DailyQuestEngine } from '../../services/DailyQuestEngine'
 import type { Tab } from '../navigation/BottomTabs'
 import type { DailyQuest } from '../../store/types'
+
+const NpcEditorModal = lazy(() => import('./NpcEditorModal').then(m => ({ default: m.NpcEditorModal })))
 
 interface Props {
   setActiveTab: (tab: Tab) => void
@@ -334,6 +337,38 @@ function VitaHubNav({ setVitaSection }: Pick<Props, 'setVitaSection'>) {
   )
 }
 
+// ─── God Mode panel (only when unlocked) ─────────────────────────────────────
+
+function GodModePanel() {
+  const godModeUnlocked = useGameStore(s => s.settings.godModeUnlocked)
+  const [showNpcEditor, setShowNpcEditor] = useState(false)
+  if (!godModeUnlocked) return null
+  return (
+    <div className="card" style={{
+      marginBottom: 12, padding: '12px 14px',
+      background: 'linear-gradient(160deg, rgba(124,58,237,0.22) 0%, rgba(27,23,51,0.5) 100%)',
+      border: '1px solid rgba(167,139,250,0.4)',
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 10 }}>
+        <span style={{ fontSize: 18 }}>⚡</span>
+        <span style={{ fontSize: 13, fontWeight: 700, color: '#c4b5fd' }}>God Mode</span>
+      </div>
+      <button
+        onClick={() => setShowNpcEditor(true)}
+        className="btn-candy btn-candy--primary"
+        style={{ width: '100%', fontSize: 13, padding: '9px 0' }}
+      >
+        🧬 Editor NPC
+      </button>
+      {showNpcEditor && (
+        <Suspense fallback={null}>
+          <NpcEditorModal onClose={() => setShowNpcEditor(false)} />
+        </Suspense>
+      )}
+    </div>
+  )
+}
+
 // ─── Combined export ─────────────────────────────────────────────────────────
 
 export function VitaWidgets(props: Props) {
@@ -341,6 +376,7 @@ export function VitaWidgets(props: Props) {
     <>
       <LifePhaseWidget />
       <VitaHubNav setVitaSection={props.setVitaSection} />
+      <GodModePanel />
       <RewardBanner />
       <CurrentObjective {...props} />
       <SuggestedActions {...props} />

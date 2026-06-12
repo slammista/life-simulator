@@ -1,5 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { CloudSaveService } from '../../services/CloudSaveService'
+import { useWalletStore } from '../../store/walletStore'
+import { useGameStore } from '../../store/gameStore'
 
 interface Props {
   onBack: () => void
@@ -49,12 +51,40 @@ export function VitaShopPanel({ onBack }: Props) {
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
   const isConfigured = CloudSaveService.isConfigured()
 
+  const gems = useWalletStore(s => s.gems)
+  const owns = useWalletStore(s => s.owns)
+  const isEquipped = useWalletStore(s => s.isEquipped)
+  const buyCosmetic = useWalletStore(s => s.buyCosmetic)
+  const toggleEquip = useWalletStore(s => s.toggleEquip)
+  const syncWithServer = useWalletStore(s => s.syncWithServer)
+  const godModeUnlocked = useGameStore(s => s.settings.godModeUnlocked)
+  const unlockGodMode = useGameStore(s => s.unlockGodMode)
+  const hasGodMode = useWalletStore(s => s.hasGodMode)
+
+  // Hydrate authoritative wallet/entitlements on open
+  useEffect(() => { syncWithServer() }, [syncWithServer])
+
+  // Mirror the server-side God Mode entitlement into in-game settings
+  useEffect(() => {
+    if (hasGodMode && !godModeUnlocked) unlockGodMode()
+  }, [hasGodMode, godModeUnlocked, unlockGodMode])
+
   const tabs: { id: ShopTab; label: string; emoji: string }[] = [
     { id: 'gems',    label: 'Gemme',    emoji: '💎' },
     { id: 'items',   label: 'Oggetti',  emoji: '🎭' },
     { id: 'bundles', label: 'Bundle',   emoji: '🎁' },
     { id: 'godmode', label: 'God Mode', emoji: '⚡' },
   ]
+
+  // Spend gems on a cosmetic (client optimistic; server validates on sync)
+  function handleGemPurchase(id: string, cost: number) {
+    const res = buyCosmetic(id, cost)
+    if (res.ok) {
+      setMessage({ text: 'Oggetto sbloccato! Equipaggialo quando vuoi.', ok: true })
+    } else {
+      setMessage({ text: res.error ?? 'Acquisto non riuscito', ok: false })
+    }
+  }
 
   async function handleBuy(productId: string) {
     if (!isConfigured) {
@@ -102,6 +132,12 @@ export function VitaShopPanel({ onBack }: Props) {
           ‹
         </button>
         <h2 style={{ fontSize: 18, fontWeight: 700, margin: 0, color: '#fff' }}>🛒 Shop</h2>
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6,
+          padding: '5px 12px', borderRadius: 20,
+          background: 'rgba(167,139,250,0.2)', border: '1px solid rgba(167,139,250,0.3)' }}>
+          <span style={{ fontSize: 15 }}>💎</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#c4b5fd' }}>{gems.toLocaleString('it-IT')}</span>
+        </div>
       </div>
 
       {/* Message */}
@@ -185,31 +221,45 @@ export function VitaShopPanel({ onBack }: Props) {
         </div>
       )}
 
-      {/* Rare Items */}
+      {/* Rare Items — purchased with gems */}
       {tab === 'items' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {RARE_ITEMS.map(item => (
-            <div key={item.id} className="card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ fontSize: 28, lineHeight: 1 }}>{item.emoji}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>{item.name}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>{item.category}</div>
+          {RARE_ITEMS.map(item => {
+            const owned = owns(item.id)
+            const equipped = isEquipped(item.id)
+            return (
+              <div key={item.id} className="card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div style={{ fontSize: 28, lineHeight: 1 }}>{item.emoji}</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>{item.name}</div>
+                  <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>{item.category}</div>
+                </div>
+                {owned ? (
+                  <button
+                    onClick={() => toggleEquip(item.id)}
+                    className={`btn-candy ${equipped ? 'btn-candy--positive' : 'btn-candy--neutral'}`}
+                    style={{ fontSize: 13, padding: '7px 14px' }}
+                  >
+                    {equipped ? '✓ Equipaggiato' : 'Equipaggia'}
+                  </button>
+                ) : (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    <span style={{ fontSize: 13, fontWeight: 700, color: gems >= item.cost ? '#a78bfa' : '#64748b' }}>💎 {item.cost}</span>
+                    <button
+                      onClick={() => handleGemPurchase(item.id, item.cost)}
+                      disabled={gems < item.cost}
+                      className="btn-candy btn-candy--primary"
+                      style={{ fontSize: 13, padding: '7px 14px', opacity: gems < item.cost ? 0.5 : 1 }}
+                    >
+                      Acquista
+                    </button>
+                  </div>
+                )}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa' }}>💎 {item.cost}</span>
-                <button
-                  onClick={() => handleBuyGems(item.id)}
-                  disabled={purchasing === item.id}
-                  className="btn-candy btn-candy--primary"
-                  style={{ fontSize: 13, padding: '7px 14px' }}
-                >
-                  {purchasing === item.id ? '…' : 'Acquista'}
-                </button>
-              </div>
-            </div>
-          ))}
+            )
+          })}
           <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textAlign: 'center', marginTop: 4 }}>
-            Gli oggetti cosmetici non influenzano il gameplay.
+            Gli oggetti cosmetici si pagano in gemme e non influenzano il gameplay. Guadagna gemme nei Rewards 🎁
           </p>
         </div>
       )}
@@ -286,14 +336,23 @@ export function VitaShopPanel({ onBack }: Props) {
                 </div>
               ))}
             </div>
-            <button
-              onClick={() => handleBuyGems('god_mode')}
-              disabled={purchasing === 'god_mode'}
-              className="btn-candy btn-candy--primary"
-              style={{ width: '100%', fontSize: 16, padding: '12px 0', fontWeight: 800 }}
-            >
-              {purchasing === 'god_mode' ? 'Apertura checkout…' : '⚡ Acquista God Mode — €5.99'}
-            </button>
+            {godModeUnlocked ? (
+              <div style={{
+                textAlign: 'center', padding: '12px 0', fontSize: 15, fontWeight: 700,
+                color: '#6ee7b7',
+              }}>
+                ✓ God Mode attivo — apri l'editor in Nuova Partita
+              </div>
+            ) : (
+              <button
+                onClick={() => handleBuyGems('god_mode')}
+                disabled={purchasing === 'god_mode'}
+                className="btn-candy btn-candy--primary"
+                style={{ width: '100%', fontSize: 16, padding: '12px 0', fontWeight: 800 }}
+              >
+                {purchasing === 'god_mode' ? 'Apertura checkout…' : '⚡ Acquista God Mode — €5.99'}
+              </button>
+            )}
           </div>
           <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textAlign: 'center' }}>
             Acquisto una-tantum, valido su tutti i dispositivi con lo stesso account.

@@ -227,6 +227,23 @@ export const CloudSaveService = {
     )
   },
 
+  // Auto-migrate: if the user has a local save but no cloud save yet, push it up.
+  // Safe to call on every login — it no-ops when a cloud save already exists.
+  async migrateLocalToCloud(): Promise<CloudSaveResult> {
+    const client = await getClient()
+    if (!client) return { success: false, error: 'Cloud save non configurato' }
+    const { data: { user } } = await client.auth.getUser()
+    if (!user) return { success: false, error: 'Utente non autenticato' }
+
+    const localRaw = localStorage.getItem(SAVE_KEY)
+    if (!localRaw) return { success: false, error: 'Nessun salvataggio locale' }
+
+    const cloudDate = await CloudSaveService.getCloudSaveDate()
+    if (cloudDate) return { success: false, error: 'Salvataggio cloud già presente' }
+
+    return CloudSaveService.uploadSave()
+  },
+
   // Returns ISO string of last cloud save, or null
   async getCloudSaveDate(): Promise<string | null> {
     const client = await getClient()

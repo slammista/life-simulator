@@ -3,6 +3,7 @@ import { useGameStore } from '../../store/gameStore'
 import { useShallow } from 'zustand/react/shallow'
 import { LegacyEngine } from '../../services/LegacyEngine'
 import { CloudSaveService } from '../../services/CloudSaveService'
+import { useWalletStore } from '../../store/walletStore'
 import { AdRewardEngine } from '../../services/AdRewardEngine'
 import { AdRewardButton } from '../game/AdRewardButton'
 import { RegretEngine } from '../../services/RegretEngine'
@@ -93,6 +94,7 @@ export function GameOverScreen() {
     const user = await CloudSaveService.getCurrentUser()
     if (!user) { setSubmitState('noauth'); return }
     setSubmitState('submitting')
+    const trophies = store.ribbons.filter(r => r.unlockedYear != null).length
     try {
       await CloudSaveService.uploadLeaderboard({
         username: identity.name + ' ' + identity.surname,
@@ -100,9 +102,27 @@ export function GameOverScreen() {
         wealth: Math.max(0, finance.money),
         happiness: Math.round(stats.happiness),
         karma: Math.round(stats.karma + 100),
-        ribbons: store.ribbons.filter(r => r.unlockedYear != null).length,
+        ribbons: trophies,
         ageReached: time.age,
       })
+      // Record this life in the personal past_lives leaderboard + claim bonus gems
+      try {
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+        const res = await fetch(`${supabaseUrl}/functions/v1/game-over`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_id: user.id,
+            final_age: time.age,
+            final_money: Math.max(0, Math.round(finance.money)),
+            trophies_earned: trophies,
+          }),
+        })
+        if (res.ok) {
+          const { total_gems } = await res.json() as { bonus_gems: number; total_gems: number }
+          useWalletStore.getState().setEntitlements({ gems_balance: total_gems })
+        }
+      } catch { /* past_lives recording is best-effort */ }
       setSubmitState('done')
     } catch {
       setSubmitState('error')

@@ -52,7 +52,7 @@ export class NPCAgencyEngine {
     }
   }
 
-  static annualTick(state: GameState, relationships: Relationship[]): NPCAgencyTickResult {
+  static annualTick(state: GameState, relationships: Relationship[], opts?: { divineProtection?: boolean }): NPCAgencyTickResult {
     const agency = NPCAgencyEngine.ensure(state.npcAgency)
     const messages: string[] = []
     const events: NPCAgencyEvent[] = []
@@ -182,6 +182,14 @@ export class NPCAgencyEngine {
 
       return next
     })
+
+    // "Vestito da Dio" perk: the divine outfit shields the player from any
+    // negative fallout of NPC actions — hostile effects are neutralized.
+    if (opts?.divineProtection) {
+      for (const key of Object.keys(effects)) {
+        if (effects[key] < 0) effects[key] = 0
+      }
+    }
 
     return {
       relationships: updatedRelationships,

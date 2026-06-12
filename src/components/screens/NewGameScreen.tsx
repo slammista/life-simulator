@@ -1,9 +1,13 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import type { Gender, FamilyBackground, Religion, SexualOrientation, GameMode, AvatarConfig, SkinTone, AvatarHairStyle, AvatarHairColor, Effect } from '../../store/types'
 import { getDefaultAvatar, SKIN_TONES, HAIR_COLORS } from '../../services/AvatarEngine'
 import { AvatarRenderer } from '../avatar/AvatarRenderer'
 import db from '../../../public/db.json'
+
+const CharacterEditorScreen = lazy(() =>
+  import('./CharacterEditorScreen').then(m => ({ default: m.CharacterEditorScreen })),
+)
 
 interface Scenario {
   id: string
@@ -118,6 +122,9 @@ export function NewGameScreen() {
   const [ironMan, setIronMan] = useState(false)
   const [avatar, setAvatar] = useState<AvatarConfig>(() => getDefaultAvatar('male'))
   const [selectedScenario, setSelectedScenario] = useState<string>('normal')
+  const godModeUnlocked = useGameStore(s => s.settings.godModeUnlocked)
+  const [godBonus, setGodBonus] = useState<Effect | null>(null)
+  const [showEditor, setShowEditor] = useState(false)
 
   const updateAvatar = (patch: Partial<AvatarConfig>) =>
     setAvatar(prev => ({ ...prev, ...patch }))
@@ -136,6 +143,10 @@ export function NewGameScreen() {
   const handleStart = () => {
     if (!name.trim()) return
     const scenario = SCENARIOS.find(s => s.id === selectedScenario)
+    // God Mode attribute overrides win over scenario bonuses on overlapping keys.
+    const startingBonus = godModeUnlocked && godBonus
+      ? { ...(scenario?.bonus ?? {}), ...godBonus }
+      : scenario?.bonus
     newGame({
       name: name.trim(),
       surname: surname.trim() || 'Rossi',
@@ -147,7 +158,7 @@ export function NewGameScreen() {
       sexualOrientation: orientation,
       emoji: '👶',
       avatar,
-    }, nationId, gameMode, ironMan, scenario?.bonus, scenario?.id)
+    }, nationId, gameMode, ironMan, startingBonus, scenario?.id)
   }
 
   const inputStyle = {
@@ -506,6 +517,35 @@ export function NewGameScreen() {
         </div>
       </div>
 
+      {/* God Mode: character editor */}
+      {godModeUnlocked && (
+        <div className="card" style={{
+          marginTop: 20, padding: '14px 16px',
+          background: 'linear-gradient(160deg, rgba(124,58,237,0.25) 0%, rgba(27,23,51,0.6) 100%)',
+          border: '1px solid rgba(167,139,250,0.4)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+            <span style={{ fontSize: 22 }}>⚡</span>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: '#c4b5fd' }}>God Mode</div>
+              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                {godBonus ? 'Attributi personalizzati attivi' : 'Personalizza gli attributi iniziali'}
+              </div>
+            </div>
+            {godBonus && (
+              <span style={{ fontSize: 11, color: '#6ee7b7', fontWeight: 600 }}>✓ attivo</span>
+            )}
+          </div>
+          <button
+            onClick={() => setShowEditor(true)}
+            className="btn-candy btn-candy--primary"
+            style={{ width: '100%', fontSize: 14, padding: '10px 0' }}
+          >
+            ✏️ Modifica Personaggio
+          </button>
+        </div>
+      )}
+
       <div style={{ marginTop: 24 }}>
         <button
           className="btn-age"
@@ -516,6 +556,16 @@ export function NewGameScreen() {
           🚀 Inizia la tua vita!
         </button>
       </div>
+
+      {showEditor && (
+        <Suspense fallback={null}>
+          <CharacterEditorScreen
+            initial={godBonus}
+            onApply={setGodBonus}
+            onClose={() => setShowEditor(false)}
+          />
+        </Suspense>
+      )}
     </div>
   )
 }

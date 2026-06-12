@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { CloudSaveService } from '../../services/CloudSaveService'
+import { useWalletStore } from '../../store/walletStore'
 
 interface Props {
   onBack: () => void
@@ -25,7 +26,6 @@ interface RewardState {
   lastVideoTs: number
   lastReset: string // YYYY-MM-DD
   questsDone: QuestId[]
-  gemsTotal: number
 }
 
 function todayKey() {
@@ -43,7 +43,7 @@ function loadState(): RewardState {
     }
     return s
   } catch {
-    return { videosWatched: 0, lastVideoTs: 0, lastReset: todayKey(), questsDone: [], gemsTotal: 0 }
+    return { videosWatched: 0, lastVideoTs: 0, lastReset: todayKey(), questsDone: [] }
   }
 }
 
@@ -78,8 +78,14 @@ export function VitaRewardsPanel({ onBack }: Props) {
   const [watching, setWatching] = useState(false)
   const [claimed, setClaimed] = useState<QuestId | null>(null)
   const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
+  const gems = useWalletStore(s => s.gems)
+  const addGems = useWalletStore(s => s.addGems)
+  const syncWithServer = useWalletStore(s => s.syncWithServer)
   const cooldown = useCooldown(state.lastVideoTs)
   const canWatch = state.videosWatched < DAILY_VIDEO_LIMIT && cooldown === 0
+
+  // Reconcile offline-earned gems with the server when the panel opens
+  useEffect(() => { syncWithServer() }, [syncWithServer])
 
   function update(patch: Partial<RewardState>) {
     setState(prev => {
@@ -107,24 +113,19 @@ export function VitaRewardsPanel({ onBack }: Props) {
           })
           if (res.ok) {
             const { gems_granted } = await res.json() as { gems_granted: number }
-            update({
-              videosWatched: state.videosWatched + 1,
-              lastVideoTs: Date.now(),
-              gemsTotal: state.gemsTotal + gems_granted,
-            })
+            update({ videosWatched: state.videosWatched + 1, lastVideoTs: Date.now() })
+            // Server already credited; reflect authoritative balance locally
+            useWalletStore.getState().setEntitlements({ gems_balance: gems + gems_granted })
             setMessage({ text: `+${gems_granted} 💎 ricevute! (${state.videosWatched + 1}/${DAILY_VIDEO_LIMIT} oggi)`, ok: true })
             setWatching(false)
             return
           }
         }
       }
-      // Local fallback (offline mode or no auth)
+      // Local fallback (offline mode or no auth) — queued for sync on next login
       const gemsGranted = 10
-      update({
-        videosWatched: state.videosWatched + 1,
-        lastVideoTs: Date.now(),
-        gemsTotal: state.gemsTotal + gemsGranted,
-      })
+      update({ videosWatched: state.videosWatched + 1, lastVideoTs: Date.now() })
+      addGems(gemsGranted)
       setMessage({ text: `+${gemsGranted} 💎 ricevute! (offline) — Accedi per sincronizzarle.`, ok: true })
     } catch {
       setMessage({ text: 'Errore. Riprova tra poco.', ok: false })
@@ -136,7 +137,8 @@ export function VitaRewardsPanel({ onBack }: Props) {
   function handleClaimQuest(questId: QuestId, reward: number) {
     if (state.questsDone.includes(questId)) return
     setClaimed(questId)
-    update({ questsDone: [...state.questsDone, questId], gemsTotal: state.gemsTotal + reward })
+    update({ questsDone: [...state.questsDone, questId] })
+    addGems(reward)
     setMessage({ text: `+${reward} 💎 dalla quest!`, ok: true })
     setTimeout(() => setClaimed(null), 1000)
   }
@@ -159,7 +161,7 @@ export function VitaRewardsPanel({ onBack }: Props) {
           padding: '5px 12px', borderRadius: 20,
           background: 'rgba(167,139,250,0.2)', border: '1px solid rgba(167,139,250,0.3)' }}>
           <span style={{ fontSize: 15 }}>💎</span>
-          <span style={{ fontSize: 13, fontWeight: 700, color: '#c4b5fd' }}>{state.gemsTotal.toLocaleString('it-IT')}</span>
+          <span style={{ fontSize: 13, fontWeight: 700, color: '#c4b5fd' }}>{gems.toLocaleString('it-IT')}</span>
         </div>
       </div>
 

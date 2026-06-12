@@ -1,5 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { CloudSaveService, type CloudUser } from '../../services/CloudSaveService'
+import { useWalletStore } from '../../store/walletStore'
+
+async function getSupaClient() {
+  const { createClient } = await import('@supabase/supabase-js')
+  return createClient(
+    import.meta.env.VITE_SUPABASE_URL as string,
+    import.meta.env.VITE_SUPABASE_ANON_KEY as string,
+  )
+}
 
 interface Props {
   onBack: () => void
@@ -41,20 +50,14 @@ export function VitaAccountPanel({ onBack }: Props) {
     })
   }, [])
 
-  useEffect(() => {
-    if (!user) return
-    CloudSaveService.getCloudSaveDate().then(setCloudDate)
-    fetchPastLives()
-  }, [user])
-
-  async function fetchPastLives() {
-    if (!user) return
-    setLoadingLives(true)
+  const fetchPastLives = useCallback(async (uid: string) => {
     try {
+      const client = await getSupaClient()
+      setLoadingLives(true)
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
-      const { data: { session } } = await (await getSupaClient()).auth.getSession()
+      const { data: { session } } = await client.auth.getSession()
       if (!session) return
-      const res = await fetch(`${supabaseUrl}/rest/v1/past_lives?user_id=eq.${user.id}&order=life_number.desc&limit=10`, {
+      const res = await fetch(`${supabaseUrl}/rest/v1/past_lives?user_id=eq.${uid}&order=life_number.desc&limit=10`, {
         headers: {
           apikey: import.meta.env.VITE_SUPABASE_ANON_KEY as string,
           Authorization: `Bearer ${session.access_token}`,
@@ -69,15 +72,17 @@ export function VitaAccountPanel({ onBack }: Props) {
     } finally {
       setLoadingLives(false)
     }
-  }
+  }, [])
 
-  async function getSupaClient() {
-    const { createClient } = await import('@supabase/supabase-js')
-    return createClient(
-      import.meta.env.VITE_SUPABASE_URL as string,
-      import.meta.env.VITE_SUPABASE_ANON_KEY as string,
-    )
-  }
+  useEffect(() => {
+    if (!user) return
+    // Auto-migrate local progress to the cloud on first login, then reconcile gems
+    CloudSaveService.migrateLocalToCloud().finally(() => {
+      CloudSaveService.getCloudSaveDate().then(setCloudDate)
+    })
+    useWalletStore.getState().syncWithServer()
+    fetchPastLives(user.id)
+  }, [user, fetchPastLives])
 
   async function handleEmailAuth() {
     setAuthMsg(null)

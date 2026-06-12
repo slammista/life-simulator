@@ -58,6 +58,7 @@ import type { BusinessSector, RentalProperty, Will } from './types'
 import { ChaosEngine } from '../services/ChaosEngine'
 import { DailyQuestEngine } from '../services/DailyQuestEngine'
 import { NPCAgencyEngine } from '../services/NPCAgencyEngine'
+import { useWalletStore } from './walletStore'
 import { BalanceEngine } from '../services/BalanceEngine'
 import { NarrativeEngine, rollTraits, buildOriginStory } from '../services/NarrativeEngine'
 import { NameEngine } from '../services/NameEngine'
@@ -734,8 +735,10 @@ export const useGameStore = create<FullStore>()(
           }
         }
 
-        // 7a. Autonomous NPC agency
-        const npcAgencyTick = NPCAgencyEngine.annualTick(state, updatedRelationships)
+        // 7a. Autonomous NPC agency ("Vestito da Dio" shields the player when worn)
+        const wallet = useWalletStore.getState()
+        const divineProtection = wallet.hasGodMode && wallet.equippedCosmetics.includes('divine_wings')
+        const npcAgencyTick = NPCAgencyEngine.annualTick(state, updatedRelationships, { divineProtection })
         merge(npcAgencyTick.effects)
         messages.push(...npcAgencyTick.messages)
         const newNpcEvents = npcAgencyTick.newEvents.slice(0, 5) // only this year's events
