@@ -1,41 +1,75 @@
 import { serve } from "https://deno.land/std@0.208.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.107.0";
-import { HmacSHA256 } from "https://deno.land/x/crypto/mod.ts";
 
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const stripeWebhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET")!;
 
-const GEM_AMOUNTS = {
+const GEM_AMOUNTS: Record<string, number> = {
   gem_pack_100: 100,
   gem_pack_350: 350,
   gem_pack_500: 500,
   gem_pack_1000: 1000,
 };
 
-function verifyStripeSignature(
+// Real HMAC-SHA256 Stripe signature validation using Web Crypto API (Deno).
+// Stripe sends: "Stripe-Signature: t=<timestamp>,v1=<hex_hash>"
+async function verifyStripeSignature(
   body: string,
-  signature: string,
-  secret: string
-): boolean {
-  const [timestamp, signatureHash] = signature.split(",")[0].split("=")[1] + "," + signature.split(",")[1].split("=")[1];
-  const signedContent = `${timestamp}.${body}`;
+  signatureHeader: string,
+  secret: string,
+): Promise<boolean> {
+  const parts = signatureHeader.split(",");
+  let timestamp = "";
+  const hashes: string[] = [];
 
-  // Use simple HMAC validation instead of complex parsing
-  // In production, use Stripe's official library
-  return true; // TODO: Implement proper signature validation
+  for (const part of parts) {
+    const idx = part.indexOf("=");
+    if (idx === -1) continue;
+    const key = part.slice(0, idx);
+    const val = part.slice(idx + 1);
+    if (key === "t") timestamp = val;
+    if (key === "v1") hashes.push(val);
+  }
+
+  if (!timestamp || hashes.length === 0) return false;
+
+  // Reject webhooks older than 5 minutes (replay protection)
+  const webhookAge = Math.abs(Date.now() / 1000 - parseInt(timestamp, 10));
+  if (webhookAge > 300) {
+    console.warn(`Webhook too old: ${webhookAge}s`);
+    return false;
+  }
+
+  const signedContent = `${timestamp}.${body}`;
+  const encoder = new TextEncoder();
+
+  const key = await crypto.subtle.importKey(
+    "raw",
+    encoder.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+
+  const sig = await crypto.subtle.sign("HMAC", key, encoder.encode(signedContent));
+  const computedHash = Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  return hashes.includes(computedHash);
+}
+
+interface StripeSession {
+  id: string;
+  client_reference_id?: string;
+  payment_status?: string;
+  metadata?: Record<string, string>;
 }
 
 interface StripeEvent {
   type: string;
-  data?: {
-    object?: {
-      id?: string;
-      client_reference_id?: string;
-      payment_status?: string;
-      metadata?: Record<string, string>;
-    };
-  };
+  data?: { object?: StripeSession };
 }
 
 serve(async (req: Request) => {
@@ -46,29 +80,33 @@ serve(async (req: Request) => {
     });
   }
 
+  const signature = req.headers.get("stripe-signature") || "";
+  const body = await req.text();
+
+  if (!signature) {
+    return new Response(JSON.stringify({ error: "Missing stripe-signature" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
+  const valid = await verifyStripeSignature(body, signature, stripeWebhookSecret);
+  if (!valid) {
+    console.warn("Invalid Stripe signature");
+    return new Response(JSON.stringify({ error: "Invalid signature" }), {
+      status: 401,
+      headers: { "Content-Type": "application/json" },
+    });
+  }
+
   try {
-    const signature = req.headers.get("stripe-signature") || "";
-    const body = await req.text();
-
-    // Verify webhook signature (simplified - in production use stripe lib)
-    if (!signature) {
-      console.warn("Missing stripe-signature header");
-      return new Response(JSON.stringify({ error: "Invalid signature" }), {
-        status: 400,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-
     const event = JSON.parse(body) as StripeEvent;
     const client = createClient(supabaseUrl, supabaseServiceRoleKey);
 
     if (event.type === "checkout.session.completed") {
       const session = event.data?.object;
       if (!session) {
-        return new Response(JSON.stringify({ error: "No session data" }), {
-          status: 400,
-          headers: { "Content-Type": "application/json" },
-        });
+        return new Response(JSON.stringify({ error: "No session data" }), { status: 400 });
       }
 
       const userId = session.client_reference_id;
@@ -76,91 +114,67 @@ serve(async (req: Request) => {
       const purchaseId = session.metadata?.purchase_id;
 
       if (!userId || !productType) {
-        return new Response(JSON.stringify({ error: "Missing user_id or product_type" }), {
-          status: 400,
+        return new Response(
+          JSON.stringify({ error: "Missing user_id or product_type" }),
+          { status: 400, headers: { "Content-Type": "application/json" } },
+        );
+      }
+
+      // Idempotency: if this session was already processed, skip it silently.
+      const { data: alreadyClaimed } = await client.rpc("claim_reward_idempotent", {
+        p_user_id: userId,
+        p_reward_id: `stripe_session_${session.id}`,
+        p_reward_type: "checkout.session.completed",
+      });
+
+      if (alreadyClaimed === false) {
+        console.log(`Session ${session.id} already processed — skipping`);
+        return new Response(JSON.stringify({ received: true }), {
+          status: 200,
           headers: { "Content-Type": "application/json" },
         });
       }
 
-      // Update purchase to completed
-      const { error: purchaseError } = await client
-        .from("purchases")
-        .update({
-          status: "completed",
-          stripe_session_id: session.id,
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", purchaseId);
-
-      if (purchaseError) {
-        console.error("Purchase update error:", purchaseError);
-        return new Response(JSON.stringify({ error: "Failed to update purchase" }), {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        });
+      // Mark purchase as completed
+      if (purchaseId) {
+        await client
+          .from("purchases")
+          .update({
+            status: "completed",
+            stripe_session_id: session.id,
+            completed_at: new Date().toISOString(),
+          })
+          .eq("id", purchaseId);
       }
 
-      // Process entitlements based on product type
+      // Grant entitlement based on product type
       if (productType === "no_ads") {
-        const { error: flagError } = await client
-          .from("users")
-          .update({ has_no_ads: true })
-          .eq("id", userId);
-
-        if (flagError) {
-          console.error("Flag update error:", flagError);
-          return new Response(JSON.stringify({ error: "Failed to grant no_ads" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
+        await client.from("users").update({ has_no_ads: true }).eq("id", userId);
       } else if (productType === "god_mode") {
-        const { error: flagError } = await client
-          .from("users")
-          .update({ has_god_mode: true })
-          .eq("id", userId);
-
-        if (flagError) {
-          console.error("Flag update error:", flagError);
-          return new Response(JSON.stringify({ error: "Failed to grant god_mode" }), {
-            status: 500,
-            headers: { "Content-Type": "application/json" },
-          });
-        }
-      } else if (productType.startsWith("gem_pack_")) {
-        const gemAmount = GEM_AMOUNTS[productType as keyof typeof GEM_AMOUNTS];
-        if (gemAmount) {
-          // Use SQL to atomically increment gems
-          const { error: gemsError } = await client.rpc("increment_user_gems", {
-            user_id: userId,
-            amount: gemAmount,
-          });
-
-          if (gemsError) {
-            // Fallback: manual increment
-            const { data: user } = await client
+        await client.from("users").update({ has_god_mode: true }).eq("id", userId);
+      } else if (productType in GEM_AMOUNTS) {
+        const gemAmount = GEM_AMOUNTS[productType];
+        const { error: rpcError } = await client.rpc("increment_user_gems", {
+          user_id: userId,
+          amount: gemAmount,
+        });
+        if (rpcError) {
+          // Fallback: manual read-update
+          const { data: user } = await client
+            .from("users")
+            .select("gems_balance")
+            .eq("id", userId)
+            .single();
+          if (user) {
+            await client
               .from("users")
-              .select("gems_balance")
-              .eq("id", userId)
-              .single();
-
-            if (user) {
-              await client
-                .from("users")
-                .update({ gems_balance: (user.gems_balance || 0) + gemAmount })
-                .eq("id", userId);
-            }
+              .update({ gems_balance: (user.gems_balance || 0) + gemAmount })
+              .eq("id", userId);
           }
         }
       }
-
-      return new Response(JSON.stringify({ received: true }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
     }
 
-    // Acknowledge other events
     return new Response(JSON.stringify({ received: true }), {
       status: 200,
       headers: { "Content-Type": "application/json" },
