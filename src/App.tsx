@@ -54,7 +54,13 @@ const PrivacyPolicyScreen = lazy(() => import('./components/screens/PrivacyPolic
 const LeaderboardScreen   = lazy(() => import('./components/screens/LeaderboardScreen').then(m => ({ default: m.LeaderboardScreen })))
 const SocializeScreen     = lazy(() => import('./components/screens/SocializeScreen').then(m => ({ default: m.SocializeScreen })))
 
+// ---- Vita Hub Panels (lazy-loaded) ----
+const VitaShopPanel = lazy(() => import('./components/game/VitaShopPanel').then(m => ({ default: m.VitaShopPanel })))
+const VitaAccountPanel = lazy(() => import('./components/game/VitaAccountPanel').then(m => ({ default: m.VitaAccountPanel })))
+const VitaRewardsPanel = lazy(() => import('./components/game/VitaRewardsPanel').then(m => ({ default: m.VitaRewardsPanel })))
+
 // ---- Sub-tab types ----
+type VitaSection     = 'home' | 'shop' | 'account' | 'rewards'
 type LavoroSubTab    = 'career' | 'education' | 'military' | 'pension'
 type AssetsSubTab    = 'finance' | 'vehicle' | 'living' | 'social'
 type RelazioniSubTab = 'relationships' | 'dating' | 'famiglia' | 'pets'
@@ -106,6 +112,7 @@ function App() {
 
   const [ageConfirmed, setAgeConfirmed] = useState(() => !!localStorage.getItem('age_confirmed'))
   const [activeTab, setActiveTab] = useState<Tab>('vita')
+  const [vitaSection, setVitaSection] = useState<VitaSection>('home')
   const [lavoroSub,    setLavoroSubRaw]    = useState<LavoroSubTab>('career')
   const [assetsSub,    setAssetsSub]    = useState<AssetsSubTab>('finance')
   const [relazioniSub, setRelazioniSubRaw] = useState<RelazioniSubTab>('relationships')
@@ -124,6 +131,7 @@ function App() {
 
   const handleAge = useCallback(() => {
     setActiveTab('vita')
+    setVitaSection('home')
     if (!ageDisabled) {
       setAgeOverlay({ visible: true, age: time.age + 1, year: time.year + 1 })
       handleInvecchia()
@@ -185,12 +193,13 @@ function App() {
 
       {/* Main content */}
       <div className="app-content">
-        {activeTab === 'vita' && (
+        {activeTab === 'vita' && vitaSection === 'home' && (
           <div className="main-dashboard">
             <div className="event-panel">
               <div style={{ padding: '8px 12px 0' }}>
                 <VitaWidgets
                   setActiveTab={setActiveTab}
+                  setVitaSection={setVitaSection}
                   setActivitiesSub={setActivitiesSub}
                   setLavoroSub={setLavoroSub}
                   setRelazioniSub={setRelazioniSub}
@@ -204,6 +213,11 @@ function App() {
 
         <ErrorBoundary>
           <Suspense fallback={<ScreenFallback />}>
+            {/* VITA HUB PANELS */}
+            {activeTab === 'vita' && vitaSection === 'shop' && <VitaShopPanel onBack={() => setVitaSection('home')} />}
+            {activeTab === 'vita' && vitaSection === 'account' && <VitaAccountPanel onBack={() => setVitaSection('home')} />}
+            {activeTab === 'vita' && vitaSection === 'rewards' && <VitaRewardsPanel onBack={() => setVitaSection('home')} />}
+
             {/* LAVORO */}
             {activeTab === 'lavoro' && lavoroSub === 'career'    && <CareerScreen />}
             {activeTab === 'lavoro' && lavoroSub === 'education' && <EducationScreen />}
