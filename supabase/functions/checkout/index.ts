@@ -6,12 +6,12 @@ const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY")!;
 
 const PRODUCT_PRICES = {
-  gem_pack_100: { price_id: "price_gem100", amount_cents: 99 },
-  gem_pack_350: { price_id: "price_gem350", amount_cents: 299 },
-  gem_pack_500: { price_id: "price_gem500", amount_cents: 599 },
-  gem_pack_1000: { price_id: "price_gem1000", amount_cents: 999 },
-  no_ads: { price_id: "price_noads", amount_cents: 299 },
-  god_mode: { price_id: "price_godmode", amount_cents: 599 },
+  gem_pack_100: { price_id: "price_1ThsbPLp739enNo0c2Ny6dPY", amount_cents: 99 },
+  gem_pack_350: { price_id: "price_1ThsbxLp739enNo0sEeXwhJm", amount_cents: 299 },
+  gem_pack_500: { price_id: "price_1ThscHLp739enNo0XLkU0pNb", amount_cents: 599 },
+  gem_pack_1000: { price_id: "price_1ThscYLp739enNo0QuEHi6xv", amount_cents: 999 },
+  no_ads: { price_id: "price_1Thse8Lp739enNo0piwkDeSC", amount_cents: 299 },
+  god_mode: { price_id: "price_1ThscsLp739enNo0QVhZDsKN", amount_cents: 599 },
 };
 
 interface CheckoutRequest {

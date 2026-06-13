@@ -17,6 +17,7 @@ import { ToastContainer } from './components/game/ToastNotification'
 import { ActionResultPanel } from './components/game/ActionResultPanel'
 import { NPCEventNotifications } from './components/game/NPCEventNotifications'
 import { VitaWidgets } from './components/game/VitaWidgets'
+import { AdBanner } from './components/game/AdBanner'
 import { OriginStoryScreen } from './components/screens/OriginStoryScreen'
 import { ShareLifeButton } from './components/game/ShareLifeButton'
 import { FirstPlayHint } from './components/game/FirstPlayHint'
@@ -369,6 +370,7 @@ function App() {
         onDone={() => setAgeOverlay(s => ({ ...s, visible: false }))}
       />
       <FirstPlayHint hasEvent={currentEvent !== null} age={time.age} />
+      <AdBanner visible={activeTab === 'vita' && vitaSection === 'home'} />
       <NPCEventNotifications />
       <ActionResultPanel />
       <ToastContainer />

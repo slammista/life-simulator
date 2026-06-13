@@ -1,7 +1,12 @@
 // AdRewardEngine — Rewarded ads with real AdMob SDK (native) + web simulation fallback.
 
 import { Capacitor } from '@capacitor/core'
-import { AdMob, RewardAdPluginEvents } from '@capacitor-community/admob'
+import {
+  AdMob,
+  RewardAdPluginEvents,
+  BannerAdPosition,
+  BannerAdSize,
+} from '@capacitor-community/admob'
 import type { GameState } from '../store/types'
 
 export const ADMOB_IDS = {
@@ -52,6 +57,46 @@ export async function showRewardedAd(adUnitId: string): Promise<boolean> {
   } catch (e) {
     console.error('AdMob showRewardedAd error:', e)
     return false
+  }
+}
+
+let adMobInitialized = false
+let bannerVisible = false
+
+async function ensureAdMobInit(): Promise<void> {
+  if (adMobInitialized) return
+  await AdMob.initialize()
+  adMobInitialized = true
+}
+
+/**
+ * Shows a bottom banner ad. No-op on web/PWA (no native SDK).
+ * Safe to call repeatedly — it won't stack banners.
+ */
+export async function showBannerAd(): Promise<void> {
+  if (!Capacitor.isNativePlatform() || bannerVisible) return
+  try {
+    await ensureAdMobInit()
+    await AdMob.showBanner({
+      adId: ADMOB_IDS.BANNER,
+      adSize: BannerAdSize.ADAPTIVE_BANNER,
+      position: BannerAdPosition.BOTTOM_CENTER,
+      margin: 0,
+    })
+    bannerVisible = true
+  } catch (e) {
+    console.error('AdMob showBannerAd error:', e)
+  }
+}
+
+/** Hides the bottom banner ad. No-op on web/PWA. */
+export async function hideBannerAd(): Promise<void> {
+  if (!Capacitor.isNativePlatform() || !bannerVisible) return
+  try {
+    await AdMob.hideBanner()
+    bannerVisible = false
+  } catch (e) {
+    console.error('AdMob hideBannerAd error:', e)
   }
 }
 

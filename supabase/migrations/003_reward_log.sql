@@ -17,6 +17,7 @@ CREATE INDEX IF NOT EXISTS idx_reward_log_user_type_date
 -- RLS: users can read their own log; only backend can write.
 ALTER TABLE public.reward_log ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can view own reward log" ON public.reward_log;
 CREATE POLICY "Users can view own reward log"
   ON public.reward_log FOR SELECT
   USING (auth.uid() = user_id);
