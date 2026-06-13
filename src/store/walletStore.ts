@@ -97,12 +97,22 @@ export const useWalletStore = create<WalletState>()(
         if (!user) return
         const { pendingGemDelta } = get()
         const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+        const authHeaders = {
+          'Content-Type': 'application/json',
+          'apikey': anonKey,
+          'Authorization': `Bearer ${anonKey}`,
+        }
         try {
           if (pendingGemDelta > 0) {
             const res = await fetch(`${supabaseUrl}/functions/v1/gems-sync`, {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ user_id: user.id, localGemsDelta: pendingGemDelta }),
+              headers: authHeaders,
+              body: JSON.stringify({
+                user_id: user.id,
+                local_gems_delta: pendingGemDelta,
+                source: 'offline_accrual',
+              }),
             })
             if (res.ok) {
               const { gems_balance } = await res.json() as { gems_balance: number }
@@ -111,10 +121,14 @@ export const useWalletStore = create<WalletState>()(
             }
           }
           // Even with no delta, hydrate authoritative entitlements
-          const { data: { session } } = await (await getClient()).auth.getSession()
-          if (!session) return
+          const client = await getClient()
+          const { data: { session } } = await client.auth.getSession()
+          const token = session?.access_token ?? anonKey
           const ent = await fetch(`${supabaseUrl}/functions/v1/user-entitlements`, {
-            headers: { Authorization: `Bearer ${session.access_token}` },
+            headers: {
+              'apikey': anonKey,
+              'Authorization': `Bearer ${token}`,
+            },
           })
           if (ent.ok) {
             const data = await ent.json()

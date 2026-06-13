@@ -99,9 +99,14 @@ export function VitaShopPanel({ onBack }: Props) {
     setPurchasing(productId)
     try {
       const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+      const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
       const res = await fetch(`${supabaseUrl}/functions/v1/checkout`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'apikey': anonKey,
+          'Authorization': `Bearer ${anonKey}`,
+        },
         body: JSON.stringify({ user_id: user.id, product_type: productId }),
       })
       const data = await res.json()

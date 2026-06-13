@@ -116,9 +116,14 @@ export function VitaRewardsPanel({ onBack }: Props) {
         const user = await CloudSaveService.getCurrentUser()
         if (user) {
           const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+          const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
           const res = await fetch(`${supabaseUrl}/functions/v1/ad-reward`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+              'Content-Type': 'application/json',
+              'apikey': anonKey,
+              'Authorization': `Bearer ${anonKey}`,
+            },
             body: JSON.stringify({ user_id: user.id, ad_type: 'gem_video', reward_id: rewardId }),
           })
           if (res.ok) {

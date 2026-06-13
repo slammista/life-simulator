@@ -46,6 +46,20 @@
 
     <!-- Fonts: self-hosted via @fontsource-variable/inter for full offline support -->
 
+    <!-- Google Consent Mode v2 (must be before AdSense) -->
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      // Default: deny all until user consents (GDPR)
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        analytics_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        wait_for_update: 500,
+      });
+    </script>
+
     <!-- Google AdSense (web/PWA ads) -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6813603804166976"
      crossorigin="anonymous"></script>
