@@ -4,6 +4,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.107.0";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 interface AdRewardRequest {
   user_id: string;
   ad_type: "gem_video" | "bonus_multiplier";
@@ -21,10 +27,13 @@ const DAILY_LIMITS: Record<string, number> = {
 };
 
 serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
@@ -35,14 +44,14 @@ serve(async (req: Request) => {
     if (!body.user_id || !body.ad_type || !body.reward_id) {
       return new Response(
         JSON.stringify({ error: "Missing required fields: user_id, ad_type, reward_id" }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } },
       );
     }
 
     if (!(body.ad_type in REWARD_AMOUNTS)) {
       return new Response(
         JSON.stringify({ error: "Invalid ad_type" }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } },
       );
     }
 
@@ -56,7 +65,7 @@ serve(async (req: Request) => {
       console.error("Rate limit check failed:", countError);
       return new Response(
         JSON.stringify({ error: "Rate limit check failed" }),
-        { status: 500, headers: { "Content-Type": "application/json" } },
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } },
       );
     }
 
@@ -68,7 +77,7 @@ serve(async (req: Request) => {
           limit: dailyLimit,
           claimed_today: countToday,
         }),
-        { status: 429, headers: { "Content-Type": "application/json" } },
+        { status: 429, headers: { "Content-Type": "application/json", ...corsHeaders } },
       );
     }
 
@@ -83,14 +92,14 @@ serve(async (req: Request) => {
       console.error("Claim failed:", claimError);
       return new Response(
         JSON.stringify({ error: "Failed to claim reward" }),
-        { status: 500, headers: { "Content-Type": "application/json" } },
+        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } },
       );
     }
 
     if (claimed === false) {
       return new Response(
         JSON.stringify({ error: "Reward already claimed" }),
-        { status: 400, headers: { "Content-Type": "application/json" } },
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } },
       );
     }
 
@@ -133,13 +142,13 @@ serve(async (req: Request) => {
         claimed_today: (countToday as number) + 1,
         limit: dailyLimit,
       }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
+      { status: 200, headers: { "Content-Type": "application/json", ...corsHeaders } },
     );
   } catch (error) {
     console.error("Ad reward error:", error);
     return new Response(
       JSON.stringify({ error: "Internal server error" }),
-      { status: 500, headers: { "Content-Type": "application/json" } },
+      { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } },
     );
   }
 });

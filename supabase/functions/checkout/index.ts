@@ -5,6 +5,12 @@ const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const stripeSecretKey = Deno.env.get("STRIPE_SECRET_KEY")!;
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 const PRODUCT_PRICES = {
   gem_pack_100: { price_id: "price_1ThsbPLp739enNo0c2Ny6dPY", amount_cents: 99 },
   gem_pack_350: { price_id: "price_1ThsbxLp739enNo0sEeXwhJm", amount_cents: 299 },
@@ -20,10 +26,13 @@ interface CheckoutRequest {
 }
 
 serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
@@ -34,7 +43,7 @@ serve(async (req: Request) => {
     if (!body.user_id || !body.product_type || !(body.product_type in PRODUCT_PRICES)) {
       return new Response(JSON.stringify({ error: "Invalid product_type or user_id" }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -57,7 +66,7 @@ serve(async (req: Request) => {
       console.error("Purchase insert error:", purchaseError);
       return new Response(JSON.stringify({ error: "Failed to create purchase record" }), {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -87,7 +96,7 @@ serve(async (req: Request) => {
       console.error("Stripe error:", error);
       return new Response(JSON.stringify({ error: "Failed to create Stripe session" }), {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -106,14 +115,14 @@ serve(async (req: Request) => {
       }),
       {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   } catch (error) {
     console.error("Checkout error:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 });

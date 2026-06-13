@@ -4,6 +4,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.107.0";
 const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
 const supabaseServiceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+};
+
 interface SyncRequest {
   user_id: string;
   local_gems_delta: number;
@@ -11,10 +17,13 @@ interface SyncRequest {
 }
 
 serve(async (req: Request) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
+  }
   if (req.method !== "POST") {
     return new Response(JSON.stringify({ error: "Method not allowed" }), {
       status: 405,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 
@@ -25,7 +34,7 @@ serve(async (req: Request) => {
     if (!body.user_id || typeof body.local_gems_delta !== "number") {
       return new Response(JSON.stringify({ error: "Invalid request" }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -39,7 +48,7 @@ serve(async (req: Request) => {
       );
       return new Response(JSON.stringify({ error: "Invalid gem amount" }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -48,7 +57,7 @@ serve(async (req: Request) => {
       console.warn(`Negative gem delta attempt for user ${body.user_id}`);
       return new Response(JSON.stringify({ error: "Cannot reduce gems" }), {
         status: 400,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -62,7 +71,7 @@ serve(async (req: Request) => {
     if (fetchError || !user) {
       return new Response(JSON.stringify({ error: "User not found" }), {
         status: 404,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -75,7 +84,7 @@ serve(async (req: Request) => {
     if (secondsSinceSync < 1) {
       return new Response(JSON.stringify({ error: "Sync too frequent" }), {
         status: 429,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -96,7 +105,7 @@ serve(async (req: Request) => {
       console.error("Gems update error:", updateError);
       return new Response(JSON.stringify({ error: "Failed to sync gems" }), {
         status: 500,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       });
     }
 
@@ -107,14 +116,14 @@ serve(async (req: Request) => {
       }),
       {
         status: 200,
-        headers: { "Content-Type": "application/json" },
+        headers: { "Content-Type": "application/json", ...corsHeaders },
       }
     );
   } catch (error) {
     console.error("Sync error:", error);
     return new Response(JSON.stringify({ error: "Internal server error" }), {
       status: 500,
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...corsHeaders },
     });
   }
 });
