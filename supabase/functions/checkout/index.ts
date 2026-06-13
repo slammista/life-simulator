@@ -49,6 +49,15 @@ serve(async (req: Request) => {
 
     const product = PRODUCT_PRICES[body.product_type];
 
+    // Ensure user row exists in our custom users table (auto-create on first purchase)
+    const { data: authUserData } = await client.auth.admin.getUserById(body.user_id);
+    if (authUserData?.user) {
+      await client.from("users").upsert({
+        id: body.user_id,
+        email: authUserData.user.email ?? "",
+      }, { onConflict: "id", ignoreDuplicates: true });
+    }
+
     // Create pending purchase record in database
     const { data: purchase, error: purchaseError } = await client
       .from("purchases")
@@ -64,7 +73,7 @@ serve(async (req: Request) => {
 
     if (purchaseError) {
       console.error("Purchase insert error:", purchaseError);
-      return new Response(JSON.stringify({ error: "Failed to create purchase record" }), {
+      return new Response(JSON.stringify({ error: "Failed to create purchase record", detail: purchaseError.message }), {
         status: 500,
         headers: { "Content-Type": "application/json", ...corsHeaders },
       });
