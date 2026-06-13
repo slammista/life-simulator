@@ -70,25 +70,27 @@ serve(async (req: Request) => {
       });
     }
 
-    // Create Stripe Checkout Session
+    const siteUrl = Deno.env.get("SITE_URL") || "https://life-simulator-2d.vercel.app";
+
+    // Create Stripe Checkout Session — use indexed form keys (Stripe API requirement)
+    const params = new URLSearchParams();
+    params.append("payment_method_types[0]", "card");
+    params.append("line_items[0][price]", product.price_id);
+    params.append("line_items[0][quantity]", "1");
+    params.append("mode", "payment");
+    params.append("success_url", `${siteUrl}/?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
+    params.append("cancel_url", `${siteUrl}/?checkout=cancel`);
+    params.append("client_reference_id", body.user_id);
+    params.append("metadata[product_type]", body.product_type);
+    params.append("metadata[purchase_id]", purchase.id);
+
     const checkoutSession = await fetch("https://api.stripe.com/v1/checkout/sessions", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${stripeSecretKey}`,
         "Content-Type": "application/x-www-form-urlencoded",
       },
-      body: new URLSearchParams({
-        payment_method_types: "card",
-        line_items: `[{"price":"${product.price_id}","quantity":1}]`,
-        mode: "payment",
-        success_url: `${Deno.env.get("SITE_URL") || "https://life-simulator.vercel.app"}/checkout/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${Deno.env.get("SITE_URL") || "https://life-simulator.vercel.app"}/checkout/cancel`,
-        client_reference_id: body.user_id,
-        metadata: {
-          product_type: body.product_type,
-          purchase_id: purchase.id,
-        },
-      }).toString(),
+      body: params.toString(),
     });
 
     if (!checkoutSession.ok) {

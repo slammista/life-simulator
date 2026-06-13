@@ -88,12 +88,12 @@ export function VitaShopPanel({ onBack }: Props) {
 
   async function handleBuy(productId: string) {
     if (!isConfigured) {
-      setMessage({ text: 'Servizio non configurato. Connettiti prima.', ok: false })
+      setMessage({ text: 'Servizio non disponibile. Controlla le variabili d\'ambiente Vercel (VITE_SUPABASE_URL, VITE_SUPABASE_ANON_KEY).', ok: false })
       return
     }
     const user = await CloudSaveService.getCurrentUser()
     if (!user) {
-      setMessage({ text: 'Accedi al tuo account per acquistare.', ok: false })
+      setMessage({ text: '🔐 Devi accedere al tuo account per acquistare. Vai su Account (in alto a destra).', ok: false })
       return
     }
     setPurchasing(productId)
