@@ -6,6 +6,7 @@
 
 import { darken, lighten } from './avatarSvg'
 import { HAIR_COLORS, EYE_COLORS } from './AvatarEngine'
+import type { AgeAppliedConfig } from './AvatarEngine'
 import type {
   AvatarConfig, SkinTone, AvatarHairStyle, EyeStyle, BrowStyle,
   BeardStyle, MouthStyle, AvatarAccessory,
@@ -253,6 +254,18 @@ function clothes(style: string, hex: string): string {
   }
 }
 
+// ---- Baby hair tuft (ciuffetto neonato) ----
+// Shown when isBaby && hairStyle === 'bald': three fine curved strokes at the
+// crown, distinguishing a newborn from a bald adult.
+// Paths scaled from the original 100×100 system (head cx=50 cy=42 r=26) to
+// this 200×200 system (head cx=100 cy=80 r=35, scale ≈ 1.35).
+function babyHairTuft(fill: string): string {
+  const sw = 3.5
+  return `<path d="M 96 46 Q 92 33 91 43" stroke="${fill}" stroke-width="${sw}" fill="none" stroke-linecap="round"/>`
+       + `<path d="M 101 44 Q 103 31 104 41" stroke="${fill}" stroke-width="${sw}" fill="none" stroke-linecap="round"/>`
+       + `<path d="M 107 46 Q 111 33 110 43" stroke="${fill}" stroke-width="${sw}" fill="none" stroke-linecap="round"/>`
+}
+
 export interface BrightAvatarOpts {
   size?: number
   background?: string | null   // disc colour; null = transparent
@@ -299,8 +312,12 @@ export function buildBrightAvatarInner(config: AvatarConfig, opts: { background?
   s += `<path d="M88,107 C95,115 105,115 112,107 L112,112 C105,120 95,120 88,112 Z" fill="${skin.shadow}" opacity="0.4"/>`
   // face
   s += `<circle cx="100" cy="80" r="35" fill="${skin.fill}"/>`
-  // hair front (over forehead), plus hat over it when present
+  // hair front (over forehead), plus baby tuft for neonates
   s += hairFront(config.hairStyle, hairHex)
+  const ageExt = config as AgeAppliedConfig
+  if (ageExt.isBaby && config.hairStyle === 'bald') {
+    s += babyHairTuft(hairHex)
+  }
   if (acc === 'hat_cap' || acc === 'hat_beanie' || acc === 'hat_fedora') {
     s += hat(acc)
   }
