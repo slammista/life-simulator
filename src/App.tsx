@@ -20,6 +20,9 @@ import { VitaWidgets } from './components/game/VitaWidgets'
 import { AdBanner } from './components/game/AdBanner'
 import { CookieConsent } from './components/common/CookieConsent'
 import { CenterAlert } from './components/common/CenterAlert'
+import { MinigameChallengeModal } from './components/minigames/MinigameChallengeModal'
+import { useChallengeStore } from './store/challengeStore'
+import { pickRandomChallenge } from './components/minigames/challengeRegistry'
 import { OriginStoryScreen } from './components/screens/OriginStoryScreen'
 import { ShareLifeButton } from './components/game/ShareLifeButton'
 import { FirstPlayHint } from './components/game/FirstPlayHint'
@@ -267,6 +270,13 @@ function App() {
       AudioEngine.playSFX('ageUp')
       setAgeOverlay({ visible: true, age: time.age + 1, year: time.year + 1 })
       handleInvecchia()
+      // The game may "pose" a mini-game challenge as an event — only when no
+      // normal event popped up this year, to avoid stacking modals.
+      const fresh = useGameStore.getState()
+      if (!fresh.currentEvent && !fresh.isGameOver && Math.random() < 0.2) {
+        const challenge = pickRandomChallenge(fresh)
+        if (challenge) useChallengeStore.getState().open(challenge.id, 'event')
+      }
     }
   }, [ageDisabled, handleInvecchia, time.age, time.year])
 
@@ -441,6 +451,7 @@ function App() {
       <ActionResultPanel />
       <ToastContainer />
       <CenterAlert />
+      <MinigameChallengeModal />
       <InstallBanner />
       <CookieConsent />
     </div>

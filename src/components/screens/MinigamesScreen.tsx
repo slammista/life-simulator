@@ -1,6 +1,8 @@
 import { useState, useEffect, useRef } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../../store/gameStore'
+import { useChallengeStore } from '../../store/challengeStore'
+import { MINI_CHALLENGES } from '../minigames/challengeRegistry'
 import {
   generateHackingCode, scoreHackingGuess, hackingReward,
   scoreDrivingTest, drivingReward,
@@ -309,6 +311,36 @@ function PrisonMinigame({ onFinish }: { onFinish: (won: boolean) => void }) {
   )
 }
 
+// ─── Skill challenges (also posed as random events) ───────────────
+
+function SkillChallenges() {
+  const openChallenge = useChallengeStore(s => s.open)
+  const state = useGameStore.getState()
+  const eligible = MINI_CHALLENGES.filter(c => c.eligible(state))
+
+  return (
+    <div style={{ ...cardStyle, border: '1px solid rgba(167,139,250,0.3)', background: 'rgba(124,58,237,0.08)' }}>
+      <p style={{ fontSize: 14, fontWeight: 700, marginBottom: 2 }}>🎯 Sfide rapide</p>
+      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
+        Mettiti alla prova quando vuoi. Compaiono anche come eventi mentre vivi!
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        {eligible.map(c => (
+          <button key={c.id} onClick={() => openChallenge(c.id, 'activity')} className="tap-scale" style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 2,
+            padding: '10px 12px', borderRadius: 12, cursor: 'pointer', textAlign: 'left',
+            border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)', color: 'var(--color-text)',
+          }}>
+            <span style={{ fontSize: 20 }}>{c.emoji}</span>
+            <span style={{ fontSize: 13, fontWeight: 700 }}>{c.title}</span>
+            <span style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>{c.category}</span>
+          </button>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Main MinigamesScreen ─────────────────────────────────────────
 
 export function MinigamesScreen() {
@@ -404,6 +436,9 @@ export function MinigamesScreen() {
       {/* Game selection */}
       {!activeGame && !result && (
         <>
+          {/* Quick challenges — also appear randomly as life events */}
+          <SkillChallenges />
+
           {games.map(g => (
             <div key={g.id} style={cardStyle}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
