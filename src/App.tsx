@@ -1,4 +1,4 @@
-import { Suspense, lazy, useState, useCallback, useEffect } from 'react'
+import { Suspense, lazy, useState, useCallback, useEffect, useRef } from 'react'
 import { useGameStore } from './store/gameStore'
 import { HUD } from './components/game/HUD'
 import { EventDisplay } from './components/game/EventDisplay'
@@ -28,6 +28,8 @@ import { AssetsNav, ASSETS_ITEMS, type AssetsSubTabId } from './components/game/
 import { RelazioniNav, RELAZIONI_ITEMS, type RelazioniSubTabId } from './components/game/RelazioniNav'
 import { AgeTransitionOverlay } from './components/game/AgeTransitionOverlay'
 import { useShallow } from 'zustand/react/shallow'
+import { CloudSaveService } from './services/CloudSaveService'
+import { useWalletStore } from './store/walletStore'
 
 // Auto-reload when a new SW takes control (fixes stale chunk MIME error)
 if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
@@ -198,6 +200,53 @@ function App() {
     }
   }, [isStarted, isGameOver, soundEnabled])
 
+  const [checkoutToast, setCheckoutToast] = useState<{ text: string; ok: boolean } | null>(null)
+  const checkoutHandled = useRef(false)
+
+  // Handle return from Stripe checkout: verify payment and credit gems
+  useEffect(() => {
+    if (checkoutHandled.current) return
+    const params = new URLSearchParams(window.location.search)
+    const checkoutStatus = params.get('checkout')
+    const sessionId = params.get('session_id')
+    if (checkoutStatus !== 'success' || !sessionId) return
+    checkoutHandled.current = true
+    // Clean URL immediately
+    window.history.replaceState({}, '', window.location.pathname)
+    const run = async () => {
+      try {
+        const user = await CloudSaveService.getCurrentUser()
+        if (!user) {
+          setCheckoutToast({ text: 'Pagamento ricevuto! Accedi per ricevere le gemme.', ok: true })
+          return
+        }
+        const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string
+        const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string
+        const res = await fetch(`${supabaseUrl}/functions/v1/verify-payment`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'apikey': anonKey, 'Authorization': `Bearer ${anonKey}` },
+          body: JSON.stringify({ session_id: sessionId, user_id: user.id }),
+        })
+        const data = await res.json() as { status: string; gems_granted?: number; product_type?: string; error?: string }
+        if (data.status === 'completed' && data.gems_granted && data.gems_granted > 0) {
+          useWalletStore.getState().addGems(data.gems_granted)
+          setCheckoutToast({ text: `+${data.gems_granted} 💎 accreditate! Grazie per l'acquisto.`, ok: true })
+        } else if (data.status === 'completed') {
+          setCheckoutToast({ text: 'Acquisto completato! Controlla il tuo account.', ok: true })
+        } else if (data.status === 'already_processed') {
+          setCheckoutToast({ text: 'Acquisto già elaborato.', ok: true })
+        } else {
+          setCheckoutToast({ text: data.error ?? 'Errore nella verifica del pagamento.', ok: false })
+        }
+        // Sync authoritative balance from server
+        useWalletStore.getState().syncWithServer()
+      } catch {
+        setCheckoutToast({ text: 'Pagamento ricevuto! Le gemme saranno accreditate a breve.', ok: true })
+      }
+    }
+    run()
+  }, [])
+
   const [ageOverlay, setAgeOverlay] = useState<{ visible: boolean; age: number; year: number }>({
     visible: false, age: 0, year: 2000,
   })
@@ -228,6 +277,21 @@ function App() {
   return (
     <div className={`app-shell ${emotionalUI.className}`} data-emotion={emotionalUI.state} data-section={activeTab}>
       <TutorialOverlay />
+
+      {/* Checkout success toast */}
+      {checkoutToast && (
+        <div style={{
+          position: 'fixed', top: 60, left: 12, right: 12, zIndex: 9998,
+          background: checkoutToast.ok ? 'rgba(16,185,129,0.95)' : 'rgba(239,68,68,0.95)',
+          borderRadius: 12, padding: '12px 16px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.4)',
+        }}>
+          <span style={{ fontSize: 14, fontWeight: 600, color: '#fff' }}>{checkoutToast.text}</span>
+          <button onClick={() => setCheckoutToast(null)} style={{ background: 'none', border: 'none', color: '#fff', cursor: 'pointer', fontSize: 18, marginLeft: 12 }}>✕</button>
+        </div>
+      )}
+
       <HUD />
 
       {/* Sub-section back bars (Activities-style) */}
