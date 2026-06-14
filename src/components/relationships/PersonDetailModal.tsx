@@ -20,7 +20,6 @@ const GodModePersonEditor = lazy(() =>
 
 interface Props {
   relId: string
-  onClose: () => void
 }
 
 const CAT_COLORS: Record<string, string> = {
@@ -55,7 +54,7 @@ const ACTION_META: Record<string, { desc: string; bg: string }> = {
   thank:                { desc: 'Ringraziale/gli',                           bg: '#34d399' },
 }
 
-export function PersonDetailModal({ relId, onClose }: Props) {
+export function PersonDetailModal({ relId }: Props) {
   const rel = useGameStore(s => s.relationships.find(r => r.id === relId)) as Relationship | undefined
   const playerAge = useGameStore(s => s.time.age)
   const interactWithNPC = useGameStore(s => s.interactWithNPC)
@@ -93,11 +92,10 @@ export function PersonDetailModal({ relId, onClose }: Props) {
 
   return (
     <>
-    <div style={overlay} onClick={onClose}>
-      <div style={sheet} onClick={e => e.stopPropagation()}>
+    <div style={{ padding: '14px 14px', paddingBottom: 'max(96px, env(safe-area-inset-bottom, 0px) + 80px)' }}>
         {/* Top bar */}
         <div style={topBar}>
-          <button onClick={onClose} className="icon-btn" style={{ width: 32, height: 32, fontSize: 16 }} aria-label="Chiudi">‹</button>
+          <span style={{ width: 32 }} />
           <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 1, textTransform: 'uppercase' }}>{relLabel}</span>
           <span style={{ width: 32 }} />
         </div>
@@ -249,7 +247,6 @@ export function PersonDetailModal({ relId, onClose }: Props) {
             </>
           )}
         </div>
-      </div>
     </div>
 
     {showEditor && (
@@ -263,20 +260,6 @@ export function PersonDetailModal({ relId, onClose }: Props) {
 
 // ─── styles ───────────────────────────────────────────────────────
 
-const overlay: React.CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 1000,
-  background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)',
-  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-}
-const sheet: React.CSSProperties = {
-  width: '100%', maxWidth: 480, maxHeight: '92vh', overflowY: 'auto',
-  background: 'linear-gradient(160deg, #2A2150 0%, #1B1733 100%)',
-  borderRadius: '20px 20px 0 0',
-  padding: '14px 14px',
-  paddingBottom: 'max(32px, env(safe-area-inset-bottom, 0px))',
-  boxShadow: '0 -8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.16)',
-  border: '1px solid rgba(167,139,250,0.3)',
-}
 const topBar: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   background: 'linear-gradient(180deg, #1e5fb4 0%, #16498c 100%)',

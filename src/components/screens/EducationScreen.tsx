@@ -90,6 +90,23 @@ export function EducationScreen() {
 
   const gpaColor = education.gpa >= 3.0 ? '#10b981' : education.gpa >= 2.0 ? '#f59e0b' : '#ef4444'
 
+  const detailNpc = detailNpcId
+    ? (education.classmates ?? []).find(c => c.id === detailNpcId) ?? null
+    : null
+
+  if (detailNpc) {
+    return (
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <Suspense fallback={null}>
+          <SchoolNpcDetailModal
+            npc={detailNpc}
+            onInteract={(id, action) => handleSchoolInteract(id, action)}
+          />
+        </Suspense>
+      </div>
+    )
+  }
+
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
@@ -277,21 +294,6 @@ export function EducationScreen() {
           )}
         </div>
       )}
-
-      {/* SchoolNPC detail modal */}
-      {detailNpcId && (() => {
-        const npc = (education.classmates ?? []).find(c => c.id === detailNpcId)
-        if (!npc) return null
-        return (
-          <Suspense fallback={null}>
-            <SchoolNpcDetailModal
-              npc={npc}
-              onClose={() => setDetailNpcId(null)}
-              onInteract={(id, action) => handleSchoolInteract(id, action)}
-            />
-          </Suspense>
-        )
-      })()}
 
       {/* Enroll tab */}
       {tab === 'enroll' && (

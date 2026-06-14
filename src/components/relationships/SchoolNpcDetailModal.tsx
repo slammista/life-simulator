@@ -35,11 +35,10 @@ const SCHOOL_ACTIONS: Array<{ action: SchoolAction; label: string; emoji: string
 
 interface Props {
   npc: SchoolNPC
-  onClose: () => void
   onInteract: (npcId: string, action: SchoolAction) => void
 }
 
-export function SchoolNpcDetailModal({ npc, onClose, onInteract }: Props) {
+export function SchoolNpcDetailModal({ npc, onInteract }: Props) {
   const attrs = ensureNpcAttributesById(npc.id, npc.age, npc.extendedAttributes)
   const statusCfg = STATUS_CONFIG[npc.status]
   const affectionColor = npc.affection >= 70 ? '#10b981' : npc.affection >= 40 ? '#f59e0b' : '#f43f5e'
@@ -51,11 +50,10 @@ export function SchoolNpcDetailModal({ npc, onClose, onInteract }: Props) {
   const availableActions = SCHOOL_ACTIONS.filter(a => !(a.studentOnly && isProf))
 
   return (
-    <div style={overlay} onClick={onClose}>
-      <div style={sheet} onClick={e => e.stopPropagation()}>
+    <div style={{ padding: '14px 16px', paddingBottom: 'max(96px, env(safe-area-inset-bottom, 0px) + 80px)' }}>
         {/* Topbar */}
         <div style={topBar}>
-          <button onClick={onClose} style={backBtn} aria-label="Chiudi">‹</button>
+          <div style={{ width: 36, flexShrink: 0 }} />
           <div style={{ flex: 1, minWidth: 0, textAlign: 'center' }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: '#fff', margin: 0 }}>{npc.name}</p>
             <p style={{ fontSize: 10, color: 'rgba(255,255,255,0.7)', margin: 0, marginTop: 1 }}>
@@ -173,35 +171,14 @@ export function SchoolNpcDetailModal({ npc, onClose, onInteract }: Props) {
             </div>
           ))}
         </div>
-      </div>
     </div>
   )
 }
 
-const overlay: React.CSSProperties = {
-  position: 'fixed', inset: 0, zIndex: 1100,
-  background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)',
-  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
-}
-const sheet: React.CSSProperties = {
-  width: '100%', maxWidth: 480, maxHeight: '90vh', overflowY: 'auto',
-  background: 'linear-gradient(160deg, #2A2150 0%, #1B1733 100%)',
-  borderRadius: '20px 20px 0 0',
-  padding: '14px 16px',
-  paddingBottom: 'max(36px, env(safe-area-inset-bottom, 0px))',
-  boxShadow: '0 -8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.16)',
-  border: '1px solid rgba(167,139,250,0.3)',
-}
 const topBar: React.CSSProperties = {
   display: 'flex', alignItems: 'center', justifyContent: 'space-between',
   background: 'linear-gradient(180deg, #1e5fb4 0%, #16498c 100%)',
   color: '#fff', borderRadius: 12, padding: '8px 10px', marginBottom: 8,
-}
-const backBtn: React.CSSProperties = {
-  width: 36, height: 36, borderRadius: '50%', border: 'none',
-  background: 'rgba(255,255,255,0.15)', color: '#fff', fontSize: 22, fontWeight: 700,
-  cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
-  lineHeight: 1, paddingBottom: 2,
 }
 const avatarCircle: React.CSSProperties = {
   width: 64, height: 64, borderRadius: '50%', flexShrink: 0,

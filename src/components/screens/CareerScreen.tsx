@@ -165,10 +165,27 @@ export function CareerScreen() {
     flash(r.message, r.success, '🤝', r.effects as Record<string, number>)
   }
 
+  const detailColleague = detailColleagueId
+    ? (career.colleagues ?? []).find(c => c.id === detailColleagueId) ?? null
+    : null
+
   const hasDiploma = state.education.completedLevels.some(l =>
     ['highschool', 'vocational', 'bachelor', 'master', 'phd', 'mba', 'medical', 'law'].includes(l)
   )
   const isMinor = time.age < 18
+
+  if (detailColleague) {
+    return (
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <Suspense fallback={null}>
+          <WorkNpcDetailModal
+            npc={detailColleague}
+            onInteract={(id, action) => handleWorkInteract(id, action)}
+          />
+        </Suspense>
+      </div>
+    )
+  }
 
   const availableJobs = getAllJobs()
     .filter(j => CareerEngine.meetsRequirements(j, state))
@@ -563,21 +580,6 @@ export function CareerScreen() {
           )}
         </div>
       )}
-
-      {/* WorkNPC detail modal */}
-      {detailColleagueId && (() => {
-        const npc = (career.colleagues ?? []).find(c => c.id === detailColleagueId)
-        if (!npc) return null
-        return (
-          <Suspense fallback={null}>
-            <WorkNpcDetailModal
-              npc={npc}
-              onClose={() => setDetailColleagueId(null)}
-              onInteract={(id, action) => handleWorkInteract(id, action)}
-            />
-          </Suspense>
-        )
-      })()}
 
       {/* History list */}
       {tab === 'history' && (

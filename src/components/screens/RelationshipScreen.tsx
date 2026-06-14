@@ -46,6 +46,16 @@ export function RelationshipScreen() {
     'Defunti': historicRels.filter(r => !r.isAlive && r.type !== 'ex_partner' && r.type !== 'colleague'),
   }
 
+  if (detailRelId) {
+    return (
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        <Suspense fallback={null}>
+          <PersonDetailModal relId={detailRelId} />
+        </Suspense>
+      </div>
+    )
+  }
+
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 'max(96px, env(safe-area-inset-bottom, 0px) + 80px)' }}>
       {/* Header */}
@@ -272,11 +282,6 @@ export function RelationshipScreen() {
         </>
       )}
 
-      {detailRelId && (
-        <Suspense fallback={null}>
-          <PersonDetailModal relId={detailRelId} onClose={() => setDetailRelId(null)} />
-        </Suspense>
-      )}
     </div>
   )
 }
