@@ -65,6 +65,7 @@ export function PersonDetailModal({ relId, onClose }: Props) {
   const relLabel = REL_TYPE_LABELS[rel.type] ?? rel.type
 
   return (
+    <>
     <div style={overlay} onClick={onClose}>
       <div style={sheet} onClick={e => e.stopPropagation()}>
         {/* Top bar */}
@@ -196,13 +197,14 @@ export function PersonDetailModal({ relId, onClose }: Props) {
           )}
         </div>
       </div>
-
-      {showEditor && (
-        <Suspense fallback={null}>
-          <GodModePersonEditor relId={rel.id} onClose={() => setShowEditor(false)} />
-        </Suspense>
-      )}
     </div>
+
+    {showEditor && (
+      <Suspense fallback={null}>
+        <GodModePersonEditor relId={rel.id} onClose={() => setShowEditor(false)} />
+      </Suspense>
+    )}
+    </>
   )
 }
 
