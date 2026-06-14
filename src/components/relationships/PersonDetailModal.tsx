@@ -6,6 +6,7 @@ import { lazy, Suspense, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { useToastStore } from '../../store/toastStore'
 import { AvatarRenderer } from '../avatar/AvatarRenderer'
+import { ensureNpcAvatar } from '../../services/NpcAvatarEngine'
 import { MoneyExchange } from './MoneyExchange'
 import {
   STAGE_EMOJI, MOOD_LABELS, TRAIT_LABELS, REL_TYPE_LABELS, CHAIN_LABELS,
@@ -106,9 +107,7 @@ export function PersonDetailModal({ relId, onClose }: Props) {
           {/* Identity */}
           <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 8px' }}>
             <div style={avatarCircle}>
-              {rel.avatar
-                ? <AvatarRenderer size="md" config={rel.avatar} age={rel.age} gender={rel.gender} />
-                : <span style={{ fontSize: 40 }}>{rel.emoji}</span>}
+              <AvatarRenderer size="md" config={ensureNpcAvatar(rel)} age={rel.age} gender={rel.gender} />
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>

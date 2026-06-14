@@ -2,8 +2,10 @@ import { lazy, Suspense, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import type { Relationship } from '../../store/types'
 import { useToastStore } from '../../store/toastStore'
+import { AvatarRenderer } from '../avatar/AvatarRenderer'
+import { ensureNpcAvatar } from '../../services/NpcAvatarEngine'
 import {
-  STAGE_EMOJI, MOOD_LABELS, REL_TYPE_LABELS,
+  MOOD_LABELS, REL_TYPE_LABELS,
 } from '../relationships/relationshipActions'
 
 const PersonDetailModal = lazy(() =>
@@ -301,9 +303,9 @@ function HistoricRelCard({ rel }: { rel: Relationship }) {
         width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
         background: 'rgba(255,255,255,0.05)', border: '1.5px solid rgba(255,255,255,0.1)',
-        filter: rel.isAlive ? 'none' : 'grayscale(1)',
+        filter: rel.isAlive ? 'none' : 'grayscale(1)', overflow: 'hidden',
       }}>
-        {rel.emoji}
+        <AvatarRenderer config={ensureNpcAvatar(rel)} age={rel.age} gender={rel.gender} style={{ width: '100%', height: '100%' }} />
       </div>
       <div style={{ flex: 1, minWidth: 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -348,8 +350,9 @@ function RelCard({ rel, onOpen }: { rel: Relationship; onOpen: () => void }) {
         display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
         background: isRomantic ? 'rgba(244,63,94,0.12)' : isFamilyType ? 'rgba(251,191,36,0.1)' : 'rgba(99,102,241,0.1)',
         border: `2px solid ${isRomantic ? 'rgba(244,63,94,0.3)' : isFamilyType ? 'rgba(251,191,36,0.3)' : 'rgba(99,102,241,0.22)'}`,
+        overflow: 'hidden',
       }}>
-        {rel.emoji}
+        <AvatarRenderer config={ensureNpcAvatar(rel)} age={rel.age} gender={rel.gender} style={{ width: '100%', height: '100%' }} />
       </div>
 
       {/* Text + bar */}
