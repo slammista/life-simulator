@@ -250,21 +250,28 @@ export function NewGameScreen() {
                 {!isUnlocked && (
                   <div style={{
                     position: 'absolute', inset: 0, borderRadius: 10,
-                    background: 'rgba(10,8,25,0.72)',
-                    backdropFilter: 'blur(1px)',
+                    background: 'rgba(8,6,20,0.86)',
+                    backdropFilter: 'grayscale(1) blur(1.5px)',
+                    WebkitBackdropFilter: 'grayscale(1) blur(1.5px)',
                     display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center', gap: 2,
+                    alignItems: 'center', justifyContent: 'center', gap: 4,
                   }}>
-                    <span style={{ fontSize: 18 }}>🔒</span>
-                    <span style={{ fontSize: 10, color: '#a78bfa', fontWeight: 700 }}>{gemCost} 💎 Shop</span>
+                    <span style={{ fontSize: 20, opacity: 0.9 }}>🔒</span>
+                    <span style={{
+                      fontSize: 10, color: '#c4b5fd', fontWeight: 800,
+                      padding: '2px 8px', borderRadius: 99,
+                      background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.35)',
+                    }}>
+                      {gemCost} 💎
+                    </span>
                   </div>
                 )}
-                <div style={{ fontSize: 22, marginBottom: 4, opacity: isUnlocked ? 1 : 0.45 }}>{s.emoji}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2, opacity: isUnlocked ? 1 : 0.55,
+                <div style={{ fontSize: 22, marginBottom: 4, opacity: isUnlocked ? 1 : 0.3, filter: isUnlocked ? 'none' : 'grayscale(1)' }}>{s.emoji}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2, opacity: isUnlocked ? 1 : 0.35,
                   color: active && isUnlocked ? s.color : 'var(--color-text)' }}>
                   {s.title}
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.35, opacity: isUnlocked ? 1 : 0.5 }}>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.35, opacity: isUnlocked ? 1 : 0.3 }}>
                   {s.subtitle}
                 </div>
                 {active && isUnlocked && s.id !== 'normal' && (

@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { CloudSaveService } from '../../services/CloudSaveService'
 import { useWalletStore } from '../../store/walletStore'
 import { showRewardedAd, ADMOB_IDS } from '../../services/AdRewardEngine'
+
+// Rewards (ad-based) are only live on native apps. On web/PWA we show a
+// "coming soon" overlay until AdSense approval lands.
+const REWARDS_LIVE = Capacitor.isNativePlatform()
 
 interface Props {
   onBack: () => void
@@ -193,6 +198,14 @@ export function VitaRewardsPanel({ onBack }: Props) {
         </div>
       )}
 
+      {/* Rewards content — grayed out + locked behind "coming soon" on web/PWA */}
+      <div style={{ position: 'relative' }}>
+        <div style={{
+          filter: REWARDS_LIVE ? 'none' : 'grayscale(1) blur(2px)',
+          opacity: REWARDS_LIVE ? 1 : 0.45,
+          pointerEvents: REWARDS_LIVE ? 'auto' : 'none',
+          userSelect: REWARDS_LIVE ? 'auto' : 'none',
+        }}>
       {/* Rewarded video */}
       <div className="card" style={{ padding: '18px 16px', marginBottom: 12 }}>
         <h4 style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa', margin: '0 0 14px' }}>📺 Guarda un Video — +10 💎</h4>
@@ -283,6 +296,43 @@ export function VitaRewardsPanel({ onBack }: Props) {
       <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textAlign: 'center', marginTop: 12 }}>
         Le quest si azzerano ogni giorno. Accedi per sincronizzare le gemme col tuo account.
       </p>
+        </div>
+
+        {/* Coming soon overlay (web/PWA only) */}
+        {!REWARDS_LIVE && (
+          <div style={{
+            position: 'absolute', inset: 0, zIndex: 2,
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center', gap: 10,
+            padding: '24px 20px', textAlign: 'center',
+          }}>
+            <div style={{
+              display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10,
+              padding: '24px 22px', borderRadius: 18,
+              background: 'rgba(26,22,56,0.92)',
+              border: '1px solid rgba(167,139,250,0.35)',
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+              maxWidth: 300,
+            }}>
+              <span style={{ fontSize: 40 }}>🚧</span>
+              <h3 style={{ fontSize: 17, fontWeight: 800, color: '#fff', margin: 0 }}>
+                Presto disponibile
+              </h3>
+              <p style={{ fontSize: 13, color: '#c4b5fd', margin: 0, lineHeight: 1.5 }}>
+                I video premio arriveranno a breve sul web. Nel frattempo puoi
+                ottenere gemme dallo Shop o completando la tua vita.
+              </p>
+              <span style={{
+                fontSize: 11, fontWeight: 700, color: '#a78bfa',
+                padding: '4px 12px', borderRadius: 99,
+                background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)',
+              }}>
+                📱 Già attivo sulle app mobile
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }
