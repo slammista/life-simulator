@@ -1,176 +1,24 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import type { NPCMood, NPCPersonalityTrait, Relationship } from '../../store/types'
-import type { NPCAction } from '../../services/RelationshipEngine'
+import type { Relationship } from '../../store/types'
 import { useToastStore } from '../../store/toastStore'
+import {
+  STAGE_EMOJI, MOOD_LABELS, REL_TYPE_LABELS,
+} from '../relationships/relationshipActions'
 
-const STAGE_EMOJI: Record<string, string> = {
-  stranger: '👤',
-  acquaintance: '👋',
-  friend: '😊',
-  close_friend: '🤝',
-  partner: '💑',
-  spouse: '💍',
-}
-
-
-const MOOD_LABELS: Record<NPCMood, { label: string; emoji: string; color: string }> = {
-  neutrale: { label: 'Neutrale', emoji: '😐', color: '#94a3b8' },
-  felice: { label: 'Felice', emoji: '😊', color: '#86efac' },
-  triste: { label: 'Triste', emoji: '😢', color: '#93c5fd' },
-  geloso: { label: 'Geloso', emoji: '😒', color: '#fbbf24' },
-  arrabbiato: { label: 'Arrabbiato', emoji: '😠', color: '#fca5a5' },
-  nostalgico: { label: 'Nostalgico', emoji: '🥲', color: '#c4b5fd' },
-  ansioso: { label: 'Ansioso', emoji: '😰', color: '#fdba74' },
-  motivato: { label: 'Motivato', emoji: '🔥', color: '#facc15' },
-}
-
-const TRAIT_LABELS: Record<NPCPersonalityTrait, string> = {
-  introverso: 'Introverso',
-  ambizioso: 'Ambizioso',
-  geloso: 'Geloso',
-  generoso: 'Generoso',
-  sensibile: 'Sensibile',
-  sicuro: 'Sicuro',
-  avido: 'Avido',
-  leale: 'Leale',
-  empatico: 'Empatico',
-  impulsivo: 'Impulsivo',
-}
-
-const REL_TYPE_LABELS: Record<string, string> = {
-  parent: 'Genitore',
-  sibling: 'Fratello/Sorella',
-  partner: 'Partner',
-  spouse: 'Coniuge',
-  ex_partner: 'Ex partner',
-  child: 'Figlio/a',
-  friend: 'Amico/a',
-  best_friend: 'Migliore amico/a',
-  colleague: 'Collega',
-  rival: 'Rivale',
-  enemy: 'Nemico',
-  acquaintance: 'Conoscente',
-}
-
-const CHAIN_LABELS: Record<string, { label: string; color: string }> = {
-  chain_warmth: { label: 'Legame caldo', color: '#86efac' },
-  chain_gratitude: { label: 'Gratitudine', color: '#facc15' },
-  chain_repairing: { label: 'Riparazione', color: '#93c5fd' },
-  chain_trust_decay: { label: 'Ferita aperta', color: '#fca5a5' },
-  chain_tension: { label: 'Tensione', color: '#fdba74' },
-  chain_jealousy: { label: 'Sospetto', color: '#f0abfc' },
-}
-
-const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: string; emoji: string }>> = {
-  stranger: [
-    { action: 'greet', label: 'Saluta', emoji: '👋' },
-  ],
-  acquaintance: [
-    { action: 'greet', label: 'Saluta', emoji: '👋' },
-    { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
-    { action: 'compliment', label: 'Complimento', emoji: '😊' },
-    { action: 'gift', label: 'Regalo', emoji: '🎁' },
-    { action: 'confess_feelings', label: 'Confessa', emoji: '💕' },
-  ],
-  friend: [
-    { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
-    { action: 'do_activity', label: 'Attività insieme', emoji: '🎳' },
-    { action: 'spend_time', label: 'Tempo insieme', emoji: '🕰️' },
-    { action: 'compliment', label: 'Complimento', emoji: '😊' },
-    { action: 'gift', label: 'Regalo', emoji: '🎁' },
-    { action: 'lend_money', label: 'Presta soldi', emoji: '💸' },
-    { action: 'ask_money', label: 'Chiedi soldi', emoji: '💶' },
-    { action: 'ask_date', label: 'Appuntamento', emoji: '💑' },
-    { action: 'confess_feelings', label: 'Confessa', emoji: '💕' },
-    { action: 'make_peace', label: 'Fai pace', emoji: '🕊️' },
-    { action: 'fight', label: 'Litigate', emoji: '😠' },
-  ],
-  close_friend: [
-    { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
-    { action: 'do_activity', label: 'Attività insieme', emoji: '🎳' },
-    { action: 'spend_time', label: 'Tempo insieme', emoji: '🕰️' },
-    { action: 'gift', label: 'Regalo', emoji: '🎁' },
-    { action: 'lend_money', label: 'Presta soldi', emoji: '💸' },
-    { action: 'ask_money', label: 'Chiedi soldi', emoji: '💶' },
-    { action: 'ask_date', label: 'Appuntamento', emoji: '💑' },
-    { action: 'kiss', label: 'Bacio', emoji: '😘' },
-    { action: 'confess_feelings', label: 'Confessa', emoji: '💕' },
-    { action: 'make_peace', label: 'Fai pace', emoji: '🕊️' },
-    { action: 'fight', label: 'Litigate', emoji: '😠' },
-    { action: 'apologize', label: 'Chiedi scusa', emoji: '🙏' },
-  ],
-  partner: [
-    { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
-    { action: 'romantic_outing', label: 'Uscita romantica', emoji: '🌹' },
-    { action: 'surprise', label: 'Sorpresa', emoji: '🎉' },
-    { action: 'vacation_together', label: 'Vacanza insieme', emoji: '✈️' },
-    { action: 'gift', label: 'Regalo', emoji: '🎁' },
-    { action: 'kiss', label: 'Bacio', emoji: '😘' },
-    { action: 'propose_cohabitation', label: 'Convivenza', emoji: '🏠' },
-    { action: 'propose', label: 'Proposta', emoji: '💍' },
-    { action: 'cheat', label: 'Tradisci', emoji: '😈' },
-    { action: 'fight', label: 'Litigate', emoji: '😠' },
-    { action: 'apologize', label: 'Chiedi scusa', emoji: '🙏' },
-    { action: 'break_up', label: 'Lascia', emoji: '💔' },
-  ],
-  spouse: [
-    { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
-    { action: 'romantic_outing', label: 'Uscita romantica', emoji: '🌹' },
-    { action: 'surprise', label: 'Sorpresa', emoji: '🎉' },
-    { action: 'vacation_together', label: 'Vacanza insieme', emoji: '✈️' },
-    { action: 'gift', label: 'Regalo', emoji: '🎁' },
-    { action: 'kiss', label: 'Bacio', emoji: '😘' },
-    { action: 'cheat', label: 'Tradisci', emoji: '😈' },
-    { action: 'fight', label: 'Litigate', emoji: '😠' },
-    { action: 'apologize', label: 'Chiedi scusa', emoji: '🙏' },
-    { action: 'divorce', label: 'Divorzia', emoji: '📜' },
-  ],
-}
-
-// Family members (parent/sibling/child) get a dedicated action list,
-// independent of their relationship stage.
-const FAMILY_ACTIONS: Array<{ action: NPCAction; label: string; emoji: string }> = [
-  { action: 'spend_time', label: 'Tempo insieme', emoji: '🕰️' },
-  { action: 'gift', label: 'Regalo', emoji: '🎁' },
-  { action: 'ask_money', label: 'Chiedi soldi', emoji: '💶' },
-  { action: 'thank', label: 'Ringrazia', emoji: '🙏' },
-  { action: 'surprise', label: 'Sorpresa', emoji: '🎉' },
-  { action: 'make_peace', label: 'Fai pace', emoji: '🕊️' },
-  { action: 'fight', label: 'Litiga', emoji: '😠' },
-]
-
-// Actions that are romantic or sexual in nature — never allowed with family or minors
-const ROMANTIC_ACTIONS: NPCAction[] = ['confess_feelings', 'ask_date', 'kiss', 'propose', 'cheat', 'break_up', 'divorce', 'romantic_outing', 'propose_cohabitation']
-const FAMILY_TYPES = ['parent', 'sibling', 'child']
-
-function getAllowedActions(
-  rel: Relationship,
-  playerAge: number,
-): Array<{ action: NPCAction; label: string; emoji: string }> {
-  const base = FAMILY_TYPES.includes(rel.type)
-    ? FAMILY_ACTIONS
-    : ACTIONS_BY_STAGE[rel.stage] ?? ACTIONS_BY_STAGE.stranger
-  return base.filter(({ action }) => {
-    if (FAMILY_TYPES.includes(rel.type) && ROMANTIC_ACTIONS.includes(action)) return false
-    if (rel.age < 18 && ROMANTIC_ACTIONS.includes(action)) return false
-    if (playerAge < 18 && (action === 'cheat' || action === 'divorce')) return false
-    if (playerAge < 16 && ROMANTIC_ACTIONS.includes(action)) return false
-    return true
-  })
-}
+const PersonDetailModal = lazy(() =>
+  import('../relationships/PersonDetailModal').then(m => ({ default: m.PersonDetailModal })))
 
 export function RelationshipScreen() {
   const relationships = useGameStore(s => s.relationships)
   const family = useGameStore(s => s.family)
   const playerAge = useGameStore(s => s.time.age)
-  const interactWithNPC = useGameStore(s => s.interactWithNPC)
   const fileForDivorce = useGameStore(s => s.fileForDivorce)
 
   const confrontPartner = useGameStore(s => s.confrontPartner)
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
-  const [expanded, setExpanded] = useState<string | null>(null)
+  const [detailRelId, setDetailRelId] = useState<string | null>(null)
   const [view, setView] = useState<'attivi' | 'storia'>('attivi')
 
   const pushToast = useToastStore(s => s.push)
@@ -180,13 +28,6 @@ export function RelationshipScreen() {
     pushToast(msg, ok ? '💚' : '❌', ok)
     setTimeout(() => setFeedback(null), 3500)
   }
-
-  const handleAction = (relId: string, action: NPCAction) => {
-    const r = interactWithNPC(relId, action)
-    flash(r.message, r.success)
-  }
-
-  const toggleExpand = (id: string) => setExpanded(prev => prev === id ? null : id)
 
   const activeRels = relationships.filter(r => r.isAlive && r.type !== 'ex_partner')
   const historicRels = relationships.filter(r => !r.isAlive || r.type === 'ex_partner')
@@ -369,10 +210,7 @@ export function RelationshipScreen() {
                     <RelCard
                       key={rel.id}
                       rel={rel}
-                      expanded={expanded === rel.id}
-                      onToggle={() => toggleExpand(rel.id)}
-                      onAction={(action) => handleAction(rel.id, action)}
-                      playerAge={playerAge}
+                      onOpen={() => setDetailRelId(rel.id)}
                     />
                   ))}
                 </div>
@@ -417,6 +255,12 @@ export function RelationshipScreen() {
             })
           )}
         </>
+      )}
+
+      {detailRelId && (
+        <Suspense fallback={null}>
+          <PersonDetailModal relId={detailRelId} onClose={() => setDetailRelId(null)} />
+        </Suspense>
       )}
     </div>
   )
@@ -503,122 +347,14 @@ function HistoricRelCard({ rel }: { rel: Relationship }) {
   )
 }
 
-// ---- Money exchange (give / ask loan / repay) ----
+// ---- RelCard subcomponent — tappable summary, opens PersonDetailModal ----
 
-function MoneyExchange({ rel }: { rel: Relationship }) {
-  const giveMoneyToNpc = useGameStore(s => s.giveMoneyToNpc)
-  const askMoneyFromNpc = useGameStore(s => s.askMoneyFromNpc)
-  const repayNpcLoan = useGameStore(s => s.repayNpcLoan)
-  const npcLoans = useGameStore(s => s.npcLoans)
-  const playerAge = useGameStore(s => s.time.age)
-  const money = useGameStore(s => s.finance.money)
-  const pushToast = useToastStore(s => s.push)
-  const [mode, setMode] = useState<'none' | 'give' | 'ask'>('none')
-
-  if (playerAge < 12 || !rel.isAlive) return null
-
-  const unpaidLoan = (npcLoans ?? []).find(l => l.npcId === rel.id && !l.repaid)
-  const amounts = mode === 'give' ? [20, 100, 500, 1000] : [100, 500, 1000, 2000]
-
-  const run = (amount: number) => {
-    const res = mode === 'give' ? giveMoneyToNpc(rel.id, amount) : askMoneyFromNpc(rel.id, amount)
-    pushToast(res.message, mode === 'give' ? '💝' : '💶', res.success)
-    setMode('none')
-  }
-
-  return (
-    <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-      <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
-        💰 Denaro
-      </div>
-
-      {/* Outstanding loan */}
-      {unpaidLoan && (
-        <div style={{
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8,
-          padding: '6px 10px', borderRadius: 8, marginBottom: 8,
-          background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)',
-        }}>
-          <span style={{ fontSize: 11, color: '#fca5a5' }}>
-            💸 Devi €{unpaidLoan.amount.toLocaleString('it-IT')} (entro {unpaidLoan.dueYear})
-          </span>
-          <button
-            className="tap-scale"
-            disabled={money < unpaidLoan.amount}
-            onClick={() => { const r = repayNpcLoan(unpaidLoan.id); pushToast(r.message, '🤝', r.success) }}
-            style={{
-              padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-              border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.12)',
-              color: money < unpaidLoan.amount ? '#475569' : '#6ee7b7',
-              opacity: money < unpaidLoan.amount ? 0.5 : 1,
-            }}
-          >
-            Restituisci
-          </button>
-        </div>
-      )}
-
-      {mode === 'none' ? (
-        <div style={{ display: 'flex', gap: 6 }}>
-          <button className="tap-scale" onClick={() => setMode('give')} style={{
-            padding: '6px 11px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-            border: '1px solid rgba(16,185,129,0.25)', background: 'rgba(16,185,129,0.1)', color: '#6ee7b7',
-          }}>
-            💝 Dai soldi
-          </button>
-          {!unpaidLoan && (
-            <button className="tap-scale" onClick={() => setMode('ask')} style={{
-              padding: '6px 11px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-              border: '1px solid rgba(245,158,11,0.25)', background: 'rgba(245,158,11,0.1)', color: '#fcd34d',
-            }}>
-              💶 Chiedi prestito
-            </button>
-          )}
-        </div>
-      ) : (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, alignItems: 'center' }}>
-          <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-            {mode === 'give' ? 'Quanto dai?' : 'Quanto chiedi?'}
-          </span>
-          {amounts.map(a => (
-            <button key={a} className="tap-scale" onClick={() => run(a)}
-              disabled={mode === 'give' && money < a}
-              style={{
-                padding: '5px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer',
-                border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.06)',
-                color: mode === 'give' && money < a ? '#475569' : 'var(--color-text)',
-                opacity: mode === 'give' && money < a ? 0.5 : 1,
-              }}>
-              €{a.toLocaleString('it-IT')}
-            </button>
-          ))}
-          <button onClick={() => setMode('none')} style={{
-            padding: '5px 8px', borderRadius: 8, fontSize: 11, cursor: 'pointer',
-            border: 'none', background: 'none', color: '#64748b',
-          }}>
-            ✕
-          </button>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ---- RelCard subcomponent ----
-
-function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
+function RelCard({ rel, onOpen }: {
   rel: Relationship
-  expanded: boolean
-  onToggle: () => void
-  onAction: (action: NPCAction) => void
-  playerAge: number
+  onOpen: () => void
 }) {
-  const actions = getAllowedActions(rel, playerAge)
   const mood = MOOD_LABELS[rel.mood ?? 'neutrale']
-  const traits = rel.personalityTraits ?? []
-  const chainFlags = rel.historyFlags.filter(flag => flag in CHAIN_LABELS)
 
-  // Determine dominant affection value for the always-visible bar
   const affection = Math.round((rel.trust * 0.5 + rel.love * 0.35 + rel.respect * 0.15))
   const affectionColor = affection >= 70 ? '#10b981' : affection >= 40 ? '#f59e0b' : '#f43f5e'
 
@@ -626,9 +362,8 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
   const isFamilyType = ['parent', 'sibling', 'child'].includes(rel.type)
 
   return (
-    <div className="card tap-scale" style={{ padding: '12px 14px' }}>
-      {/* Header row */}
-      <div className="rel-card-header" onClick={onToggle}>
+    <div className="card tap-scale" style={{ padding: '12px 14px', cursor: 'pointer' }}>
+      <div className="rel-card-header" onClick={onOpen}>
         {/* NPC avatar circle */}
         <div className="rel-card-avatar" style={{
           borderColor: isRomantic ? 'rgba(244,63,94,0.4)' : isFamilyType ? 'rgba(251,191,36,0.4)' : 'rgba(124,92,255,0.25)',
@@ -653,12 +388,10 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
               {REL_TYPE_LABELS[rel.type] ?? rel.type}
             </span>
             <span style={{ fontSize: 13 }}>{STAGE_EMOJI[rel.stage] ?? '👤'}</span>
-            {/* Mood badge */}
             <span className="rel-mood-badge" style={{ color: mood.color }}>
               {mood.emoji} {mood.label}
             </span>
           </div>
-          {/* Affection bar — always visible */}
           <div style={{ marginTop: 6 }}>
             <div className="rel-affection-bar">
               <div className="rel-affection-fill" style={{ width: `${affection}%`, background: affectionColor }} />
@@ -666,110 +399,8 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
           </div>
         </div>
 
-        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', flexShrink: 0 }}>{expanded ? '▲' : '▼'}</span>
+        <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', flexShrink: 0 }}>›</span>
       </div>
-
-      {/* Expanded section */}
-      {expanded && (
-        <div style={{ marginTop: 12 }}>
-          {/* Trait + chain badges */}
-          {(traits.length > 0 || chainFlags.length > 0) && (
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
-              {traits.map(trait => (
-                <span key={trait} style={{ fontSize: 10, color: '#cbd5e1', padding: '2px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}>
-                  {TRAIT_LABELS[trait]}
-                </span>
-              ))}
-              {chainFlags.map(flag => {
-                const chain = CHAIN_LABELS[flag]
-                return (
-                  <span key={flag} style={{ fontSize: 10, color: chain.color, padding: '2px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.05)', border: `1px solid ${chain.color}33` }}>
-                    {chain.label}
-                  </span>
-                )
-              })}
-            </div>
-          )}
-
-          {/* Detailed stat bars */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
-            {[
-              { label: 'Fiducia', val: rel.trust, color: '#10b981' },
-              { label: 'Amore', val: rel.love, color: '#f43f5e' },
-              { label: 'Attrazione', val: rel.attraction, color: '#f59e0b' },
-              { label: 'Rispetto', val: rel.respect, color: '#8b5cf6' },
-              { label: 'Gelosia', val: rel.jealousy, color: '#ef4444' },
-            ].map(({ label, val, color }) => (
-              <div key={label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', width: 60, flexShrink: 0 }}>{label}</span>
-                <div className="stat-bar" style={{ flex: 1 }}>
-                  <div className="stat-bar-fill" style={{ width: `${val}%`, backgroundColor: color }} />
-                </div>
-                <span style={{ fontSize: 10, width: 22, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{val}</span>
-              </div>
-            ))}
-          </div>
-
-          {/* Action buttons */}
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: actions.length > 0 ? 0 : 0 }}>
-            {actions.map(({ action, label, emoji }) => {
-              const isDanger = action === 'break_up' || action === 'divorce' || action === 'insult'
-              const isDark = action === 'cheat'
-              return (
-                <button
-                  key={action}
-                  onClick={() => onAction(action)}
-                  className="tap-scale"
-                  style={{
-                    padding: '6px 11px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    border: `1px solid ${isDanger ? 'rgba(239,68,68,0.25)' : isDark ? 'rgba(168,85,247,0.25)' : 'rgba(255,255,255,0.1)'}`,
-                    background: isDanger ? 'rgba(239,68,68,0.12)' : isDark ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.07)',
-                    color: isDanger ? '#fca5a5' : isDark ? '#d8b4fe' : 'var(--color-text)',
-                  }}
-                >
-                  {emoji} {label}
-                </button>
-              )
-            })}
-          </div>
-
-          {/* Money exchange: gifts, loans, repayment */}
-          <MoneyExchange rel={rel} />
-
-          {/* NPC Memories */}
-          {rel.memoryLog && rel.memoryLog.length > 0 && (
-            <div style={{ marginTop: 12 }}>
-              <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
-                📖 Memorie condivise
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {rel.memoryLog.slice(0, 4).map(mem => {
-                  const catColors: Record<string, string> = {
-                    romantic: '#f43f5e', family: '#f59e0b', friendship: '#10b981',
-                    professional: '#60a5fa', financial: '#a855f7', criminal: '#ef4444',
-                  }
-                  const color = catColors[mem.category] ?? '#94a3b8'
-                  return (
-                    <div key={mem.id} style={{
-                      fontSize: 11, color: '#94a3b8', padding: '4px 8px', borderRadius: 6,
-                      background: 'rgba(255,255,255,0.03)', borderLeft: `2px solid ${color}`,
-                      display: 'flex', justifyContent: 'space-between', gap: 8,
-                    }}>
-                      <span>{mem.description}</span>
-                      <span style={{ flexShrink: 0, color: '#475569' }}>Anno {mem.year}</span>
-                    </div>
-                  )
-                })}
-                {rel.memoryLog.length > 4 && (
-                  <div style={{ fontSize: 10, color: '#475569', textAlign: 'right' }}>
-                    +{rel.memoryLog.length - 4} altre memorie
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-      )}
     </div>
   )
 }

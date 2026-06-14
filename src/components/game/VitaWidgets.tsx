@@ -363,8 +363,11 @@ function GodModePanel() {
         className="btn-candy btn-candy--primary"
         style={{ width: '100%', fontSize: 13, padding: '9px 0' }}
       >
-        🧬 Editor NPC
+        🧬 Editor relazioni NPC
       </button>
+      <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', margin: '8px 2px 0', lineHeight: 1.4 }}>
+        💡 Tocca qualsiasi persona in <strong>Relazioni</strong> e premi <strong>Modifica</strong> per cambiarne nome, aspetto e attributi.
+      </p>
       {showNpcEditor && (
         <Suspense fallback={null}>
           <NpcEditorModal onClose={() => setShowNpcEditor(false)} />

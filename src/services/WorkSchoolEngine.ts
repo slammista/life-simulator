@@ -107,13 +107,18 @@ const RELIGIONS: Religion[] = ['catholicism', 'islam', 'buddhism', 'hinduism', '
 
 function randomExtendedAttributes(): NPCExtendedAttributes {
   return {
-    craziness:  Math.floor(Math.random() * 101),
-    fertility:  Math.floor(Math.random() * 101),
-    willpower:  Math.floor(Math.random() * 101),
-    smarts:     Math.floor(Math.random() * 101),
-    sexuality:  SEXUALITIES[Math.floor(Math.random() * SEXUALITIES.length)],
-    politics:   POLITICS[Math.floor(Math.random() * POLITICS.length)],
-    religion:   RELIGIONS[Math.floor(Math.random() * RELIGIONS.length)],
+    craziness:     Math.floor(Math.random() * 101),
+    fertility:     Math.floor(Math.random() * 101),
+    willpower:     Math.floor(Math.random() * 101),
+    smarts:        Math.floor(Math.random() * 101),
+    happiness:     40 + Math.floor(Math.random() * 50),
+    health:        50 + Math.floor(Math.random() * 50),
+    looks:         30 + Math.floor(Math.random() * 60),
+    generosity:    Math.floor(Math.random() * 101),
+    religiousness: Math.floor(Math.random() * 101),
+    sexuality:     SEXUALITIES[Math.floor(Math.random() * SEXUALITIES.length)],
+    politics:      POLITICS[Math.floor(Math.random() * POLITICS.length)],
+    religion:      RELIGIONS[Math.floor(Math.random() * RELIGIONS.length)],
   }
 }
 

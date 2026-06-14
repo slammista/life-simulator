@@ -122,6 +122,12 @@ export interface NPCExtendedAttributes {
   fertility: number       // 0-100
   willpower: number       // 0-100
   smarts: number          // 0-100
+  // BitLife-style attributes (editable in God Mode)
+  happiness: number       // 0-100
+  health: number          // 0-100
+  looks: number           // 0-100
+  generosity: number      // 0-100
+  religiousness: number   // 0-100
   sexuality: SexualOrientation
   politics: PoliticalOrientation
   religion: Religion
@@ -360,6 +366,8 @@ export interface Relationship {
   isAlive: boolean
   nationality: Nationality
   extendedAttributes?: NPCExtendedAttributes
+  // God Mode: optional custom avatar (overrides emoji rendering when present)
+  avatar?: AvatarConfig
 }
 
 // ---- Work Ecosystem ----

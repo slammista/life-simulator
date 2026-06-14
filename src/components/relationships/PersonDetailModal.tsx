@@ -1,0 +1,251 @@
+// PersonDetailModal — BitLife-style full-screen detail for a relationship.
+// Header, relationship bar, God-Mode "Edit" entry, attributes, activities,
+// money exchange and shared memories.
+
+import { lazy, Suspense, useState } from 'react'
+import { useGameStore } from '../../store/gameStore'
+import { useToastStore } from '../../store/toastStore'
+import { AvatarRenderer } from '../avatar/AvatarRenderer'
+import { MoneyExchange } from './MoneyExchange'
+import {
+  STAGE_EMOJI, MOOD_LABELS, TRAIT_LABELS, REL_TYPE_LABELS, CHAIN_LABELS,
+  getAllowedActions,
+} from './relationshipActions'
+import { ensureNpcAttributes, NPC_ATTR_META } from '../../services/NpcAttributes'
+import type { Relationship } from '../../store/types'
+import type { NPCAction } from '../../services/RelationshipEngine'
+
+const GodModePersonEditor = lazy(() =>
+  import('./GodModePersonEditor').then(m => ({ default: m.GodModePersonEditor })))
+
+interface Props {
+  relId: string
+  onClose: () => void
+}
+
+const CAT_COLORS: Record<string, string> = {
+  romantic: '#f43f5e', family: '#f59e0b', friendship: '#10b981',
+  professional: '#60a5fa', financial: '#a855f7', criminal: '#ef4444',
+}
+
+export function PersonDetailModal({ relId, onClose }: Props) {
+  const rel = useGameStore(s => s.relationships.find(r => r.id === relId)) as Relationship | undefined
+  const playerAge = useGameStore(s => s.time.age)
+  const interactWithNPC = useGameStore(s => s.interactWithNPC)
+  const godModeUnlocked = useGameStore(s => s.settings.godModeUnlocked)
+  const pushToast = useToastStore(s => s.push)
+  const showAlert = useToastStore(s => s.showAlert)
+  const [showEditor, setShowEditor] = useState(false)
+
+  if (!rel) return null
+
+  const handleAction = (action: NPCAction) => {
+    const r = interactWithNPC(rel.id, action)
+    pushToast(r.message, r.success ? '💚' : '❌', r.success)
+  }
+
+  const openEditor = () => {
+    if (!godModeUnlocked) {
+      showAlert(
+        'L\'editor God Mode permette di modificare nome, aspetto e attributi di ogni persona. Sbloccalo dallo Shop.',
+        true, '⚡',
+      )
+      return
+    }
+    setShowEditor(true)
+  }
+
+  const attrs = ensureNpcAttributes(rel)
+  const actions = getAllowedActions(rel, playerAge)
+  const mood = MOOD_LABELS[rel.mood ?? 'neutrale']
+  const traits = rel.personalityTraits ?? []
+  const chainFlags = rel.historyFlags.filter(f => f in CHAIN_LABELS)
+  const affection = Math.round(rel.trust * 0.5 + rel.love * 0.35 + rel.respect * 0.15)
+  const affectionColor = affection >= 70 ? '#10b981' : affection >= 40 ? '#f59e0b' : '#f43f5e'
+  const relLabel = REL_TYPE_LABELS[rel.type] ?? rel.type
+
+  return (
+    <div style={overlay} onClick={onClose}>
+      <div style={sheet} onClick={e => e.stopPropagation()}>
+        {/* Top bar */}
+        <div style={topBar}>
+          <button onClick={onClose} className="icon-btn" style={{ width: 32, height: 32, fontSize: 16 }} aria-label="Chiudi">‹</button>
+          <span style={{ fontWeight: 800, fontSize: 15, letterSpacing: 1, textTransform: 'uppercase' }}>{relLabel}</span>
+          <span style={{ width: 32 }} />
+        </div>
+
+        <div style={{ padding: '4px 4px 8px' }}>
+          {/* Identity */}
+          <div style={{ display: 'flex', gap: 12, alignItems: 'center', padding: '12px 8px' }}>
+            <div style={avatarCircle}>
+              {rel.avatar
+                ? <AvatarRenderer size="md" config={rel.avatar} age={rel.age} gender={rel.gender} />
+                : <span style={{ fontSize: 40 }}>{rel.emoji}</span>}
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span style={{ fontSize: 18, fontWeight: 800, color: 'var(--color-text)' }}>{rel.name}</span>
+                <span style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>({rel.age} anni)</span>
+                <span style={{ fontSize: 15 }}>{STAGE_EMOJI[rel.stage] ?? '👤'}</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+                <span className="rel-mood-badge" style={{ color: mood.color }}>{mood.emoji} {mood.label}</span>
+                {rel.toxicityTag && (
+                  <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 99, background: 'rgba(239,68,68,0.18)', color: '#fca5a5' }}>⚠️ tossica</span>
+                )}
+              </div>
+              <div style={{ marginTop: 8 }}>
+                <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Relazione</span>
+                <div className="stat-bar" style={{ marginTop: 3 }}>
+                  <div className="stat-bar-fill" style={{ width: `${affection}%`, backgroundColor: affectionColor }} />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Trait + chain badges */}
+          {(traits.length > 0 || chainFlags.length > 0) && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, padding: '0 8px 10px' }}>
+              {traits.map(t => (
+                <span key={t} style={badge}>{TRAIT_LABELS[t]}</span>
+              ))}
+              {chainFlags.map(f => {
+                const c = CHAIN_LABELS[f]
+                return <span key={f} style={{ ...badge, color: c.color, border: `1px solid ${c.color}33` }}>{c.label}</span>
+              })}
+            </div>
+          )}
+
+          {/* Edit (God Mode) */}
+          <button onClick={openEditor} style={editRow}>
+            <span style={{ fontSize: 22 }}>✏️</span>
+            <div style={{ flex: 1, textAlign: 'left' }}>
+              <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', margin: 0 }}>Modifica</p>
+              <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', margin: 0 }}>Nome, aspetto e attributi</p>
+            </div>
+            <span style={godBadge}>GOD MODE</span>
+          </button>
+
+          {/* Attributes */}
+          <div style={sectionHead}>Attributi</div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, padding: '0 8px 6px' }}>
+            {NPC_ATTR_META.map(m => {
+              const val = attrs[m.key] as number
+              const color = val >= 70 ? '#10b981' : val >= 40 ? '#f59e0b' : '#f43f5e'
+              return (
+                <div key={String(m.key)} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 96, flexShrink: 0 }}>{m.emoji} {m.label}</span>
+                  <div className="stat-bar" style={{ flex: 1 }}>
+                    <div className="stat-bar-fill" style={{ width: `${val}%`, backgroundColor: color }} />
+                  </div>
+                  <span style={{ fontSize: 10, width: 30, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{val}%</span>
+                </div>
+              )
+            })}
+          </div>
+
+          {/* Activities */}
+          {actions.length > 0 && (
+            <>
+              <div style={sectionHead}>Attività</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '0 8px' }}>
+                {actions.map(({ action, label, emoji }) => {
+                  const isDanger = action === 'break_up' || action === 'divorce' || action === 'insult'
+                  const isDark = action === 'cheat'
+                  return (
+                    <button key={action} onClick={() => handleAction(action)} className="tap-scale"
+                      style={{
+                        padding: '7px 12px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                        border: `1px solid ${isDanger ? 'rgba(239,68,68,0.25)' : isDark ? 'rgba(168,85,247,0.25)' : 'rgba(255,255,255,0.1)'}`,
+                        background: isDanger ? 'rgba(239,68,68,0.12)' : isDark ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.07)',
+                        color: isDanger ? '#fca5a5' : isDark ? '#d8b4fe' : 'var(--color-text)',
+                      }}>
+                      {emoji} {label}
+                    </button>
+                  )
+                })}
+              </div>
+            </>
+          )}
+
+          {/* Money */}
+          <div style={{ padding: '0 8px' }}>
+            <MoneyExchange rel={rel} />
+          </div>
+
+          {/* Memories */}
+          {rel.memoryLog && rel.memoryLog.length > 0 && (
+            <>
+              <div style={sectionHead}>📖 Memorie condivise</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 4, padding: '0 8px 8px' }}>
+                {rel.memoryLog.slice(0, 6).map(mem => {
+                  const color = CAT_COLORS[mem.category] ?? '#94a3b8'
+                  return (
+                    <div key={mem.id} style={{
+                      fontSize: 11, color: '#94a3b8', padding: '5px 9px', borderRadius: 6,
+                      background: 'rgba(255,255,255,0.03)', borderLeft: `2px solid ${color}`,
+                      display: 'flex', justifyContent: 'space-between', gap: 8,
+                    }}>
+                      <span>{mem.description}</span>
+                      <span style={{ flexShrink: 0, color: '#475569' }}>Anno {mem.year}</span>
+                    </div>
+                  )
+                })}
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+
+      {showEditor && (
+        <Suspense fallback={null}>
+          <GodModePersonEditor relId={rel.id} onClose={() => setShowEditor(false)} />
+        </Suspense>
+      )}
+    </div>
+  )
+}
+
+// ─── styles ───────────────────────────────────────────────────────
+
+const overlay: React.CSSProperties = {
+  position: 'fixed', inset: 0, zIndex: 1000,
+  background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(4px)',
+  display: 'flex', alignItems: 'flex-end', justifyContent: 'center',
+}
+const sheet: React.CSSProperties = {
+  width: '100%', maxWidth: 480, maxHeight: '92vh', overflowY: 'auto',
+  background: 'linear-gradient(160deg, #2A2150 0%, #1B1733 100%)',
+  borderRadius: '20px 20px 0 0', padding: '14px 14px 32px',
+  boxShadow: '0 -8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.16)',
+  border: '1px solid rgba(167,139,250,0.3)',
+}
+const topBar: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+  background: 'linear-gradient(180deg, #1e5fb4 0%, #16498c 100%)',
+  color: '#fff', borderRadius: 12, padding: '8px 10px', marginBottom: 8,
+}
+const avatarCircle: React.CSSProperties = {
+  width: 64, height: 64, borderRadius: '50%', flexShrink: 0,
+  display: 'flex', alignItems: 'center', justifyContent: 'center',
+  background: 'rgba(255,255,255,0.06)', border: '2px solid rgba(167,139,250,0.3)', overflow: 'hidden',
+}
+const editRow: React.CSSProperties = {
+  display: 'flex', alignItems: 'center', gap: 10, width: '100%',
+  padding: '11px 12px', borderRadius: 12, cursor: 'pointer',
+  background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+  margin: '4px 0 6px',
+}
+const godBadge: React.CSSProperties = {
+  fontSize: 9, fontWeight: 800, color: '#1a1a2e', background: 'linear-gradient(180deg,#fde047,#facc15)',
+  padding: '3px 7px', borderRadius: 6, letterSpacing: 0.5,
+  border: '1px solid #ca8a04', boxShadow: '0 1px 0 rgba(0,0,0,0.2)',
+}
+const sectionHead: React.CSSProperties = {
+  fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1,
+  padding: '12px 8px 6px', fontWeight: 700,
+}
+const badge: React.CSSProperties = {
+  fontSize: 10, color: '#cbd5e1', padding: '2px 7px', borderRadius: 99,
+  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+}
