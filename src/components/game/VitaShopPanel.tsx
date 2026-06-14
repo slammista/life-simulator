@@ -18,11 +18,17 @@ const GEM_PACKS = [
 ] as const
 
 const RARE_ITEMS = [
-  { id: 'accessory_crown',   name: 'Corona Reale',     cost: 100, emoji: '👑', category: 'Accessori' },
+  { id: 'accessory_crown',   name: 'Corona Reale',          cost: 100, emoji: '👑', category: 'Accessori' },
   { id: 'outfit_knight',     name: 'Armatura da Cavaliere', cost: 150, emoji: '⚔️', category: 'Vestiti' },
-  { id: 'vehicle_ferrari',   name: 'Ferrari Rossa',    cost: 250, emoji: '🚗', category: 'Veicoli' },
-  { id: 'home_villa',        name: 'Villa sul Mare',   cost: 500, emoji: '🏰', category: 'Abitazioni' },
-  { id: 'divine_wings',      name: 'Ali Divine',       cost: 800, emoji: '🪽', category: 'Divini' },
+  { id: 'vehicle_ferrari',   name: 'Ferrari Rossa',         cost: 250, emoji: '🚗', category: 'Veicoli' },
+  { id: 'home_villa',        name: 'Villa sul Mare',        cost: 500, emoji: '🏰', category: 'Abitazioni' },
+  { id: 'divine_wings',      name: 'Ali Divine',            cost: 800, emoji: '🪽', category: 'Divini' },
+  // Vita Scenarios (unlock at new game creation)
+  { id: 'scenario_rich',      name: 'Nato Privilegiato',    cost: 150, emoji: '💰', category: 'Scenari' },
+  { id: 'scenario_poor',      name: 'Vita Difficile',       cost: 50,  emoji: '🏚️', category: 'Scenari' },
+  { id: 'scenario_prodigy',   name: 'Prodigio',             cost: 200, emoji: '🎓', category: 'Scenari' },
+  { id: 'scenario_celebrity', name: 'Figlio di Famosi',     cost: 300, emoji: '🎬', category: 'Scenari' },
+  { id: 'scenario_athlete',   name: 'Atleta Nato',          cost: 200, emoji: '🏆', category: 'Scenari' },
 ] as const
 
 const BUNDLES = [

@@ -1,5 +1,6 @@
 import { lazy, Suspense, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
+import { useWalletStore } from '../../store/walletStore'
 import type { Gender, FamilyBackground, Religion, SexualOrientation, GameMode, AvatarConfig, SkinTone, AvatarHairStyle, AvatarHairColor, Effect } from '../../store/types'
 import { getDefaultAvatar, SKIN_TONES, HAIR_COLORS } from '../../services/AvatarEngine'
 import { AvatarRenderer } from '../avatar/AvatarRenderer'
@@ -18,6 +19,16 @@ interface Scenario {
   background: FamilyBackground
   mode: GameMode
   bonus: Effect
+}
+
+// Gem cost for premium scenarios (0 = free)
+const SCENARIO_GEM_COST: Record<string, number> = {
+  normal:    0,
+  rich:      150,
+  poor:      50,
+  prodigy:   200,
+  celebrity: 300,
+  athlete:   200,
 }
 
 const SCENARIOS: Scenario[] = [
@@ -125,6 +136,8 @@ export function NewGameScreen() {
   const godModeUnlocked = useGameStore(s => s.settings.godModeUnlocked)
   const [godBonus, setGodBonus] = useState<Effect | null>(null)
   const [showEditor, setShowEditor] = useState(false)
+  const [lockedHint, setLockedHint] = useState<string | null>(null)
+  const owns = useWalletStore(s => s.owns)
 
   const updateAvatar = (patch: Partial<AvatarConfig>) =>
     setAvatar(prev => ({ ...prev, ...patch }))
@@ -198,28 +211,63 @@ export function NewGameScreen() {
       {/* ── Scenario Selector ── */}
       <div style={{ marginBottom: 20 }}>
         <label style={{ ...labelStyle, fontSize: 13, marginBottom: 10 }}>🎭 Scegli il tuo scenario di vita</label>
+        {lockedHint && (
+          <div style={{
+            marginBottom: 8, padding: '8px 12px', borderRadius: 10,
+            background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)',
+            fontSize: 12, color: '#c4b5fd', textAlign: 'center',
+          }}>
+            {lockedHint}
+          </div>
+        )}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {SCENARIOS.map(s => {
             const active = selectedScenario === s.id
+            const gemCost = SCENARIO_GEM_COST[s.id] ?? 0
+            const isPremium = gemCost > 0
+            const isUnlocked = !isPremium || owns(`scenario_${s.id}`)
             return (
               <button
                 key={s.id}
-                onClick={() => applyScenario(s)}
+                onClick={() => {
+                  if (!isUnlocked) {
+                    setLockedHint(`🔒 Acquista "${s.title}" nello Shop per ${gemCost} 💎`)
+                    return
+                  }
+                  setLockedHint(null)
+                  applyScenario(s)
+                }}
                 style={{
-                  padding: '10px 12px', borderRadius: 12, textAlign: 'left',
-                  cursor: 'pointer', border: `2px solid ${active ? s.color : 'rgba(255,255,255,0.08)'}`,
-                  background: active ? `${s.color}18` : 'rgba(255,255,255,0.03)',
+                  padding: '10px 12px', borderRadius: 12, textAlign: 'left', position: 'relative',
+                  cursor: isUnlocked ? 'pointer' : 'default',
+                  border: `2px solid ${active && isUnlocked ? s.color : 'rgba(255,255,255,0.08)'}`,
+                  background: active && isUnlocked ? `${s.color}18` : 'rgba(255,255,255,0.03)',
                   transition: 'all 0.15s ease',
+                  overflow: 'hidden',
                 }}
               >
-                <div style={{ fontSize: 22, marginBottom: 4 }}>{s.emoji}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, color: active ? s.color : 'var(--color-text)', lineHeight: 1.2 }}>
+                {/* Lock overlay for premium unowned scenarios */}
+                {!isUnlocked && (
+                  <div style={{
+                    position: 'absolute', inset: 0, borderRadius: 10,
+                    background: 'rgba(10,8,25,0.72)',
+                    backdropFilter: 'blur(1px)',
+                    display: 'flex', flexDirection: 'column',
+                    alignItems: 'center', justifyContent: 'center', gap: 2,
+                  }}>
+                    <span style={{ fontSize: 18 }}>🔒</span>
+                    <span style={{ fontSize: 10, color: '#a78bfa', fontWeight: 700 }}>{gemCost} 💎 Shop</span>
+                  </div>
+                )}
+                <div style={{ fontSize: 22, marginBottom: 4, opacity: isUnlocked ? 1 : 0.45 }}>{s.emoji}</div>
+                <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2, opacity: isUnlocked ? 1 : 0.55,
+                  color: active && isUnlocked ? s.color : 'var(--color-text)' }}>
                   {s.title}
                 </div>
-                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.35 }}>
+                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.35, opacity: isUnlocked ? 1 : 0.5 }}>
                   {s.subtitle}
                 </div>
-                {active && s.id !== 'normal' && (
+                {active && isUnlocked && s.id !== 'normal' && (
                   <div style={{ marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
                     {Object.entries(s.bonus).filter(([, v]) => v !== 0).slice(0, 3).map(([k, v]) => (
                       <span key={k} style={{

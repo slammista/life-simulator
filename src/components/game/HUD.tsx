@@ -1,6 +1,7 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore, computeWeeklyHours } from '../../store/gameStore'
+import { useWalletStore } from '../../store/walletStore'
 import { AvatarRenderer } from '../avatar/AvatarRenderer'
 import { TRAIT_DEFS } from '../../services/NarrativeEngine'
 
@@ -156,6 +157,7 @@ export const HUD = memo(function HUD() {
   const outfitBadge = getJobOutfitBadge(data)
   const traits = usePlayerTraits()
   const showFame = fame >= 30
+  const gems = useWalletStore(s => s.gems)
 
   // Flash stat value when it changes
   const prevStatsRef = useRef<Record<string, number>>({})
@@ -268,26 +270,40 @@ export const HUD = memo(function HUD() {
           </div>
         </div>
 
-        {/* Wallet chip — with count-up flash */}
-        <div style={{
-          display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0,
-          padding: '5px 11px', borderRadius: 'var(--radius-pill)',
-          background: 'rgba(24,211,158,0.1)', border: '1px solid rgba(24,211,158,0.25)',
-          boxShadow: moneyFlash ? '0 0 12px rgba(24,211,158,0.4)' : 'none',
-          transition: 'box-shadow 0.3s ease',
-        }}>
-          <span
-            key={money}
-            className={moneyFlash ? 'money-flash' : undefined}
-            style={{ fontSize: 13, fontWeight: 800, color: '#18D39E', lineHeight: 1 }}
-          >
-            {formatMoney(money)}
-          </span>
-          {bankBalance > 0 && (
-            <span style={{ fontSize: 9, color: '#687087', marginTop: 1 }}>
-              🏦 {formatMoney(bankBalance)}
+        {/* Wallet chips */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4, flexShrink: 0 }}>
+          {/* Money chip */}
+          <div style={{
+            display: 'flex', flexDirection: 'column', alignItems: 'flex-end',
+            padding: '4px 10px', borderRadius: 'var(--radius-pill)',
+            background: 'rgba(24,211,158,0.1)', border: '1px solid rgba(24,211,158,0.25)',
+            boxShadow: moneyFlash ? '0 0 12px rgba(24,211,158,0.4)' : 'none',
+            transition: 'box-shadow 0.3s ease',
+          }}>
+            <span
+              key={money}
+              className={moneyFlash ? 'money-flash' : undefined}
+              style={{ fontSize: 13, fontWeight: 800, color: '#18D39E', lineHeight: 1 }}
+            >
+              {formatMoney(money)}
             </span>
-          )}
+            {bankBalance > 0 && (
+              <span style={{ fontSize: 9, color: '#687087', marginTop: 1 }}>
+                🏦 {formatMoney(bankBalance)}
+              </span>
+            )}
+          </div>
+          {/* Gems chip */}
+          <div style={{
+            display: 'flex', alignItems: 'center', gap: 4,
+            padding: '3px 10px', borderRadius: 'var(--radius-pill)',
+            background: 'rgba(167,139,250,0.12)', border: '1px solid rgba(167,139,250,0.28)',
+          }}>
+            <span style={{ fontSize: 11 }}>💎</span>
+            <span style={{ fontSize: 12, fontWeight: 800, color: '#c4b5fd', lineHeight: 1 }}>
+              {gems.toLocaleString('it-IT')}
+            </span>
+          </div>
         </div>
       </div>
 
