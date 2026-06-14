@@ -1055,3 +1055,25 @@ img.emoji-sprite {
   --section-accent: #FBBF24;
   --section-glow:   rgba(251, 191, 36, 0.13);
 }
+
+/* ── Animated avatars (idle breathing + blink) ───────────────────── */
+@keyframes avatarBreathe {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-1.2%) scale(1.012); }
+}
+@keyframes avatarBlink {
+  0%, 92%, 100% { transform: scaleY(1); }
+  96%           { transform: scaleY(0.08); }
+}
+.avatar-animated {
+  animation: avatarBreathe 3.6s ease-in-out infinite;
+  transform-origin: center bottom;
+  transform-box: fill-box;
+}
+.avatar-blink {
+  animation: avatarBlink 4.6s ease-in-out infinite;
+  transform-origin: center 44px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .avatar-animated, .avatar-blink { animation: none; }
+}

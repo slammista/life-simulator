@@ -1,9 +1,12 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { useToastStore } from '../../store/toastStore'
 import { TRAVEL_DESTS, type TravelClass, type TravelCategory } from '../../services/TravelEngine'
 import db from '../../../public/db.json'
 import type { Nation } from '../../store/types'
+
+const WorldMapModal = lazy(() =>
+  import('../world/WorldMapModal').then(m => ({ default: m.WorldMapModal })))
 
 const NATION_FLAGS: Record<string, string> = {
   italy: '🇮🇹', usa: '🇺🇸', germany: '🇩🇪', japan: '🇯🇵', brazil: '🇧🇷',
@@ -129,39 +132,38 @@ export function TravelScreen() {
             </p>
           </div>
           <button
-            onClick={() => setShowEmigrate(v => !v)}
+            onClick={() => setShowEmigrate(true)}
             style={{
               padding: '6px 12px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
               border: '1px solid rgba(99,102,241,0.35)', background: 'rgba(99,102,241,0.12)', color: '#a5b4fc',
             }}
           >
-            {showEmigrate ? 'Chiudi' : 'Scegli paese'}
+            🗺️ Apri mappa
           </button>
         </div>
-        {showEmigrate && (
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6, marginTop: 10 }}>
-            {(db.nations as Nation[]).filter(n => n.id !== nation?.id).map(n => (
-              <button
-                key={n.id}
-                disabled={finance.money < 5000 || time.age < 18 || criminal.inPrison}
-                onClick={() => {
-                  const r = emigrate(n.id)
-                  setFeedback(r.message)
-                  if (r.success) setShowEmigrate(false)
-                }}
-                style={{
-                  padding: '8px 10px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer', textAlign: 'left',
-                  border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(255,255,255,0.05)',
-                  color: finance.money < 5000 || time.age < 18 ? '#475569' : 'var(--color-text)',
-                  opacity: finance.money < 5000 || time.age < 18 ? 0.5 : 1,
-                }}
-              >
-                {NATION_FLAGS[n.id] ?? '🌍'} {n.name}
-              </button>
-            ))}
-          </div>
-        )}
       </div>
+
+      {showEmigrate && (
+        <Suspense fallback={null}>
+          <WorldMapModal
+            nations={db.nations as Nation[]}
+            currentNationId={nation?.id}
+            canEmigrate={finance.money >= 5000 && time.age >= 18 && !criminal.inPrison}
+            blockReason={
+              criminal.inPrison ? 'Non puoi emigrare dalla prigione.'
+              : time.age < 18 ? 'Devi essere maggiorenne per emigrare.'
+              : finance.money < 5000 ? 'Servono €5.000 per trasferirti.'
+              : undefined
+            }
+            onEmigrate={(id) => {
+              const r = emigrate(id)
+              setFeedback(r.message)
+              if (r.success) setShowEmigrate(false)
+            }}
+            onClose={() => setShowEmigrate(false)}
+          />
+        </Suspense>
+      )}
 
       {/* Dual citizenship */}
       {time.age >= 18 && nation && !(citizenships ?? []).includes(nation.id) && (

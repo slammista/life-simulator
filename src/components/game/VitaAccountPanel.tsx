@@ -108,6 +108,12 @@ export function VitaAccountPanel({ onBack }: Props) {
     if (!result.success) setAuthMsg({ text: result.error ?? 'Errore Google', ok: false })
   }
 
+  async function handleDiscord() {
+    setAuthMsg(null)
+    const result = await CloudSaveService.signInWithDiscord()
+    if (!result.success) setAuthMsg({ text: result.error ?? 'Errore Discord', ok: false })
+  }
+
   // Apple Sign-In is "coming soon" — requires a paid Apple Developer account.
   // CloudSaveService.signInWithApple() stays available for when it's enabled.
 
@@ -306,6 +312,14 @@ export function VitaAccountPanel({ onBack }: Props) {
                 style={{ width: '100%', fontSize: 14, padding: '11px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
               >
                 <span style={{ fontSize: 18 }}>🇬</span> Accedi con Google
+              </button>
+              <button
+                onClick={handleDiscord}
+                disabled={!isConfigured}
+                className="btn-candy"
+                style={{ width: '100%', fontSize: 14, padding: '11px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'linear-gradient(180deg,#5865F2,#4752c4)', color: '#fff' }}
+              >
+                <span style={{ fontSize: 18 }}>🎮</span> Accedi con Discord
               </button>
               <button
                 disabled

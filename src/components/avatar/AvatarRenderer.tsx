@@ -236,9 +236,12 @@ interface Props {
   age?: number
   gender?: Gender | string
   style?: React.CSSProperties
+  // Subtle idle breathing + blinking. Defaults on for md/lg, off for sm.
+  animated?: boolean
 }
 
-export function AvatarRenderer({ size = 'sm', config, age, gender, style }: Props) {
+export function AvatarRenderer({ size = 'sm', config, age, gender, style, animated }: Props) {
+  const isAnimated = animated ?? size !== 'sm'
   const rawId = useId()
   const clipId = 'av' + rawId.replace(/[^a-zA-Z0-9]/g, '')
 
@@ -268,6 +271,7 @@ export function AvatarRenderer({ size = 'sm', config, age, gender, style }: Prop
       viewBox="0 0 100 100"
       width={px}
       height={px}
+      className={isAnimated ? 'avatar-animated' : undefined}
       style={{ display: 'block', flexShrink: 0, ...style }}
       xmlns="http://www.w3.org/2000/svg"
     >
@@ -313,7 +317,9 @@ export function AvatarRenderer({ size = 'sm', config, age, gender, style }: Prop
       <Brows style={aged.browStyle} color={browColor} />
 
       {/* Eyes */}
-      <Eyes style={aged.eyeStyle} fill={eyeHex} />
+      <g className={isAnimated ? 'avatar-blink' : undefined}>
+        <Eyes style={aged.eyeStyle} fill={eyeHex} />
+      </g>
 
       {/* Nose */}
       <ellipse cx="47.5" cy="52" rx="1.6" ry="1.1" fill={skinDark} opacity="0.45" />

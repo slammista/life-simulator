@@ -120,6 +120,17 @@ export const CloudSaveService = {
     return { success: true }
   },
 
+  async signInWithDiscord(): Promise<CloudSaveResult> {
+    const client = await getClient()
+    if (!client) return { success: false, error: 'Cloud save non configurato' }
+    const { error } = await client.auth.signInWithOAuth({
+      provider: 'discord',
+      options: { redirectTo: `${window.location.origin}/auth-confirm` },
+    })
+    if (error) return { success: false, error: error.message }
+    return { success: true }
+  },
+
   async signInWithApple(): Promise<CloudSaveResult> {
     const client = await getClient()
     if (!client) return { success: false, error: 'Cloud save non configurato' }
