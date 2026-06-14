@@ -33,6 +33,29 @@ const pct = (str: string, salt: number, min = 0, max = 100) =>
 const pick = <T,>(arr: T[], str: string, salt: number): T =>
   arr[Math.floor(hash01(str, salt) * arr.length) % arr.length]
 
+// Generic fallback for WorkNPC / SchoolNPC (no Relationship required).
+export function ensureNpcAttributesById(
+  id: string,
+  age: number,
+  existing?: NPCExtendedAttributes
+): NPCExtendedAttributes {
+  if (existing) return existing
+  return {
+    craziness:     pct(id, 1),
+    fertility:     pct(id, 2),
+    willpower:     pct(id, 3),
+    smarts:        pct(id, 4),
+    happiness:     pct(id, 5, 40, 90),
+    health:        clampStat(Math.max(20, 95 - age * 0.6 + hash01(id, 6) * 20)),
+    looks:         pct(id, 7, 25, 85),
+    generosity:    pct(id, 8),
+    religiousness: pct(id, 9),
+    sexuality:     pick(SEXUALITIES, id, 10),
+    politics:      pick(POLITICS, id, 11),
+    religion:      pick(RELIGIONS, id, 12),
+  }
+}
+
 // Returns a complete attribute set, filling any missing field deterministically.
 export function ensureNpcAttributes(rel: Relationship): NPCExtendedAttributes {
   const seed = rel.npcId || rel.id || rel.name

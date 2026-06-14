@@ -47,7 +47,7 @@ export function RelationshipScreen() {
   }
 
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
+    <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 'max(96px, env(safe-area-inset-bottom, 0px) + 80px)' }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
         <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)' }}>❤️ Relazioni</h2>

@@ -1,10 +1,13 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { CareerEngine, getAllJobs, getContractLabel, getCategorySkillBonus } from '../../services/CareerEngine'
 import { useToastStore } from '../../store/toastStore'
 import { haptic } from '../../services/HapticEngine'
 import { ContextualHint } from '../game/ContextualHint'
 import type { WorkAction, WorkNPC, WorkReputationStatus, PlayerSkills } from '../../store/types'
+
+const WorkNpcDetailModal = lazy(() =>
+  import('../relationships/WorkNpcDetailModal').then(m => ({ default: m.WorkNpcDetailModal })))
 
 const CATEGORY_SKILL_HINTS: Record<string, { key: keyof PlayerSkills; label: string; emoji: string }[]> = {
   care:      [{ key: 'socialSkill',   label: 'Socialità',  emoji: '💬' }, { key: 'charisma',     label: 'Carisma',    emoji: '✨' }],
@@ -81,19 +84,6 @@ const JOB_TAGLINE: Record<string, string> = {
   life_coach:        'Aiuti chi non sa ancora dove andare.',
 }
 
-const TRAIT_CONFIG: Record<string, { emoji: string; color: string }> = {
-  introverso:  { emoji: '🤫', color: '#94a3b8' },
-  ambizioso:   { emoji: '🔥', color: '#f59e0b' },
-  geloso:      { emoji: '💚', color: '#22c55e' },
-  generoso:    { emoji: '🤝', color: '#f472b6' },
-  sensibile:   { emoji: '💙', color: '#60a5fa' },
-  sicuro:      { emoji: '😎', color: '#a78bfa' },
-  avido:       { emoji: '💰', color: '#fbbf24' },
-  leale:       { emoji: '🛡️', color: '#38bdf8' },
-  empatico:    { emoji: '💫', color: '#ec4899' },
-  impulsivo:   { emoji: '⚡', color: '#ef4444' },
-}
-
 const WORK_REP_CONFIG: Record<WorkReputationStatus, { label: string; color: string; bg: string }> = {
   nuovo:       { label: 'Nuovo',        color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' },
   affidabile:  { label: 'Affidabile',   color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
@@ -105,15 +95,6 @@ const WORK_REP_CONFIG: Record<WorkReputationStatus, { label: string; color: stri
   leader:      { label: 'Leader',       color: '#38bdf8', bg: 'rgba(56,189,248,0.12)' },
   problematico:{ label: 'Problematico', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
 }
-
-const WORK_ACTIONS: Array<{ action: WorkAction; label: string; emoji: string }> = [
-  { action: 'talk',       label: 'Parla',     emoji: '💬' },
-  { action: 'socialize',  label: 'Esci',      emoji: '☕' },
-  { action: 'help',       label: 'Aiuta',     emoji: '🤝' },
-  { action: 'compliment', label: 'Complimenta', emoji: '😊' },
-  { action: 'gossip',     label: 'Gossip',    emoji: '🗣️' },
-  { action: 'fight',      label: 'Litiga',    emoji: '😠' },
-]
 
 const STATUS_CONFIG: Record<WorkNPC['status'], { color: string; label: string }> = {
   neutral:  { color: '#94a3b8', label: 'Neutrale' },
@@ -147,7 +128,7 @@ export function CareerScreen() {
   const workInteract = useGameStore(s => s.workInteract)
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [tab, setTab] = useState<'offers' | 'colleagues' | 'history'>('offers')
-  const [expandedColleague, setExpandedColleague] = useState<string | null>(null)
+  const [detailColleagueId, setDetailColleagueId] = useState<string | null>(null)
 
   const showPanel = useToastStore(s => s.showPanel)
   const closePanel = useToastStore(s => s.closePanel)
@@ -542,100 +523,61 @@ export function CareerScreen() {
             </div>
           ) : (
             (career.colleagues ?? []).map(colleague => {
-              const isExpanded = expandedColleague === colleague.id
               const statusCfg = STATUS_CONFIG[colleague.status]
-              const isPromoted = !!colleague.promotedToRelId
+              const affectionColor = colleague.affection >= 70 ? '#10b981' : colleague.affection >= 40 ? '#f59e0b' : '#f43f5e'
               return (
-                <div key={colleague.id} className="card" style={{ padding: '12px 14px' }}>
-                  <div
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
-                    onClick={() => setExpandedColleague(isExpanded ? null : colleague.id)}
-                  >
-                    <span style={{ fontSize: 26, flexShrink: 0 }}>{colleague.emoji}</span>
+                <div
+                  key={colleague.id}
+                  className="card tap-scale"
+                  style={{ padding: '12px 14px', cursor: 'pointer' }}
+                  onClick={() => setDetailColleagueId(colleague.id)}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+                      background: 'rgba(99,102,241,0.1)', border: '1.5px solid rgba(99,102,241,0.25)',
+                    }}>
+                      {colleague.emoji}
+                    </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontWeight: 600, fontSize: 14 }}>{colleague.name}</p>
-                      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                        {colleague.role} · {colleague.age} anni
-                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 700, fontSize: 14 }}>{colleague.name}</span>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{colleague.age}y</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{colleague.role}</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 7px', borderRadius: 99, background: `${statusCfg.color}22`, color: statusCfg.color }}>
+                          {statusCfg.label}
+                        </span>
+                      </div>
+                      <div style={{ height: 5, borderRadius: 99, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginTop: 5 }}>
+                        <div style={{ height: '100%', width: `${colleague.affection}%`, background: affectionColor, borderRadius: 99, transition: 'width 0.4s' }} />
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                      <span style={{
-                        fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
-                        background: `${statusCfg.color}22`, color: statusCfg.color,
-                      }}>
-                        {statusCfg.label}
-                      </span>
-                      <span style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
-                        {colleague.affection}% affinità
-                      </span>
-                    </div>
+                    <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', flexShrink: 0 }}>›</span>
                   </div>
-
-                  {isExpanded && (
-                    <div style={{ marginTop: 10 }}>
-                      {/* Trait badges */}
-                      {colleague.personalityTraits.length > 0 && (
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
-                          {colleague.personalityTraits.map(trait => {
-                            const tc = TRAIT_CONFIG[trait] ?? { emoji: '🔹', color: '#94a3b8' }
-                            return (
-                              <span key={trait} title={trait} style={{
-                                fontSize: 10, padding: '2px 7px', borderRadius: 99,
-                                background: `${tc.color}15`, color: tc.color,
-                                border: `1px solid ${tc.color}30`,
-                              }}>
-                                {tc.emoji} {trait}
-                              </span>
-                            )
-                          })}
-                        </div>
-                      )}
-
-                      {/* Affection bar */}
-                      <div style={{ marginBottom: 10 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--color-text-secondary)', marginBottom: 3 }}>
-                          <span>Affinità</span><span>{colleague.affection}/100</span>
-                        </div>
-                        <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${colleague.affection}%`, background: '#22c55e', borderRadius: 4, transition: 'width 0.3s' }} />
-                        </div>
-                      </div>
-
-                      {isPromoted ? (
-                        <p style={{ fontSize: 12, color: '#4ade80', marginBottom: 8 }}>
-                          ✅ {colleague.name} è diventato/a tuo amico/a!
-                        </p>
-                      ) : (
-                        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
-                          Porta l'affinità a 65+ per promuoverlo/a come amico/a reale.
-                        </p>
-                      )}
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
-                        {WORK_ACTIONS.map(({ action, label, emoji }) => (
-                          <button
-                            key={action}
-                            onClick={() => handleWorkInteract(colleague.id, action)}
-                            style={{
-                              padding: '8px 4px', borderRadius: 10, fontSize: 11, fontWeight: 500,
-                              background: action === 'fight' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.07)',
-                              color: action === 'fight' ? '#fca5a5' : 'var(--color-text)',
-                              border: `1px solid ${action === 'fight' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.08)'}`,
-                              cursor: 'pointer', textAlign: 'center',
-                            }}
-                          >
-                            {emoji}<br />{label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )
             })
           )}
         </div>
       )}
+
+      {/* WorkNPC detail modal */}
+      {detailColleagueId && (() => {
+        const npc = (career.colleagues ?? []).find(c => c.id === detailColleagueId)
+        if (!npc) return null
+        return (
+          <Suspense fallback={null}>
+            <WorkNpcDetailModal
+              npc={npc}
+              onClose={() => setDetailColleagueId(null)}
+              onInteract={(id, action) => handleWorkInteract(id, action)}
+            />
+          </Suspense>
+        )
+      })()}
 
       {/* History list */}
       {tab === 'history' && (

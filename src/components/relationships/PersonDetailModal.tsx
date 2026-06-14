@@ -218,7 +218,9 @@ const overlay: React.CSSProperties = {
 const sheet: React.CSSProperties = {
   width: '100%', maxWidth: 480, maxHeight: '92vh', overflowY: 'auto',
   background: 'linear-gradient(160deg, #2A2150 0%, #1B1733 100%)',
-  borderRadius: '20px 20px 0 0', padding: '14px 14px 32px',
+  borderRadius: '20px 20px 0 0',
+  padding: '14px 14px',
+  paddingBottom: 'max(32px, env(safe-area-inset-bottom, 0px))',
   boxShadow: '0 -8px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.16)',
   border: '1px solid rgba(167,139,250,0.3)',
 }

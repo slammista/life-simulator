@@ -1,20 +1,10 @@
-import { useState } from 'react'
+import { lazy, Suspense, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { EducationEngine, getEducationLabel } from '../../services/EducationEngine'
-import type { EducationLevel, SchoolAction, SchoolNPC, SchoolReputationStatus, NPCPersonalityTrait } from '../../store/types'
+import type { EducationLevel, SchoolAction, SchoolNPC, SchoolReputationStatus } from '../../store/types'
 
-const TRAIT_CONFIG: Record<NPCPersonalityTrait, { emoji: string; color: string }> = {
-  introverso:  { emoji: '🤫', color: '#94a3b8' },
-  ambizioso:   { emoji: '🔥', color: '#f59e0b' },
-  geloso:      { emoji: '💚', color: '#22c55e' },
-  generoso:    { emoji: '🤝', color: '#f472b6' },
-  sensibile:   { emoji: '💙', color: '#60a5fa' },
-  sicuro:      { emoji: '😎', color: '#a78bfa' },
-  avido:       { emoji: '💰', color: '#fbbf24' },
-  leale:       { emoji: '🛡️', color: '#38bdf8' },
-  empatico:    { emoji: '💫', color: '#ec4899' },
-  impulsivo:   { emoji: '⚡', color: '#ef4444' },
-}
+const SchoolNpcDetailModal = lazy(() =>
+  import('../relationships/SchoolNpcDetailModal').then(m => ({ default: m.SchoolNpcDetailModal })))
 
 const LEVEL_EMOJI: Record<EducationLevel, string> = {
   none: '❌',
@@ -41,15 +31,6 @@ const SCHOOL_REP_CONFIG: Record<SchoolReputationStatus, { label: string; color: 
   leader:       { label: 'Leader',       color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
   artista:      { label: 'Artista',      color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
 }
-
-const SCHOOL_ACTIONS: Array<{ action: SchoolAction; label: string; emoji: string; profOnly?: boolean; studentOnly?: boolean }> = [
-  { action: 'talk',           label: 'Parla',        emoji: '💬' },
-  { action: 'befriend',       label: 'Amicizia',     emoji: '🤝' },
-  { action: 'study_together', label: 'Studia',       emoji: '📖', studentOnly: true },
-  { action: 'gossip',         label: 'Gossip',       emoji: '🗣️',  studentOnly: true },
-  { action: 'fight',          label: 'Litigate',     emoji: '😠' },
-  { action: 'copy_homework',  label: 'Copia',        emoji: '📋',  studentOnly: true },
-]
 
 const STATUS_LABELS: Record<SchoolNPC['status'], { color: string; label: string }> = {
   neutral:  { color: '#94a3b8', label: 'Neutrale' },
@@ -84,7 +65,7 @@ export function EducationScreen() {
 
   const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [tab, setTab] = useState<'status' | 'classmates' | 'enroll'>('status')
-  const [expandedNPC, setExpandedNPC] = useState<string | null>(null)
+  const [detailNpcId, setDetailNpcId] = useState<string | null>(null)
 
   const flash = (msg: string, ok: boolean) => {
     setFeedback({ msg, ok })
@@ -250,103 +231,67 @@ export function EducationScreen() {
             </div>
           ) : (
             (education.classmates ?? []).map(npc => {
-              const isExpanded = expandedNPC === npc.id
               const statusCfg = STATUS_LABELS[npc.status]
-              const isPromoted = !!npc.promotedToRelId
-              const roleLabel = npc.role === 'professor' ? (npc.subject ? `Prof. ${npc.subject}` : 'Professore') : 'Studente'
+              const isProf = npc.role === 'professor' || npc.role === 'coach'
+              const roleLabel = npc.role === 'professor'
+                ? (npc.subject ? `Prof. ${npc.subject}` : 'Professore')
+                : npc.role === 'coach' ? 'Allenatore'
+                : 'Studente'
+              const affectionColor = npc.affection >= 70 ? '#10b981' : npc.affection >= 40 ? '#f59e0b' : '#f43f5e'
               return (
-                <div key={npc.id} className="card" style={{ padding: '12px 14px' }}>
-                  <div
-                    style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}
-                    onClick={() => setExpandedNPC(isExpanded ? null : npc.id)}
-                  >
-                    <span style={{ fontSize: 26, flexShrink: 0 }}>{npc.emoji}</span>
+                <div
+                  key={npc.id}
+                  className="card tap-scale"
+                  style={{ padding: '12px 14px', cursor: 'pointer' }}
+                  onClick={() => setDetailNpcId(npc.id)}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                    <div style={{
+                      width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+                      background: isProf ? 'rgba(96,165,250,0.1)' : 'rgba(99,102,241,0.1)',
+                      border: `1.5px solid ${isProf ? 'rgba(96,165,250,0.25)' : 'rgba(99,102,241,0.25)'}`,
+                    }}>
+                      {npc.emoji}
+                    </div>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontWeight: 600, fontSize: 14 }}>{npc.name}</p>
-                      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                        {roleLabel} · {npc.age} anni
-                      </p>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 700, fontSize: 14 }}>{npc.name}</span>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{npc.age}y</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{roleLabel}</span>
+                        <span style={{ fontSize: 10, fontWeight: 600, padding: '1px 7px', borderRadius: 99, background: `${statusCfg.color}22`, color: statusCfg.color }}>
+                          {statusCfg.label}
+                        </span>
+                      </div>
+                      <div style={{ height: 5, borderRadius: 99, background: 'rgba(255,255,255,0.07)', overflow: 'hidden', marginTop: 5 }}>
+                        <div style={{ height: '100%', width: `${npc.affection}%`, background: affectionColor, borderRadius: 99, transition: 'width 0.4s' }} />
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
-                      <span style={{
-                        fontSize: 10, fontWeight: 600, padding: '2px 8px', borderRadius: 99,
-                        background: `${statusCfg.color}22`, color: statusCfg.color,
-                      }}>
-                        {statusCfg.label}
-                      </span>
-                      <span style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>
-                        {npc.affection}% affinità
-                      </span>
-                    </div>
+                    <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', flexShrink: 0 }}>›</span>
                   </div>
-
-                  {isExpanded && (
-                    <div style={{ marginTop: 10 }}>
-                      {/* NPC personality trait badges */}
-                      {npc.personalityTraits.length > 0 && (
-                        <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginBottom: 8 }}>
-                          {npc.personalityTraits.map(trait => {
-                            const tc = TRAIT_CONFIG[trait]
-                            return (
-                              <span key={trait} style={{
-                                fontSize: 10, padding: '2px 7px', borderRadius: 99,
-                                background: `${tc.color}15`, color: tc.color,
-                                border: `1px solid ${tc.color}30`,
-                              }}>
-                                {tc.emoji} {trait}
-                              </span>
-                            )
-                          })}
-                        </div>
-                      )}
-                      <div style={{ marginBottom: 10 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: 'var(--color-text-secondary)', marginBottom: 3 }}>
-                          <span>Affinità</span><span>{npc.affection}/100</span>
-                        </div>
-                        <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${npc.affection}%`, background: '#22c55e', borderRadius: 4, transition: 'width 0.3s' }} />
-                        </div>
-                      </div>
-
-                      {isPromoted ? (
-                        <p style={{ fontSize: 12, color: '#4ade80', marginBottom: 8 }}>
-                          ✅ {npc.name} è diventato/a tuo amico/a!
-                        </p>
-                      ) : npc.role === 'student' ? (
-                        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
-                          Porta l'affinità a 65+ per guadagnarti la sua amicizia reale.
-                        </p>
-                      ) : null}
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
-                        {SCHOOL_ACTIONS.filter(a => {
-                          if (a.profOnly && npc.role !== 'professor') return false
-                          if (a.studentOnly && npc.role !== 'student') return false
-                          return true
-                        }).map(({ action, label, emoji }) => (
-                          <button
-                            key={action}
-                            onClick={() => handleSchoolInteract(npc.id, action)}
-                            style={{
-                              padding: '8px 4px', borderRadius: 10, fontSize: 11, fontWeight: 500,
-                              background: action === 'fight' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.07)',
-                              color: action === 'fight' ? '#fca5a5' : 'var(--color-text)',
-                              border: `1px solid ${action === 'fight' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.08)'}`,
-                              cursor: 'pointer', textAlign: 'center',
-                            }}
-                          >
-                            {emoji}<br />{label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
                 </div>
               )
             })
           )}
         </div>
       )}
+
+      {/* SchoolNPC detail modal */}
+      {detailNpcId && (() => {
+        const npc = (education.classmates ?? []).find(c => c.id === detailNpcId)
+        if (!npc) return null
+        return (
+          <Suspense fallback={null}>
+            <SchoolNpcDetailModal
+              npc={npc}
+              onClose={() => setDetailNpcId(null)}
+              onInteract={(id, action) => handleSchoolInteract(id, action)}
+            />
+          </Suspense>
+        )
+      })()}
 
       {/* Enroll tab */}
       {tab === 'enroll' && (
