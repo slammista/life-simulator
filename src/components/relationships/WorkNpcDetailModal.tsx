@@ -30,13 +30,13 @@ const LEVEL_LABELS: Record<WorkNPC['level'], string> = {
   ceo:       '🏢 CEO',
 }
 
-const WORK_ACTIONS: Array<{ action: WorkAction; label: string; emoji: string }> = [
-  { action: 'talk',       label: 'Parla',       emoji: '💬' },
-  { action: 'socialize',  label: 'Esci',        emoji: '☕' },
-  { action: 'help',       label: 'Aiuta',       emoji: '🤝' },
-  { action: 'compliment', label: 'Loda',        emoji: '😊' },
-  { action: 'gossip',     label: 'Gossip',      emoji: '🗣️' },
-  { action: 'fight',      label: 'Litiga',      emoji: '😠' },
+const WORK_ACTIONS: Array<{ action: WorkAction; label: string; emoji: string; desc: string; bg: string }> = [
+  { action: 'talk',       label: 'Parla',       emoji: '💬', desc: 'Fai due chiacchiere con lui/lei',         bg: '#60a5fa' },
+  { action: 'socialize',  label: 'Esci',        emoji: '☕', desc: 'Uscite insieme dopo il lavoro',           bg: '#3b82f6' },
+  { action: 'help',       label: 'Aiuta',       emoji: '🤝', desc: 'Dagli/le una mano con il lavoro',        bg: '#10b981' },
+  { action: 'compliment', label: 'Loda',        emoji: '😊', desc: 'Fagli/le un complimento professionale',  bg: '#f59e0b' },
+  { action: 'gossip',     label: 'Gossip',      emoji: '🗣️', desc: 'Spettegola insieme su altri colleghi', bg: '#f472b6' },
+  { action: 'fight',      label: 'Litiga',      emoji: '😠', desc: 'Litigate in ufficio',                    bg: '#ef4444' },
 ]
 
 interface Props {
@@ -139,24 +139,36 @@ export function WorkNpcDetailModal({ npc, onClose, onInteract }: Props) {
           </p>
         )}
 
-        {/* Actions */}
-        <p style={sectionHead}>Azioni</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-          {WORK_ACTIONS.map(({ action, label, emoji }) => (
-            <button
+        {/* Actions — BitLife-style vertical list */}
+        <p style={sectionHead}>Attività</p>
+        <div style={{ marginLeft: -16, marginRight: -16 }}>
+          {WORK_ACTIONS.map(({ action, label, emoji, desc, bg }) => (
+            <div
               key={action}
               onClick={() => onInteract(npc.id, action)}
               style={{
-                padding: '10px 4px', borderRadius: 12, fontSize: 12, fontWeight: 600,
-                background: action === 'fight' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.07)',
-                color: action === 'fight' ? '#fca5a5' : 'var(--color-text)',
-                border: `1px solid ${action === 'fight' ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.09)'}`,
-                cursor: 'pointer', textAlign: 'center',
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '11px 16px',
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
-              <div style={{ fontSize: 18, marginBottom: 2 }}>{emoji}</div>
-              {label}
-            </button>
+              <div style={{
+                width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 20, background: bg,
+              }}>
+                {emoji}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: action === 'fight' ? '#fca5a5' : 'var(--color-text)' }}>
+                  {label}
+                </p>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', margin: 0, marginTop: 1 }}>{desc}</p>
+              </div>
+              <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.25)', flexShrink: 0, letterSpacing: 1 }}>···</span>
+            </div>
           ))}
         </div>
       </div>

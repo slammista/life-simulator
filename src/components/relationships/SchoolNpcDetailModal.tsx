@@ -24,13 +24,13 @@ const STATUS_CONFIG: Record<SchoolNPC['status'], { color: string; label: string 
   hostile:  { color: '#ef4444', label: 'Ostile' },
 }
 
-const SCHOOL_ACTIONS: Array<{ action: SchoolAction; label: string; emoji: string; studentOnly?: boolean }> = [
-  { action: 'talk',           label: 'Parla',    emoji: '💬' },
-  { action: 'befriend',       label: 'Amicizia', emoji: '🤝' },
-  { action: 'study_together', label: 'Studia',   emoji: '📖', studentOnly: true },
-  { action: 'gossip',         label: 'Gossip',   emoji: '🗣️', studentOnly: true },
-  { action: 'fight',          label: 'Litigate', emoji: '😠' },
-  { action: 'copy_homework',  label: 'Copia',    emoji: '📋', studentOnly: true },
+const SCHOOL_ACTIONS: Array<{ action: SchoolAction; label: string; emoji: string; desc: string; bg: string; studentOnly?: boolean }> = [
+  { action: 'talk',           label: 'Parla',          emoji: '💬', desc: 'Fai due chiacchiere con lui/lei',       bg: '#60a5fa' },
+  { action: 'befriend',       label: 'Fai amicizia',   emoji: '🤝', desc: 'Cerca la sua amicizia',                 bg: '#10b981' },
+  { action: 'study_together', label: 'Studia insieme', emoji: '📖', desc: 'Studiate insieme per i prossimi esami', bg: '#8b5cf6', studentOnly: true },
+  { action: 'gossip',         label: 'Gossip',         emoji: '🗣️', desc: 'Spettegola insieme sui compagni',      bg: '#f472b6', studentOnly: true },
+  { action: 'fight',          label: 'Litiga',         emoji: '😠', desc: 'Litigate in corridoio',                bg: '#ef4444' },
+  { action: 'copy_homework',  label: 'Copia i compiti',emoji: '📋', desc: 'Copiate i compiti da lui/lei',         bg: '#f59e0b', studentOnly: true },
 ]
 
 interface Props {
@@ -141,24 +141,36 @@ export function SchoolNpcDetailModal({ npc, onClose, onInteract }: Props) {
           )
         )}
 
-        {/* Actions */}
-        <p style={sectionHead}>Azioni</p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-          {availableActions.map(({ action, label, emoji }) => (
-            <button
+        {/* Actions — BitLife-style vertical list */}
+        <p style={sectionHead}>Attività</p>
+        <div style={{ marginLeft: -16, marginRight: -16 }}>
+          {availableActions.map(({ action, label, emoji, desc, bg }) => (
+            <div
               key={action}
               onClick={() => onInteract(npc.id, action)}
               style={{
-                padding: '10px 4px', borderRadius: 12, fontSize: 12, fontWeight: 600,
-                background: action === 'fight' ? 'rgba(239,68,68,0.12)' : 'rgba(255,255,255,0.07)',
-                color: action === 'fight' ? '#fca5a5' : 'var(--color-text)',
-                border: `1px solid ${action === 'fight' ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.09)'}`,
-                cursor: 'pointer', textAlign: 'center',
+                display: 'flex', alignItems: 'center', gap: 12,
+                padding: '11px 16px',
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
               }}
             >
-              <div style={{ fontSize: 18, marginBottom: 2 }}>{emoji}</div>
-              {label}
-            </button>
+              <div style={{
+                width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: 20, background: bg,
+              }}>
+                {emoji}
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{ fontSize: 14, fontWeight: 700, margin: 0, color: action === 'fight' ? '#fca5a5' : 'var(--color-text)' }}>
+                  {label}
+                </p>
+                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', margin: 0, marginTop: 1 }}>{desc}</p>
+              </div>
+              <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.25)', flexShrink: 0, letterSpacing: 1 }}>···</span>
+            </div>
           ))}
         </div>
       </div>

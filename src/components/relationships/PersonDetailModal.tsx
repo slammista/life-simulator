@@ -28,6 +28,33 @@ const CAT_COLORS: Record<string, string> = {
   professional: '#60a5fa', financial: '#a855f7', criminal: '#ef4444',
 }
 
+// BitLife-style: each action has a coloured icon background + description
+const ACTION_META: Record<string, { desc: string; bg: string }> = {
+  greet:                { desc: 'Saluta la persona',                         bg: '#64748b' },
+  hang_out:             { desc: 'Uscite insieme',                            bg: '#3b82f6' },
+  compliment:           { desc: 'Fagli/le un complimento',                   bg: '#f59e0b' },
+  gift:                 { desc: 'Fagli/le un regalo',                        bg: '#10b981' },
+  confess_feelings:     { desc: 'Confessa i tuoi sentimenti',                bg: '#ef4444' },
+  do_activity:          { desc: "Fate un'attività insieme",                  bg: '#8b5cf6' },
+  spend_time:           { desc: 'Trascorri del tempo insieme',               bg: '#06b6d4' },
+  lend_money:           { desc: 'Prestagli/le dei soldi',                    bg: '#84cc16' },
+  ask_money:            { desc: 'Chiedile/gli dei soldi',                    bg: '#eab308' },
+  ask_date:             { desc: 'Proponici un appuntamento',                 bg: '#ec4899' },
+  make_peace:           { desc: 'Fate pace',                                 bg: '#14b8a6' },
+  fight:                { desc: 'Litigate',                                  bg: '#f97316' },
+  kiss:                 { desc: 'Dagli/le un bacio',                         bg: '#e879f9' },
+  apologize:            { desc: 'Chiedigli/le scusa',                        bg: '#a78bfa' },
+  romantic_outing:      { desc: "Un'uscita romantica",                       bg: '#f43f5e' },
+  surprise:             { desc: 'Fagli/le una sorpresa',                     bg: '#fb923c' },
+  vacation_together:    { desc: 'Partite in vacanza insieme',                bg: '#22d3ee' },
+  propose_cohabitation: { desc: 'Proponete di andare a vivere insieme',      bg: '#60a5fa' },
+  propose:              { desc: 'Falle/gli una proposta di matrimonio',      bg: '#fbbf24' },
+  cheat:                { desc: 'Tradisci il tuo partner',                   bg: '#7c3aed' },
+  break_up:             { desc: 'Lascia questa relazione',                   bg: '#dc2626' },
+  divorce:              { desc: 'Inizia le pratiche di divorzio',            bg: '#b91c1c' },
+  thank:                { desc: 'Ringraziale/gli',                           bg: '#34d399' },
+}
+
 export function PersonDetailModal({ relId, onClose }: Props) {
   const rel = useGameStore(s => s.relationships.find(r => r.id === relId)) as Relationship | undefined
   const playerAge = useGameStore(s => s.time.age)
@@ -145,24 +172,50 @@ export function PersonDetailModal({ relId, onClose }: Props) {
             })}
           </div>
 
-          {/* Activities */}
+          {/* Activities — BitLife-style vertical list */}
           {actions.length > 0 && (
             <>
               <div style={sectionHead}>Attività</div>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '0 8px' }}>
+              <div style={{ marginLeft: -14, marginRight: -14 }}>
                 {actions.map(({ action, label, emoji }) => {
-                  const isDanger = action === 'break_up' || action === 'divorce' || action === 'insult'
-                  const isDark = action === 'cheat'
+                  const meta = ACTION_META[action]
+                  const isDanger = ['break_up', 'divorce', 'fight', 'cheat'].includes(action)
                   return (
-                    <button key={action} onClick={() => handleAction(action)} className="tap-scale"
+                    <div
+                      key={action}
+                      onClick={() => handleAction(action)}
                       style={{
-                        padding: '7px 12px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                        border: `1px solid ${isDanger ? 'rgba(239,68,68,0.25)' : isDark ? 'rgba(168,85,247,0.25)' : 'rgba(255,255,255,0.1)'}`,
-                        background: isDanger ? 'rgba(239,68,68,0.12)' : isDark ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.07)',
-                        color: isDanger ? '#fca5a5' : isDark ? '#d8b4fe' : 'var(--color-text)',
+                        display: 'flex', alignItems: 'center', gap: 12,
+                        padding: '11px 14px',
+                        borderBottom: '1px solid rgba(255,255,255,0.05)',
+                        cursor: 'pointer',
+                        WebkitTapHighlightColor: 'transparent',
+                      }}
+                    >
+                      {/* Coloured icon circle */}
+                      <div style={{
+                        width: 42, height: 42, borderRadius: '50%', flexShrink: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        fontSize: 20, background: meta?.bg ?? '#64748b',
                       }}>
-                      {emoji} {label}
-                    </button>
+                        {emoji}
+                      </div>
+                      {/* Label + description */}
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <p style={{
+                          fontSize: 14, fontWeight: 700, margin: 0,
+                          color: isDanger ? '#fca5a5' : 'var(--color-text)',
+                        }}>
+                          {label}
+                        </p>
+                        {meta?.desc && (
+                          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', margin: 0, marginTop: 1 }}>
+                            {meta.desc}
+                          </p>
+                        )}
+                      </div>
+                      <span style={{ fontSize: 16, color: 'rgba(255,255,255,0.25)', flexShrink: 0, letterSpacing: 1 }}>···</span>
+                    </div>
                   )
                 })}
               </div>

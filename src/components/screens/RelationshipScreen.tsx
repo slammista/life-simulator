@@ -198,14 +198,23 @@ export function RelationshipScreen() {
             </div>
           )}
 
-          {Object.entries(groupedRels).map(([groupName, rels]) => {
+      {Object.entries(groupedRels).map(([groupName, rels]) => {
             if (rels.length === 0) return null
             return (
-              <div key={groupName} style={{ marginBottom: 16 }}>
-                <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+              <div key={groupName} style={{ marginBottom: 12 }}>
+                {/* BitLife-style gray section header band */}
+                <div style={{
+                  background: 'rgba(0,0,0,0.32)',
+                  padding: '5px 16px',
+                  marginLeft: -16, marginRight: -16,
+                  fontSize: 11, color: 'var(--color-text-secondary)',
+                  textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 700,
+                  marginBottom: 0,
+                }}>
                   {groupName}
-                </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                </div>
+                {/* Flat rows */}
+                <div>
                   {rels.map(rel => (
                     <RelCard
                       key={rel.id}
@@ -235,17 +244,23 @@ export function RelationshipScreen() {
             Object.entries(historicGroups).map(([groupName, rels]) => {
               if (rels.length === 0) return null
               const groupMeta: Record<string, { color: string; icon: string }> = {
-                'Ex partner':     { color: '#f43f5e', icon: '💔' },
+                'Ex partner':      { color: '#f43f5e', icon: '💔' },
                 'Vecchi colleghi': { color: '#60a5fa', icon: '💼' },
-                'Defunti':        { color: '#94a3b8', icon: '🕯️' },
+                'Defunti':         { color: '#94a3b8', icon: '🕯️' },
               }
               const meta = groupMeta[groupName] ?? { color: '#94a3b8', icon: '👤' }
               return (
-                <div key={groupName} style={{ marginBottom: 16 }}>
-                  <p style={{ fontSize: 11, color: meta.color, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+                <div key={groupName} style={{ marginBottom: 12 }}>
+                  <div style={{
+                    background: 'rgba(0,0,0,0.32)',
+                    padding: '5px 16px',
+                    marginLeft: -16, marginRight: -16,
+                    fontSize: 11, color: meta.color,
+                    textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 700,
+                  }}>
                     {meta.icon} {groupName}
-                  </p>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  </div>
+                  <div>
                     {rels.map(rel => (
                       <HistoricRelCard key={rel.id} rel={rel} />
                     ))}
@@ -266,141 +281,102 @@ export function RelationshipScreen() {
   )
 }
 
-// ---- HistoricRelCard — read-only card for ex/deceased ----
+// ---- HistoricRelCard — flat list row for ex/deceased ----
 
 function HistoricRelCard({ rel }: { rel: Relationship }) {
-  const [expanded, setExpanded] = useState(false)
   const isEx = rel.type === 'ex_partner'
   const isColleague = rel.type === 'colleague'
   const statusColor = isEx ? '#f43f5e' : isColleague ? '#60a5fa' : '#64748b'
   const statusLabel = isEx ? '💔 Ex' : isColleague ? '💼 Ex collega' : '🕯️ Scomparso'
+  const affection = Math.round((rel.trust * 0.5 + rel.love * 0.35 + rel.respect * 0.15))
+  const affectionColor = affection >= 70 ? '#10b981' : affection >= 40 ? '#f59e0b' : '#f43f5e'
 
   return (
-    <div className="card" style={{ padding: 12, opacity: rel.isAlive ? 1 : 0.75 }}>
-      <div
-        style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', cursor: 'pointer' }}
-        onClick={() => setExpanded(p => !p)}
-      >
-        <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
-          <span style={{ fontSize: 26, filter: rel.isAlive ? 'none' : 'grayscale(1)' }}>{rel.emoji}</span>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-              <p style={{ fontWeight: 600, fontSize: 14 }}>{rel.name}</p>
-              <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 99, background: `${statusColor}22`, color: statusColor }}>
-                {statusLabel}
-              </span>
-            </div>
-            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-              {REL_TYPE_LABELS[rel.type] ?? rel.type} · {rel.age}y
-            </p>
-          </div>
-        </div>
-        <span style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{expanded ? '▲' : '▼'}</span>
+    <div style={{
+      display: 'flex', alignItems: 'center', gap: 12,
+      padding: '12px 16px', opacity: rel.isAlive ? 0.9 : 0.6,
+      borderBottom: '1px solid rgba(255,255,255,0.05)',
+    }}>
+      <div style={{
+        width: 44, height: 44, borderRadius: '50%', flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22,
+        background: 'rgba(255,255,255,0.05)', border: '1.5px solid rgba(255,255,255,0.1)',
+        filter: rel.isAlive ? 'none' : 'grayscale(1)',
+      }}>
+        {rel.emoji}
       </div>
-
-      {expanded && (
-        <div style={{ marginTop: 10 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
-            {[
-              { label: 'Fiducia', val: rel.trust, color: '#10b981' },
-              { label: 'Amore', val: rel.love, color: '#f43f5e' },
-            ].map(({ label, val, color }) => (
-              <div key={label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-                <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 55, flexShrink: 0 }}>{label}</span>
-                <div className="stat-bar" style={{ flex: 1 }}>
-                  <div className="stat-bar-fill" style={{ width: `${val}%`, backgroundColor: color }} />
-                </div>
-                <span style={{ fontSize: 11, width: 24, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{val}</span>
-              </div>
-            ))}
-          </div>
-
-          {rel.memoryLog && rel.memoryLog.length > 0 && (
-            <div>
-              <div style={{ fontSize: 10, color: '#64748b', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
-                📖 Ricordi
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                {rel.memoryLog.slice(0, 5).map(mem => {
-                  const catColors: Record<string, string> = {
-                    romantic: '#f43f5e', family: '#f59e0b', friendship: '#10b981',
-                    professional: '#60a5fa', financial: '#a855f7', criminal: '#ef4444',
-                  }
-                  const color = catColors[mem.category] ?? '#94a3b8'
-                  return (
-                    <div key={mem.id} style={{
-                      fontSize: 11, color: '#94a3b8', padding: '4px 8px', borderRadius: 6,
-                      background: 'rgba(255,255,255,0.03)', borderLeft: `2px solid ${color}`,
-                      display: 'flex', justifyContent: 'space-between', gap: 8,
-                    }}>
-                      <span>{mem.description}</span>
-                      <span style={{ flexShrink: 0, color: '#475569' }}>Anno {mem.year}</span>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
-          )}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontWeight: 700, fontSize: 14, color: 'var(--color-text)' }}>{rel.name}</span>
+          <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 99, background: `${statusColor}22`, color: statusColor }}>
+            {statusLabel}
+          </span>
         </div>
-      )}
+        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 1 }}>
+          {REL_TYPE_LABELS[rel.type] ?? rel.type} · {rel.age}y
+        </p>
+        <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.08)', overflow: 'hidden', marginTop: 5 }}>
+          <div style={{ height: '100%', width: `${affection}%`, background: affectionColor, borderRadius: 99 }} />
+        </div>
+      </div>
     </div>
   )
 }
 
-// ---- RelCard subcomponent — tappable summary, opens PersonDetailModal ----
+// ---- RelCard — BitLife flat list row, opens PersonDetailModal ----
 
-function RelCard({ rel, onOpen }: {
-  rel: Relationship
-  onOpen: () => void
-}) {
+function RelCard({ rel, onOpen }: { rel: Relationship; onOpen: () => void }) {
   const mood = MOOD_LABELS[rel.mood ?? 'neutrale']
-
   const affection = Math.round((rel.trust * 0.5 + rel.love * 0.35 + rel.respect * 0.15))
   const affectionColor = affection >= 70 ? '#10b981' : affection >= 40 ? '#f59e0b' : '#f43f5e'
-
   const isRomantic = ['partner', 'spouse'].includes(rel.type)
   const isFamilyType = ['parent', 'sibling', 'child'].includes(rel.type)
 
   return (
-    <div className="card tap-scale" style={{ padding: '12px 14px', cursor: 'pointer' }}>
-      <div className="rel-card-header" onClick={onOpen}>
-        {/* NPC avatar circle */}
-        <div className="rel-card-avatar" style={{
-          borderColor: isRomantic ? 'rgba(244,63,94,0.4)' : isFamilyType ? 'rgba(251,191,36,0.4)' : 'rgba(124,92,255,0.25)',
-          background: isRomantic ? 'rgba(244,63,94,0.12)' : isFamilyType ? 'rgba(251,191,36,0.1)' : 'rgba(124,92,255,0.1)',
-        }}>
-          {rel.emoji}
-        </div>
-
-        {/* Identity + bars */}
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
-            <span style={{ fontWeight: 700, fontSize: 14 }}>{rel.name}</span>
-            <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{rel.age}y</span>
-            {rel.toxicityTag && (
-              <span style={{ fontSize: 10, padding: '1px 6px', borderRadius: 99, background: 'rgba(239,68,68,0.18)', color: '#fca5a5' }}>
-                ⚠️ tossica
-              </span>
-            )}
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-            <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-              {REL_TYPE_LABELS[rel.type] ?? rel.type}
-            </span>
-            <span style={{ fontSize: 13 }}>{STAGE_EMOJI[rel.stage] ?? '👤'}</span>
-            <span className="rel-mood-badge" style={{ color: mood.color }}>
-              {mood.emoji} {mood.label}
-            </span>
-          </div>
-          <div style={{ marginTop: 6 }}>
-            <div className="rel-affection-bar">
-              <div className="rel-affection-fill" style={{ width: `${affection}%`, background: affectionColor }} />
-            </div>
-          </div>
-        </div>
-
-        <span style={{ fontSize: 14, color: 'var(--color-text-secondary)', flexShrink: 0 }}>›</span>
+    <div
+      onClick={onOpen}
+      style={{
+        display: 'flex', alignItems: 'center', gap: 12,
+        padding: '12px 16px', cursor: 'pointer',
+        borderBottom: '1px solid rgba(255,255,255,0.05)',
+        WebkitTapHighlightColor: 'transparent',
+      }}
+    >
+      {/* Avatar circle */}
+      <div style={{
+        width: 46, height: 46, borderRadius: '50%', flexShrink: 0,
+        display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 24,
+        background: isRomantic ? 'rgba(244,63,94,0.12)' : isFamilyType ? 'rgba(251,191,36,0.1)' : 'rgba(99,102,241,0.1)',
+        border: `2px solid ${isRomantic ? 'rgba(244,63,94,0.3)' : isFamilyType ? 'rgba(251,191,36,0.3)' : 'rgba(99,102,241,0.22)'}`,
+      }}>
+        {rel.emoji}
       </div>
+
+      {/* Text + bar */}
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-text)' }}>{rel.name}</span>
+          <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>({rel.age}y)</span>
+          {rel.toxicityTag && (
+            <span style={{ fontSize: 9, padding: '1px 5px', borderRadius: 99, background: 'rgba(239,68,68,0.18)', color: '#fca5a5' }}>
+              ⚠️
+            </span>
+          )}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 5, marginTop: 2 }}>
+          <span style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+            {REL_TYPE_LABELS[rel.type] ?? rel.type}
+          </span>
+          <span style={{ fontSize: 12, color: mood.color }}>{mood.emoji}</span>
+        </div>
+        {/* Relationship bar */}
+        <div style={{ height: 4, borderRadius: 99, background: 'rgba(255,255,255,0.08)', overflow: 'hidden', marginTop: 5 }}>
+          <div style={{ height: '100%', width: `${affection}%`, background: affectionColor, borderRadius: 99 }} />
+        </div>
+      </div>
+
+      {/* Chevron */}
+      <span style={{ fontSize: 20, color: 'rgba(255,255,255,0.25)', flexShrink: 0 }}>›</span>
     </div>
   )
 }
