@@ -120,14 +120,14 @@ serve(async (req: Request) => {
         );
       }
 
-      // Idempotency: if this session was already processed, skip it silently.
-      const { data: alreadyClaimed } = await client.rpc("claim_reward_idempotent", {
-        p_user_id: userId,
-        p_reward_id: `stripe_session_${session.id}`,
-        p_reward_type: "checkout.session.completed",
-      });
+      // Idempotency: skip if this session was already processed
+      const { data: existingBySession } = await client
+        .from("purchases")
+        .select("id, status")
+        .eq("stripe_session_id", session.id)
+        .maybeSingle();
 
-      if (alreadyClaimed === false) {
+      if (existingBySession?.status === "completed") {
         console.log(`Session ${session.id} already processed — skipping`);
         return new Response(JSON.stringify({ received: true }), {
           status: 200,
@@ -135,7 +135,7 @@ serve(async (req: Request) => {
         });
       }
 
-      // Mark purchase as completed
+      // Mark purchase as completed (by purchase_id from metadata, or by session_id)
       if (purchaseId) {
         await client
           .from("purchases")
@@ -145,6 +145,14 @@ serve(async (req: Request) => {
             completed_at: new Date().toISOString(),
           })
           .eq("id", purchaseId);
+      } else {
+        await client
+          .from("purchases")
+          .update({
+            status: "completed",
+            completed_at: new Date().toISOString(),
+          })
+          .eq("stripe_session_id", session.id);
       }
 
       // Grant entitlement based on product type
