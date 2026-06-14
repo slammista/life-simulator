@@ -108,11 +108,8 @@ export function VitaAccountPanel({ onBack }: Props) {
     if (!result.success) setAuthMsg({ text: result.error ?? 'Errore Google', ok: false })
   }
 
-  async function handleApple() {
-    setAuthMsg(null)
-    const result = await CloudSaveService.signInWithApple()
-    if (!result.success) setAuthMsg({ text: result.error ?? 'Errore Apple', ok: false })
-  }
+  // Apple Sign-In is "coming soon" — requires a paid Apple Developer account.
+  // CloudSaveService.signInWithApple() stays available for when it's enabled.
 
   async function handleSignOut() {
     await CloudSaveService.signOut()
@@ -311,12 +308,18 @@ export function VitaAccountPanel({ onBack }: Props) {
                 <span style={{ fontSize: 18 }}>🇬</span> Accedi con Google
               </button>
               <button
-                onClick={handleApple}
-                disabled={!isConfigured}
+                disabled
                 className="btn-candy btn-candy--neutral"
-                style={{ width: '100%', fontSize: 14, padding: '11px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(0,0,0,0.4)' }}
+                style={{ width: '100%', fontSize: 14, padding: '11px 0', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, background: 'rgba(0,0,0,0.4)', opacity: 0.6, cursor: 'not-allowed', position: 'relative' }}
               >
                 <span style={{ fontSize: 18 }}>🍎</span> Accedi con Apple
+                <span style={{
+                  fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 99,
+                  background: 'rgba(167,139,250,0.25)', color: '#c4b5fd', marginLeft: 4,
+                  textTransform: 'uppercase', letterSpacing: 0.5,
+                }}>
+                  Presto
+                </span>
               </button>
             </div>
           </div>

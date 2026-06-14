@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
+import { useToastStore } from '../../store/toastStore'
 import { CriminalEngine } from '../../services/CriminalEngine'
+
+const MIN_AGE_CRIME = 14
 
 const CATEGORY_EMOJI: Record<string, string> = {
   theft: '🔓',
@@ -14,20 +17,18 @@ const CATEGORY_EMOJI: Record<string, string> = {
 export function CriminalScreen() {
   const criminal = useGameStore(s => s.criminal)
   const state = useGameStore(s => s)
+  const age = useGameStore(s => s.time.age)
   const commitCrime = useGameStore(s => s.commitCrime)
   const robSomeone = useGameStore(s => s.robSomeone)
   const bribeOfficial = useGameStore(s => s.bribeOfficial)
   const workInPrison = useGameStore(s => s.workInPrison)
   const studyInPrison = useGameStore(s => s.studyInPrison)
   const fightInPrison = useGameStore(s => s.fightInPrison)
+  const showAlert = useToastStore(s => s.showAlert)
 
-  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [tab, setTab] = useState<'status' | 'crimes'>('status')
 
-  const flash = (msg: string, ok: boolean) => {
-    setFeedback({ msg, ok })
-    setTimeout(() => setFeedback(null), 4000)
-  }
+  const flash = (msg: string, ok: boolean) => showAlert(msg, ok, ok ? '🚔' : '🚨')
 
   const handleCrime = (id: string) => {
     const r = commitCrime(id)
@@ -36,20 +37,25 @@ export function CriminalScreen() {
 
   const available = CriminalEngine.getAvailableCrimes(state)
 
+  // Whole criminal world is locked until 14
+  if (age < MIN_AGE_CRIME && !criminal.inPrison) {
+    return (
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginBottom: 12 }}>🚔 Attività criminali</h2>
+        <div className="card card-locked" style={{ padding: '24px 16px', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🔞</div>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#fca5a5', marginBottom: 4 }}>Troppo giovane</p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+            Le attività criminali sono disponibili dai {MIN_AGE_CRIME} anni.
+          </p>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
       <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginBottom: 12 }}>🚔 Attività criminali</h2>
-
-      {feedback && (
-        <div style={{
-          borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
-        }}>
-          {feedback.msg}
-        </div>
-      )}
 
       {/* Prison alert */}
       {criminal.inPrison && (

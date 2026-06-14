@@ -303,15 +303,41 @@ export class RelationshipEngine {
   ): RelActionResult & { updatedRel?: Partial<Relationship> } {
     // ── Safety guards (legal & ethical) ──
     const ROMANTIC_ACTS: NPCAction[] = ['confess_feelings', 'ask_date', 'kiss', 'propose', 'cheat', 'break_up', 'divorce']
+    // Soft/innocent romance (kisses, tenderness) unlocks at 14; sexual/marriage stays 18+
+    const SOFT_ROMANTIC_ACTS: NPCAction[] = ['confess_feelings', 'ask_date', 'kiss', 'romantic_outing']
+    const ADULT_ROMANTIC_ACTS: NPCAction[] = ['propose']
     const FAMILY_TYPES = ['parent', 'sibling', 'child']
-    if (FAMILY_TYPES.includes(rel.type) && ROMANTIC_ACTS.includes(action)) {
+
+    if (FAMILY_TYPES.includes(rel.type) && (ROMANTIC_ACTS.includes(action) || SOFT_ROMANTIC_ACTS.includes(action))) {
       return { success: false, message: 'Non puoi avere un\'interazione romantica con un familiare.', effects: {} }
     }
-    if (rel.age < 18 && ROMANTIC_ACTS.includes(action)) {
-      return { success: false, message: 'Questa persona è minorenne. Interazione non consentita.', effects: {} }
+
+    // Marriage proposals require both parties to be adults
+    if (ADULT_ROMANTIC_ACTS.includes(action) && (state.time.age < 18 || rel.age < 18)) {
+      return { success: false, message: 'Dovete essere entrambi maggiorenni per fidanzarvi ufficialmente.', effects: {} }
     }
-    if (state.time.age < 16 && ROMANTIC_ACTS.includes(action)) {
-      return { success: false, message: 'Sei troppo giovane per questo tipo di interazione.', effects: {} }
+
+    if (SOFT_ROMANTIC_ACTS.includes(action)) {
+      // Tenderness from 14, but a minor can only flirt with another close-age minor
+      if (state.time.age < 14) {
+        return { success: false, message: 'Sei troppo giovane per questo tipo di interazione.', effects: {} }
+      }
+      if (rel.age < 14) {
+        return { success: false, message: 'Questa persona è troppo giovane. Interazione non consentita.', effects: {} }
+      }
+      const playerMinor = state.time.age < 18
+      const npcMinor = rel.age < 18
+      if (playerMinor !== npcMinor) {
+        return { success: false, message: 'Interazione non consentita per la differenza d\'età.', effects: {} }
+      }
+    } else if (ROMANTIC_ACTS.includes(action)) {
+      // Stronger/legal romantic acts keep the 18+ rule
+      if (rel.age < 18) {
+        return { success: false, message: 'Questa persona è minorenne. Interazione non consentita.', effects: {} }
+      }
+      if (state.time.age < 18) {
+        return { success: false, message: 'Sei troppo giovane per questo tipo di interazione.', effects: {} }
+      }
     }
 
     // Anti-abuse: diminishing returns per NPC per year

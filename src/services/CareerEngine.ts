@@ -157,9 +157,11 @@ export class CareerEngine {
       }
     }
 
-    const salary = Math.round(
-      jobDef.salaryMin + Math.random() * (jobDef.salaryMax - jobDef.salaryMin)
-    )
+    // Base salary from the job definition, scaled by the country's cost-of-living
+    // so the same role pays more in high-income nations and less in lower ones.
+    const costMult = state.nation?.costOfLiving ?? 1
+    const baseSalary = jobDef.salaryMin + Math.random() * (jobDef.salaryMax - jobDef.salaryMin)
+    const salary = Math.round(baseSalary * costMult)
     const company = generateCompanyName(jobDef.category)
 
     const SUCCESS_INTROS = [

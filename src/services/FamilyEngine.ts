@@ -33,6 +33,31 @@ const BACKGROUND_FAMILY_REPUTATION: Record<FamilyBackground, number> = {
   elite: 92,
 }
 
+// Plausible occupations per wealth tier — used to flavour parents & grandparents
+const OCCUPATION_POOLS: Record<FamilyBackground, string[]> = {
+  poor:         ['Operaio', 'Bracciante agricolo', 'Addetto pulizie', 'Cassiere', 'Disoccupato', 'Magazziniere'],
+  lower_middle: ['Operaio specializzato', 'Commesso', 'Autista', 'Cuoco', 'Idraulico', 'Parrucchiere'],
+  middle:       ['Impiegato', 'Insegnante', 'Infermiere', 'Elettricista', 'Contabile', 'Poliziotto'],
+  upper_middle: ['Ingegnere', 'Medico di base', 'Avvocato', 'Architetto', 'Manager', 'Farmacista'],
+  rich:         ['Imprenditore', 'Chirurgo', 'Notaio', 'Dirigente d\'azienda', 'Commercialista', 'Pilota'],
+  elite:        ['Magnate', 'Politico di rilievo', 'CEO', 'Investitore', 'Produttore cinematografico', 'Ereditiere'],
+}
+
+function pickOccupation(background: FamilyBackground): string {
+  const pool = OCCUPATION_POOLS[background]
+  return pool[Math.floor(Math.random() * pool.length)]
+}
+
+// Grandparents are typically from a slightly humbler tier than the parents'
+const PREVIOUS_TIER: Record<FamilyBackground, FamilyBackground> = {
+  poor: 'poor',
+  lower_middle: 'poor',
+  middle: 'lower_middle',
+  upper_middle: 'middle',
+  rich: 'upper_middle',
+  elite: 'rich',
+}
+
 export interface StartingFamilyResult {
   family: FamilyState
   relationships: Relationship[]
@@ -126,6 +151,7 @@ function makeMember(params: {
   birthYear: number
   biological: boolean
   familyBranch: FamilyMember['familyBranch']
+  occupation?: string
 }): FamilyMember {
   return {
     id: uid('fam'),
@@ -138,6 +164,32 @@ function makeMember(params: {
     biological: params.biological,
     familyBranch: params.familyBranch,
     notes: params.relationship.historyFlags,
+    occupation: params.occupation,
+  }
+}
+
+// Ancestors exist only in the genealogy (no interactive Relationship needed)
+function makeAncestor(params: {
+  name: string
+  gender: Gender
+  birthYear: number
+  deathYear: number | null
+  relationToPlayer: FamilyMember['relationToPlayer']
+  familyBranch: FamilyMember['familyBranch']
+  occupation: string
+}): FamilyMember {
+  return {
+    id: uid('fam'),
+    relationshipId: null,
+    name: params.name,
+    gender: params.gender,
+    birthYear: params.birthYear,
+    deathYear: params.deathYear,
+    relationToPlayer: params.relationToPlayer,
+    biological: true,
+    familyBranch: params.familyBranch,
+    notes: [],
+    occupation: params.occupation,
   }
 }
 
@@ -183,11 +235,13 @@ export class FamilyEngine {
       birthYear,
     })
 
+    const motherOccupation = pickOccupation(background)
+    const fatherOccupation = pickOccupation(background)
+
     const relationships = [mother, father]
-    const members = [
-      makeMember({ relationship: mother, relationToPlayer: 'mother', birthYear: birthYear - mother.age, biological: true, familyBranch: 'maternal' }),
-      makeMember({ relationship: father, relationToPlayer: 'father', birthYear: birthYear - father.age, biological: true, familyBranch: 'paternal' }),
-    ]
+    const motherMember = makeMember({ relationship: mother, relationToPlayer: 'mother', birthYear: birthYear - mother.age, biological: true, familyBranch: 'maternal', occupation: motherOccupation })
+    const fatherMember = makeMember({ relationship: father, relationToPlayer: 'father', birthYear: birthYear - father.age, biological: true, familyBranch: 'paternal', occupation: fatherOccupation })
+    const members = [motherMember, fatherMember]
     const links: FamilyLink[] = [{
       id: uid('link'),
       fromMemberId: members[0].id,
@@ -195,7 +249,45 @@ export class FamilyEngine {
       relation: 'spouse_of',
     }]
 
+    // ── Grandparents (ancestry) ──
+    // Four biological grandparents from a slightly humbler tier. Some may have
+    // already passed away depending on their age — this is the root of the tree.
+    const ancestorTier = PREVIOUS_TIER[background]
+    const grandparentSpecs: Array<{
+      gender: Gender
+      branch: 'maternal' | 'paternal'
+      surname: string
+      parentMember: FamilyMember
+      parentAge: number
+    }> = [
+      { gender: 'female', branch: 'maternal', surname: motherMaidenSurname, parentMember: motherMember, parentAge: mother.age },
+      { gender: 'male',   branch: 'maternal', surname: motherMaidenSurname, parentMember: motherMember, parentAge: mother.age },
+      { gender: 'female', branch: 'paternal', surname: NameEngine.surname(identity.nationality), parentMember: fatherMember, parentAge: father.age },
+      { gender: 'male',   branch: 'paternal', surname: surname, parentMember: fatherMember, parentAge: father.age },
+    ]
+    for (const spec of grandparentSpecs) {
+      const gpAgeAtParentBirth = 22 + Math.floor(Math.random() * 14)
+      const gpBirthYear = birthYear - spec.parentAge - gpAgeAtParentBirth
+      // Current age (relative to player's birth year as game start); chance of death rises with age
+      const gpCurrentAge = birthYear - gpBirthYear
+      const deathYear = gpCurrentAge > 70 && Math.random() < 0.5
+        ? gpBirthYear + 65 + Math.floor(Math.random() * 20)
+        : null
+      const gp = makeAncestor({
+        name: `${NameEngine.firstName(spec.gender, identity.nationality)} ${spec.surname}`,
+        gender: spec.gender,
+        birthYear: gpBirthYear,
+        deathYear: deathYear && deathYear < birthYear ? deathYear : null,
+        relationToPlayer: 'grandparent',
+        familyBranch: spec.branch,
+        occupation: pickOccupation(ancestorTier),
+      })
+      members.push(gp)
+      links.push({ id: uid('link'), fromMemberId: gp.id, toMemberId: spec.parentMember.id, relation: 'parent_of' })
+    }
+
     const siblings = Math.max(opts?.forceSibling ? 1 : 0, siblingCount(background))
+    let firstSiblingMemberId: string | null = null
     for (let i = 0; i < siblings; i += 1) {
       const gender: Gender = Math.random() < 0.5 ? 'male' : 'female'
       const age = 1 + Math.floor(Math.random() * 9)
@@ -221,9 +313,10 @@ export class FamilyEngine {
         familyBranch: 'direct',
       })
       members.push(member)
+      if (firstSiblingMemberId === null) firstSiblingMemberId = member.id
       links.push(
-        { id: uid('link'), fromMemberId: members[0].id, toMemberId: member.id, relation: 'parent_of' },
-        { id: uid('link'), fromMemberId: members[1].id, toMemberId: member.id, relation: 'parent_of' },
+        { id: uid('link'), fromMemberId: motherMember.id, toMemberId: member.id, relation: 'parent_of' },
+        { id: uid('link'), fromMemberId: fatherMember.id, toMemberId: member.id, relation: 'parent_of' },
       )
     }
 
@@ -234,7 +327,7 @@ export class FamilyEngine {
         dynastyName: surname,
         members,
         links,
-        favoredChildId: siblings > 0 && Math.random() < 0.25 ? members[2]?.id ?? null : null,
+        favoredChildId: siblings > 0 && Math.random() < 0.25 ? firstSiblingMemberId : null,
         familyReputation: BACKGROUND_FAMILY_REPUTATION[background],
         familyWealthTier: background,
         inheritedFlags: [`origin_${background}`, `dynasty_${surname.toLowerCase()}`],

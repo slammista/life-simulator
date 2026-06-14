@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
+import { useToastStore } from '../../store/toastStore'
 import { TRAVEL_DESTS, type TravelClass, type TravelCategory } from '../../services/TravelEngine'
 import db from '../../../public/db.json'
 import type { Nation } from '../../store/types'
@@ -20,13 +21,39 @@ const CATEGORY_LABELS: Record<TravelCategory, string> = {
 }
 
 export function TravelScreen() {
-  const { finance, travelHistory, time, criminal, bookTrip, emigrate, applyForCitizenship, nation, citizenships } = useGameStore()
+  const { finance, travelHistory, time, criminal, relationships, bookTrip, emigrate, applyForCitizenship, nation, citizenships } = useGameStore()
+  const showAlert = useToastStore(s => s.showAlert)
   const [feedback, setFeedback] = useState('')
   const [travelClass, setTravelClass] = useState<TravelClass>('economy')
   const [filter, setFilter] = useState<TravelCategory | 'all'>('all')
   const [showEmigrate, setShowEmigrate] = useState(false)
+  // Minors need parental consent to travel (asked once per visit)
+  const [parentConsent, setParentConsent] = useState(false)
+
+  const isMinor = time.age < 18
+  const livingParents = relationships.filter(r => r.type === 'parent' && r.isAlive)
+  const needsConsent = isMinor && !parentConsent
+
+  const handleAskParents = () => {
+    if (livingParents.length === 0) {
+      showAlert('Non hai genitori a cui chiedere il permesso di viaggiare.', false, '✈️')
+      return
+    }
+    const best = Math.max(...livingParents.map(p => (p.trust + p.love) / 2))
+    const chance = 0.45 + (best / 100) * 0.45
+    if (Math.random() < chance) {
+      setParentConsent(true)
+      showAlert('I tuoi genitori ti danno il permesso di viaggiare! ✈️', true, '🥰')
+    } else {
+      showAlert('I tuoi genitori non ti lasciano partire per ora. Migliora il rapporto o riprova più avanti.', false, '🙅')
+    }
+  }
 
   const handleBook = (destId: string) => {
+    if (needsConsent) {
+      showAlert('Sei minorenne: chiedi prima il permesso ai tuoi genitori.', false, '✈️')
+      return
+    }
     const r = bookTrip(destId, travelClass)
     setFeedback(r.message)
   }
@@ -45,6 +72,28 @@ export function TravelScreen() {
       {criminal.inPrison && (
         <div className="card" style={{ padding: 10, background: 'rgba(239,68,68,0.1)', borderColor: 'rgba(239,68,68,0.3)', textAlign: 'center', fontSize: 13 }}>
           🔒 Non puoi viaggiare mentre sei in prigione.
+        </div>
+      )}
+
+      {/* Minor: parental consent gate */}
+      {needsConsent && !criminal.inPrison && (
+        <div className="card" style={{ padding: '16px', textAlign: 'center', border: '1px solid rgba(14,165,233,0.3)' }}>
+          <div style={{ fontSize: 28, marginBottom: 6 }}>🧳</div>
+          <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>Sei minorenne</p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
+            Per viaggiare devi avere il permesso dei tuoi genitori.
+          </p>
+          <button
+            className="btn-candy btn-candy--primary"
+            style={{ width: '100%', fontSize: 14, padding: '10px 0', fontWeight: 700 }}
+            onClick={handleAskParents}
+            disabled={livingParents.length === 0}
+          >
+            🙏 Chiedi ai tuoi genitori
+          </button>
+          {livingParents.length === 0 && (
+            <p style={{ fontSize: 11, color: '#fca5a5', marginTop: 8 }}>Non hai genitori a cui chiedere.</p>
+          )}
         </div>
       )}
 

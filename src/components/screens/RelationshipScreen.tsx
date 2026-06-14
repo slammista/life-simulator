@@ -261,6 +261,41 @@ export function RelationshipScreen() {
                   Origine: {family.familyWealthTier.replace('_', ' ')}
                 </p>
               )}
+
+              {/* Ancestry: who you descend from + parents' jobs */}
+              {(() => {
+                const parents = family.members.filter(m => m.relationToPlayer === 'mother' || m.relationToPlayer === 'father')
+                const grandparents = family.members.filter(m => m.relationToPlayer === 'grandparent')
+                if (parents.length === 0 && grandparents.length === 0) return null
+                const maternalGps = grandparents.filter(g => g.familyBranch === 'maternal')
+                const paternalGps = grandparents.filter(g => g.familyBranch === 'paternal')
+                const renderPerson = (m: typeof family.members[number], icon: string, role: string) => (
+                  <div key={m.id} style={{ display: 'flex', alignItems: 'baseline', gap: 6, fontSize: 12, marginBottom: 3 }}>
+                    <span style={{ flexShrink: 0 }}>{icon}</span>
+                    <span style={{ color: 'var(--color-text)', fontWeight: 600 }}>{m.name}</span>
+                    {m.deathYear != null && <span style={{ fontSize: 10, color: '#94a3b8' }}>✝</span>}
+                    <span style={{ color: 'var(--color-text-secondary)', fontSize: 11 }}>
+                      · {role}{m.occupation ? ` · ${m.occupation}` : ''}
+                    </span>
+                  </div>
+                )
+                return (
+                  <div style={{ marginTop: 10, paddingTop: 10, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                    <p style={{ fontSize: 11, color: '#a78bfa', fontWeight: 700, marginBottom: 6 }}>
+                      🌳 Da chi discendi
+                    </p>
+                    {parents.map(p => renderPerson(p, p.gender === 'female' ? '👩' : '👨', p.relationToPlayer === 'mother' ? 'Madre' : 'Padre'))}
+                    {maternalGps.length > 0 && (
+                      <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', margin: '8px 0 4px', textTransform: 'uppercase', letterSpacing: 0.5 }}>Ramo materno</p>
+                    )}
+                    {maternalGps.map(g => renderPerson(g, g.gender === 'female' ? '👵' : '👴', g.gender === 'female' ? 'Nonna' : 'Nonno'))}
+                    {paternalGps.length > 0 && (
+                      <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', margin: '8px 0 4px', textTransform: 'uppercase', letterSpacing: 0.5 }}>Ramo paterno</p>
+                    )}
+                    {paternalGps.map(g => renderPerson(g, g.gender === 'female' ? '👵' : '👴', g.gender === 'female' ? 'Nonna' : 'Nonno'))}
+                  </div>
+                )
+              })()}
             </div>
           )}
 

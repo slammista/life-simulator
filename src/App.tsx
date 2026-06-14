@@ -19,6 +19,7 @@ import { NPCEventNotifications } from './components/game/NPCEventNotifications'
 import { VitaWidgets } from './components/game/VitaWidgets'
 import { AdBanner } from './components/game/AdBanner'
 import { CookieConsent } from './components/common/CookieConsent'
+import { CenterAlert } from './components/common/CenterAlert'
 import { OriginStoryScreen } from './components/screens/OriginStoryScreen'
 import { ShareLifeButton } from './components/game/ShareLifeButton'
 import { FirstPlayHint } from './components/game/FirstPlayHint'
@@ -439,6 +440,7 @@ function App() {
       <NPCEventNotifications />
       <ActionResultPanel />
       <ToastContainer />
+      <CenterAlert />
       <InstallBanner />
       <CookieConsent />
     </div>

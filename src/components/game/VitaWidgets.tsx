@@ -1,9 +1,13 @@
 import { lazy, Suspense, useState } from 'react'
+import { Capacitor } from '@capacitor/core'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../../store/gameStore'
 import { LifePhaseWidget } from './LifePhaseWidget'
 import { AdRewardEngine } from '../../services/AdRewardEngine'
 import { AdRewardButton } from './AdRewardButton'
+
+// Ad-based rewards are live only on native apps (web waits for AdSense approval)
+const REWARDS_LIVE = Capacitor.isNativePlatform()
 import { DailyQuestEngine } from '../../services/DailyQuestEngine'
 import type { Tab } from '../navigation/BottomTabs'
 import type { DailyQuest } from '../../store/types'
@@ -30,18 +34,19 @@ function RewardBanner() {
       claimDailyQuest: s.claimDailyQuest,
     })))
 
-  const canAd = AdRewardEngine.canWatch(adRewards)
+  // Only surface ad rewards on native apps; web/PWA shows "coming soon" instead
+  const canAd = REWARDS_LIVE && AdRewardEngine.canWatch(adRewards).ok
   const questState = DailyQuestEngine.ensure(dailyQuests)
   const pendingQuests: DailyQuest[] = questState.quests.filter(
     q => questState.completedQuestIds.includes(q.id) && !q.claimed
   )
 
-  if (!canAd.ok && pendingQuests.length === 0) return null
+  if (!canAd && pendingQuests.length === 0) return null
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
-      {/* Ad reward */}
-      {canAd.ok && (
+      {/* Ad reward (native only) */}
+      {canAd && (
         <div className="card" style={{ padding: '10px 14px', border: '1px solid rgba(99,102,241,0.35)', background: 'rgba(99,102,241,0.08)' }}>
           <p style={{ fontSize: 12, fontWeight: 700, color: '#a78bfa', marginBottom: 6 }}>
             🎁 Ricompensa disponibile

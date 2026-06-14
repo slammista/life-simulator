@@ -11,12 +11,12 @@ export interface SectorDef {
 }
 
 export const SECTOR_DEFS: SectorDef[] = [
-  { id: 'tech',       label: 'Tech / App',      emoji: '💻', startupCost: 30000, baseRevenue: 60000, volatility: 0.4,  skillKey: 'intelligence' },
-  { id: 'food',       label: 'Ristorante',       emoji: '🍕', startupCost: 25000, baseRevenue: 45000, volatility: 0.25, skillKey: 'socialSkill'  },
-  { id: 'retail',     label: 'Negozio',          emoji: '🛍️', startupCost: 20000, baseRevenue: 35000, volatility: 0.2,  skillKey: 'charisma'    },
-  { id: 'consulting', label: 'Consulenza',       emoji: '📊', startupCost: 15000, baseRevenue: 40000, volatility: 0.3,  skillKey: 'intelligence' },
-  { id: 'fitness',    label: 'Palestra / Sport', emoji: '🏋️', startupCost: 25000, baseRevenue: 38000, volatility: 0.22, skillKey: 'athleticism' },
-  { id: 'fashion',    label: 'Moda / Design',    emoji: '👗', startupCost: 35000, baseRevenue: 50000, volatility: 0.35, skillKey: 'creativity'  },
+  { id: 'tech',       label: 'Tech / App',      emoji: '💻', startupCost: 120000, baseRevenue: 110000, volatility: 0.4,  skillKey: 'intelligence' },
+  { id: 'food',       label: 'Ristorante',       emoji: '🍕', startupCost: 150000, baseRevenue: 95000,  volatility: 0.25, skillKey: 'socialSkill'  },
+  { id: 'retail',     label: 'Negozio',          emoji: '🛍️', startupCost: 80000,  baseRevenue: 70000,  volatility: 0.2,  skillKey: 'charisma'    },
+  { id: 'consulting', label: 'Consulenza',       emoji: '📊', startupCost: 25000,  baseRevenue: 55000,  volatility: 0.3,  skillKey: 'intelligence' },
+  { id: 'fitness',    label: 'Palestra / Sport', emoji: '🏋️', startupCost: 120000, baseRevenue: 85000,  volatility: 0.22, skillKey: 'athleticism' },
+  { id: 'fashion',    label: 'Moda / Design',    emoji: '👗', startupCost: 130000, baseRevenue: 100000, volatility: 0.35, skillKey: 'creativity'  },
 ]
 
 const uid = () => Math.random().toString(36).slice(2, 10)
@@ -51,7 +51,7 @@ export class BusinessEngine {
     const rand = 0.7 + Math.random() * 0.6
     const revenue = Math.round(def.baseRevenue * (1 + biz.employees * 0.3) * skillFactor * rand * (biz.reputation / 100 + 0.5))
     const fixedCosts = Math.round(def.baseRevenue * 0.20)
-    const salaryCosts = biz.employees * 18000
+    const salaryCosts = biz.employees * 28000
     const expenses = fixedCosts + salaryCosts
     const profit = revenue - expenses
     const valuation = Math.max(0, profit * 4 + (biz.capitalInvested ?? 0))

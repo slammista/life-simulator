@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import { CloudSaveService } from '../../services/CloudSaveService'
 import { useWalletStore } from '../../store/walletStore'
 import { useGameStore } from '../../store/gameStore'
+import { useToastStore } from '../../store/toastStore'
 
 interface Props {
   onBack: () => void
@@ -54,7 +55,8 @@ const BUNDLES = [
 export function VitaShopPanel({ onBack }: Props) {
   const [tab, setTab] = useState<ShopTab>('gems')
   const [purchasing, setPurchasing] = useState<string | null>(null)
-  const [message, setMessage] = useState<{ text: string; ok: boolean } | null>(null)
+  const showAlert = useToastStore(s => s.showAlert)
+  const setMessage = (m: { text: string; ok: boolean }) => showAlert(m.text, m.ok)
   const isConfigured = CloudSaveService.isConfigured()
 
   const gems = useWalletStore(s => s.gems)
@@ -150,25 +152,6 @@ export function VitaShopPanel({ onBack }: Props) {
           <span style={{ fontSize: 13, fontWeight: 700, color: '#c4b5fd' }}>{gems.toLocaleString('it-IT')}</span>
         </div>
       </div>
-
-      {/* Message */}
-      {message && (
-        <div
-          className="card"
-          style={{
-            padding: '10px 14px', marginBottom: 12,
-            background: message.ok ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-            borderColor: message.ok ? 'rgba(16,185,129,0.3)' : 'rgba(239,68,68,0.3)',
-            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          }}
-        >
-          <span style={{ fontSize: 13, color: message.ok ? '#6ee7b7' : '#fca5a5' }}>{message.text}</span>
-          <button
-            onClick={() => setMessage(null)}
-            style={{ background: 'none', border: 'none', color: 'inherit', cursor: 'pointer', fontSize: 16 }}
-          >✕</button>
-        </div>
-      )}
 
       {/* Tab bar */}
       <div style={{

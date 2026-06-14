@@ -461,6 +461,7 @@ export interface FamilyMember {
   biological: boolean
   familyBranch: 'maternal' | 'paternal' | 'direct'
   notes: string[]
+  occupation?: string
 }
 
 export interface FamilyLink {

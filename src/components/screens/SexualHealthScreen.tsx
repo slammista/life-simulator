@@ -105,11 +105,19 @@ export default function SexualHealthScreen() {
       <div className="card" style={{ marginBottom: 12 }}>
         <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8, fontWeight: 600 }}>Azioni</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {time.age >= 14 && (
+          {time.age >= 18 ? (
             <button onClick={() => { const r = haveSex(Math.random() < 0.1); setLastMsg(r.message) }}
               style={{ padding: '8px 0', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#ec4899', color: '#fff' }}>
               💕 Rapporto Sessuale
             </button>
+          ) : time.age >= 14 ? (
+            <div style={{ padding: '10px 12px', borderRadius: 8, fontSize: 12, background: 'rgba(236,72,153,0.1)', border: '1px solid rgba(236,72,153,0.25)', color: '#f9a8d4' }}>
+              💞 Per ora solo baci e tenerezze (nelle relazioni). I rapporti sessuali si sbloccano a 18 anni.
+            </div>
+          ) : (
+            <div style={{ padding: '10px 12px', borderRadius: 8, fontSize: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.25)', color: '#fca5a5' }}>
+              🔞 Sezione non disponibile alla tua età.
+            </div>
           )}
           <button onClick={() => { const r = takePregnancyTest(); setLastMsg(r.message) }}
             disabled={finance.money < 10}

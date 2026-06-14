@@ -1,9 +1,12 @@
 import { useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../../store/gameStore'
+import { useToastStore } from '../../store/toastStore'
 import { PET_DEFS, type PetSpecies, type AdoptMethod } from '../../services/PetEngine'
 import { PetBattleEngine, deriveBattleStats } from '../../services/PetBattleEngine'
 import type { Pet } from '../../store/types'
+
+const MIN_AGE_PET = 6
 
 const SPECIES_LABELS: Record<PetSpecies, string> = {
   dog: '🐕 Cane', cat: '🐱 Gatto', rabbit: '🐰 Coniglio', bird: '🦜 Uccello', fish: '🐠 Pesce', horse: '🐴 Cavallo',
@@ -175,22 +178,45 @@ function PetCard({ pet, onFeedback }: { pet: Pet; onFeedback: (msg: string) => v
 }
 
 export function PetScreen() {
-  const { pets, finance, time, adoptPet } = useGameStore(useShallow(s => ({
+  const { pets, finance, time, relationships, adoptPet } = useGameStore(useShallow(s => ({
     pets: s.pets,
     finance: s.finance,
     time: s.time,
+    relationships: s.relationships,
     adoptPet: s.adoptPet,
   })))
+  const showAlert = useToastStore(s => s.showAlert)
   const [feedback, setFeedback] = useState('')
   const [selectedDef, setSelectedDef] = useState(PET_DEFS[0].id)
   const [adoptMethod, setAdoptMethod] = useState<AdoptMethod>('adopt')
+  // Minors must get parental consent before adopting (asked once per visit)
+  const [parentConsent, setParentConsent] = useState(false)
 
   const alivePets = pets.filter(p => p.isAlive)
   const deadPets = pets.filter(p => !p.isAlive)
+  const isMinor = time.age < 18
+  const livingParents = relationships.filter(r => r.type === 'parent' && r.isAlive)
+  const canAdopt = !isMinor || parentConsent
 
   const handleAdopt = () => {
     const r = adoptPet(selectedDef, adoptMethod)
     setFeedback(r.message)
+  }
+
+  const handleAskParents = () => {
+    if (livingParents.length === 0) {
+      showAlert('Non hai genitori a cui chiedere il permesso.', false, '🐾')
+      return
+    }
+    // Chance scales with the best parent relationship (trust + love)
+    const best = Math.max(...livingParents.map(p => (p.trust + p.love) / 2))
+    const chance = 0.45 + (best / 100) * 0.45
+    if (Math.random() < chance) {
+      setParentConsent(true)
+      showAlert('I tuoi genitori sono d\'accordo! Ora puoi scegliere un animale. 🐾', true, '🥰')
+    } else {
+      showAlert('I tuoi genitori hanno detto di no per ora. Riprova quando crescerai o migliora il rapporto con loro.', false, '🙅')
+    }
   }
 
   return (
@@ -214,10 +240,10 @@ export function PetScreen() {
       )}
 
       {/* Adotta */}
-      {alivePets.length < 5 && time.age >= 18 && (
+      {alivePets.length < 5 && time.age >= MIN_AGE_PET && canAdopt && (
         <div>
           <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-            Adotta / Acquista
+            Adotta / Acquista{isMinor ? ' (con permesso dei genitori)' : ''}
           </p>
           <div className="card" style={{ padding: '12px 14px' }}>
             <div style={{ display: 'flex', gap: 8, marginBottom: 10 }}>
@@ -256,13 +282,38 @@ export function PetScreen() {
         </div>
       )}
 
-      {time.age < 18 && alivePets.length === 0 && (
+      {/* Too young entirely */}
+      {time.age < MIN_AGE_PET && alivePets.length === 0 && (
         <div className="card card-locked" style={{ padding: '24px 16px', textAlign: 'center' }}>
           <div style={{ fontSize: 32, marginBottom: 8 }}>🐾</div>
-          <p style={{ fontSize: 14, fontWeight: 600, color: '#fca5a5', marginBottom: 4 }}>Non ancora disponibile</p>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#fca5a5', marginBottom: 4 }}>Sei troppo piccolo</p>
           <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            Puoi adottare un animale domestico dopo i 18 anni. Ti aspettano tanti amici pelosi!
+            Potrai prenderti cura di un animale dai {MIN_AGE_PET} anni in su.
           </p>
+        </div>
+      )}
+
+      {/* Minor with no consent yet: ask parents */}
+      {isMinor && time.age >= MIN_AGE_PET && !parentConsent && alivePets.length < 5 && (
+        <div className="card" style={{ padding: '20px 16px', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🐶</div>
+          <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--color-text)', marginBottom: 4 }}>Vuoi un animale?</p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 14 }}>
+            Sei minorenne: devi chiedere il permesso ai tuoi genitori prima di adottare o acquistare un animale.
+          </p>
+          <button
+            className="btn-candy btn-candy--primary"
+            style={{ width: '100%', fontSize: 14, padding: '11px 0', fontWeight: 700 }}
+            onClick={handleAskParents}
+            disabled={livingParents.length === 0}
+          >
+            🙏 Chiedi ai tuoi genitori
+          </button>
+          {livingParents.length === 0 && (
+            <p style={{ fontSize: 11, color: '#fca5a5', marginTop: 8 }}>
+              Non hai genitori a cui chiedere.
+            </p>
+          )}
         </div>
       )}
 

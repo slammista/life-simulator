@@ -24,8 +24,8 @@ export interface CriminalActionResult {
 }
 
 const CRIME_DEFS: CrimeDef[] = [
-  { id: 'pickpocket', name: 'Borseggio', emoji: '👜', category: 'theft', minAge: 12, baseMoneyGain: 80, baseArrestChance: 0.18, sentence: 1, karmaHit: -8, reputationHit: -5, requiresCleanRecord: false, intelligenceBonus: true },
-  { id: 'shoplifting', name: 'Taccheggio', emoji: '🏪', category: 'theft', minAge: 12, baseMoneyGain: 120, baseArrestChance: 0.22, sentence: 1, karmaHit: -8, reputationHit: -5, requiresCleanRecord: false, intelligenceBonus: false },
+  { id: 'pickpocket', name: 'Borseggio', emoji: '👜', category: 'theft', minAge: 14, baseMoneyGain: 80, baseArrestChance: 0.18, sentence: 1, karmaHit: -8, reputationHit: -5, requiresCleanRecord: false, intelligenceBonus: true },
+  { id: 'shoplifting', name: 'Taccheggio', emoji: '🏪', category: 'theft', minAge: 14, baseMoneyGain: 120, baseArrestChance: 0.22, sentence: 1, karmaHit: -8, reputationHit: -5, requiresCleanRecord: false, intelligenceBonus: false },
   { id: 'burglary', name: 'Furto con scasso', emoji: '🔐', category: 'theft', minAge: 16, baseMoneyGain: 600, baseArrestChance: 0.28, sentence: 3, karmaHit: -15, reputationHit: -15, requiresCleanRecord: false, intelligenceBonus: true },
   { id: 'fraud', name: 'Frode', emoji: '📄', category: 'fraud', minAge: 18, baseMoneyGain: 2000, baseArrestChance: 0.15, sentence: 4, karmaHit: -18, reputationHit: -25, requiresCleanRecord: false, intelligenceBonus: true },
   { id: 'tax_evasion', name: 'Evasione fiscale', emoji: '🧾', category: 'fraud', minAge: 18, baseMoneyGain: 5000, baseArrestChance: 0.08, sentence: 3, karmaHit: -12, reputationHit: -20, requiresCleanRecord: false, intelligenceBonus: true },
@@ -33,7 +33,7 @@ const CRIME_DEFS: CrimeDef[] = [
   { id: 'robbery', name: 'Rapina', emoji: '💰', category: 'violence', minAge: 16, baseMoneyGain: 2500, baseArrestChance: 0.35, sentence: 7, karmaHit: -30, reputationHit: -40, requiresCleanRecord: false, intelligenceBonus: false },
   { id: 'assault', name: 'Aggressione', emoji: '👊', category: 'violence', minAge: 14, baseMoneyGain: 0, baseArrestChance: 0.40, sentence: 3, karmaHit: -25, reputationHit: -30, requiresCleanRecord: false, intelligenceBonus: false },
   { id: 'corruption', name: 'Corruzione', emoji: '🤝', category: 'corruption', minAge: 25, baseMoneyGain: 8000, baseArrestChance: 0.10, sentence: 6, karmaHit: -30, reputationHit: -50, requiresCleanRecord: false, intelligenceBonus: true },
-  { id: 'vandalism', name: 'Vandalismo', emoji: '🖌️', category: 'vandalism', minAge: 12, baseMoneyGain: 0, baseArrestChance: 0.15, sentence: 1, karmaHit: -10, reputationHit: -10, requiresCleanRecord: false, intelligenceBonus: false },
+  { id: 'vandalism', name: 'Vandalismo', emoji: '🖌️', category: 'vandalism', minAge: 14, baseMoneyGain: 0, baseArrestChance: 0.15, sentence: 1, karmaHit: -10, reputationHit: -10, requiresCleanRecord: false, intelligenceBonus: false },
 ]
 
 export function getCrimeDef(id: string): CrimeDef | undefined {

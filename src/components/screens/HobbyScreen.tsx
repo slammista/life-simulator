@@ -4,6 +4,8 @@ import { getAllHobbyDefs, getHobbyDef } from '../../services/HobbyEngine'
 import { useToastStore } from '../../store/toastStore'
 import { haptic } from '../../services/HapticEngine'
 
+const MIN_AGE_HOBBY = 6
+
 export function HobbyScreen() {
   const hobbies = useGameStore(s => s.hobbies)
   const finance = useGameStore(s => s.finance)
@@ -44,6 +46,21 @@ export function HobbyScreen() {
   const allDefs = getAllHobbyDefs()
   const myIds = new Set(hobbies.map(h => h.id))
   const discoverable = allDefs.filter(d => !myIds.has(d.id))
+
+  if (age < MIN_AGE_HOBBY) {
+    return (
+      <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--color-text)', marginBottom: 12 }}>🎸 Hobby</h2>
+        <div className="card card-locked" style={{ padding: '24px 16px', textAlign: 'center' }}>
+          <div style={{ fontSize: 32, marginBottom: 8 }}>🧸</div>
+          <p style={{ fontSize: 14, fontWeight: 600, color: '#fca5a5', marginBottom: 4 }}>Sei troppo piccolo</p>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+            Potrai iniziare a coltivare hobby dai {MIN_AGE_HOBBY} anni.
+          </p>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
