@@ -213,7 +213,7 @@ export function VitaShopPanel({ onBack }: Props) {
                 onClick={() => handleBuyGems(pack.id)}
                 disabled={purchasing === pack.id}
                 className="btn-candy btn-candy--primary"
-                style={{ fontSize: 14, padding: '8px 18px', flexShrink: 0 }}
+                style={{ fontSize: 14, padding: '8px 16px', width: 'auto', flexShrink: 0 }}
               >
                 {purchasing === pack.id ? '…' : pack.price}
               </button>
