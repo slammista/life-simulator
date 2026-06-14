@@ -195,32 +195,25 @@ export function VitaShopPanel({ onBack }: Props) {
 
       {/* Gem Packs */}
       {tab === 'gems' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {GEM_PACKS.map(pack => (
-            <div key={pack.id} className="card" style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ fontSize: 28, lineHeight: 1 }}>{pack.emoji}</div>
-              <div style={{ flex: 1 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontWeight: 700, color: '#fff', fontSize: 15 }}>{pack.label}</span>
-                  {pack.badge && (
-                    <span style={{
-                      fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20,
-                      background: pack.badge === 'Popolare' ? 'rgba(251,191,36,0.2)' : 'rgba(16,185,129,0.2)',
-                      color: pack.badge === 'Popolare' ? '#fbbf24' : '#6ee7b7',
-                    }}>{pack.badge}</span>
-                  )}
-                </div>
-                {pack.gems > 0 && (
-                  <div style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
-                    {pack.gems} gemme da usare nello shop
-                  </div>
+            <div key={pack.id} className="card" style={{ padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ fontSize: 24, lineHeight: 1, flexShrink: 0 }}>{pack.emoji}</div>
+              <div style={{ flex: 1, minWidth: 0, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                <span style={{ fontWeight: 700, color: '#fff', fontSize: 14, whiteSpace: 'nowrap' }}>{pack.label}</span>
+                {pack.badge && (
+                  <span style={{
+                    fontSize: 10, fontWeight: 700, padding: '2px 7px', borderRadius: 20, whiteSpace: 'nowrap',
+                    background: pack.badge === 'Popolare' ? 'rgba(251,191,36,0.2)' : 'rgba(16,185,129,0.2)',
+                    color: pack.badge === 'Popolare' ? '#fbbf24' : '#6ee7b7',
+                  }}>{pack.badge}</span>
                 )}
               </div>
               <button
                 onClick={() => handleBuyGems(pack.id)}
                 disabled={purchasing === pack.id}
                 className="btn-candy btn-candy--primary"
-                style={{ fontSize: 14, padding: '8px 16px', flexShrink: 0 }}
+                style={{ fontSize: 14, padding: '8px 18px', flexShrink: 0 }}
               >
                 {purchasing === pack.id ? '…' : pack.price}
               </button>
