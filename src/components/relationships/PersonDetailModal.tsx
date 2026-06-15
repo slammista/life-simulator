@@ -222,6 +222,37 @@ export function PersonDetailModal({ relId }: Props) {
             })}
           </div>
 
+          {/* Suspicion indicator */}
+          {isRomanticRel && (rel.suspicion ?? 0) >= 20 && (
+            <div style={{
+              margin: '4px 8px 6px',
+              padding: '8px 12px',
+              borderRadius: 10,
+              background: (rel.suspicion ?? 0) >= 80
+                ? 'rgba(239,68,68,0.15)'
+                : (rel.suspicion ?? 0) >= 60
+                  ? 'rgba(249,115,22,0.12)'
+                  : (rel.suspicion ?? 0) >= 40
+                    ? 'rgba(234,179,8,0.10)'
+                    : 'rgba(148,163,184,0.10)',
+              border: `1px solid ${(rel.suspicion ?? 0) >= 80 ? 'rgba(239,68,68,0.35)' : (rel.suspicion ?? 0) >= 60 ? 'rgba(249,115,22,0.3)' : (rel.suspicion ?? 0) >= 40 ? 'rgba(234,179,8,0.25)' : 'rgba(255,255,255,0.08)'}`,
+              display: 'flex', alignItems: 'center', gap: 8,
+            }}>
+              <span style={{ fontSize: 16 }}>
+                {(rel.suspicion ?? 0) >= 80 ? '😤' : (rel.suspicion ?? 0) >= 60 ? '🔍' : (rel.suspicion ?? 0) >= 40 ? '👀' : '💭'}
+              </span>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontSize: 12, fontWeight: 700, margin: 0, color: (rel.suspicion ?? 0) >= 80 ? '#fca5a5' : (rel.suspicion ?? 0) >= 60 ? '#fdba74' : (rel.suspicion ?? 0) >= 40 ? '#fde047' : 'var(--color-text-secondary)' }}>
+                  {(rel.suspicion ?? 0) >= 80 ? 'In crisi — sospetto profondo' : (rel.suspicion ?? 0) >= 60 ? 'Sospetto alto' : (rel.suspicion ?? 0) >= 40 ? 'Comincia a sospettare' : 'Leggermente distante'}
+                </p>
+                <div className="stat-bar" style={{ marginTop: 4 }}>
+                  <div className="stat-bar-fill" style={{ width: `${rel.suspicion}%`, backgroundColor: (rel.suspicion ?? 0) >= 80 ? '#ef4444' : (rel.suspicion ?? 0) >= 60 ? '#f97316' : (rel.suspicion ?? 0) >= 40 ? '#eab308' : '#94a3b8' }} />
+                </div>
+              </div>
+              <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', flexShrink: 0 }}>{rel.suspicion}%</span>
+            </div>
+          )}
+
           {/* Couple dynamics — emergent relationship model, compatibility & bond */}
           {dynamics && (
             <>

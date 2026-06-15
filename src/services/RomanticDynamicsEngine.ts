@@ -52,6 +52,8 @@ const ROMANTIC_TYPES = new Set(['partner', 'spouse'])
 const isRomantic = (rel: Relationship) =>
   ROMANTIC_TYPES.has(rel.type) || rel.stage === 'partner' || rel.stage === 'spouse'
 
+const FAMILY_BLOCK = new Set(['parent', 'sibling', 'child'])
+
 const firstName = (full: string) => full.split(' ')[0]
 
 // ─── public engine ──────────────────────────────────────────────────────────
@@ -215,6 +217,17 @@ export class RomanticDynamicsEngine {
     let budget = 3 // cap romantic log lines per year to avoid spam
     const spend = (): boolean => { if (budget > 0) { budget--; return true } return false }
 
+    // Social attention allocation: read how many interactions player had with each
+    // romantic partner this year (tracked in diminishingReturns by the store).
+    const yearStr = String(year)
+    const getPlayerInteracts = (rel: Relationship): number => {
+      const key = `interact_${rel.id}_${yearStr}`
+      return ((state as unknown as { diminishingReturns?: Record<string, number> }).diminishingReturns ?? {})[key] ?? 0
+    }
+    const romanticRels = relationships.filter(r => r.isAlive && isRomantic(r))
+    const totalAttention = romanticRels.reduce((sum, r) => sum + getPlayerInteracts(r), 0)
+    const hasMultiplePartners = romanticRels.length >= 2
+
     // Pool of "available alternatives" the NPC could stray with.
     // Excludes family and romantic partners; used both for opportunity measure and
     // as the pool from which a named affair partner is drawn.
@@ -258,8 +271,26 @@ export class RomanticDynamicsEngine {
       // ── proposals / ultimatums ──
       next = this._proposalStep(next, profile, bond, model, state, year, messages, spend)
 
+      // ── suspicion drift ──
+      const interacts = getPlayerInteracts(rel)
+      const attentionShare = romanticRels.length > 1
+        ? (totalAttention > 0 ? interacts / totalAttention : 1 / romanticRels.length)
+        : 1
+      next = this._suspicionStep(next, profile, bond, attentionShare, hasMultiplePartners, year, messages, spend)
+
+      // ── NPC life events (autonomous partner activities) ──
+      next = this._npcLifeStep(next, profile, state, year, messages, addFx, spend)
+
       return next
     })
+
+    // ── double-relationship drama ──
+    if (hasMultiplePartners) {
+      this._doubleDramaStep(romanticRels, state, year, messages, spend)
+    }
+
+    // ── social network gossip ──
+    this._socialNetworkStep(relationships, out, year, messages, addFx, spend)
 
     return { relationships: out, effects, messages }
   }
@@ -477,6 +508,195 @@ export class RomanticDynamicsEngine {
       return { ...rel, historyFlags: uniq([...rel.historyFlags, 'npc_proposed_marriage']) }
     }
     return rel
+  }
+
+  // ── suspicion drift and threshold events ──────────────────────────────────
+  private static _suspicionStep(
+    rel: Relationship,
+    profile: RomanticProfile,
+    bond: RelationshipBond,
+    attentionShare: number,
+    hasMultiplePartners: boolean,
+    year: number,
+    messages: string[],
+    spend: () => boolean,
+  ): Relationship {
+    const prevSusp = rel.suspicion ?? 0
+    const name = firstName(rel.name)
+
+    // Build suspicion delta
+    let delta = 0
+
+    // Neglect: too little attention compared to other partners
+    if (attentionShare < 0.20) delta += 14
+    else if (attentionShare < 0.40) delta += 7
+    else if (attentionShare > 0.70) delta -= 5   // lots of attention → reassured
+
+    // Multiple partners: NPC senses reduced availability
+    if (hasMultiplePartners) delta += 8
+
+    // Bond signals
+    if (bond.emotionalSat < 35) delta += 7
+    if (bond.sexualSat < 30) delta += 5
+    if (bond.passion < 25) delta += 4
+
+    // Undiscovered active affairs visible to this NPC (cohabiting = more exposure)
+    const activeAffairs = (rel.secretAffairs ?? []).filter(a => !a.discovered)
+    const cohabiting = rel.historyFlags.includes('cohabiting') || rel.stage === 'spouse'
+    if (activeAffairs.length > 0 && cohabiting) delta += 12
+    else if (activeAffairs.length > 0) delta += 5
+
+    // Warmth and trust cool suspicion
+    if (rel.historyFlags.includes('chain_warmth')) delta -= 10
+    delta -= rel.trust * 0.04
+    delta -= rel.love * 0.02
+
+    const suspicion = clamp(round(prevSusp + delta))
+
+    // Threshold crossing events (fire once per crossing)
+    const crossed = (t: number) => prevSusp < t && suspicion >= t
+    if (crossed(80) && spend()) {
+      messages.push(`😤 ${name} ti affronta direttamente: "Credo che tu mi stia tradendo."`)
+    } else if (crossed(60) && spend()) {
+      messages.push(`📱 ${name} chiede di vedere il tuo telefono. "Non hai nulla da nascondere, vero?"`)
+    } else if (crossed(40) && spend()) {
+      messages.push(`👀 ${name}: "Chi è quella persona che continua a mettere like alle tue foto?"`)
+    } else if (crossed(20) && spend()) {
+      messages.push(`💭 ${name} dice sottovoce: "Mi sembri distante ultimamente..."`)
+    }
+
+    // At 80+ suspicion, trust and love erode autonomously
+    const trustPenalty = suspicion >= 80 ? -6 : suspicion >= 60 ? -2 : 0
+    const lovePenalty = suspicion >= 80 ? -4 : 0
+
+    void profile  // used for future extensions (e.g. personality-based suspicion scaling)
+    void year     // available for time-based logic if needed in the future
+
+    return {
+      ...rel,
+      suspicion,
+      trust: clamp(round(rel.trust + trustPenalty)),
+      love: clamp(round(rel.love + lovePenalty)),
+    }
+  }
+
+  // ── NPC autonomous life events (partner has their own social life) ──────────
+  private static _npcLifeStep(
+    rel: Relationship,
+    profile: RomanticProfile,
+    state: GameState,
+    year: number,
+    messages: string[],
+    addFx: (e: Effect) => void,
+    spend: () => boolean,
+  ): Relationship {
+    // Rate-limit: one autonomous event per NPC per year
+    if ((rel.npcLifeYear ?? 0) >= year) return rel
+    if (Math.random() > 0.28) return rel  // 28% chance any event fires at all
+
+    const name = firstName(rel.name)
+    type LifeEvent = { msg: string; jealousyHit?: number; trustDelta?: number }
+    const pool: LifeEvent[] = []
+
+    // Social outings (more likely for high freedom)
+    if (profile.freedomDrive > 35) {
+      pool.push({ msg: `🎉 ${name} è uscita/o con gli amici sabato sera.`, jealousyHit: profile.freedomDrive > 65 ? 5 : 0 })
+    }
+    // New hobby
+    {
+      const hobbies = ['la palestra', 'la pittura', 'la danza', 'lo yoga', 'la fotografia', 'il teatro']
+      const h = hobbies[Math.floor(Math.random() * hobbies.length)]
+      pool.push({ msg: `🎨 ${name} ha iniziato ${h}. Sembra entusiasta.` })
+    }
+    // Provocative social media (young + high freedom)
+    if (rel.age < 38 && profile.freedomDrive > 55) {
+      pool.push({ msg: `📸 ${name} ha pubblicato una foto molto provocante. Riceve molti commenti.`, jealousyHit: 8 })
+    }
+    // Colleague/friend social proximity
+    if (Math.random() < 0.4) {
+      pool.push({ msg: `🚗 Un collega di ${name} la/lo accompagna spesso a casa. ${name} dice che sono solo amici.`, jealousyHit: 6 })
+    }
+    // Career change / travel (independence signal)
+    if (profile.ambition > 60 && Math.random() < 0.3) {
+      pool.push({ msg: `💼 ${name} sta considerando un cambiamento di carriera. Ultimamente è spesso fuori.`, jealousyHit: 0 })
+    }
+
+    if (pool.length === 0) return rel
+
+    const ev = pool[Math.floor(Math.random() * pool.length)]
+    if (!spend()) return rel
+
+    messages.push(ev.msg)
+    if ((ev.jealousyHit ?? 0) > 0) {
+      addFx({ happiness: -Math.round((ev.jealousyHit!) / 3) })
+    }
+
+    void state  // used for future extensions (e.g. checking player traits)
+    return { ...rel, npcLifeYear: year }
+  }
+
+  // ── double-relationship drama (when player has 2+ romantic partners) ────────
+  private static _doubleDramaStep(
+    romanticRels: Relationship[],
+    _state: GameState,
+    _year: number,
+    messages: string[],
+    spend: () => boolean,
+  ): void {
+    if (!spend()) return
+    const [r1, r2] = romanticRels
+    const n1 = firstName(r1.name)
+    const n2 = firstName(r2.name)
+
+    const roll = Math.random()
+    if (roll < 0.25) {
+      messages.push(`📅 Sia ${n1} che ${n2} vogliono uscire con te lo stesso weekend. Dovrai trovare una scusa.`)
+    } else if (roll < 0.50) {
+      messages.push(`📱 ${n2} ti chiama mentre sei con ${n1}. Momento di tensione.`)
+    } else if (roll < 0.68) {
+      messages.push(`💌 Hai inviato per errore un messaggio romantico a ${n1} che era destinato a ${n2}. Panico.`)
+    } else if (roll < 0.82) {
+      messages.push(`👥 ${n1} e ${n2} si trovano casualmente nello stesso posto. L'aria è glaciale.`)
+    } else if (roll < 0.92) {
+      messages.push(`🎂 Hai dimenticato il compleanno di ${n1} — stavi festeggiando con ${n2}.`)
+    } else {
+      messages.push(`🏷️ ${n2} ha pubblicato una vostra foto insieme. ${n1} l'ha vista.`)
+    }
+  }
+
+  // ── social network gossip (friends/colleagues can expose affairs) ───────────
+  private static _socialNetworkStep(
+    allRelationships: Relationship[],
+    out: Relationship[],
+    _year: number,
+    messages: string[],
+    addFx: (e: Effect) => void,
+    spend: () => boolean,
+  ): void {
+    // For each romantic NPC with undiscovered affairs, check if the social
+    // network is likely to leak the information.
+    const socialContacts = allRelationships.filter(r =>
+      r.isAlive && ['friend', 'best_friend', 'colleague', 'acquaintance'].includes(r.type)
+    )
+    if (socialContacts.length === 0) return
+
+    for (let i = 0; i < out.length; i++) {
+      const rel = out[i]
+      if (!isRomantic(rel)) continue
+      const activeAffairs = (rel.secretAffairs ?? []).filter(a => !a.discovered)
+      if (activeAffairs.length === 0) continue
+
+      // Probability proportional to social exposure
+      const pGossip = Math.min(0.18, 0.03 + socialContacts.length * 0.025)
+      if (Math.random() < pGossip && spend()) {
+        const affair = activeAffairs[Math.floor(Math.random() * activeAffairs.length)]
+        const gossiper = socialContacts[Math.floor(Math.random() * socialContacts.length)]
+        messages.push(`🗣️ ${gossiper.name} ha sentito pettegolezzi su te e ${affair.loverName}. Le voci si diffondono.`)
+        addFx({ reputation: -4, socialReputation: -3 })
+        // Escalate suspicion on the cheated-on partner
+        out[i] = { ...out[i], suspicion: clamp((out[i].suspicion ?? 0) + 22) }
+      }
+    }
   }
 
   // ── obsession escalation ladder (post-rejection / post-breakup) ──

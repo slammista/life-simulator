@@ -454,6 +454,8 @@ export interface Relationship {
   secretAffairs?: SecretAffair[]
   obsession?: ObsessionState
   externalApproval?: number   // 0-100 — family/social approval of this couple
+  suspicion?: number            // 0-100: how suspicious this NPC is about the player
+  npcLifeYear?: number          // last year NPC did something autonomous (prevents spam)
 }
 
 // ---- Work Ecosystem ----
