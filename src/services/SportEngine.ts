@@ -155,25 +155,95 @@ export class SportEngine {
     }
   }
 
-  /** Annual maintenance: skill growth if trained, decay otherwise. */
-  static annualTick(state: GameState): { effects: Effect; updates: Array<{ id: string; skillDelta: number }> } {
+  /** Annual maintenance: skill growth if trained, decay otherwise. Also tracks youth exp and injuries. */
+  static annualTick(state: GameState): {
+    effects: Effect
+    updates: Array<{
+      id: string
+      skillDelta: number
+      youthExpDelta?: number
+      injuryEvent?: { severity: 'minor' | 'moderate' | 'severe'; skillLoss: number; message: string }
+      injuryCleared?: boolean
+    }>
+    injuryMessages: string[]
+  } {
     const effects: Effect = {}
-    const updates: Array<{ id: string; skillDelta: number }> = []
+    const updates: Array<{
+      id: string
+      skillDelta: number
+      youthExpDelta?: number
+      injuryEvent?: { severity: 'minor' | 'moderate' | 'severe'; skillLoss: number; message: string }
+      injuryCleared?: boolean
+    }> = []
+    const injuryMessages: string[] = []
 
     for (const sport of state.sports ?? []) {
       const def = getSportDef(sport.id)
       if (!def) continue
 
       const practiceKey = `sport_${sport.id}_${state.time.year}`
-      const practiced = (state.diminishingReturns[practiceKey] ?? 0) > 0
+      const practiceCount = state.diminishingReturns[practiceKey] ?? 0
+      const practiced = practiceCount > 0
 
-      const skillDelta = practiced
+      // Clear injury if recovery year passed
+      let injuryCleared = false
+      if (sport.currentInjury && sport.injuryRecoveryYear && state.time.year >= sport.injuryRecoveryYear) {
+        injuryCleared = true
+        injuryMessages.push(`${def.emoji} Sei guarito/a dall'infortunio a ${def.name}. Pronto/a a tornare in pista!`)
+      }
+
+      // Skill delta (halved if currently injured)
+      const injured = sport.currentInjury && !injuryCleared
+      let skillDelta = practiced
         ? Math.max(0, Math.round(5 * state.stats.energy / 100))
         : -def.decayPerYear
+      if (injured) skillDelta = Math.min(skillDelta, -2)
 
-      updates.push({ id: sport.id, skillDelta })
+      // Youth experience accumulation (age 10-18)
+      let youthExpDelta: number | undefined
+      if (state.time.age >= 10 && state.time.age < 18 && practiced) {
+        youthExpDelta = 1
+      }
+
+      // Injury risk calculation (only if not already injured)
+      let injuryEvent: { severity: 'minor' | 'moderate' | 'severe'; skillLoss: number; message: string } | undefined
+      if (!sport.currentInjury || injuryCleared) {
+        const age = state.time.age
+        // Age factor: risk rises past sport prime end (approximated as 31 default)
+        const ageFactor = Math.max(0, (age - 30) * 0.04)
+        const overtrainingFactor = practiceCount >= 4 ? 0.15 : 0
+        const healthFactor = ((100 - state.stats.health) / 100) * 0.25
+        const rawRisk = def.injuryRisk * (1 + ageFactor + overtrainingFactor + healthFactor)
+        const injuryRisk = Math.min(0.75, rawRisk)
+
+        if (Math.random() < injuryRisk) {
+          const roll = Math.random()
+          if (roll < 0.5) {
+            injuryEvent = {
+              severity: 'minor',
+              skillLoss: 5,
+              message: `🤕 Piccolo infortunio durante l'allenamento di ${def.name}. Qualche settimana di riposo.`,
+            }
+          } else if (roll < 0.85) {
+            injuryEvent = {
+              severity: 'moderate',
+              skillLoss: 12,
+              message: `🏥 Infortunio moderato in ${def.name}. Salterai parte della stagione.`,
+            }
+          } else {
+            injuryEvent = {
+              severity: 'severe',
+              skillLoss: 25,
+              message: `🚨 Grave infortunio in ${def.name}! Stagione compromessa — possibile impatto sulla carriera.`,
+            }
+          }
+          injuryMessages.push(injuryEvent.message)
+        }
+      }
+
+      updates.push({ id: sport.id, skillDelta, youthExpDelta, injuryEvent, injuryCleared })
     }
 
-    return { effects, updates }
+    return { effects, updates, injuryMessages }
   }
 }

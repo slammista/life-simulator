@@ -1,4 +1,5 @@
 import type { GameState, Effect } from '../store/types'
+import { getSportDef } from './SportEngine'
 
 export type SpecialCareerType = 'actor' | 'musician' | 'pro_athlete' | 'politician' | 'criminal'
 
@@ -218,6 +219,12 @@ export class SpecialCareerEngine {
     if (career.type === 'pro_athlete') {
       base += (state.stats.health / 100) * 0.1
       base += this._linkedSportBonus(career, action, state)
+      // Age-based performance multiplier (prime vs decline)
+      const linkedSportId = career.flags.linkedSportId
+      const sportId = typeof linkedSportId === 'string' ? linkedSportId : ''
+      const discipline = (state.stats as unknown as Record<string, number>).discipline ?? 50
+      const perfMult = this._athletePerformanceMult(state.time.age, sportId, discipline, state.stats.health)
+      base *= perfMult
     }
     if (career.type === 'criminal') {
       // A darker past (negative karma) means more underworld experience.
@@ -226,8 +233,7 @@ export class SpecialCareerEngine {
     return Math.min(0.9, Math.max(0.1, base))
   }
 
-  // Real-sport integration: the skill of the sport linked at career start
-  // boosts tryouts and contract negotiations (up to +15%).
+  // Real-sport integration: sport skill + youth exp boost tryouts and contract negotiations (up to +25%).
   private static _linkedSportBonus(career: SpecialCareer, action: SpecialCareerAction, state: GameState): number {
     if (career.type !== 'pro_athlete') return 0
     if (action.id !== 'athlete_tryout' && action.id !== 'athlete_contract') return 0
@@ -235,7 +241,10 @@ export class SpecialCareerEngine {
     if (typeof linkedSportId !== 'string') return 0
     const sport = (state.sports ?? []).find(s => s.id === linkedSportId)
     if (!sport) return 0
-    return (sport.skillLevel / 100) * 0.15
+    const skillBonus = (sport.skillLevel / 100) * 0.15
+    // Youth experience: each session (age 10-17) adds up to +10% extra
+    const youthBonus = Math.min(0.10, (sport.youthExp ?? 0) * 0.01)
+    return skillBonus + youthBonus
   }
 
   private static _successRewards(
@@ -379,9 +388,147 @@ export class SpecialCareerEngine {
     return labels[phase]
   }
 
-  static annualTick(career: SpecialCareer, state: GameState): { effects: Effect; updatedCareer: SpecialCareer } {
+  // ---- Sport career phase system ----
+
+  // [primeStart, primeEnd] by sport id. Outside this window performance decays.
+  private static PRIME_AGES: Record<string, [number, number]> = {
+    calcio:     [23, 31],
+    basket:     [24, 33],
+    tennis:     [22, 31],
+    mma:        [25, 34],
+    boxe:       [24, 35],
+    judo:       [23, 33],
+    karate:     [23, 34],
+    taekwondo:  [22, 31],
+    ping_pong:  [24, 36],
+    badminton:  [22, 31],
+    nuoto:      [18, 28],
+    atletica:   [22, 32],
+    ginnastica: [15, 25],
+    ciclismo:   [24, 34],
+    sci:        [22, 33],
+    default:    [22, 32],
+  }
+
+  // Performance multiplier for athletes (0.3–1.15) based on age vs prime window.
+  // discipline (0-100) and health (0-100) can extend the prime by up to 3 years.
+  private static _athletePerformanceMult(age: number, sportId: string, discipline: number, health: number): number {
+    const [ps, pe] = this.PRIME_AGES[sportId] ?? this.PRIME_AGES.default
+    const extension = Math.round(((discipline + health) / 200) * 3)   // 0-3 years
+    const effectivePeEnd = pe + extension
+
+    if (age < 16) return 0.40
+    if (age < ps) {
+      // Rising phase: 0.65 at 16 → 1.0 at primeStart
+      return Math.min(1.0, 0.65 + (age - 16) / Math.max(1, ps - 16) * 0.35)
+    }
+    if (age <= effectivePeEnd) return 1.05  // prime (slight boost)
+    if (age <= effectivePeEnd + 4) {
+      // Early decline: -8% per year past prime
+      return Math.max(0.55, 1.05 - (age - effectivePeEnd) * 0.08)
+    }
+    // Advanced decline: -11% per year
+    return Math.max(0.25, 1.05 - (age - effectivePeEnd) * 0.11)
+  }
+
+  // Map SpecialCareer phase to a biological label for events.
+  private static _bioPhaseLabel(age: number, sportId: string): string {
+    const [ps, pe] = this.PRIME_AGES[sportId] ?? this.PRIME_AGES.default
+    if (age < ps) return 'Giovane Promessa'
+    if (age <= pe) return 'Picco di Carriera'
+    if (age <= pe + 4) return 'Primo Declino'
+    return 'Declino Avanzato'
+  }
+
+  // Youth bonus: youthExp (practice sessions age 10-17) → bonus skill at pro start.
+  static youthBonus(career: SpecialCareer, state: GameState): number {
+    if (career.type !== 'pro_athlete') return 0
+    const linkedSportId = career.flags.linkedSportId
+    if (typeof linkedSportId !== 'string') return 0
+    const sport = (state.sports ?? []).find(s => s.id === linkedSportId)
+    const exp = sport?.youthExp ?? 0
+    // Each youth practice session = +0.5 bonus skill (max 20)
+    return Math.min(20, exp * 0.5)
+  }
+
+  // ---- Decisive event system ----
+
+  // Guaranteed decisive events per career (hybrid: fires when condition met OR falls back at threshold).
+  private static _checkDecisiveEvent(career: SpecialCareer, sportId: string, state: GameState): string | null {
+    const age = state.time.age
+    const [ps, pe] = this.PRIME_AGES[sportId] ?? this.PRIME_AGES.default
+    const sportName = getSportDef(sportId)?.name ?? 'sport'
+
+    // Decisive event 1: first major title (guaranteed once, at/after prime start)
+    if (!career.flags.decisive_first_title && age >= ps && (Math.random() < 0.4 || career.projectsCompleted >= 5)) {
+      career.flags.decisive_first_title = true
+      return `🏆 MOMENTO STORICO! Hai vinto il tuo primo titolo importante in ${sportName}! Una pietra miliare della tua carriera.`
+    }
+
+    // Decisive event 2: rivalry (guaranteed once, in prime)
+    if (!career.flags.decisive_rivalry && career.flags.decisive_first_title && age >= ps + 2 && (Math.random() < 0.35 || career.projectsCompleted >= 9)) {
+      career.flags.decisive_rivalry = true
+      return `⚔️ GRANDE RIVALITÀ! La tua sfida epica con un altro campione di ${sportName} tiene tutto il paese col fiato sospeso.`
+    }
+
+    // Decisive event 3: career-defining championship (at established+ phase)
+    if (!career.flags.decisive_championship && career.phase === 'established' && age <= pe && (Math.random() < 0.3 || career.projectsCompleted >= 12)) {
+      career.flags.decisive_championship = true
+      return `🥇 CAMPIONATO MONDIALE! Trionfi nella competizione più importante di ${sportName}. Sei nell'Olimpo degli atleti!`
+    }
+
+    // Decisive event 4: comeback from injury (fires if injuries >= 2 and still active)
+    const sport = (state.sports ?? []).find(s => s.id === sportId)
+    if (!career.flags.decisive_comeback && (sport?.injuries ?? 0) >= 2 && career.reputation >= 60 && (Math.random() < 0.45)) {
+      career.flags.decisive_comeback = true
+      return `💪 GRANDE RITORNO! Dopo i tuoi infortuni, la tua rimonta è diventata fonte d'ispirazione in tutto il mondo.`
+    }
+
+    return null
+  }
+
+  // ---- Legendary event system ----
+
+  private static _checkLegendaryEvent(career: SpecialCareer, sportId: string, state: GameState): string | null {
+    const fame = career.fame
+    const age = state.time.age
+    const year = state.time.year
+    const sportName = getSportDef(sportId)?.name ?? 'sport'
+
+    // Pallone d'Oro / MVP (fame >= 85, superstar, once)
+    if (!career.flags.legend_mvp && fame >= 85 && career.phase === 'superstar' && Math.random() < 0.25) {
+      career.flags.legend_mvp = true
+      return `🌟 PALLONE D'ORO! Eletto/a miglior atleta del mondo in ${sportName}. Il tuo nome è nella storia.`
+    }
+
+    // Hall of Fame (fame >= 90, age >= 35, once)
+    if (!career.flags.legend_hof && fame >= 90 && age >= 35 && (career.phase === 'declining' || career.phase === 'superstar') && Math.random() < 0.4) {
+      career.flags.legend_hof = true
+      return `🏛️ HALL OF FAME! Sei stato/a introdotto/a nella Hall of Fame di ${sportName}. Un riconoscimento eterno.`
+    }
+
+    // Olympics (fame >= 70, every 4 years, max 3 times)
+    const olympicCount = (career.flags.legend_olympic_count as number) ?? 0
+    if (fame >= 70 && year % 4 === 0 && olympicCount < 3 && Math.random() < 0.5) {
+      career.flags.legend_olympic_count = olympicCount + 1
+      const medals = ['bronzo 🥉', 'argento 🥈', 'oro 🥇']
+      const medal = olympicCount < medals.length ? medals[olympicCount] : 'oro 🥇'
+      return `🏅 OLIMPIADI! Rappresenti il tuo paese e conquisti la medaglia di ${medal} in ${sportName}.`
+    }
+
+    // Farewell match (retiring with fame >= 75)
+    if (!career.flags.legend_farewell && career.phase === 'declining' && age >= 35 && fame >= 75 && Math.random() < 0.3) {
+      career.flags.legend_farewell = true
+      return `👑 PARTITA D'ADDIO! Uno stadio gremito ti tributa un'ovazione commovente. La tua carriera in ${sportName} lascia un'impronta indelebile.`
+    }
+
+    return null
+  }
+
+  static annualTick(career: SpecialCareer, state: GameState): { effects: Effect; updatedCareer: SpecialCareer; messages?: string[] } {
     const effects: Effect = {}
-    const updated = { ...career }
+    const updated = { ...career, flags: { ...career.flags } }
+    const messages: string[] = []
 
     // Passive income
     const monthlyIncome = CAREER_INCOME[career.type][career.phase] ?? 0
@@ -390,18 +537,86 @@ export class SpecialCareerEngine {
     }
 
     // Natural fame decay if no actions taken
-    const key = `sc_action_${state.time.year}`
-    const actionsThisYear = state.diminishingReturns[key] ?? 0
+    const actionKey = `sc_action_${state.time.year}`
+    const actionsThisYear = state.diminishingReturns[actionKey] ?? 0
     if (actionsThisYear === 0 && career.fame > 0) {
       updated.fame = Math.max(0, career.fame - 3)
       updated.reputation = Math.max(0, career.reputation - 1)
     }
 
-    // Age-based phase check for athlete
-    if (career.type === 'pro_athlete' && state.time.age > 35 && career.phase !== 'retired' && career.phase !== 'declining') {
-      updated.phase = 'declining'
+    // ---- Pro athlete: realistic career arc ----
+    if (career.type === 'pro_athlete') {
+      const linkedSportId = career.flags.linkedSportId
+      const sportId = typeof linkedSportId === 'string' ? linkedSportId : ''
+      const sport = (state.sports ?? []).find(s => s.id === sportId)
+      const discipline = (state.stats as unknown as Record<string, number>).discipline ?? 50
+      const health = state.stats.health
+      const age = state.time.age
+      const [, pe] = this.PRIME_AGES[sportId] ?? this.PRIME_AGES.default
+
+      const perfMult = this._athletePerformanceMult(age, sportId, discipline, health)
+      const bioPhase = this._bioPhaseLabel(age, sportId)
+
+      // Apply youth bonus once at career start (before first competition)
+      if (!career.flags.youth_bonus_applied && sport) {
+        const bonus = this.youthBonus(career, state)
+        if (bonus > 0) {
+          updated.reputation = Math.min(100, updated.reputation + Math.round(bonus * 0.6))
+          updated.flags.youth_bonus_applied = true
+          messages.push(`⭐ Il tuo talento giovanile in ${sport.name} ti dà un vantaggio d'inizio carriera!`)
+        }
+      }
+
+      // Career phase flip into decline: 3+ years past prime end (pe).
+      // Performance multiplier affects success chance; career phase arc is fixed by age.
+      if (age > pe + 3 && career.phase !== 'declining' && career.phase !== 'retired') {
+        updated.phase = 'declining'
+        messages.push(`📉 ${bioPhase}: le prestazioni in ${sport?.name ?? 'sport'} calano con l'età. Il corpo non risponde più come prima.`)
+      }
+
+      // Performance penalty on income for declining athletes
+      if (career.phase === 'declining') {
+        const incomeHit = Math.round(monthlyIncome * (1 - perfMult) * 0.5)
+        effects.money = (effects.money ?? 0) - incomeHit * 12
+      }
+
+      // Decisive events
+      if (sportId && career.phase !== 'retired') {
+        const decisive = this._checkDecisiveEvent(updated, sportId, state)
+        if (decisive) {
+          messages.push(decisive)
+          updated.fame = Math.min(100, updated.fame + 8)
+          updated.reputation = Math.min(100, updated.reputation + 6)
+          effects.happiness = (effects.happiness ?? 0) + 15
+        }
+      }
+
+      // Legendary events (high-fame athletes only)
+      if (sportId && updated.fame >= 70) {
+        const legendary = this._checkLegendaryEvent(updated, sportId, state)
+        if (legendary) {
+          messages.push(legendary)
+          updated.fame = Math.min(100, updated.fame + 5)
+          effects.happiness = (effects.happiness ?? 0) + 20
+          effects.money = (effects.money ?? 0) + 50000
+        }
+      }
+
+      // Age warning events
+      const ageWarnings: Array<[number, string]> = [
+        [pe, `⏳ Hai raggiunto la fine del tuo picco naturale in ${sport?.name ?? 'sport'}. È il momento di sfruttare al massimo la tua esperienza.`],
+        [pe + 3, `⚠️ A ${age} anni il corpo inizia a sentire il peso degli anni. Pensa al tuo futuro dopo lo sport.`],
+        [40, `🕰️ A 40 anni sei un veterano/a assoluto/a. Ogni partita potrebbe essere l'ultima.`],
+      ]
+      for (const [targetAge, msg] of ageWarnings) {
+        if (age === targetAge && !career.flags[`age_warn_${targetAge}`]) {
+          career.flags[`age_warn_${targetAge}`] = true
+          updated.flags[`age_warn_${targetAge}`] = true
+          messages.push(msg)
+        }
+      }
     }
 
-    return { effects, updatedCareer: updated }
+    return { effects, updatedCareer: updated, messages: messages.length > 0 ? messages : undefined }
   }
 }

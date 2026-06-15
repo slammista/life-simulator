@@ -743,6 +743,11 @@ export interface Sport {
   isProfessional: boolean          // pro career flag
   fame: number                     // 0-100 sport fame
   packId: string
+  // Youth talent: practice sessions before age 18 (used as pro career bonus)
+  youthExp?: number
+  // Injury severity tracker: 'minor' | 'moderate' | 'severe'
+  currentInjury?: 'minor' | 'moderate' | 'severe'
+  injuryRecoveryYear?: number      // year when injury clears
 }
 
 // ---- Social Media ----

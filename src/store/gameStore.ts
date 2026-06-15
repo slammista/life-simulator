@@ -752,15 +752,17 @@ export const useGameStore = create<FullStore>()(
         merge(hobbyFx)
 
         // 8b. Sport annual tick
-        const { effects: sportFx, updates: sportUpdates } = SportEngine.annualTick(state)
+        const { effects: sportFx, updates: sportUpdates, injuryMessages } = SportEngine.annualTick(state)
         merge(sportFx)
+        messages.push(...injuryMessages)
 
         // 8c. Special career annual tick
         let updatedSpecialCareer = state.specialCareer
         if (state.specialCareer && state.specialCareer.phase !== 'retired') {
-          const { effects: scFx, updatedCareer: scUpdated } = SpecialCareerEngine.annualTick(state.specialCareer, state)
+          const { effects: scFx, updatedCareer: scUpdated, messages: scMessages } = SpecialCareerEngine.annualTick(state.specialCareer, state)
           merge(scFx)
           updatedSpecialCareer = scUpdated
+          if (scMessages?.length) messages.push(...scMessages)
         }
 
         // 9. Criminal annual tick (prison sentence)
@@ -1125,7 +1127,26 @@ export const useGameStore = create<FullStore>()(
         const updatedSports = (state.sports ?? []).map(sp => {
           const upd = sportUpdates.find(u => u.id === sp.id)
           if (!upd) return sp
-          return { ...sp, skillLevel: clamp(sp.skillLevel + upd.skillDelta, 0, 100) }
+          let updated = { ...sp, skillLevel: clamp(sp.skillLevel + upd.skillDelta, 0, 100) }
+          // Youth experience accumulation (pre-18 practice)
+          if (upd.youthExpDelta) updated = { ...updated, youthExp: (updated.youthExp ?? 0) + upd.youthExpDelta }
+          // Injury clearing
+          if (upd.injuryCleared) {
+            const { currentInjury: _ci, injuryRecoveryYear: _iry, ...rest } = updated
+            updated = rest
+          }
+          // New injury
+          if (upd.injuryEvent) {
+            const recoveryYears = upd.injuryEvent.severity === 'minor' ? 0 : upd.injuryEvent.severity === 'moderate' ? 1 : 2
+            updated = {
+              ...updated,
+              currentInjury: upd.injuryEvent.severity,
+              injuryRecoveryYear: state.time.year + recoveryYears,
+              injuries: (updated.injuries ?? 0) + 1,
+              skillLevel: clamp(updated.skillLevel - upd.injuryEvent.skillLoss, 0, 100),
+            }
+          }
+          return updated
         })
 
         const baseFinance = partial.finance ?? state.finance
