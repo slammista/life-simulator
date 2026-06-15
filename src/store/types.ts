@@ -750,6 +750,65 @@ export interface Sport {
   injuryRecoveryYear?: number      // year when injury clears
 }
 
+// ---- Hidden Talent ----
+
+export interface HiddenTalent {
+  sports: number    // 0-100
+  music: number     // 0-100
+  acting: number    // 0-100
+  business: number  // 0-100
+  politics: number  // 0-100
+  crime: number     // 0-100
+}
+
+// ---- Career Lifecycle ----
+
+export type ContractRole = 'riserva' | 'titolare' | 'stella' | 'capitano'
+
+export interface PlayerContract {
+  teamId: string
+  teamName: string
+  teamEmoji: string
+  monthlySalary: number
+  durationYears: number
+  yearsRemaining: number
+  signingBonus: number
+  role: ContractRole
+  bonusPerGoal: number
+}
+
+export interface TransferOffer {
+  fromTeamId: string
+  fromTeamName: string
+  fromTeamEmoji: string
+  monthlySalary: number
+  durationYears: number
+  role: ContractRole
+  offerYear: number
+  expiresYear: number
+}
+
+export interface SeasonStats {
+  year: number
+  teamId: string
+  teamName: string
+  teamEmoji: string
+  matches: number
+  goals: number
+  assists: number
+  averageRating: number
+  injuries: number
+  trophies: string[]
+  personalAward?: string
+  monthlySalary: number
+}
+
+export interface PendingCareerOffer {
+  type: 'scout' | 'transfer'
+  offer: TransferOffer
+  sportId: string
+}
+
 // ---- Social Media ----
 
 export type SocialPlatform = 'instagram' | 'tiktok' | 'youtube' | 'twitter' | 'facebook' | 'twitch' | 'podcast' | 'onlyfans'
@@ -1289,6 +1348,12 @@ export interface GameState {
   // Sports (separate category from hobbies)
   sports: Sport[]
 
+  // Hidden talent (never shown to player — drives career growth)
+  hiddenTalent?: HiddenTalent
+
+  // Pending scout/transfer offer (resolved by player action)
+  pendingCareerOffer?: PendingCareerOffer
+
   // Social media
   socialMedia: SocialMediaProfile[]
 
@@ -1498,6 +1563,8 @@ export interface GameActions {
   startSpecialCareer: (type: import('../services/SpecialCareerEngine').SpecialCareerType) => ActionResult
   performSpecialCareerAction: (actionId: string) => ActionResult
   quitSpecialCareer: () => ActionResult
+  respondToScoutOffer: (accept: boolean) => ActionResult
+  respondToTransferOffer: (response: 'accept' | 'negotiate' | 'reject') => ActionResult
 
   // Criminal engine actions
   commitCrime: (crimeId: string) => ActionResult

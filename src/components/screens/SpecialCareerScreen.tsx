@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { SpecialCareerEngine, type SpecialCareerType } from '../../services/SpecialCareerEngine'
+import { CareerLifecycleEngine } from '../../services/CareerLifecycleEngine'
 import { useToastStore } from '../../store/toastStore'
 import { haptic } from '../../services/HapticEngine'
 import { ConfirmDialog } from '../common/ConfirmDialog'
@@ -36,6 +37,14 @@ const CAREER_META: Record<SpecialCareerType, {
 
 const CAREER_ORDER: SpecialCareerType[] = ['actor', 'musician', 'pro_athlete', 'politician', 'criminal']
 
+const ROLE_LABEL: Record<string, string> = {
+  riserva: 'Riserva 🪑', titolare: 'Titolare ⚽', stella: 'Stella ⭐', capitano: 'Capitano 🏅',
+}
+
+const LEGACY_COLORS: Record<string, string> = {
+  dimenticato: '#94a3b8', professionista: '#60a5fa', leggenda_nazionale: '#f59e0b', leggenda_mondiale: '#a855f7',
+}
+
 export function SpecialCareerScreen() {
   const career = useGameStore(s => s.specialCareer)
   const age = useGameStore(s => s.time.age)
@@ -43,9 +52,12 @@ export function SpecialCareerScreen() {
   const energy = useGameStore(s => s.stats.energy)
   const sports = useGameStore(s => s.sports ?? [])
   const diminishingReturns = useGameStore(s => s.diminishingReturns)
+  const pendingCareerOffer = useGameStore(s => s.pendingCareerOffer)
   const startSpecialCareer = useGameStore(s => s.startSpecialCareer)
   const performSpecialCareerAction = useGameStore(s => s.performSpecialCareerAction)
   const quitSpecialCareer = useGameStore(s => s.quitSpecialCareer)
+  const respondToScoutOffer = useGameStore(s => s.respondToScoutOffer)
+  const respondToTransferOffer = useGameStore(s => s.respondToTransferOffer)
   const showPanel = useToastStore(s => s.showPanel)
   const closePanel = useToastStore(s => s.closePanel)
 
@@ -53,6 +65,16 @@ export function SpecialCareerScreen() {
     haptic(ok ? 'success' : 'error')
     showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
     setTimeout(() => closePanel(), 3500)
+  }
+
+  const handleScoutResponse = (accept: boolean) => {
+    const r = respondToScoutOffer(accept)
+    flash(r.message, r.success, accept ? '📝' : '❌', r.effects as Record<string, number>)
+  }
+
+  const handleTransferResponse = (response: 'accept' | 'negotiate' | 'reject') => {
+    const r = respondToTransferOffer(response)
+    flash(r.message, r.success, response === 'accept' ? '✈️' : response === 'negotiate' ? '🤝' : '❌', r.effects as Record<string, number>)
   }
 
   const handleStart = (type: SpecialCareerType) => {
@@ -90,6 +112,35 @@ export function SpecialCareerScreen() {
         <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 14 }}>
           Intraprendi un percorso fuori dall'ordinario: fama, reputazione e guadagni crescono con i tuoi successi.
         </p>
+
+        {/* Scout offer banner */}
+        {pendingCareerOffer && (
+          <div className="card" style={{
+            padding: 14, marginBottom: 14,
+            background: 'linear-gradient(135deg, rgba(34,197,94,0.15) 0%, var(--bg-card) 70%)',
+            border: '1px solid rgba(34,197,94,0.40)',
+          }}>
+            <p style={{ fontWeight: 800, fontSize: 14, color: '#86efac', marginBottom: 6 }}>
+              🔍 UNO SCOUT TI HA NOTATO!
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--color-text)', marginBottom: 4 }}>
+              {pendingCareerOffer.offer.fromTeamEmoji} <strong>{pendingCareerOffer.offer.fromTeamName}</strong> vuole offrirti un contratto professionale.
+            </p>
+            <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
+              Ruolo: <strong>{ROLE_LABEL[pendingCareerOffer.offer.role]}</strong> · Stipendio: <strong>€{pendingCareerOffer.offer.monthlySalary.toLocaleString()}/mese</strong> · Durata: {pendingCareerOffer.offer.durationYears} {pendingCareerOffer.offer.durationYears === 1 ? 'anno' : 'anni'}
+            </p>
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button onClick={() => handleScoutResponse(true)} className="tap-scale" style={{
+                flex: 1, padding: '9px 0', borderRadius: 10, fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer',
+                background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff',
+              }}>✅ Vai al Provino</button>
+              <button onClick={() => handleScoutResponse(false)} className="tap-scale" style={{
+                flex: 1, padding: '9px 0', borderRadius: 10, fontSize: 13, fontWeight: 700, border: '1px solid rgba(239,68,68,0.4)', cursor: 'pointer',
+                background: 'rgba(239,68,68,0.08)', color: '#fca5a5',
+              }}>❌ Rifiuta</button>
+            </div>
+          </div>
+        )}
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {CAREER_ORDER.map(type => {
@@ -214,6 +265,10 @@ export function SpecialCareerScreen() {
           {[
             { label: 'Fama', val: career.fame, color: '#f59e0b' },
             { label: 'Reputazione', val: career.reputation, color: '#8b5cf6' },
+            ...(career.type === 'pro_athlete' && career.professionalFame != null ? [
+              { label: 'Fama Prof.', val: career.professionalFame, color: '#22c55e' },
+              { label: 'Fama Pub.', val: career.publicFame ?? 0, color: '#f43f5e' },
+            ] : []),
           ].map(({ label, val, color }) => (
             <div key={label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 80, flexShrink: 0 }}>{label}</span>
@@ -235,6 +290,148 @@ export function SpecialCareerScreen() {
           </span>
         </div>
       </div>
+
+      {/* Current contract card — only for pro_athlete */}
+      {career.type === 'pro_athlete' && career.contract && (
+        <div className="card" style={{
+          padding: 14, marginBottom: 14,
+          background: 'linear-gradient(135deg, rgba(34,197,94,0.10) 0%, var(--bg-card) 70%)',
+          border: '1px solid rgba(34,197,94,0.30)',
+        }}>
+          <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#86efac', textTransform: 'uppercase', marginBottom: 10 }}>
+            📋 Contratto in Corso
+          </p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+            <div>
+              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)' }}>
+                {career.contract.teamEmoji} {career.contract.teamName}
+              </p>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                {ROLE_LABEL[career.contract.role]}
+              </p>
+            </div>
+            <div style={{ textAlign: 'right' }}>
+              <p style={{ fontSize: 16, fontWeight: 900, color: '#86efac' }}>
+                €{career.contract.monthlySalary.toLocaleString('it-IT')}<span style={{ fontSize: 10, fontWeight: 400, color: 'var(--color-text-secondary)' }}>/mese</span>
+              </p>
+              <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>
+                {career.contract.yearsRemaining} {career.contract.yearsRemaining === 1 ? 'anno rimasto' : 'anni rimasti'}
+              </p>
+            </div>
+          </div>
+          {career.contract.signingBonus > 0 && (
+            <p style={{ fontSize: 11, color: '#fcd34d' }}>🎁 Bonus firma: €{career.contract.signingBonus.toLocaleString('it-IT')}</p>
+          )}
+        </div>
+      )}
+
+      {/* Transfer offer panel */}
+      {career.type === 'pro_athlete' && career.pendingOffer && (
+        <div className="card" style={{
+          padding: 14, marginBottom: 14,
+          background: 'linear-gradient(135deg, rgba(96,165,250,0.12) 0%, var(--bg-card) 70%)',
+          border: '1px solid rgba(96,165,250,0.35)',
+        }}>
+          <p style={{ fontWeight: 800, fontSize: 14, color: '#93c5fd', marginBottom: 8 }}>
+            ✈️ OFFERTA DI TRASFERIMENTO
+          </p>
+          <p style={{ fontSize: 13, color: 'var(--color-text)', marginBottom: 4 }}>
+            {career.pendingOffer.fromTeamEmoji} <strong>{career.pendingOffer.fromTeamName}</strong> ti vuole nel suo roster.
+          </p>
+          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 12 }}>
+            Ruolo: <strong>{ROLE_LABEL[career.pendingOffer.role]}</strong>
+            {' · '}Stipendio: <strong>€{career.pendingOffer.monthlySalary.toLocaleString('it-IT')}/mese</strong>
+            {' · '}Durata: {career.pendingOffer.durationYears} {career.pendingOffer.durationYears === 1 ? 'anno' : 'anni'}
+          </p>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => handleTransferResponse('accept')} className="tap-scale" style={{
+              flex: 1, padding: '9px 0', borderRadius: 10, fontSize: 12, fontWeight: 700, border: 'none', cursor: 'pointer',
+              background: 'linear-gradient(135deg, #16a34a 0%, #15803d 100%)', color: '#fff',
+            }}>✅ Accetta</button>
+            <button onClick={() => handleTransferResponse('negotiate')} className="tap-scale" style={{
+              flex: 1, padding: '9px 0', borderRadius: 10, fontSize: 12, fontWeight: 700, border: '1px solid rgba(96,165,250,0.4)', cursor: 'pointer',
+              background: 'rgba(96,165,250,0.10)', color: '#93c5fd',
+            }}>🤝 Negozia</button>
+            <button onClick={() => handleTransferResponse('reject')} className="tap-scale" style={{
+              flex: 1, padding: '9px 0', borderRadius: 10, fontSize: 12, fontWeight: 700, border: '1px solid rgba(239,68,68,0.4)', cursor: 'pointer',
+              background: 'rgba(239,68,68,0.08)', color: '#fca5a5',
+            }}>❌ Rifiuta</button>
+          </div>
+        </div>
+      )}
+
+      {/* Last season stats — only for pro_athlete */}
+      {career.type === 'pro_athlete' && career.seasonHistory && career.seasonHistory.length > 0 && (() => {
+        const last = career.seasonHistory[career.seasonHistory.length - 1]
+        return (
+          <div className="card" style={{
+            padding: 14, marginBottom: 14,
+            background: 'linear-gradient(135deg, rgba(168,85,247,0.10) 0%, var(--bg-card) 70%)',
+            border: '1px solid rgba(168,85,247,0.28)',
+          }}>
+            <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#c4b5fd', textTransform: 'uppercase', marginBottom: 10 }}>
+              📊 Ultima Stagione ({last.year})
+            </p>
+            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
+              {last.teamEmoji} {last.teamName}
+            </p>
+            <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
+              {[
+                { label: 'Partite', val: last.matches, emoji: '🏟️' },
+                { label: 'Gol', val: last.goals, emoji: '⚽' },
+                { label: 'Assist', val: last.assists, emoji: '🎯' },
+                { label: 'Rating', val: last.averageRating.toFixed(1), emoji: '⭐' },
+              ].map(({ label, val, emoji }) => (
+                <div key={label} style={{
+                  flex: '1 1 60px', textAlign: 'center', padding: '8px 6px', borderRadius: 10,
+                  background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)',
+                }}>
+                  <p style={{ fontSize: 18, marginBottom: 2 }}>{emoji}</p>
+                  <p style={{ fontSize: 16, fontWeight: 800, color: 'var(--color-text)' }}>{val}</p>
+                  <p style={{ fontSize: 9, color: 'var(--color-text-secondary)' }}>{label}</p>
+                </div>
+              ))}
+            </div>
+            {last.trophies.length > 0 && (
+              <p style={{ fontSize: 11, color: '#fcd34d', marginBottom: 4 }}>
+                🏆 {last.trophies.join(', ')}
+              </p>
+            )}
+            {last.personalAward && (
+              <p style={{ fontSize: 11, color: '#f9a8d4', marginBottom: 4 }}>
+                🌟 {last.personalAward}
+              </p>
+            )}
+            {last.injuries > 0 && (
+              <p style={{ fontSize: 11, color: '#fca5a5' }}>
+                🏥 {last.injuries} {last.injuries === 1 ? 'infortunio' : 'infortuni'} questa stagione
+              </p>
+            )}
+          </div>
+        )
+      })()}
+
+      {/* Career legacy */}
+      {career.careerLegacy && (
+        <div style={{
+          marginBottom: 14, padding: '10px 14px', borderRadius: 12,
+          background: `${LEGACY_COLORS[career.careerLegacy]}18`,
+          border: `1px solid ${LEGACY_COLORS[career.careerLegacy]}40`,
+          display: 'flex', alignItems: 'center', gap: 10,
+        }}>
+          <span style={{ fontSize: 22 }}>
+            {career.careerLegacy === 'leggenda_mondiale' ? '🌍' : career.careerLegacy === 'leggenda_nazionale' ? '🏅' : career.careerLegacy === 'professionista' ? '📋' : '💤'}
+          </span>
+          <div>
+            <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: LEGACY_COLORS[career.careerLegacy] }}>
+              Legacy
+            </p>
+            <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', textTransform: 'capitalize' }}>
+              {CareerLifecycleEngine.legacyLabel(career.careerLegacy)}
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Actions */}
       {!isRetired && (

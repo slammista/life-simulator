@@ -1,5 +1,6 @@
-import type { GameState, Effect } from '../store/types'
+import type { GameState, Effect, PlayerContract, TransferOffer, SeasonStats } from '../store/types'
 import { getSportDef } from './SportEngine'
+import { CareerLifecycleEngine } from './CareerLifecycleEngine'
 
 export type SpecialCareerType = 'actor' | 'musician' | 'pro_athlete' | 'politician' | 'criminal'
 
@@ -23,6 +24,13 @@ export interface SpecialCareer {
   startYear: number
   lastActionYear: number
   flags: Record<string, boolean | number | string>
+  // Athlete-specific lifecycle fields (optional — filled progressively)
+  professionalFame?: number          // industry/peer recognition
+  publicFame?: number                // media & fan recognition
+  contract?: PlayerContract
+  seasonHistory?: SeasonStats[]
+  pendingOffer?: TransferOffer       // in-career transfer offer
+  careerLegacy?: 'dimenticato' | 'professionista' | 'leggenda_nazionale' | 'leggenda_mondiale'
 }
 
 export interface SpecialCareerAction {
@@ -544,20 +552,19 @@ export class SpecialCareerEngine {
       updated.reputation = Math.max(0, career.reputation - 1)
     }
 
-    // ---- Pro athlete: realistic career arc ----
+    // ---- Pro athlete: realistic career arc + full lifecycle ----
     if (career.type === 'pro_athlete') {
       const linkedSportId = career.flags.linkedSportId
       const sportId = typeof linkedSportId === 'string' ? linkedSportId : ''
       const sport = (state.sports ?? []).find(s => s.id === sportId)
       const discipline = (state.stats as unknown as Record<string, number>).discipline ?? 50
-      const health = state.stats.health
       const age = state.time.age
       const [, pe] = this.PRIME_AGES[sportId] ?? this.PRIME_AGES.default
 
-      const perfMult = this._athletePerformanceMult(age, sportId, discipline, health)
+      const perfMult = this._athletePerformanceMult(age, sportId, discipline, state.stats.health)
       const bioPhase = this._bioPhaseLabel(age, sportId)
 
-      // Apply youth bonus once at career start (before first competition)
+      // Youth bonus on first season
       if (!career.flags.youth_bonus_applied && sport) {
         const bonus = this.youthBonus(career, state)
         if (bonus > 0) {
@@ -567,39 +574,16 @@ export class SpecialCareerEngine {
         }
       }
 
-      // Career phase flip into decline: 3+ years past prime end (pe).
-      // Performance multiplier affects success chance; career phase arc is fixed by age.
+      // Career phase flip (biological age gate)
       if (age > pe + 3 && career.phase !== 'declining' && career.phase !== 'retired') {
         updated.phase = 'declining'
         messages.push(`📉 ${bioPhase}: le prestazioni in ${sport?.name ?? 'sport'} calano con l'età. Il corpo non risponde più come prima.`)
       }
 
-      // Performance penalty on income for declining athletes
+      // Performance penalty on legacy income for declining athletes
       if (career.phase === 'declining') {
         const incomeHit = Math.round(monthlyIncome * (1 - perfMult) * 0.5)
         effects.money = (effects.money ?? 0) - incomeHit * 12
-      }
-
-      // Decisive events
-      if (sportId && career.phase !== 'retired') {
-        const decisive = this._checkDecisiveEvent(updated, sportId, state)
-        if (decisive) {
-          messages.push(decisive)
-          updated.fame = Math.min(100, updated.fame + 8)
-          updated.reputation = Math.min(100, updated.reputation + 6)
-          effects.happiness = (effects.happiness ?? 0) + 15
-        }
-      }
-
-      // Legendary events (high-fame athletes only)
-      if (sportId && updated.fame >= 70) {
-        const legendary = this._checkLegendaryEvent(updated, sportId, state)
-        if (legendary) {
-          messages.push(legendary)
-          updated.fame = Math.min(100, updated.fame + 5)
-          effects.happiness = (effects.happiness ?? 0) + 20
-          effects.money = (effects.money ?? 0) + 50000
-        }
       }
 
       // Age warning events
@@ -610,11 +594,42 @@ export class SpecialCareerEngine {
       ]
       for (const [targetAge, msg] of ageWarnings) {
         if (age === targetAge && !career.flags[`age_warn_${targetAge}`]) {
-          career.flags[`age_warn_${targetAge}`] = true
           updated.flags[`age_warn_${targetAge}`] = true
           messages.push(msg)
         }
       }
+
+      // Legendary events (high-fame athletes)
+      if (sportId && updated.fame >= 70) {
+        const legendary = this._checkLegendaryEvent(updated, sportId, state)
+        if (legendary) {
+          messages.push(legendary)
+          updated.fame = Math.min(100, updated.fame + 5)
+          effects.happiness = (effects.happiness ?? 0) + 20
+          effects.money = (effects.money ?? 0) + 50000
+        }
+      }
+
+      // Decisive events (keep from previous system)
+      if (sportId && career.phase !== 'retired') {
+        const decisive = this._checkDecisiveEvent(updated, sportId, state)
+        if (decisive) {
+          messages.push(decisive)
+          updated.fame = Math.min(100, updated.fame + 8)
+          updated.reputation = Math.min(100, updated.reputation + 6)
+          effects.happiness = (effects.happiness ?? 0) + 15
+        }
+      }
+
+      // ---- Full lifecycle tick: season stats, contracts, transfers ----
+      const { updatedCareer: lc, effects: lcFx, messages: lcMsgs } =
+        CareerLifecycleEngine.athleteAnnualTick(updated, state)
+      // Merge lifecycle results
+      Object.assign(updated, lc)
+      for (const [k, v] of Object.entries(lcFx)) {
+        effects[k] = ((effects[k] as number) ?? 0) + (v as number)
+      }
+      messages.push(...lcMsgs)
     }
 
     return { effects, updatedCareer: updated, messages: messages.length > 0 ? messages : undefined }

@@ -23,6 +23,7 @@ import { SportEngine } from '../services/SportEngine'
 import { SportCompetitionEngine } from '../services/SportCompetitionEngine'
 import { SpecialCareerEngine, initialSpecialCareer } from '../services/SpecialCareerEngine'
 import type { SpecialCareerType } from '../services/SpecialCareerEngine'
+import { CareerLifecycleEngine } from '../services/CareerLifecycleEngine'
 import { MinorEconomyEngine } from '../services/MinorEconomyEngine'
 import { CriminalEngine } from '../services/CriminalEngine'
 import { FinanceEngine, type AssetType } from '../services/FinanceEngine'
@@ -447,6 +448,8 @@ function buildInitialState(): GameState {
     will: null,
     citizenships: ['italy'],
     specialCareer: null,
+    hiddenTalent: undefined,
+    pendingCareerOffer: undefined,
   }
 }
 
@@ -504,6 +507,10 @@ export const useGameStore = create<FullStore>()(
 
         const originText = buildOriginStory(identity, scenarioId, traits, startingFamily.relationships)
 
+        const hiddenTalent = CareerLifecycleEngine.generateHiddenTalent(
+          identity.name, identity.surname, identity.birthYear,
+        )
+
         set({
           ...initial,
           isStarted: true,
@@ -516,6 +523,8 @@ export const useGameStore = create<FullStore>()(
           skills: { ...initial.skills, music: initial.skills.music + NarrativeEngine.startMusicSkill(traits) },
           relationships: startingFamily.relationships,
           family: startingFamily.family,
+          hiddenTalent,
+          pendingCareerOffer: undefined,
           narrative: {
             traits,
             originStory: { scenarioId, text: originText, seen: false },
@@ -763,6 +772,18 @@ export const useGameStore = create<FullStore>()(
           merge(scFx)
           updatedSpecialCareer = scUpdated
           if (scMessages?.length) messages.push(...scMessages)
+        }
+
+        // 8d. Pre-pro scouting check (age 15-22, no special career yet)
+        let updatedPendingCareerOffer = state.pendingCareerOffer
+        if (!state.specialCareer && !state.pendingCareerOffer) {
+          const scout = CareerLifecycleEngine.checkScouting(state)
+          if (scout) {
+            updatedPendingCareerOffer = scout
+            const teamName = scout.offer.fromTeamName
+            const emoji    = scout.offer.fromTeamEmoji
+            messages.push(`🔍 SCOUTING! ${emoji} ${teamName} ti ha osservato. C'è un'offerta in attesa nella sezione Carriera!`)
+          }
         }
 
         // 9. Criminal annual tick (prison sentence)
@@ -1243,6 +1264,7 @@ export const useGameStore = create<FullStore>()(
           pendingConsequences: remainingConsequences,
           npcLoans: updatedNpcLoans,
           specialCareer: updatedSpecialCareer ?? state.specialCareer,
+          pendingCareerOffer: updatedPendingCareerOffer,
           narrative: {
             ...(state.narrative ?? NarrativeEngine.initialState()),
             arcs: arcTick.updatedArcs,
@@ -2413,6 +2435,82 @@ export const useGameStore = create<FullStore>()(
           }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message, effects }
+      },
+
+      // ---- Scout offer (pre-pro): accept or reject ----
+      respondToScoutOffer: (accept: boolean): ActionResult => {
+        const state = get()
+        const pending = state.pendingCareerOffer
+        if (!pending || pending.type !== 'scout') {
+          return { success: false, message: 'Nessuna offerta scout in sospeso.', effects: {} }
+        }
+        if (!accept) {
+          set(s => ({
+            pendingCareerOffer: undefined,
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Hai rifiutato l'offerta di ${pending.offer.fromTeamName}. Altra strada, forse?`, emoji: '❌', category: 'work', statChanges: {} }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: true, message: 'Offerta rifiutata.', effects: {} }
+        }
+        // Accept: create pro_athlete career with contract
+        if (state.specialCareer) return { success: false, message: 'Hai già una carriera speciale.', effects: {} }
+        const career = {
+          ...initialSpecialCareer('pro_athlete', state.time.year),
+          contract: CareerLifecycleEngine.contractFromOffer(pending.offer),
+          income: pending.offer.monthlySalary,
+          flags: { linkedSportId: pending.sportId },
+        }
+        const signingBonus = career.contract?.signingBonus ?? 0
+        const effects: Effect = { money: signingBonus, happiness: 20 }
+        const partial = applyEffects(state, effects)
+        const msg = `Contratto firmato con ${pending.offer.fromTeamName} ${pending.offer.fromTeamEmoji}! Ruolo: ${pending.offer.role}. Bonus: €${signingBonus.toLocaleString()}. Benvenuto/a nel professionismo!`
+        set(s => ({
+          ...partial,
+          specialCareer: career,
+          pendingCareerOffer: undefined,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: '📝', category: 'work', statChanges: effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: msg, effects }
+      },
+
+      // ---- Transfer offer (in-career): accept / negotiate / reject ----
+      respondToTransferOffer: (response: 'accept' | 'negotiate' | 'reject'): ActionResult => {
+        const state = get()
+        const career = state.specialCareer
+        if (!career || !career.pendingOffer) {
+          return { success: false, message: 'Nessuna offerta di trasferimento in sospeso.', effects: {} }
+        }
+        const offer = career.pendingOffer
+        if (response === 'reject') {
+          const updatedCareer = { ...career, pendingOffer: undefined }
+          set(s => ({
+            specialCareer: updatedCareer,
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Hai rifiutato il trasferimento a ${offer.fromTeamName}. Resti fedele alla tua squadra.`, emoji: '🚫', category: 'work', statChanges: {} }, ...s.eventLog].slice(0, 150),
+          }))
+          return { success: true, message: 'Trasferimento rifiutato.', effects: {} }
+        }
+        if (response === 'negotiate') {
+          const { success, offer: newOffer, message: negMsg } = CareerLifecycleEngine.negotiateTransfer(offer)
+          if (!success) {
+            const updatedCareer = { ...career, pendingOffer: undefined }
+            set(s => ({ specialCareer: updatedCareer, eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: negMsg, emoji: '📵', category: 'work', statChanges: {} }, ...s.eventLog].slice(0, 150) }))
+            return { success: false, message: negMsg, effects: {} }
+          }
+          const updatedCareer = { ...career, pendingOffer: newOffer }
+          set(s => ({ specialCareer: updatedCareer, eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: negMsg, emoji: '🤝', category: 'work', statChanges: {} }, ...s.eventLog].slice(0, 150) }))
+          return { success: true, message: negMsg, effects: {} }
+        }
+        // Accept
+        const updatedCareer = CareerLifecycleEngine.acceptTransfer(career, offer)
+        const signingBonus = updatedCareer.contract?.signingBonus ?? 0
+        const effects: Effect = { money: signingBonus, happiness: 15 }
+        const partial = applyEffects(state, effects)
+        const msg = `Trasferito a ${offer.fromTeamName} ${offer.fromTeamEmoji}! Nuovo contratto: €${offer.monthlySalary.toLocaleString()}/mese come ${offer.role}.`
+        set(s => ({
+          ...partial,
+          specialCareer: updatedCareer,
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: '✈️', category: 'work', statChanges: effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: msg, effects }
       },
 
       // ==================== Criminal actions ====================
