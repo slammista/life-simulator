@@ -31,6 +31,7 @@ export type NPCAction =
   | 'confess_feelings'
   | 'ask_date'
   | 'kiss'
+  | 'make_love'
   | 'propose'
   | 'break_up'
   | 'divorce'
@@ -188,7 +189,7 @@ export class RelationshipEngine {
     const previewRel = { ...rel, ...updatedRel }
     updatedRel.mood = updatedRel.mood ?? this._inferMood(previewRel)
     // New actions not in ChainReactionEngine — map them to the closest chain action
-    const NEW_ACTIONS = new Set(['spend_time', 'ask_money', 'make_peace', 'thank', 'surprise', 'romantic_outing', 'vacation_together', 'propose_cohabitation', 'do_activity', 'lend_money'])
+    const NEW_ACTIONS = new Set(['spend_time', 'ask_money', 'make_peace', 'thank', 'surprise', 'romantic_outing', 'vacation_together', 'propose_cohabitation', 'do_activity', 'lend_money', 'make_love'])
     const chainAction = NEW_ACTIONS.has(action) ? 'greet' : action
     const chainedRel = ChainReactionEngine.applyAction(rel, chainAction as import('./ChainReactionEngine').RelationshipChainAction, updatedRel)
 
@@ -394,6 +395,8 @@ export class RelationshipEngine {
         return this._withHumanReaction(rel, action, this._doActivity(rel, state))
       case 'lend_money':
         return this._withHumanReaction(rel, action, this._lendMoney(rel, state))
+      case 'make_love':
+        return this._withHumanReaction(rel, action, this._makeLove(rel, state))
       default:
         return { success: false, message: 'Azione non riconosciuta.', effects: {} }
     }
@@ -1070,6 +1073,62 @@ export class RelationshipEngine {
       updatedRel: {
         trust: Math.min(100, rel.trust + 15),
       },
+    }
+  }
+
+  private static _makeLove(rel: Relationship, state: GameState): RelActionResult & { updatedRel?: Partial<Relationship> } {
+    if (rel.stage !== 'partner' && rel.stage !== 'spouse') {
+      return { success: false, message: 'Non hai questo tipo di rapporto con questa persona.', effects: {} }
+    }
+    if (state.time.age < 18 || rel.age < 18) {
+      return { success: false, message: 'Entrambi dovete essere maggiorenni.', effects: {} }
+    }
+
+    // Quality driven by attraction + love + mood context
+    const base = rel.attraction * 0.4 + rel.love * 0.6
+    const moodBonus = rel.mood === 'felice' ? 8 : rel.mood === 'arrabbiato' ? -20 : rel.mood === 'ansioso' ? -10 : 0
+    const quality = Math.round(Math.min(100, Math.max(0, base + moodBonus)))
+
+    const great = quality >= 70
+    const ok = quality >= 40
+
+    const loveGain = great ? 8 : ok ? 4 : 0
+    const attractionGain = great ? 4 : ok ? 2 : 0
+    const happinessGain = great ? 12 : ok ? 7 : 2
+
+    // Pregnancy hint (simplified — full tracking lives in SexualHealthEngine)
+    let extraMsg = ''
+    const playerGender = state.identity.gender
+    const npcGender = rel.gender
+    const canConceive = (playerGender === 'female' && npcGender === 'male') ||
+                        (playerGender === 'male' && npcGender === 'female')
+    const isNpcFertile = rel.age >= 18 && rel.age <= 50
+    const sexHealth = (state as unknown as { sexualHealth?: { isPregnant?: boolean; isInfertile?: boolean } }).sexualHealth
+    const isPlayerFertile = !sexHealth?.isInfertile && state.time.age >= 18 && state.time.age <= 50
+    if (canConceive && isPlayerFertile && isNpcFertile && !sexHealth?.isPregnant && Math.random() < 0.04) {
+      extraMsg = ' ⚠️ Potrebbe esserci una conseguenza inaspettata...'
+    }
+
+    const qualMsg = great ? 'È stato meraviglioso! 🔥' : ok ? 'Una bella serata insieme. 💕' : 'Non c\'era molta intesa stasera...'
+
+    return {
+      success: true,
+      message: `Hai fatto l'amore con ${rel.name}. ${qualMsg}${extraMsg}`,
+      effects: { happiness: happinessGain, mentalHealth: Math.round(happinessGain * 0.3) },
+      updatedRel: {
+        love: Math.min(100, rel.love + loveGain),
+        attraction: Math.min(100, rel.attraction + attractionGain),
+      },
+      ...(great ? {
+        memoryEntry: {
+          category: 'romantic' as const,
+          description: `Serata passionale con ${rel.name}`,
+          year: 0,
+          weight: 2,
+          decayFactor: 0.04,
+          unforgettable: false,
+        },
+      } : {}),
     }
   }
 }

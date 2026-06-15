@@ -102,6 +102,7 @@ export const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: 
   partner: [
     { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
     { action: 'romantic_outing', label: 'Uscita romantica', emoji: '🌹' },
+    { action: 'make_love', label: 'Fai l\'amore', emoji: '❤️‍🔥' },
     { action: 'surprise', label: 'Sorpresa', emoji: '🎉' },
     { action: 'vacation_together', label: 'Vacanza insieme', emoji: '✈️' },
     { action: 'gift', label: 'Regalo', emoji: '🎁' },
@@ -116,6 +117,7 @@ export const ACTIONS_BY_STAGE: Record<string, Array<{ action: NPCAction; label: 
   spouse: [
     { action: 'hang_out', label: 'Esci insieme', emoji: '☕' },
     { action: 'romantic_outing', label: 'Uscita romantica', emoji: '🌹' },
+    { action: 'make_love', label: 'Fai l\'amore', emoji: '❤️‍🔥' },
     { action: 'surprise', label: 'Sorpresa', emoji: '🎉' },
     { action: 'vacation_together', label: 'Vacanza insieme', emoji: '✈️' },
     { action: 'gift', label: 'Regalo', emoji: '🎁' },

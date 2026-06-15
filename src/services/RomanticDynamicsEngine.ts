@@ -24,6 +24,7 @@ import type {
   AffairKind,
   Effect,
 } from '../store/types'
+import { NameEngine } from './NameEngine'
 
 export interface RomanticTickResult {
   relationships: Relationship[]
@@ -214,10 +215,13 @@ export class RomanticDynamicsEngine {
     let budget = 3 // cap romantic log lines per year to avoid spam
     const spend = (): boolean => { if (budget > 0) { budget--; return true } return false }
 
-    // Pool of "available alternatives" the NPC could stray with: attractiveness of
-    // other alive adults the player knows (proxy for real-world opportunity).
-    const alternatives = relationships.filter(r => r.isAlive && r.age >= 18 && !isRomantic(r))
-    const opportunity = clamp(20 + alternatives.length * 6, 0, 70)
+    // Pool of "available alternatives" the NPC could stray with.
+    // Excludes family and romantic partners; used both for opportunity measure and
+    // as the pool from which a named affair partner is drawn.
+    const FAMILY_TYPES = new Set(['parent', 'sibling', 'child'])
+    const alternatives = relationships.filter(r =>
+      r.isAlive && r.age >= 18 && !isRomantic(r) && !FAMILY_TYPES.has(r.type)
+    )
 
     const out = relationships.map(rel => {
       if (!rel.isAlive) return rel
@@ -249,7 +253,7 @@ export class RomanticDynamicsEngine {
       }
 
       // ── infidelity decision ──
-      next = this._infidelityStep(next, player, profile, compat, bond, model, opportunity, state, year, messages, addFx, spend)
+      next = this._infidelityStep(next, player, profile, compat, bond, model, alternatives, state, year, messages, addFx, spend)
 
       // ── proposals / ultimatums ──
       next = this._proposalStep(next, profile, bond, model, state, year, messages, spend)
@@ -305,7 +309,7 @@ export class RomanticDynamicsEngine {
     compat: CompatibilityScores,
     bond: RelationshipBond,
     model: RelationshipModel,
-    opportunity: number,
+    alternatives: Relationship[],
     state: GameState,
     year: number,
     messages: string[],
@@ -317,8 +321,7 @@ export class RomanticDynamicsEngine {
     const name = firstName(rel.name)
 
     // ── P(stray) — bounded 0..~0.35 ──
-    // Driven by dissatisfaction, low fidelity, freedom drive, opportunity and
-    // attractiveness of alternatives; braked by religiousness and bond quality.
+    const opportunity = clamp(20 + alternatives.length * 6, 0, 70)
     const dissatisfaction = (200 - bond.emotionalSat - bond.sexualSat) / 2 // 0..100
     let pStray =
         dissatisfaction * 0.0022
@@ -328,7 +331,6 @@ export class RomanticDynamicsEngine {
       + profile.craziness * 0.0006
       - profile.religiousness * 0.0010
       - bond.commitment * 0.0008
-    // open/poly models: "straying" is sanctioned, far less likely to be hidden/harmful
     if (model === 'open' || model === 'poly') pStray *= 0.35
     pStray = clamp(pStray, 0, 0.35)
 
@@ -337,9 +339,19 @@ export class RomanticDynamicsEngine {
       const kind = this._affairKind(profile, bond, compat)
       const existing = affairs.find(a => a.kind === kind && !a.discovered)
       const intensity = clamp((kind === 'emotional' ? 100 - bond.emotionalSat : 100 - bond.sexualSat) * 0.5 + 30)
+
+      // Pick a named, persistent affair partner from the known NPC pool.
+      // Prefer NPCs already in the alternatives list; fall back to a generated name.
+      const loverNpc = alternatives.length > 0
+        ? alternatives[Math.floor(Math.random() * alternatives.length)]
+        : null
+      const loverGender = rel.gender === 'male' ? 'female' : rel.gender === 'female' ? 'male' : 'male'
+      const loverName = loverNpc?.name ?? NameEngine.fullName(loverGender)
+      const loverId = loverNpc?.id
+
       const updatedAffairs: SecretAffair[] = existing
         ? affairs.map(a => a === existing ? { ...a, intensity: clamp(a.intensity + 15) } : a)
-        : [...affairs, { loverName: 'qualcuno', kind, startYear: year, intensity, discovered: false }]
+        : [...affairs, { loverName, loverId, kind, startYear: year, intensity, discovered: false }]
 
       // ── open/poly: transparent, the NPC simply tells the player ──
       if (model === 'open' || model === 'poly') {

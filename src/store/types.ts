@@ -408,6 +408,7 @@ export type AffairKind = 'occasional' | 'ongoing' | 'emotional' | 'sexual' | 'do
 // low fidelity + opportunity; resolved via confession, lie or discovery.
 export interface SecretAffair {
   loverName: string
+  loverId?: string       // id of the actual NPC in the relationships array (if known)
   kind: AffairKind
   startYear: number
   intensity: number      // 0-100 — emotional/sexual investment

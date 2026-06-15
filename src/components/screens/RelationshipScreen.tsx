@@ -170,7 +170,7 @@ export function RelationshipScreen() {
           {spouseOrPartner && playerAge >= 18 && (
             <div className="card" style={{ padding: '12px 14px', marginBottom: 12, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.06)' }}>
               <p style={{ fontSize: 11, fontWeight: 700, color: '#fca5a5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
-                💔 Relazione con {spouseOrPartner.name.split(' ')[0]}
+                {spouseOrPartner.type === 'spouse' ? '💍' : '💑'} {spouseOrPartner.name.split(' ')[0]}
               </p>
               {spouseOrPartner.historyFlags.includes('cheated_secretly') && (
                 <button
@@ -184,19 +184,23 @@ export function RelationshipScreen() {
                   🔎 Confronta sul tradimento
                 </button>
               )}
-              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
-                Puoi richiedere il divorzio (€2.000 di pratiche legali).
-              </p>
-              <button
-                className="btn-secondary"
-                style={{ width: '100%', padding: '8px 0', fontSize: 13, fontWeight: 700, borderColor: 'rgba(239,68,68,0.4)', color: '#fca5a5', cursor: 'pointer' }}
-                onClick={() => {
-                  const r = fileForDivorce()
-                  flash(r.message, r.success)
-                }}
-              >
-                💔 Chiedi divorzio (€2.000)
-              </button>
+              {spouseOrPartner.type === 'spouse' && (
+                <>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
+                    Puoi richiedere il divorzio (costo legale da €2.000).
+                  </p>
+                  <button
+                    className="btn-secondary"
+                    style={{ width: '100%', padding: '8px 0', fontSize: 13, fontWeight: 700, borderColor: 'rgba(239,68,68,0.4)', color: '#fca5a5', cursor: 'pointer' }}
+                    onClick={() => {
+                      const r = fileForDivorce()
+                      flash(r.message, r.success)
+                    }}
+                  >
+                    📜 Chiedi divorzio
+                  </button>
+                </>
+              )}
             </div>
           )}
 

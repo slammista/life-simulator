@@ -45,7 +45,8 @@ const ACTION_META: Record<string, { desc: string; bg: string }> = {
   fight:                { desc: 'Litigate',                                  bg: '#f97316' },
   kiss:                 { desc: 'Dagli/le un bacio',                         bg: '#e879f9' },
   apologize:            { desc: 'Chiedigli/le scusa',                        bg: '#a78bfa' },
-  romantic_outing:      { desc: "Un'uscita romantica",                       bg: '#f43f5e' },
+  make_love:            { desc: 'Sii intimo/a con il tuo partner',           bg: '#f43f5e' },
+  romantic_outing:      { desc: "Un'uscita romantica",                       bg: '#ec4899' },
   surprise:             { desc: 'Fagli/le una sorpresa',                     bg: '#fb923c' },
   vacation_together:    { desc: 'Partite in vacanza insieme',                bg: '#22d3ee' },
   propose_cohabitation: { desc: 'Proponete di andare a vivere insieme',      bg: '#60a5fa' },
@@ -127,7 +128,21 @@ export function PersonDetailModal({ relId }: Props) {
   const chainFlags = rel.historyFlags.filter(f => f in CHAIN_LABELS)
   const affection = Math.round(rel.trust * 0.5 + rel.love * 0.35 + rel.respect * 0.15)
   const affectionColor = affection >= 70 ? '#10b981' : affection >= 40 ? '#f59e0b' : '#f43f5e'
-  const relLabel = REL_TYPE_LABELS[rel.type] ?? rel.type
+
+  // Precise stage label: distinguishes Frequentazione / Fidanzato / Convivente / Sposato
+  const relLabel = (() => {
+    if (rel.type === 'spouse') return 'Coniuge'
+    if (rel.type === 'partner') {
+      if (rel.historyFlags.includes('cohabiting')) return 'Convivente'
+      const model = dynamics?.model
+      if (model === 'serious') return 'Fidanzato/a'
+      if (model === 'fwb') return 'Amici con benefici'
+      if (model === 'open') return 'Rel. aperta'
+      if (model === 'casual') return 'Rel. casuale'
+      return 'In frequentazione'
+    }
+    return REL_TYPE_LABELS[rel.type] ?? rel.type
+  })()
 
   return (
     <>
