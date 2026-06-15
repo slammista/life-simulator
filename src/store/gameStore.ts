@@ -58,6 +58,7 @@ import type { BusinessSector, RentalProperty, Will } from './types'
 import { ChaosEngine } from '../services/ChaosEngine'
 import { DailyQuestEngine } from '../services/DailyQuestEngine'
 import { NPCAgencyEngine } from '../services/NPCAgencyEngine'
+import { RomanticDynamicsEngine } from '../services/RomanticDynamicsEngine'
 import { useWalletStore } from './walletStore'
 import { BalanceEngine } from '../services/BalanceEngine'
 import { NarrativeEngine, rollTraits, buildOriginStory } from '../services/NarrativeEngine'
@@ -716,23 +717,16 @@ export const useGameStore = create<FullStore>()(
           }
         }
 
-        // 7-quater. Partner infidelity annual check
+        // 7-quater. Emergent romantic dynamics: bond evolution, autonomous NPC
+        // infidelity (typed + secrecy + discovery), proposals/ultimatums, external
+        // pressure and post-breakup obsession. Replaces the old flat cheat check.
         {
-          const partner = updatedRelationships.find(r => (r.type === 'spouse' || r.type === 'partner') && r.isAlive && !r.historyFlags.includes('cheated_on_player'))
-          if (partner) {
-            const cheatChance = 0.02 + (partner.love < 40 ? 0.08 : 0) + (partner.trust < 40 ? 0.05 : 0)
-            if (Math.random() < Math.min(cheatChance, 0.12)) {
-              const idx = updatedRelationships.indexOf(partner)
-              const found = Math.random() < 0.6
-              if (found) {
-                updatedRelationships[idx] = { ...partner, trust: clamp(partner.trust - 35, 0, 100), love: clamp(partner.love - 30, 0, 100), historyFlags: [...partner.historyFlags, 'cheated_on_player'] }
-                merge({ happiness: -10, mentalHealth: -8 })
-                messages.push(`💔 Hai scoperto che ${partner.name.split(' ')[0]} ti ha tradito/a. Un colpo durissimo.`)
-              } else {
-                updatedRelationships[idx] = { ...partner, historyFlags: [...partner.historyFlags, 'cheated_secretly'] }
-              }
-            }
+          const romanticTick = RomanticDynamicsEngine.annualTick(state, updatedRelationships)
+          for (let i = 0; i < romanticTick.relationships.length; i++) {
+            updatedRelationships[i] = romanticTick.relationships[i]
           }
+          merge(romanticTick.effects)
+          messages.push(...romanticTick.messages)
         }
 
         // 7a. Autonomous NPC agency ("Vestito da Dio" shields the player when worn)

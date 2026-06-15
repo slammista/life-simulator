@@ -348,6 +348,79 @@ export interface NPCMemory {
   unforgettable: boolean
 }
 
+// ---- Emergent Romantic Dynamics ----
+// A deep simulation layer for romantic relationships. Every field is OPTIONAL on
+// Relationship so old saves stay valid; the RomanticDynamicsEngine fills them in
+// deterministically on first contact. See docs/ROMANTIC_DYNAMICS_DESIGN.md.
+
+// How a romantic bond is framed. Decided at formation from age, values and traits
+// (not random). Drives expectations around exclusivity, jealousy and escalation.
+export type RelationshipModel =
+  | 'serious'   // relazione seria — exclusivity expected, escalates toward marriage
+  | 'casual'    // relazione non seria — low commitment, easy to dissolve
+  | 'dating'    // frequentazione — undefined, still being evaluated
+  | 'fwb'       // amicizia con benefici — sexual, low emotional commitment
+  | 'open'      // relazione aperta — non-exclusive by mutual agreement
+  | 'poly'      // poliamorosa — multiple committed partners allowed
+
+// Psychological make-up of an NPC for romantic purposes (0-100 each). Derived from
+// extendedAttributes + personalityTraits + a stable per-NPC hash so values persist.
+export interface RomanticProfile {
+  empathy: number            // empatia
+  affectivity: number        // affettività — need to give/receive tenderness
+  sexuality: number          // sessualità / libido
+  jealousy: number           // gelosia
+  fidelity: number           // fedeltà — resistance to temptation
+  selfEsteem: number         // autostima
+  courage: number            // coraggio — willingness to confront / confess
+  ambition: number           // ambizione
+  honesty: number            // onestà — tendency to confess vs lie
+  emotionalMaturity: number  // maturità emotiva
+  freedomDrive: number       // volontà di libertà — need for autonomy
+  religiousness: number      // religiosità — moral brake on infidelity
+  intelligence: number       // intelligenza — prudence, deception skill
+  attractiveness: number     // attrattiva fisica
+  craziness: number          // pazzia — volatility / unpredictability
+}
+
+// Four independent compatibility axes between player and NPC (0-100).
+export interface CompatibilityScores {
+  mental: number      // intelligenza, interessi, valori, religione, stile di vita
+  affective: number   // empatia, affettività, bisogni emotivi
+  sexual: number      // libido, apertura, attrazione fisica
+  projectual: number  // figli, matrimonio, carriera, obiettivi
+  overall: number     // weighted blend
+}
+
+// Live health of the bond, recomputed yearly (0-100). Distinct from trust/love/
+// respect/jealousy which remain the authoritative low-level metrics.
+export interface RelationshipBond {
+  emotionalSat: number   // soddisfazione emotiva
+  sexualSat: number      // soddisfazione sessuale
+  passion: number        // passione
+  stability: number      // stabilità
+  commitment: number     // impegno / esclusività attesa
+}
+
+export type AffairKind = 'occasional' | 'ongoing' | 'emotional' | 'sexual' | 'double_life'
+
+// A hidden parallel relationship an NPC keeps. Emerges from low satisfaction +
+// low fidelity + opportunity; resolved via confession, lie or discovery.
+export interface SecretAffair {
+  loverName: string
+  kind: AffairKind
+  startYear: number
+  intensity: number      // 0-100 — emotional/sexual investment
+  discovered: boolean
+}
+
+// Post-rejection / post-breakup obsessive escalation (toxic behaviour ladder).
+export interface ObsessionState {
+  level: number          // 0-100
+  sinceYear: number
+  behaviors: string[]    // escalation markers (control, stalking, blackmail, ...)
+}
+
 export interface Relationship {
   id: string
   npcId: string
@@ -372,6 +445,14 @@ export interface Relationship {
   extendedAttributes?: NPCExtendedAttributes
   // God Mode: optional custom avatar (overrides emoji rendering when present)
   avatar?: AvatarConfig
+  // Emergent romantic dynamics (lazily populated by RomanticDynamicsEngine)
+  romanticProfile?: RomanticProfile
+  relationshipModel?: RelationshipModel
+  compatibility?: CompatibilityScores
+  bond?: RelationshipBond
+  secretAffairs?: SecretAffair[]
+  obsession?: ObsessionState
+  externalApproval?: number   // 0-100 — family/social approval of this couple
 }
 
 // ---- Work Ecosystem ----

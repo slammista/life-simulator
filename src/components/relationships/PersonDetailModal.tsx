@@ -13,7 +13,8 @@ import {
   getAllowedActions,
 } from './relationshipActions'
 import { ensureNpcAttributes, NPC_ATTR_META } from '../../services/NpcAttributes'
-import type { Relationship } from '../../store/types'
+import { RomanticDynamicsEngine } from '../../services/RomanticDynamicsEngine'
+import type { Relationship, RelationshipModel } from '../../store/types'
 import type { NPCAction } from '../../services/RelationshipEngine'
 
 const GodModePersonEditor = lazy(() =>
@@ -55,6 +56,29 @@ const ACTION_META: Record<string, { desc: string; bg: string }> = {
   thank:                { desc: 'Ringraziale/gli',                           bg: '#34d399' },
 }
 
+const MODEL_LABELS: Record<RelationshipModel, { label: string; emoji: string; color: string }> = {
+  serious: { label: 'Relazione seria',      emoji: '💞', color: '#f43f5e' },
+  dating:  { label: 'Frequentazione',       emoji: '💬', color: '#60a5fa' },
+  casual:  { label: 'Relazione non seria',  emoji: '🎈', color: '#fbbf24' },
+  fwb:     { label: 'Amicizia con benefici', emoji: '🔥', color: '#f97316' },
+  open:    { label: 'Relazione aperta',     emoji: '🔓', color: '#a78bfa' },
+  poly:    { label: 'Poliamorosa',          emoji: '💗', color: '#ec4899' },
+}
+
+const COMPAT_AXES: { key: 'mental' | 'affective' | 'sexual' | 'projectual'; label: string; emoji: string }[] = [
+  { key: 'mental',     label: 'Mentale',    emoji: '🧠' },
+  { key: 'affective',  label: 'Affettiva',  emoji: '💗' },
+  { key: 'sexual',     label: 'Sessuale',   emoji: '🔥' },
+  { key: 'projectual', label: 'Progettuale', emoji: '🎯' },
+]
+
+const BOND_BARS: { key: 'emotionalSat' | 'sexualSat' | 'passion' | 'stability'; label: string; emoji: string }[] = [
+  { key: 'emotionalSat', label: 'Soddisf. emotiva',  emoji: '😊' },
+  { key: 'sexualSat',    label: 'Soddisf. sessuale', emoji: '💋' },
+  { key: 'passion',      label: 'Passione',          emoji: '✨' },
+  { key: 'stability',    label: 'Stabilità',         emoji: '⚖️' },
+]
+
 export function PersonDetailModal({ relId }: Props) {
   const rel = useGameStore(s => s.relationships.find(r => r.id === relId)) as Relationship | undefined
   const playerAge = useGameStore(s => s.time.age)
@@ -84,6 +108,20 @@ export function PersonDetailModal({ relId }: Props) {
 
   const attrs = ensureNpcAttributes(rel)
   const actions = getAllowedActions(rel, playerAge)
+
+  // Emergent couple dynamics (romantic relationships only) — computed live so the
+  // panel is populated even before the first annual tick fills the stored fields.
+  const isRomanticRel = rel.type === 'partner' || rel.type === 'spouse'
+  const dynamics = (() => {
+    if (!isRomanticRel) return null
+    const st = useGameStore.getState()
+    const player = RomanticDynamicsEngine.playerProfile(st)
+    const npcProfile = rel.romanticProfile ?? RomanticDynamicsEngine.ensureProfile(rel)
+    const compat = rel.compatibility ?? RomanticDynamicsEngine.computeCompatibility(player, npcProfile, rel, st)
+    const model = rel.relationshipModel ?? RomanticDynamicsEngine.classifyModel(player, npcProfile, compat, rel, st)
+    const bond = rel.bond ?? RomanticDynamicsEngine.ensureBond({ ...rel, relationshipModel: model, compatibility: compat }, compat)
+    return { compat, model, bond }
+  })()
   const mood = MOOD_LABELS[rel.mood ?? 'neutrale']
   const traits = rel.personalityTraits ?? []
   const chainFlags = rel.historyFlags.filter(f => f in CHAIN_LABELS)
@@ -168,6 +206,65 @@ export function PersonDetailModal({ relId }: Props) {
               )
             })}
           </div>
+
+          {/* Couple dynamics — emergent relationship model, compatibility & bond */}
+          {dynamics && (
+            <>
+              <div style={sectionHead}>Dinamiche di coppia</div>
+              <div style={{ padding: '0 8px 6px' }}>
+                {/* Relationship model chip */}
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 6, marginBottom: 10,
+                  fontSize: 12, fontWeight: 700, padding: '4px 12px', borderRadius: 99,
+                  background: `${MODEL_LABELS[dynamics.model].color}1f`,
+                  color: MODEL_LABELS[dynamics.model].color,
+                  border: `1px solid ${MODEL_LABELS[dynamics.model].color}40`,
+                }}>
+                  {MODEL_LABELS[dynamics.model].emoji} {MODEL_LABELS[dynamics.model].label}
+                </div>
+
+                {/* Compatibility axes */}
+                <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, margin: '2px 0 5px', fontWeight: 700 }}>
+                  Compatibilità · {dynamics.compat.overall}%
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginBottom: 10 }}>
+                  {COMPAT_AXES.map(axis => {
+                    const val = dynamics.compat[axis.key]
+                    const color = val >= 70 ? '#10b981' : val >= 45 ? '#f59e0b' : '#f43f5e'
+                    return (
+                      <div key={axis.key} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 96, flexShrink: 0 }}>{axis.emoji} {axis.label}</span>
+                        <div className="stat-bar" style={{ flex: 1 }}>
+                          <div className="stat-bar-fill" style={{ width: `${val}%`, backgroundColor: color }} />
+                        </div>
+                        <span style={{ fontSize: 10, width: 30, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{val}%</span>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Bond health */}
+                <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, margin: '2px 0 5px', fontWeight: 700 }}>
+                  Salute del legame
+                </p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {BOND_BARS.map(b => {
+                    const val = dynamics.bond[b.key]
+                    const color = val >= 65 ? '#10b981' : val >= 40 ? '#f59e0b' : '#f43f5e'
+                    return (
+                      <div key={b.key} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                        <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 96, flexShrink: 0 }}>{b.emoji} {b.label}</span>
+                        <div className="stat-bar" style={{ flex: 1 }}>
+                          <div className="stat-bar-fill" style={{ width: `${val}%`, backgroundColor: color }} />
+                        </div>
+                        <span style={{ fontSize: 10, width: 30, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{val}%</span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+            </>
+          )}
 
           {/* Activities — BitLife-style vertical list */}
           {actions.length > 0 && (
