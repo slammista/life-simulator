@@ -1642,6 +1642,113 @@ export const useGameStore = create<FullStore>()(
         return { success: true, message: `Hai lasciato il ${label}.`, effects: {} }
       },
 
+      skipClass: (): ActionResult => {
+        const state = get()
+        if (state.education.currentLevel === 'none') return { success: false, message: 'Non sei iscritto/a a nessuna scuola.', effects: {} }
+        const key = `skipClass_${state.time.year}`
+        const times = state.diminishingReturns[key] ?? 0
+        if (times >= 2) return { success: false, message: 'Hai già saltato troppe lezioni quest\'anno. Il preside ti tiene d\'occhio.', effects: {} }
+        const rand = Math.random()
+        const escaped = rand < 0.5
+        const msg = escaped
+          ? 'Hai saltato la lezione! Ti sei goduto la giornata, ma il GPA ne risente un po\'.'
+          : 'Il professore ti ha beccato assente! Richiamo disciplinare e GPA in picchiata.'
+        const effects: Record<string, number> = escaped ? { happiness: 5, energy: 10 } : { happiness: -5 }
+        set(s => {
+          const partial = applyEffects(state, effects)
+          return {
+            ...partial,
+            education: { ...s.education, gpa: clamp(s.education.gpa - (escaped ? 0.08 : 0.15), 0, 4.0) },
+            diminishingReturns: { ...s.diminishingReturns, [key]: times + 1 },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: escaped ? '😴' : '😬', category: 'education', statChanges: effects }, ...s.eventLog].slice(0, 150),
+          }
+        })
+        return { success: escaped, message: msg, effects }
+      },
+
+      throwSchoolParty: (): ActionResult => {
+        const state = get()
+        if (state.education.currentLevel === 'none') return { success: false, message: 'Non sei iscritto/a a nessuna scuola.', effects: {} }
+        if (state.stats.energy < 20) return { success: false, message: 'Sei troppo stanco/a per organizzare una festa.', effects: {} }
+        const key = `schoolParty_${state.time.year}`
+        if (state.diminishingReturns[key]) return { success: false, message: 'Hai già organizzato una festa quest\'anno. Meglio aspettare.', effects: {} }
+        const success = Math.random() > 0.35
+        const msg = success
+          ? 'La festa è un successo! Tutti parlano di te — la tua popolarità è alle stelle.'
+          : 'La festa è andata male. Pochi invitati, musica pessima. Che figuraccia.'
+        const effects = success ? { happiness: 12, energy: -20 } : { happiness: -8, energy: -15 }
+        const updatedClassmates = success
+          ? (state.education.classmates ?? []).map(c => ({ ...c, affection: clamp(c.affection + 8, 0, 100) }))
+          : state.education.classmates ?? []
+        set(s => ({
+          stats: { ...s.stats, happiness: clamp(s.stats.happiness + (success ? 12 : -8), 0, 100), energy: clamp(s.stats.energy - (success ? 20 : 15), 0, 100) },
+          education: { ...s.education, classmates: updatedClassmates },
+          diminishingReturns: { ...s.diminishingReturns, [key]: 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: success ? '🎉' : '😬', category: 'education', statChanges: effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success, message: msg, effects }
+      },
+
+      visitSchoolNurse: (): ActionResult => {
+        const state = get()
+        if (state.education.currentLevel === 'none') return { success: false, message: 'Non sei iscritto/a a nessuna scuola.', effects: {} }
+        const key = `schoolNurse_${state.time.year}`
+        if (state.diminishingReturns[key]) return { success: false, message: 'Hai già visitato l\'infermeria quest\'anno.', effects: {} }
+        const effects = { health: 5, energy: 5 }
+        set(s => ({
+          stats: { ...s.stats, health: clamp(s.stats.health + 5, 0, 100), energy: clamp(s.stats.energy + 5, 0, 100) },
+          diminishingReturns: { ...s.diminishingReturns, [key]: 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: 'L\'infermiera ti ha visitato e ti ha dato qualcosa per stare meglio.', emoji: '💊', category: 'health', statChanges: effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: 'L\'infermiera ti ha visitato e ti ha dato qualcosa per stare meglio.', effects }
+      },
+
+      dropOutSchool: (): ActionResult => {
+        const state = get()
+        if (state.education.currentLevel === 'none') return { success: false, message: 'Non sei iscritto/a a nessuna scuola.', effects: {} }
+        const mandatory = ['elementary', 'middle', 'highschool'].includes(state.education.currentLevel)
+        if (mandatory && state.time.age < 16) return { success: false, message: 'Sei troppo giovane per abbandonare la scuola dell\'obbligo.', effects: {} }
+        set(s => ({
+          education: { ...s.education, dropOut: true, currentLevel: 'none' as const, classmates: [] },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: 'Hai abbandonato la scuola. Una scelta di vita importante.', emoji: '🚶', category: 'education', statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: 'Hai abbandonato la scuola. Il futuro è nelle tue mani.', effects: {} }
+      },
+
+      attendSchoolDance: (): ActionResult => {
+        const state = get()
+        if (state.education.currentLevel === 'none') return { success: false, message: 'Non sei iscritto/a a nessuna scuola.', effects: {} }
+        const key = `schoolDance_${state.time.year}`
+        if (state.diminishingReturns[key]) return { success: false, message: 'Hai già partecipato al ballo scolastico quest\'anno.', effects: {} }
+        const success = Math.random() > 0.3
+        const effects: Record<string, number> = success ? { happiness: 15 } : { happiness: -5 }
+        const msg = success
+          ? 'Il ballo scolastico è stato magico! Ti sei divertito/a un mondo e hai conosciuto nuove persone.'
+          : 'Il ballo scolastico è stato un disastro. Nessuno ti ha invitato a ballare. Che serata.'
+        set(s => ({
+          stats: { ...s.stats, happiness: clamp(s.stats.happiness + (success ? 15 : -5), 0, 100) },
+          skills: success ? { ...s.skills, charisma: clamp(s.skills.charisma + 2, 0, 100) } : s.skills,
+          diminishingReturns: { ...s.diminishingReturns, [key]: 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: success ? '💃' : '😔', category: 'education', statChanges: effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success, message: msg, effects }
+      },
+
+      changeSchoolClique: (clique): ActionResult => {
+        const state = get()
+        if (state.education.currentLevel === 'none') return { success: false, message: 'Non sei iscritto/a a nessuna scuola.', effects: {} }
+        const LABELS: Record<string, string> = {
+          invisibile: 'Solitari', popolare: 'Popolari', nerd: 'Nerd', atleta: 'Atleti',
+          ribelle: 'Ribelli', problematico: 'Problematici', leader: 'Leader', artista: 'Artisti',
+        }
+        const label = LABELS[clique] ?? clique
+        set(s => ({
+          education: { ...s.education, schoolReputation: clique },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Ti sei unito/a al gruppo dei ${label}.`, emoji: '🤝', category: 'education', statChanges: {} }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: `Ora fai parte del gruppo: ${label}.`, effects: {} }
+      },
+
       requestMoneyFromParents: (amount: number, reason: string): ActionResult => {
         const state = get()
         const age = state.time.age
@@ -1754,6 +1861,64 @@ export const useGameStore = create<FullStore>()(
           eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `Hai restituito €${loan.amount.toLocaleString('it-IT')} a ${loan.npcName.split(' ')[0]}${onTime ? ' nei tempi' : ' (in ritardo)'}.`, emoji: '🤝', category: 'social', statChanges: { money: -loan.amount } }, ...s.eventLog].slice(0, 150),
         }))
         return { success: true, message: `Debito saldato con ${loan.npcName.split(' ')[0]}. ${onTime ? 'Parola mantenuta.' : 'Meglio tardi che mai.'}`, effects: { money: -loan.amount } }
+      },
+
+      // ==================== Career extra actions ====================
+      workHarder: (): ActionResult => {
+        const state = get()
+        if (!state.career.currentJob) return { success: false, message: 'Non hai un lavoro.', effects: {} }
+        if (state.stats.energy < 15) return { success: false, message: 'Sei troppo esausto/a per lavorare di più.', effects: {} }
+        const key = `workHarder_${state.time.year}`
+        const times = state.diminishingReturns[key] ?? 0
+        if (times >= 2) return { success: false, message: 'Hai già dato il massimo quest\'anno. Il capo lo ha notato.', effects: {} }
+        const success = Math.random() > 0.25
+        const effects: Record<string, number> = success ? { energy: -20 } : { energy: -25, happiness: -5 }
+        const msg = success
+          ? 'Hai lavorato con grande impegno. Il tuo capo ha notato i tuoi sforzi!'
+          : 'Hai lavorato duramente, ma nessuno sembra averlo notato. Demotivante.'
+        const boost = success ? 0.06 : 0.02
+        const energyCost = success ? 20 : 25
+        set(s => {
+          const newJob = s.career.currentJob
+            ? { ...s.career.currentJob, promotionChance: clamp((s.career.currentJob.promotionChance ?? 0.1) + boost, 0, 1) }
+            : null
+          return {
+            stats: { ...s.stats, energy: clamp(s.stats.energy - energyCost, 0, 100), happiness: clamp(s.stats.happiness - (success ? 0 : 5), 0, 100) },
+            career: { ...s.career, currentJob: newJob },
+            diminishingReturns: { ...s.diminishingReturns, [key]: times + 1 },
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: success ? '💪' : '😓', category: 'work', statChanges: effects }, ...s.eventLog].slice(0, 150),
+          }
+        })
+        return { success, message: msg, effects }
+      },
+
+      reportColleagueToHR: (colleagueId: string): ActionResult => {
+        const state = get()
+        if (!state.career.currentJob) return { success: false, message: 'Non hai un lavoro.', effects: {} }
+        const colleague = (state.career.colleagues ?? []).find(c => c.id === colleagueId)
+        if (!colleague) return { success: false, message: 'Collega non trovato.', effects: {} }
+        const rand = Math.random()
+        const outcome = rand < 0.4 ? 'action' : rand < 0.7 ? 'backfire' : 'hostile'
+        const msg = outcome === 'action'
+          ? `Hai segnalato ${colleague.name} alle Risorse Umane. L'HR ha preso provvedimenti disciplinari.`
+          : outcome === 'backfire'
+            ? `L'HR ha ascoltato la tua segnalazione ma non ha agito. ${colleague.name} lo ha scoperto ed è furioso/a con te.`
+            : `Il tuo capo ha ritorto la tua segnalazione contro di te. Sei visto/a come un guastafeste in ufficio.`
+        const effects: Record<string, number> = outcome === 'action' ? { happiness: 5 } : outcome === 'backfire' ? { happiness: -8 } : { happiness: -15 }
+        const colleagueAffectionDelta = outcome === 'action' ? -30 : outcome === 'backfire' ? -20 : 0
+        const updatedColleagues = colleagueAffectionDelta !== 0
+          ? (state.career.colleagues ?? []).map(c => c.id === colleagueId ? { ...c, status: 'hostile' as const, affection: clamp(c.affection + colleagueAffectionDelta, 0, 100) } : c)
+          : state.career.colleagues ?? []
+        set(s => ({
+          stats: { ...s.stats, happiness: clamp(s.stats.happiness + (effects.happiness ?? 0), 0, 100) },
+          career: {
+            ...s.career,
+            colleagues: updatedColleagues,
+            workReputation: outcome === 'hostile' ? ('problematico' as const) : s.career.workReputation,
+          },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: outcome === 'action' ? '📋' : outcome === 'backfire' ? '😤' : '😰', category: 'work', statChanges: effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: outcome === 'action', message: msg, effects }
       },
 
       // ==================== BitLife-style extras ====================

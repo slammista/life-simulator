@@ -1525,12 +1525,22 @@ export interface GameActions {
   schoolInteract: (npcId: string, action: SchoolAction) => ActionResult
   joinClub: (clubId: string) => ActionResult
   leaveClub: (clubId: string) => ActionResult
+  skipClass: () => ActionResult
+  throwSchoolParty: () => ActionResult
+  visitSchoolNurse: () => ActionResult
+  dropOutSchool: () => ActionResult
+  attendSchoolDance: () => ActionResult
+  changeSchoolClique: (clique: SchoolReputationStatus) => ActionResult
   requestMoneyFromParents: (amount: number, reason: string) => ActionResult
 
   // NPC money exchange + loans from relatives/friends
   giveMoneyToNpc: (relId: string, amount: number) => ActionResult
   askMoneyFromNpc: (relId: string, amount: number) => ActionResult
   repayNpcLoan: (loanId: string) => ActionResult
+
+  // Career extra actions
+  workHarder: () => ActionResult
+  reportColleagueToHR: (colleagueId: string) => ActionResult
 
   // BitLife-style extras
   askForRaise: () => ActionResult
