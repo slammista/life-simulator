@@ -382,11 +382,12 @@ function App() {
             {activeTab === 'vita' && vitaSection === 'rewards' && <VitaRewardsPanel onBack={() => setVitaSection('home')} />}
 
             {/* LAVORO */}
-            {activeTab === 'lavoro' && lavoroSub === 'career'    && <CareerScreen />}
-            {activeTab === 'lavoro' && lavoroSub === 'education' && <EducationScreen />}
-            {activeTab === 'lavoro' && lavoroSub === 'military'  && <MilitaryScreen />}
-            {activeTab === 'lavoro' && lavoroSub === 'pension'   && <RetirementScreen />}
-            {activeTab === 'lavoro' && lavoroSub === 'business'  && <BusinessScreen />}
+            {activeTab === 'lavoro' && lavoroSub === 'career'         && <CareerScreen />}
+            {activeTab === 'lavoro' && lavoroSub === 'education'      && <EducationScreen />}
+            {activeTab === 'lavoro' && lavoroSub === 'military'       && <MilitaryScreen />}
+            {activeTab === 'lavoro' && lavoroSub === 'pension'        && <RetirementScreen />}
+            {activeTab === 'lavoro' && lavoroSub === 'business'       && <BusinessScreen />}
+            {activeTab === 'lavoro' && lavoroSub === 'special_career' && <SpecialCareerScreen />}
 
             {/* ASSETS */}
             {activeTab === 'assets' && assetsSub === 'finance'  && <FinanceScreen />}
@@ -424,7 +425,6 @@ function App() {
             {activeTab === 'activities' && activitiesSub === 'settings'    && <SettingsScreen />}
             {activeTab === 'activities' && activitiesSub === 'privacy'     && <PrivacyPolicyScreen />}
             {activeTab === 'activities' && activitiesSub === 'socialize'   && <SocializeScreen />}
-            {activeTab === 'activities' && activitiesSub === 'special_career' && <SpecialCareerScreen />}
           </Suspense>
         </ErrorBoundary>
       </div>

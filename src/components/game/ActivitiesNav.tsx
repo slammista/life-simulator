@@ -20,7 +20,7 @@ export type ActivitiesSubTab =
   | 'body' | 'beauty' | 'barber' | 'gambling' | 'sex_health' | 'cosmetic'
   | 'travel' | 'politics' | 'goals' | 'challenges' | 'ribbons'
   | 'timeline' | 'minigames' | 'leaderboard' | 'settings' | 'privacy'
-  | 'socialize' | 'special_career'
+  | 'socialize'
 
 interface ActivityDef {
   id: ActivitiesSubTab
@@ -43,7 +43,6 @@ const ALL_ITEMS: ActivityDef[] = [
   { id: 'substances',  emoji: '🍺', label: 'Sostanze',           subtitle: 'Alcol, fumo e droghe',          color: '#f97316' },
   { id: 'gambling',    emoji: '🎲', label: 'Azzardo',            subtitle: 'Scommesse e casinò',             color: '#dc2626' },
   { id: 'socialize',   emoji: '🎉', label: 'Socializza',         subtitle: 'Incontra nuove persone',         color: '#6366f1' },
-  { id: 'special_career', emoji: '🌟', label: 'Carriera Speciale', subtitle: 'Attore, musicista, atleta, politico', color: '#eab308' },
   { id: 'religion',    emoji: '🙏', label: 'Fede',               subtitle: 'Pratiche religiose e spirituali', color: '#a78bfa' },
   { id: 'politics',    emoji: '🏛️', label: 'Politica',           subtitle: 'Impegno civile e voto',          color: '#60a5fa' },
   { id: 'travel',      emoji: '✈️', label: 'Viaggi',             subtitle: 'Esplora il mondo',               color: '#06b6d4' },
@@ -63,7 +62,7 @@ export { ITEM_MAP as ACTIVITIES_ITEM_MAP }
 const CATEGORIES: { label: string; ids: ActivitiesSubTab[] }[] = [
   { label: 'Corpo & Salute',  ids: ['health', 'hobby', 'sport', 'beauty', 'barber', 'cosmetic', 'body', 'sex_health'] },
   { label: 'Rischio',         ids: ['criminal', 'substances', 'gambling'] },
-  { label: 'Socialità',       ids: ['socialize', 'special_career', 'religion', 'politics', 'travel'] },
+  { label: 'Socialità',       ids: ['socialize', 'religion', 'politics', 'travel'] },
   { label: 'Svago & Goals',   ids: ['goals', 'challenges', 'ribbons', 'minigames'] },
   { label: 'Profilo',         ids: ['timeline', 'leaderboard', 'settings', 'privacy'] },
 ]
