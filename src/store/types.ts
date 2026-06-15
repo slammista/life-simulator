@@ -1593,6 +1593,11 @@ export interface GameActions {
   // Social media actions
   createSocialProfile: (platform: string) => ActionResult
   postContent: (platform: string, postType: string) => ActionResult
+  trollSocialMedia: (platform: string) => ActionResult
+  promoteSocialMedia: (platform: string) => ActionResult
+  requestVerification: (platform: string) => ActionResult
+  replyCelebrity: (platform: string) => ActionResult
+  deleteSocialProfile: (platform: string) => ActionResult
 
   // Substance actions
   drinkAlcohol: (type: string) => ActionResult

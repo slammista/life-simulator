@@ -2887,6 +2887,79 @@ export const useGameStore = create<FullStore>()(
         return { success: true, message: resultMessage, effects: combinedEffects }
       },
 
+      trollSocialMedia: (platform: string): ActionResult => {
+        const state = get()
+        const profile = state.socialMedia.find(p => p.platform === platform)
+        if (!profile) return { success: false, message: 'Profilo non trovato.', effects: {} }
+        const def = SocialMediaEngine.getPlatforms().find(p => p.id === platform)
+        const rand = Math.random()
+        if (rand < 0.25) {
+          const effects = { happiness: -10 }
+          const partial = applyEffects(state, effects)
+          set(s => ({ ...partial }))
+          return { success: false, message: `⛔ Sei stato bannato temporaneamente da ${def?.name ?? platform} per trolling!`, effects }
+        } else if (rand < 0.6) {
+          const lost = Math.max(0, Math.floor(profile.followers * 0.05))
+          set(s => ({ socialMedia: s.socialMedia.map(p => p.platform === platform ? { ...p, followers: Math.max(0, p.followers - lost) } : p) }))
+          return { success: false, message: `😤 Il tuo troll è andato a vuoto. Hai perso ${lost} follower.`, effects: {} }
+        } else {
+          const gained = Math.floor(Math.random() * 200 + 50)
+          set(s => ({ socialMedia: s.socialMedia.map(p => p.platform === platform ? { ...p, followers: p.followers + gained } : p) }))
+          return { success: true, message: `😈 Il tuo troll è diventato virale! +${gained} follower.`, effects: {} }
+        }
+      },
+
+      promoteSocialMedia: (platform: string): ActionResult => {
+        const state = get()
+        const profile = state.socialMedia.find(p => p.platform === platform)
+        if (!profile) return { success: false, message: 'Profilo non trovato.', effects: {} }
+        if (profile.followers < 1000) return { success: false, message: 'Hai bisogno di almeno 1.000 follower per promuovere prodotti.', effects: {} }
+        const income = Math.round(profile.followers * 0.01 * (Math.random() * 0.5 + 0.5))
+        const effects = { money: income }
+        set(s => ({ finance: { ...s.finance, money: s.finance.money + income } }))
+        return { success: true, message: `💰 Hai promosso un prodotto e guadagnato €${income.toLocaleString('it-IT')}!`, effects }
+      },
+
+      requestVerification: (platform: string): ActionResult => {
+        const state = get()
+        const profile = state.socialMedia.find(p => p.platform === platform)
+        if (!profile) return { success: false, message: 'Profilo non trovato.', effects: {} }
+        if (profile.followers < 10000) return { success: false, message: 'Hai bisogno di almeno 10.000 follower per richiedere la verifica.', effects: {} }
+        if (state.fame?.verified) return { success: false, message: 'Sei già verificato!', effects: {} }
+        const chance = profile.followers >= 100000 ? 0.7 : profile.followers >= 50000 ? 0.4 : 0.2
+        if (Math.random() < chance) {
+          set(s => ({ fame: s.fame ? { ...s.fame, verified: true } : s.fame }))
+          return { success: true, message: `✅ Sei stato verificato! Hai la spunta blu su tutti i tuoi profili!`, effects: { happiness: 10 } }
+        }
+        return { success: false, message: 'La tua richiesta di verifica è stata rifiutata. Riprova più tardi.', effects: {} }
+      },
+
+      replyCelebrity: (platform: string): ActionResult => {
+        const state = get()
+        const profile = state.socialMedia.find(p => p.platform === platform)
+        if (!profile) return { success: false, message: 'Profilo non trovato.', effects: {} }
+        const rand = Math.random()
+        if (rand < 0.05) {
+          const gained = Math.floor(Math.random() * 5000 + 1000)
+          set(s => ({ socialMedia: s.socialMedia.map(p => p.platform === platform ? { ...p, followers: p.followers + gained } : p) }))
+          return { success: true, message: `⭐ La celebrity ti ha risposto! Il tuo post è diventato virale! +${gained} follower!`, effects: { happiness: 15 } }
+        } else if (rand < 0.35) {
+          const gained = Math.floor(Math.random() * 300 + 50)
+          set(s => ({ socialMedia: s.socialMedia.map(p => p.platform === platform ? { ...p, followers: p.followers + gained } : p) }))
+          return { success: true, message: `😊 Qualche fan della celebrity ha visto il tuo reply. +${gained} follower.`, effects: {} }
+        }
+        return { success: false, message: 'La celebrity ha ignorato il tuo messaggio. Meglio fortuna la prossima volta!', effects: {} }
+      },
+
+      deleteSocialProfile: (platform: string): ActionResult => {
+        const state = get()
+        const profile = state.socialMedia.find(p => p.platform === platform)
+        if (!profile) return { success: false, message: 'Profilo non trovato.', effects: {} }
+        const def = SocialMediaEngine.getPlatforms().find(p => p.id === platform)
+        set(s => ({ socialMedia: s.socialMedia.filter(p => p.platform !== platform) }))
+        return { success: true, message: `🗑️ Hai eliminato il tuo profilo ${def?.emoji ?? ''} ${def?.name ?? platform}.`, effects: {} }
+      },
+
       // ==================== Substance actions ====================
       drinkAlcohol: (type: string): ActionResult => {
         const state = get()
