@@ -3,6 +3,7 @@ import { SpecialCareerEngine, type SpecialCareerType } from '../../services/Spec
 
 export type CarreraSubTab =
   | 'career' | 'education' | 'military' | 'pension' | 'business' | 'special_career'
+  | 'freelance_gigs' | 'part_time_jobs'
 
 interface ItemDef {
   id: CarreraSubTab
@@ -13,12 +14,14 @@ interface ItemDef {
 }
 
 const ALL_ITEMS: ItemDef[] = [
-  { id: 'career',         emoji: '💼', label: 'Lavoro',            subtitle: 'Trova e gestisci il tuo impiego',   color: '#f59e0b' },
-  { id: 'education',      emoji: '📚', label: 'Istruzione',        subtitle: 'Scuola, università e club',          color: '#3b82f6' },
-  { id: 'military',       emoji: '🪖', label: 'Militare',          subtitle: 'Servizio militare e leva',           color: '#6b7280' },
-  { id: 'pension',        emoji: '🎗️', label: 'Pensione',          subtitle: 'Pensione anticipata o ordinaria',    color: '#10b981' },
-  { id: 'business',       emoji: '🚀', label: 'La tua Azienda',    subtitle: 'Fonda e gestisci la tua società',   color: '#8b5cf6' },
-  { id: 'special_career', emoji: '🌟', label: 'Carriere Speciali', subtitle: 'Attore, musicista, atleta, politico, criminale', color: '#eab308' },
+  { id: 'career',          emoji: '💼', label: 'Lavoro',            subtitle: 'Trova e gestisci il tuo impiego',     color: '#f59e0b' },
+  { id: 'part_time_jobs',  emoji: '⏰', label: 'Lavori Part-Time',  subtitle: 'Impieghi flessibili e orari ridotti', color: '#22c55e' },
+  { id: 'freelance_gigs',  emoji: '🔨', label: 'Lavoretti',         subtitle: 'Guadagna subito con lavori a chiamata', color: '#06b6d4' },
+  { id: 'education',       emoji: '📚', label: 'Istruzione',        subtitle: 'Scuola, università e club',            color: '#3b82f6' },
+  { id: 'military',        emoji: '🪖', label: 'Militare',          subtitle: 'Servizio militare e leva',             color: '#6b7280' },
+  { id: 'pension',         emoji: '🎗️', label: 'Pensione',          subtitle: 'Pensione anticipata o ordinaria',      color: '#10b981' },
+  { id: 'business',        emoji: '🚀', label: 'La tua Azienda',    subtitle: 'Fonda e gestisci la tua società',     color: '#8b5cf6' },
+  { id: 'special_career',  emoji: '🌟', label: 'Carriere Speciali', subtitle: 'Attore, musicista, atleta, politico, criminale', color: '#eab308' },
 ]
 
 export { ALL_ITEMS as CARRERA_ITEMS }

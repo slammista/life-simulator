@@ -1921,6 +1921,40 @@ export const useGameStore = create<FullStore>()(
         return { success: outcome === 'action', message: msg, effects }
       },
 
+      performFreelanceGig: (gigId: string): ActionResult => {
+        const state = get()
+        if (state.stats.energy < 10) return { success: false, message: 'Sei troppo stanco/a per fare un lavoretto.', effects: {} }
+        const GIG_DEFS: Record<string, { label: string; emoji: string; earnMin: number; earnMax: number; energyCost: number; minAge: number }> = {
+          babysitter_gig:  { label: 'Babysitter',           emoji: '👶', earnMin: 30,  earnMax: 80,  energyCost: 15, minAge: 13 },
+          dog_walker:      { label: 'Dog Sitter',           emoji: '🐕', earnMin: 20,  earnMax: 60,  energyCost: 10, minAge: 12 },
+          lawn_mower:      { label: 'Taglia Erba',          emoji: '🌿', earnMin: 25,  earnMax: 70,  energyCost: 20, minAge: 12 },
+          car_wash:        { label: 'Lavaggio Auto',        emoji: '🚗', earnMin: 20,  earnMax: 50,  energyCost: 15, minAge: 14 },
+          tutor_gig:       { label: 'Tutor Privato',        emoji: '📖', earnMin: 40,  earnMax: 120, energyCost: 20, minAge: 15 },
+          handyman:        { label: 'Tuttofare',            emoji: '🔧', earnMin: 50,  earnMax: 150, energyCost: 25, minAge: 16 },
+          pet_sitter:      { label: 'Pet Sitter',           emoji: '🐈', earnMin: 25,  earnMax: 70,  energyCost: 10, minAge: 12 },
+          grocery_shopper: { label: 'Spesa a Domicilio',    emoji: '🛒', earnMin: 15,  earnMax: 40,  energyCost: 10, minAge: 14 },
+          caretaker:       { label: 'Badante Occasionale',  emoji: '🧓', earnMin: 35,  earnMax: 90,  energyCost: 20, minAge: 18 },
+          delivery_gig:    { label: 'Consegna a Domicilio', emoji: '📦', earnMin: 30,  earnMax: 80,  energyCost: 15, minAge: 16 },
+        }
+        const gig = GIG_DEFS[gigId]
+        if (!gig) return { success: false, message: 'Lavoretto non trovato.', effects: {} }
+        if (state.time.age < gig.minAge) return { success: false, message: `Devi avere almeno ${gig.minAge} anni per questo lavoretto.`, effects: {} }
+        const key = `gig_${gigId}_${state.time.year}`
+        const timesThisYear = state.diminishingReturns[key] ?? 0
+        const earn = Math.round(gig.earnMin + Math.random() * (gig.earnMax - gig.earnMin))
+        const costMult = state.nation?.costOfLiving ?? 1
+        const finalEarn = Math.round(earn * costMult)
+        const effects = { money: finalEarn, energy: -gig.energyCost }
+        const msg = `Hai fatto il ${gig.label} e guadagnato €${finalEarn.toLocaleString('it-IT')}!`
+        set(s => ({
+          finance: { ...s.finance, money: s.finance.money + finalEarn },
+          stats: { ...s.stats, energy: clamp(s.stats.energy - gig.energyCost, 0, 100) },
+          diminishingReturns: { ...s.diminishingReturns, [key]: timesThisYear + 1 },
+          eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: msg, emoji: gig.emoji, category: 'work', statChanges: effects }, ...s.eventLog].slice(0, 150),
+        }))
+        return { success: true, message: msg, effects }
+      },
+
       // ==================== BitLife-style extras ====================
       askForRaise: (): ActionResult => {
         const state = get()

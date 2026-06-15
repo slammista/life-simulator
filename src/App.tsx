@@ -80,6 +80,8 @@ const PrivacyPolicyScreen = lazy(() => import('./components/screens/PrivacyPolic
 const LeaderboardScreen   = lazy(() => import('./components/screens/LeaderboardScreen').then(m => ({ default: m.LeaderboardScreen })))
 const SocializeScreen     = lazy(() => import('./components/screens/SocializeScreen').then(m => ({ default: m.SocializeScreen })))
 const SpecialCareerScreen = lazy(() => import('./components/screens/SpecialCareerScreen').then(m => ({ default: m.SpecialCareerScreen })))
+const FreelanceGigsScreen = lazy(() => import('./components/screens/FreelanceGigsScreen').then(m => ({ default: m.FreelanceGigsScreen })))
+const PartTimeJobsScreen  = lazy(() => import('./components/screens/PartTimeJobsScreen').then(m => ({ default: m.PartTimeJobsScreen })))
 
 // ---- Vita Hub Panels (lazy-loaded) ----
 const VitaShopPanel    = lazy(() => import('./components/game/VitaShopPanel').then(m => ({ default: m.VitaShopPanel })))
@@ -387,7 +389,9 @@ function App() {
             {activeTab === 'lavoro' && lavoroSub === 'military'       && <MilitaryScreen />}
             {activeTab === 'lavoro' && lavoroSub === 'pension'        && <RetirementScreen />}
             {activeTab === 'lavoro' && lavoroSub === 'business'       && <BusinessScreen />}
-            {activeTab === 'lavoro' && lavoroSub === 'special_career' && <SpecialCareerScreen />}
+            {activeTab === 'lavoro' && lavoroSub === 'special_career'  && <SpecialCareerScreen />}
+            {activeTab === 'lavoro' && lavoroSub === 'freelance_gigs'  && <FreelanceGigsScreen />}
+            {activeTab === 'lavoro' && lavoroSub === 'part_time_jobs'  && <PartTimeJobsScreen />}
 
             {/* ASSETS */}
             {activeTab === 'assets' && assetsSub === 'finance'  && <FinanceScreen />}

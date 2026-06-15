@@ -1541,6 +1541,7 @@ export interface GameActions {
   // Career extra actions
   workHarder: () => ActionResult
   reportColleagueToHR: (colleagueId: string) => ActionResult
+  performFreelanceGig: (gigId: string) => ActionResult
 
   // BitLife-style extras
   askForRaise: () => ActionResult
