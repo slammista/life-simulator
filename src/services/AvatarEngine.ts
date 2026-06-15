@@ -102,11 +102,15 @@ export function applyAgeToConfig(age: number, config: AvatarConfig): AgeAppliedC
     else if (age >= 40) hairColor = 'gray'
   }
   const hairStyle: AvatarHairStyle = age < 2 ? 'bald' : config.hairStyle
+  // Children never show facial hair, whatever the stored config says.
+  const beardStyle: BeardStyle = age < 14 ? 'none' : config.beardStyle
   return {
     ...config,
     hairColor,
     hairStyle,
+    beardStyle,
     accessory:          config.accessory ?? 'none',
+    mouthStyle:         config.mouthStyle ?? 'smile',
     hasAcne:            age >= 13 && age <= 18,
     grayStreak:         age >= 40 && age <= 55 && !isDyed,
     showLightWrinkles:  age >= 51 && age <= 65,

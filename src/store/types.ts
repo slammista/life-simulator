@@ -142,6 +142,7 @@ export type EyeStyle = 'round' | 'almond' | 'wide' | 'narrow'
 export type EyeColor = 'brown' | 'dark_brown' | 'blue' | 'green' | 'hazel' | 'gray' | 'amber'
 export type BrowStyle = 'thin' | 'medium' | 'thick' | 'arched'
 export type BeardStyle = 'none' | 'stubble' | 'short' | 'full' | 'goatee' | 'mustache'
+export type MouthStyle = 'smile' | 'neutral' | 'grin' | 'frown' | 'smirk'
 export type AvatarClothesStyle = 'casual' | 'formal' | 'sporty' | 'elegant' | 'punk' | 'traditional'
 export type AvatarAccessory = 'none' | 'glasses_round' | 'glasses_square' | 'sunglasses' | 'hat_cap' | 'hat_beanie' | 'hat_fedora'
 
@@ -155,6 +156,9 @@ export interface AvatarConfig {
   beardStyle: BeardStyle
   clothesStyle: AvatarClothesStyle
   accessory?: AvatarAccessory
+  // Optional mouth expression. Defaults to 'smile' (the original fixed mouth)
+  // when absent, so existing saves and the player avatar are unaffected.
+  mouthStyle?: MouthStyle
 }
 
 export interface PlayerIdentity {
