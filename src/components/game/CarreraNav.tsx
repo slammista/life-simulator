@@ -40,13 +40,8 @@ interface Props {
 
 function SectionLabel({ label }: { label: string }) {
   return (
-    <div style={{
-      padding: '9px 16px 7px',
-      background: 'rgba(0,0,0,0.18)',
-      borderTop: '1px solid rgba(255,255,255,0.045)',
-      borderBottom: '1px solid rgba(255,255,255,0.045)',
-    }}>
-      <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: 'var(--text-faint)', textTransform: 'uppercase' }}>
+    <div style={{ padding: '14px 16px 5px', borderTop: '1px solid rgba(255,255,255,0.04)' }}>
+      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-faint)' }}>
         {label}
       </span>
     </div>
@@ -54,11 +49,13 @@ function SectionLabel({ label }: { label: string }) {
 }
 
 function StatBar({ label, val, color }: { label: string; val: number; color: string }) {
+  const pct = Math.max(0, Math.min(100, val))
   return (
     <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
       <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', width: 80, flexShrink: 0 }}>{label}</span>
       <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
-        <div style={{ height: '100%', width: `${Math.max(0, Math.min(100, val))}%`, background: color, borderRadius: 4, transition: 'width 0.4s' }} />
+        <div style={{ height: '100%', width: '100%', background: color, borderRadius: 4,
+          transform: `scaleX(${pct / 100})`, transformOrigin: 'left', transition: 'transform 0.4s ease' }} />
       </div>
       <span style={{ fontSize: 10, width: 22, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{Math.round(val)}</span>
     </div>

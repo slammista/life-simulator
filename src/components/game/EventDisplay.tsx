@@ -87,36 +87,63 @@ export const EventDisplay = memo(function EventDisplay() {
   if (!currentEvent) {
     return (
       <div style={{
-        margin: '0 12px 16px',
-        padding: '24px 20px',
+        margin: '4px 12px 16px',
+        padding: '28px 20px 24px',
         borderRadius: 'var(--radius-lg)',
-        background: 'rgba(124,92,255,0.06)',
-        border: '1px solid rgba(124,92,255,0.14)',
+        background: 'linear-gradient(160deg, rgba(124,92,255,0.10) 0%, rgba(124,92,255,0.04) 100%)',
+        border: '1px solid rgba(124,92,255,0.18)',
         textAlign: 'center',
+        position: 'relative',
+        overflow: 'hidden',
       }}>
+        {/* Subtle glow behind the emoji */}
         <div style={{
-          fontSize: 38, marginBottom: 10,
-          animation: 'idle-pulse 3s ease-in-out infinite',
+          position: 'absolute', top: '30%', left: '50%',
+          transform: 'translate(-50%, -50%)',
+          width: 120, height: 60,
+          background: 'radial-gradient(ellipse, rgba(124,92,255,0.22) 0%, transparent 70%)',
+          pointerEvents: 'none',
+          filter: 'blur(12px)',
+        }} />
+        <div style={{
+          fontSize: 44, marginBottom: 12,
+          animation: 'idle-pulse 3.2s ease-in-out infinite',
           display: 'inline-block',
+          position: 'relative',
         }}>
           ⏳
         </div>
         <p style={{
-          color: 'var(--color-text)', fontSize: 14, fontWeight: 600,
-          lineHeight: 1.5, marginBottom: 4,
+          color: 'var(--color-text)', fontSize: 16, fontWeight: 700,
+          lineHeight: 1.4, marginBottom: 6, letterSpacing: '-0.01em',
         }}>
           La vita aspetta.
         </p>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 12, lineHeight: 1.5 }}>
-          Tocca <strong style={{ color: '#a78bfa', fontWeight: 700 }}>+1 ETÀ</strong> per andare avanti.
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 12, lineHeight: 1.55, marginBottom: 20 }}>
+          Ogni anno porta nuovi eventi, scelte e conseguenze.
         </p>
+        <div style={{
+          display: 'inline-flex', alignItems: 'center', gap: 8,
+          padding: '10px 24px', borderRadius: 'var(--radius-pill)',
+          background: 'linear-gradient(135deg, #7C5CFF, #9B5CFF)',
+          boxShadow: '0 0 24px rgba(124,92,255,0.45), inset 0 1px 0 rgba(255,255,255,0.2)',
+          animation: 'idle-cta-pulse 2.5s cubic-bezier(0.4,0,0.6,1) infinite',
+        }}>
+          <span style={{ fontSize: 15, fontWeight: 800, color: '#fff', letterSpacing: '0.3px' }}>+1 ETÀ</span>
+          <span style={{ fontSize: 13 }}>›</span>
+        </div>
         <style>{`
           @keyframes idle-pulse {
-            0%, 100% { transform: scale(1);    opacity: 0.85; }
-            50%       { transform: scale(1.08); opacity: 1;    }
+            0%, 100% { transform: scale(1);    opacity: 0.8; }
+            50%       { transform: scale(1.1);  opacity: 1;   }
+          }
+          @keyframes idle-cta-pulse {
+            0%, 100% { box-shadow: 0 0 24px rgba(124,92,255,0.45), inset 0 1px 0 rgba(255,255,255,0.2); }
+            50%       { box-shadow: 0 0 36px rgba(124,92,255,0.65), inset 0 1px 0 rgba(255,255,255,0.2); }
           }
           @media (prefers-reduced-motion: reduce) {
             @keyframes idle-pulse { 0%, 100% { transform: none; opacity: 1; } }
+            @keyframes idle-cta-pulse { 0%, 100% { box-shadow: 0 0 24px rgba(124,92,255,0.45); } }
           }
         `}</style>
       </div>

@@ -24,11 +24,6 @@ interface Props {
 export function RelazioniNav({ onChange }: Props) {
   return (
     <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 72 }}>
-      <div style={{ padding: '9px 16px 7px', background: 'rgba(0,0,0,0.18)', borderBottom: '1px solid rgba(255,255,255,0.045)' }}>
-        <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: 'var(--text-faint)', textTransform: 'uppercase' }}>
-          Persone & Relazioni
-        </span>
-      </div>
       {ITEMS.map(item => (
         <button
           key={item.id}

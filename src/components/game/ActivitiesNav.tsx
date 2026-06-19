@@ -131,15 +131,10 @@ function ActivityRow({ item, pinned, editMode, onClick, onTogglePin }: RowProps)
 function SectionLabel({ label }: { label: string }) {
   return (
     <div style={{
-      padding: '9px 16px 7px',
-      background: 'rgba(0,0,0,0.18)',
-      borderTop: '1px solid rgba(255,255,255,0.045)',
-      borderBottom: '1px solid rgba(255,255,255,0.045)',
+      padding: '14px 16px 5px',
+      borderTop: '1px solid rgba(255,255,255,0.04)',
     }}>
-      <span style={{
-        fontSize: 10, fontWeight: 800, letterSpacing: 1.5,
-        color: 'var(--text-faint)', textTransform: 'uppercase',
-      }}>
+      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-faint)' }}>
         {label}
       </span>
     </div>
@@ -172,7 +167,7 @@ export function ActivitiesNav({ onChange }: Props) {
         background: 'rgba(0,0,0,0.18)',
         borderBottom: '1px solid rgba(255,255,255,0.045)',
       }}>
-        <span style={{ flex: 1, fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: 'var(--text-faint)', textTransform: 'uppercase' }}>
+        <span style={{ flex: 1, fontSize: 11, fontWeight: 500, color: 'var(--text-faint)' }}>
           Preferiti
         </span>
         <button
