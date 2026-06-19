@@ -100,7 +100,7 @@ function SubTabBar<T extends string>({
 }: { tabs: { id: T; label: string; emoji: string }[]; active: T; onChange: (t: T) => void }) {
   return (
     <div style={{
-      display: 'flex', gap: 6, padding: '8px 12px',
+      display: 'flex', gap: 2, padding: '6px 12px',
       background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.06)',
       overflowX: 'auto', flexShrink: 0,
     }}>
@@ -109,10 +109,12 @@ function SubTabBar<T extends string>({
           key={t.id}
           onClick={() => onChange(t.id)}
           style={{
-            padding: '5px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500,
+            padding: '5px 11px', borderRadius: 14, fontSize: 12,
+            fontWeight: active === t.id ? 700 : 500,
             whiteSpace: 'nowrap', border: 'none', cursor: 'pointer', flexShrink: 0,
-            background: active === t.id ? 'var(--color-cta)' : 'rgba(255,255,255,0.07)',
-            color: active === t.id ? '#fff' : 'var(--color-text-secondary)',
+            background: active === t.id ? 'var(--primary)' : 'transparent',
+            color: active === t.id ? '#fff' : 'rgba(255,255,255,0.42)',
+            WebkitTapHighlightColor: 'transparent',
           }}
         >
           {t.emoji} {t.label}
@@ -126,31 +128,24 @@ function ScreenFallback() {
   return <div className="screen-loading">Caricamento...</div>
 }
 
-function SectionBackBar({ label, itemLabel, onBack }: { label: string; itemLabel?: string; onBack: () => void }) {
+function SectionBackBar({ label, onBack }: { label: string; itemLabel?: string; onBack: () => void }) {
   return (
     <div style={{
-      display: 'flex', alignItems: 'center', gap: 10, padding: '6px 14px 6px 8px',
-      background: 'rgba(0,0,0,0.22)', borderBottom: '1px solid rgba(255,255,255,0.06)',
+      display: 'flex', alignItems: 'center', padding: '7px 14px',
+      background: 'rgba(0,0,0,0.18)', borderBottom: '1px solid rgba(255,255,255,0.05)',
       flexShrink: 0,
     }}>
       <button
         onClick={onBack}
         style={{
-          display: 'flex', alignItems: 'center', gap: 4,
-          fontSize: 15, fontWeight: 600, color: 'var(--primary)',
-          border: '1px solid rgba(124,92,255,0.3)',
-          background: 'rgba(124,92,255,0.12)', cursor: 'pointer',
-          padding: '5px 12px', borderRadius: 20,
+          display: 'flex', alignItems: 'center', gap: 5,
+          fontSize: 14, fontWeight: 600, color: 'var(--primary)',
+          border: 'none', background: 'none', cursor: 'pointer', padding: 0,
+          WebkitTapHighlightColor: 'transparent',
         }}
       >
         ‹ {label}
       </button>
-      {itemLabel && (
-        <>
-          <div style={{ width: 1, height: 14, background: 'rgba(255,255,255,0.12)' }} />
-          <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)' }}>{itemLabel}</span>
-        </>
-      )}
     </div>
   )
 }
@@ -356,15 +351,17 @@ function App() {
         {activeTab === 'vita' && vitaSection === 'home' && (
           <div className="main-dashboard">
             <div className="event-panel">
-              <div style={{ padding: '8px 12px 0' }}>
-                <VitaWidgets
-                  setActiveTab={setActiveTab}
-                  setVitaSection={setVitaSection}
-                  setActivitiesSub={setActivitiesSub}
-                  setLavoroSub={setLavoroSub}
-                  setRelazioniSub={setRelazioniSub}
-                />
-              </div>
+              {!currentEvent && (
+                <div style={{ padding: '8px 12px 0' }}>
+                  <VitaWidgets
+                    setActiveTab={setActiveTab}
+                    setVitaSection={setVitaSection}
+                    setActivitiesSub={setActivitiesSub}
+                    setLavoroSub={setLavoroSub}
+                    setRelazioniSub={setRelazioniSub}
+                  />
+                </div>
+              )}
               <EventDisplay />
             </div>
             <div className="event-log-panel">

@@ -86,11 +86,39 @@ export const EventDisplay = memo(function EventDisplay() {
 
   if (!currentEvent) {
     return (
-      <div style={{ margin: '12px', textAlign: 'center', padding: '20px 16px' }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>🎮</div>
-        <p style={{ color: 'var(--color-text-secondary)', fontSize: 13, lineHeight: 1.6 }}>
-          Premi <strong style={{ color: 'var(--primary)', fontWeight: 700 }}>+1 ETÀ</strong> per avanzare di un anno e far succedere qualcosa.
+      <div style={{
+        margin: '0 12px 16px',
+        padding: '24px 20px',
+        borderRadius: 'var(--radius-lg)',
+        background: 'rgba(124,92,255,0.06)',
+        border: '1px solid rgba(124,92,255,0.14)',
+        textAlign: 'center',
+      }}>
+        <div style={{
+          fontSize: 38, marginBottom: 10,
+          animation: 'idle-pulse 3s ease-in-out infinite',
+          display: 'inline-block',
+        }}>
+          ⏳
+        </div>
+        <p style={{
+          color: 'var(--color-text)', fontSize: 14, fontWeight: 600,
+          lineHeight: 1.5, marginBottom: 4,
+        }}>
+          La vita aspetta.
         </p>
+        <p style={{ color: 'var(--color-text-secondary)', fontSize: 12, lineHeight: 1.5 }}>
+          Tocca <strong style={{ color: '#a78bfa', fontWeight: 700 }}>+1 ETÀ</strong> per andare avanti.
+        </p>
+        <style>{`
+          @keyframes idle-pulse {
+            0%, 100% { transform: scale(1);    opacity: 0.85; }
+            50%       { transform: scale(1.08); opacity: 1;    }
+          }
+          @media (prefers-reduced-motion: reduce) {
+            @keyframes idle-pulse { 0%, 100% { transform: none; opacity: 1; } }
+          }
+        `}</style>
       </div>
     )
   }
@@ -306,15 +334,16 @@ function EffectPreview({ effects }: { effects: Record<string, number> }) {
   if (!entries.length) return null
 
   return (
-    <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', justifyContent: 'flex-end', flexShrink: 0 }}>
+    <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end', flexShrink: 0 }}>
       {entries.slice(0, 3).map(([key, val]) => (
         <span
           key={key}
           style={{
-            fontSize: 10, fontWeight: 700,
-            color: val > 0 ? '#16a34a' : '#dc2626',
-            background: val > 0 ? '#dcfce7' : '#fee2e2',
-            padding: '2px 6px', borderRadius: 99,
+            fontSize: 11, fontWeight: 800,
+            color: val > 0 ? '#4ade80' : '#f87171',
+            textShadow: val > 0
+              ? '0 0 10px rgba(74,222,128,0.55)'
+              : '0 0 10px rgba(248,113,113,0.55)',
           }}
         >
           {key === 'money' ? '€' : ''}{val > 0 ? '+' : ''}{val}

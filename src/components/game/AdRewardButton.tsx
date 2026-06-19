@@ -84,8 +84,10 @@ export function AdRewardButton({ adState, onClaim, compact = false }: Props) {
           <div style={{
             height: '100%', borderRadius: 2,
             background: 'var(--color-cta, #6366f1)',
-            width: `${((5 - countdown) / 5) * 100}%`,
-            transition: 'width 0.9s linear',
+            width: '100%',
+            transform: `scaleX(${(5 - countdown) / 5})`,
+            transformOrigin: 'left',
+            transition: 'transform 0.9s linear',
           }} />
         </div>
       </div>

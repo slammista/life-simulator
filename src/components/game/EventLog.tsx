@@ -31,13 +31,6 @@ export function EventLog() {
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: '0 12px 12px' }}>
       <div className="event-log-panel-inner">
-        <p style={{
-          fontSize: 10, color: 'var(--text-faint)', marginBottom: 10,
-          fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1.2,
-        }}>
-          Cronaca di vita
-        </p>
-
         {eventLog.length === 0 && (
           <div style={{ textAlign: 'center', padding: '24px 12px' }}>
             <div style={{ fontSize: 28, marginBottom: 8 }}>📜</div>
@@ -59,16 +52,10 @@ export function EventLog() {
               key={entry.id}
               onClick={() => setExpanded(isExpanded ? null : entry.id)}
               style={{
-                display: 'flex', gap: 8, padding: '6px 0', cursor: 'pointer',
+                display: 'flex', gap: 8, padding: '7px 0', cursor: 'pointer',
                 borderBottom: '1px solid rgba(255,255,255,0.04)',
               }}
             >
-              {/* Category color stripe */}
-              <div style={{
-                width: 2, borderRadius: 2, flexShrink: 0, alignSelf: 'stretch',
-                background: cfg.color + '60',
-              }} />
-
               {/* Emoji */}
               <span style={{ fontSize: 14, flexShrink: 0, alignSelf: 'flex-start', marginTop: 1 }}>
                 {entry.emoji}

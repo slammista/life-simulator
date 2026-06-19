@@ -1,46 +1,10 @@
 import { memo, useEffect, useRef, useState } from 'react'
 import { useShallow } from 'zustand/react/shallow'
-import { useGameStore, computeWeeklyHours } from '../../store/gameStore'
+import { useGameStore } from '../../store/gameStore'
 import { useWalletStore } from '../../store/walletStore'
 import { AvatarRenderer } from '../avatar/AvatarRenderer'
 import { TRAIT_DEFS } from '../../services/NarrativeEngine'
 
-function useWeeklyHoursData() {
-  const contractType = useGameStore(s => s.career.currentJob?.contractType ?? null)
-  const eduLevel = useGameStore(s => s.education.currentLevel)
-  const clubs = useGameStore(useShallow(s => s.education.clubs))
-  const hours = computeWeeklyHours({
-    career: { currentJob: contractType ? { contractType } as never : null } as never,
-    education: { currentLevel: eduLevel, clubs } as never,
-  })
-  return hours
-}
-
-function WeeklyHoursBar() {
-  const contractType = useGameStore(s => s.career.currentJob?.contractType ?? null)
-  const eduLevel = useGameStore(s => s.education.currentLevel)
-  const clubs = useGameStore(useShallow(s => s.education.clubs))
-  const hours = computeWeeklyHours({
-    career: { currentJob: contractType ? { contractType } as never : null } as never,
-    education: { currentLevel: eduLevel, clubs } as never,
-  })
-  if (hours === 0) return null
-  const pct = Math.min(100, (hours / 80) * 100)
-  const color = hours > 60 ? '#ef4444' : hours > 40 ? '#f59e0b' : '#10b981'
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 2 }}>
-      <span style={{ fontSize: 9, color: 'var(--color-text-secondary)', flexShrink: 0, minWidth: 52 }}>
-        ⏰ {hours}/80h
-      </span>
-      <div style={{ flex: 1, height: 3, background: 'rgba(255,255,255,0.1)', borderRadius: 2 }}>
-        <div style={{ width: `${pct}%`, height: '100%', background: color, borderRadius: 2, transition: 'width 0.4s ease' }} />
-      </div>
-      {hours > 60 && (
-        <span style={{ fontSize: 9, color: '#ef4444', fontWeight: 700, flexShrink: 0 }}>⚠️ stress</span>
-      )}
-    </div>
-  )
-}
 
 function useHUDData() {
   const stats = useGameStore(useShallow(s => s.stats))
@@ -56,7 +20,8 @@ function useHUDData() {
   const eduLevel = useGameStore(s => s.education.currentLevel)
   const inPrison = useGameStore(s => s.criminal.inPrison)
   const isRetired = useGameStore(s => s.retirement.isRetired)
-  return { stats, money, bankBalance, age, year, emoji, name, surname, fame, currentJob, eduLevel, inPrison, isRetired }
+  const burnoutLevel = useGameStore(s => s.career.burnoutLevel)
+  return { stats, money, bankBalance, age, year, emoji, name, surname, fame, currentJob, eduLevel, inPrison, isRetired, burnoutLevel }
 }
 
 const JOB_CATEGORY_OUTFIT: Record<string, { emoji: string; color: string }> = {
@@ -152,12 +117,13 @@ function usePlayerTraits() {
 
 export const HUD = memo(function HUD() {
   const data = useHUDData()
-  const { stats, money, bankBalance, age, year, name, surname, fame } = data
+  const { stats, money, bankBalance, age, year, name, surname, fame, burnoutLevel } = data
   const status = getStatusBadge(data)
   const outfitBadge = getJobOutfitBadge(data)
   const traits = usePlayerTraits()
   const showFame = fame >= 30
   const gems = useWalletStore(s => s.gems)
+  const showBurnout = burnoutLevel > 50
 
   // Flash stat value when it changes
   const prevStatsRef = useRef<Record<string, number>>({})
@@ -172,6 +138,7 @@ export const HUD = memo(function HUD() {
     const checks: [string, number][] = [
       ['happiness', stats.happiness], ['health', stats.health],
       ['intelligence', stats.intelligence], ['looks', stats.looks], ['_fame', fame],
+      ['_burnout', burnoutLevel],
     ]
     for (const [k, v] of checks) {
       const rounded = Math.round(v)
@@ -187,7 +154,7 @@ export const HUD = memo(function HUD() {
     const t = setTimeout(() => setFlashKeys(new Set()), 400)
     const t2 = setTimeout(() => setDeltas(d => d.filter(x => !newDeltas.find(n => n.id === x.id))), 950)
     return () => { clearTimeout(t); clearTimeout(t2) }
-  }, [stats.happiness, stats.health, stats.intelligence, stats.looks, fame])
+  }, [stats.happiness, stats.health, stats.intelligence, stats.looks, fame, burnoutLevel])
 
   // Money flash animation
   const prevMoneyRef = useRef(money)
@@ -201,9 +168,11 @@ export const HUD = memo(function HUD() {
     }
   }, [money])
 
-  const statList = showFame
-    ? [...BASE_STATS, { key: '_fame', label: 'Fama', emoji: '⭐', color: '#FFB020' }]
-    : BASE_STATS
+  const statList = [
+    ...BASE_STATS,
+    ...(showFame    ? [{ key: '_fame',    label: 'Fama',    emoji: '⭐', color: '#FFB020' }] : []),
+    ...(showBurnout ? [{ key: '_burnout', label: 'Burnout', emoji: '🥵', color: '#f97316' }] : []),
+  ]
 
   // Avatar ring color based on overall wellbeing
   const wellbeing = (stats.health + stats.happiness) / 2
@@ -307,13 +276,10 @@ export const HUD = memo(function HUD() {
         </div>
       </div>
 
-      {/* Weekly hours bar */}
-      <WeeklyHoursBar />
-
       {/* Stat bars with delta overlays */}
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${statList.length}, 1fr)`, gap: 6 }}>
         {statList.map(({ key, emoji: statEmoji, label, color }) => {
-          const val = key === '_fame' ? fame : (stats as unknown as Record<string, number>)[key] ?? 0
+          const val = key === '_fame' ? fame : key === '_burnout' ? burnoutLevel : (stats as unknown as Record<string, number>)[key] ?? 0
           const displayVal = Math.round(val)
           const isLow = displayVal < 30
           const barColor = isLow ? 'var(--red)' : color

@@ -220,8 +220,10 @@ export function VitaRewardsPanel({ onBack }: Props) {
             <div style={{
               height: '100%', borderRadius: 99,
               background: 'linear-gradient(90deg, var(--section-accent), #a78bfa)',
-              width: `${(state.videosWatched / DAILY_VIDEO_LIMIT) * 100}%`,
-              transition: 'width 0.3s',
+              width: '100%',
+              transform: `scaleX(${state.videosWatched / DAILY_VIDEO_LIMIT})`,
+              transformOrigin: 'left',
+              transition: 'transform 0.3s',
             }} />
           </div>
         </div>
@@ -264,7 +266,7 @@ export function VitaRewardsPanel({ onBack }: Props) {
                 padding: '10px 12px', borderRadius: 10,
                 background: done ? 'rgba(16,185,129,0.08)' : 'rgba(255,255,255,0.04)',
                 opacity: done ? 0.6 : 1,
-                transition: 'all 0.2s',
+                transition: 'background 0.2s, opacity 0.2s',
               }}>
                 <span style={{ fontSize: 20, width: 28, textAlign: 'center', flexShrink: 0 }}>{quest.emoji}</span>
                 <div style={{ flex: 1 }}>

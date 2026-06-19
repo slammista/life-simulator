@@ -167,7 +167,7 @@ export function VitaShopPanel({ onBack }: Props) {
               borderRadius: 10, fontSize: 11, fontWeight: 600,
               background: tab === t.id ? 'var(--section-accent)' : 'transparent',
               color: tab === t.id ? '#fff' : 'var(--color-text-secondary)',
-              transition: 'all 0.15s',
+              transition: 'background 0.15s, color 0.15s',
             }}
           >
             <div style={{ fontSize: 16 }}>{t.emoji}</div>
