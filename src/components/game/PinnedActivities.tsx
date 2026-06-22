@@ -72,7 +72,7 @@ export function PinnedActivities({ activeSub, onChange }: Props) {
   return (
     <div style={{ padding: '8px 12px 0', flexShrink: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-        <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>
+        <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontWeight: 600 }}>
           ⭐ Preferiti
         </span>
         <button

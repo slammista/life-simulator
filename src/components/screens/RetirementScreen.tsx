@@ -125,21 +125,28 @@ export default function RetirementScreen() {
           {!retirement.isRetired && (
             <div className="card">
               <h3 className="card-title">Vai in pensione</h3>
-              <div className="action-grid">
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
                 {([
                   { type: 'early' as RetirementType,    label: '🏖️ Anticipata (FIRE)', min: 55, moneyMin: 500000, desc: 'Età 55+, €500k+ risparmiati' },
                   { type: 'standard' as RetirementType, label: '🎗️ Standard',          min: 62, moneyMin: 0,      desc: 'Età 62+' },
                   { type: 'medical' as RetirementType,  label: '🏥 Per invalidità',    min: 0,  moneyMin: 0,      desc: 'Richiede disabilità certificata' },
-                ]).map(opt => (
-                  <div key={opt.type} className="card">
-                    <p className="card-subtitle">{opt.label}</p>
-                    <p className="small-text">{opt.desc}</p>
+                ]).map((opt, idx, arr) => (
+                  <div key={opt.type} style={{
+                    display: 'flex', alignItems: 'center', gap: 12,
+                    padding: '10px 0',
+                    borderBottom: idx < arr.length - 1 ? '1px solid rgba(255,255,255,0.05)' : 'none',
+                  }}>
+                    <div style={{ flex: 1 }}>
+                      <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--color-text)', marginBottom: 2 }}>{opt.label}</p>
+                      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{opt.desc}</p>
+                    </div>
                     <button
                       className="action-btn"
+                      style={{ flexShrink: 0, fontSize: 12, padding: '6px 14px' }}
                       disabled={time.age < opt.min || finance.money < opt.moneyMin}
                       onClick={() => act(() => retire(opt.type))}
                     >
-                      Vai in pensione
+                      Vai
                     </button>
                   </div>
                 ))}

@@ -45,7 +45,7 @@ export default function ParentingScreen() {
         <p className="card-subtitle">
           Figli: {children.length}/8 · Età: {time.age}
         </p>
-        <div className="action-grid">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <button
             className="action-btn"
             onClick={() => act(haveChild, '👶')}
@@ -173,7 +173,7 @@ export default function ParentingScreen() {
               {selectedChild?.id === child.id && (
                 <div className="parenting-actions">
                   <h4>Interagisci con {child.name}</h4>
-                  <div className="action-grid compact">
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
                     {PARENTING_ACTIONS.map(def => (
                       <button
                         key={def.id}

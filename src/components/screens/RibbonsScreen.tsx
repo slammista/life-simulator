@@ -175,7 +175,7 @@ export default function RibbonsScreen() {
               )}
               <div style={{
                 marginTop: 4, fontSize: 9, fontWeight: 600,
-                color: TIER_COLORS[def.tier], textTransform: 'uppercase' as const,
+                color: TIER_COLORS[def.tier], textTransform: 'capitalize' as const,
               }}>
                 {def.tier}
               </div>

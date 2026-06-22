@@ -57,7 +57,7 @@ export function ShareLifeButton() {
         color: copied ? '#6ee7b7' : '#a5b4fc',
         fontSize: 12, fontWeight: 600,
         cursor: 'pointer',
-        transition: 'all 0.2s ease',
+        transition: 'background 0.2s ease, border-color 0.2s ease, color 0.2s ease',
       }}
     >
       <span>{copied ? '✓' : '📤'}</span>

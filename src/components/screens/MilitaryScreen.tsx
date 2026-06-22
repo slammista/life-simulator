@@ -99,7 +99,7 @@ export default function MilitaryScreen() {
               {military.isEnlisted && (
                 <div className="card">
                   <h3 className="card-title">Azioni</h3>
-                  <div className="action-grid">
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                     <button className="action-btn" onClick={() => act(requestMilitaryPromotion)}>
                       🎖️ Richiedi promozione
                     </button>

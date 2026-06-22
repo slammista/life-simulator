@@ -330,7 +330,7 @@ export function VitaAccountPanel({ onBack }: Props) {
                 <span style={{
                   fontSize: 9, fontWeight: 800, padding: '2px 7px', borderRadius: 99,
                   background: 'rgba(167,139,250,0.25)', color: '#c4b5fd', marginLeft: 4,
-                  textTransform: 'uppercase', letterSpacing: 0.5,
+                  letterSpacing: 0,
                 }}>
                   Presto
                 </span>
@@ -350,7 +350,7 @@ export function VitaAccountPanel({ onBack }: Props) {
                     fontSize: 13, fontWeight: 600,
                     background: authTab === t ? 'var(--section-accent)' : 'rgba(255,255,255,0.07)',
                     color: authTab === t ? '#fff' : 'var(--color-text-secondary)',
-                    transition: 'all 0.15s',
+                    transition: 'background 0.15s, color 0.15s',
                   }}
                 >
                   {t === 'login' ? 'Accedi' : 'Registrati'}

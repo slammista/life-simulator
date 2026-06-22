@@ -92,7 +92,7 @@ export function TutorialOverlay() {
                   ? 'var(--color-cta, #6366f1)'
                   : 'rgba(255,255,255,0.18)',
               opacity: i < step ? 0.5 : 1,
-              transition: 'all 0.25s ease',
+              transition: 'background 0.25s ease, opacity 0.25s ease',
             }} />
           ))}
         </div>

@@ -70,8 +70,8 @@ export function NPCEventNotifications() {
           {/* Content */}
           <div style={{ flex: 1, minWidth: 0 }}>
             <p style={{
-              fontSize: 11, fontWeight: 700, letterSpacing: 0.5,
-              color: color, textTransform: 'uppercase', marginBottom: 2,
+              fontSize: 11, fontWeight: 700,
+              color: color, marginBottom: 2,
             }}>
               {ev.npcName} — vita privata
             </p>
