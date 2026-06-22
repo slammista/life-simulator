@@ -276,7 +276,7 @@ export function TravelScreen() {
       )}
       {travelHistory.length > 0 && (
         <div>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             Viaggi passati ({travelHistory.length})
           </p>
           {travelHistory.slice(0, 10).map((t, i) => (

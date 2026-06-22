@@ -66,7 +66,7 @@ export function HealthScreen() {
       </div>
 
       {/* Activity cards */}
-      <p style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: 8 }}>
+      <p style={{ fontSize: 12, color: 'var(--text-faint)', fontWeight: 600, marginBottom: 8 }}>
         Azioni disponibili
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
@@ -160,7 +160,7 @@ export function HealthScreen() {
       </div>
 
       {/* Trauma & resilience */}
-      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+      <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
         Trauma e resilienza
       </p>
       <div className="card" style={{ padding: 12, marginBottom: 14 }}>
@@ -201,7 +201,7 @@ export function HealthScreen() {
       </div>
 
       {/* Diseases */}
-      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+      <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
         Condizioni ({health.diseases.length})
       </p>
       {health.diseases.length === 0 ? (
@@ -248,7 +248,7 @@ export function HealthScreen() {
       {/* Addictions */}
       {health.addictions.length > 0 && (
         <>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             Dipendenze
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -280,7 +280,7 @@ function OrganDonorSection() {
 
   return (
     <div style={{ marginTop: 16 }}>
-      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+      <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
         Donazione organi
       </p>
       <div

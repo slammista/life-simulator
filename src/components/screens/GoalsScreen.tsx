@@ -27,7 +27,7 @@ export function GoalsScreen() {
       {/* Active goals */}
       {active.length > 0 && (
         <>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8, fontWeight: 600 }}>
             Da completare
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 16 }}>
@@ -59,7 +59,7 @@ export function GoalsScreen() {
       {/* Completed goals */}
       {completed.length > 0 && (
         <>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8, fontWeight: 600 }}>
             Completati ✅
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>

@@ -123,7 +123,7 @@ export default function CausalityTimelineScreen() {
               {filtered.map(entry => {
                 const color = CATEGORY_COLORS[entry.category]
                 return (
-                  <div key={entry.id} className="card" style={{ padding: 12, borderLeft: `3px solid ${color}` }}>
+                  <div key={entry.id} className="card" style={{ padding: 12, borderTop: `2px solid ${color}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                       <div>
                         <p style={{ fontSize: 13, fontWeight: 700 }}>
@@ -209,7 +209,7 @@ export default function CausalityTimelineScreen() {
               {filteredMemories.map(mem => {
                 const color = MEMORY_CATEGORY_COLORS[mem.category]
                 return (
-                  <div key={mem.id} className="card" style={{ padding: 12, borderLeft: `3px solid ${color}` }}>
+                  <div key={mem.id} className="card" style={{ padding: 12, borderTop: `2px solid ${color}` }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                       <div style={{
                         width: 40, height: 40, borderRadius: 10, flexShrink: 0,

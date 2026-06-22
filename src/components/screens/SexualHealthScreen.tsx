@@ -32,14 +32,14 @@ export default function SexualHealthScreen() {
       <h2 style={{ fontSize: 16, marginBottom: 8, color: 'var(--color-text)' }}>❤️ Salute Sessuale</h2>
 
       {lastMsg && (
-        <div className="card" style={{ marginBottom: 12, borderLeft: '3px solid var(--color-cta)' }}>
+        <div className="card" style={{ marginBottom: 12, background: 'rgba(124,92,255,0.08)', border: '1px solid rgba(124,92,255,0.25)' }}>
           <p style={{ fontSize: 13 }}>{lastMsg}</p>
         </div>
       )}
 
       {/* Pregnancy status */}
       {sexualHealth.isPregnant && (
-        <div className="card" style={{ marginBottom: 12, borderLeft: '3px solid #f59e0b' }}>
+        <div className="card" style={{ marginBottom: 12, background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.35)' }}>
           <p style={{ fontSize: 14, fontWeight: 600 }}>🤰 Sei incinta — {trimesterLabel}</p>
           <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
             <button onClick={() => { const r = getAbortion(); setLastMsg(r.message) }}
@@ -62,7 +62,7 @@ export default function SexualHealthScreen() {
 
       {/* Active STIs */}
       {sexualHealth.activeSTIs.length > 0 && (
-        <div className="card" style={{ marginBottom: 12, borderLeft: '3px solid #ef4444' }}>
+        <div className="card" style={{ marginBottom: 12, background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.3)' }}>
           <p style={{ fontSize: 12, color: '#ef4444', fontWeight: 600, marginBottom: 8 }}>⚠️ MST Attive</p>
           {sexualHealth.activeSTIs.map(sti => (
             <div key={sti.type} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '6px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>

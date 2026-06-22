@@ -66,7 +66,7 @@ export function DatingScreen() {
       {/* Spouse */}
       {spouses.length > 0 && (
         <div>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             💒 Sposato/a con
           </p>
           {spouses.map(s => {
@@ -117,7 +117,7 @@ export function DatingScreen() {
       {/* Engaged / Partner */}
       {engagedWith && !spouses.find(s => s.id === engagedWith.id) && (
         <div>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             💍 Fidanzato/a con
           </p>
           <div className="card" style={{ padding: '12px 14px' }}>
@@ -161,7 +161,7 @@ export function DatingScreen() {
         const compat = DatingEngine.computeCompatibility(skills, stats, partner.personalityTraits)
         return (
         <div key={partner.id}>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             ❤️ Partner
           </p>
           <div className="card" style={{ padding: '12px 14px' }}>
@@ -207,7 +207,7 @@ export function DatingScreen() {
       {/* Dating apps */}
       {spouses.length === 0 && (
         <div>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             📱 App di Dating
           </p>
           {time.age < 18 ? (

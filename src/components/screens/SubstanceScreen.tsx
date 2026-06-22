@@ -47,7 +47,7 @@ export function SubstanceScreen() {
       {/* Dipendenze attive */}
       {hasAddiction && (
         <div>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             Dipendenze Attive
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -62,7 +62,7 @@ export function SubstanceScreen() {
                     <span style={{ fontSize: 12, color }}>Livello {a.level}%</span>
                   </div>
                   <div style={{ height: 6, background: 'rgba(255,255,255,0.1)', borderRadius: 3, marginBottom: 10, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${a.level}%`, background: color, borderRadius: 3, transition: 'width 0.3s' }} />
+                    <div style={{ height: '100%', width: '100%', background: color, borderRadius: 3, transform: `scaleX(${a.level / 100})`, transformOrigin: 'left', transition: 'transform 0.3s' }} />
                   </div>
                   <button
                     className="btn-secondary"
@@ -92,7 +92,7 @@ export function SubstanceScreen() {
       {/* Alcol — dai 16 anni */}
       {age >= MIN_AGE_ALCOHOL && (
         <div>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             🍺 Alcol
           </p>
           {age < 18 && (
@@ -123,7 +123,7 @@ export function SubstanceScreen() {
       {/* Fumo/sostanze — dai 13 anni (sigarette/vape), dai 16 (cannabis) */}
       {age >= MIN_AGE_SMOKE && (
         <div>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             🚬 Fumo &amp; Sostanze
           </p>
           {age < 18 && (
@@ -157,7 +157,7 @@ export function SubstanceScreen() {
       {/* Centro Riabilitazione */}
       {hasAddiction && (
         <div className="card" style={{ padding: '14px 16px', border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.05)' }}>
-          <p style={{ fontSize: 11, fontWeight: 800, color: '#6ee7b7', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#6ee7b7', marginBottom: 6 }}>
             🏥 Centro Riabilitazione
           </p>
           <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>

@@ -136,7 +136,7 @@ export function FinanceScreen() {
       {/* Parent money card — only for under 18 */}
       {age < 18 && (
         <div className="card" style={{ padding: '14px 16px', marginBottom: 12, border: '1px solid rgba(245,158,11,0.3)', background: 'rgba(245,158,11,0.06)' }}>
-          <p style={{ fontSize: 11, fontWeight: 800, color: '#fbbf24', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#fbbf24', marginBottom: 8 }}>
             💸 Chiedi soldi ai genitori
           </p>
           <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
@@ -176,7 +176,7 @@ export function FinanceScreen() {
       {/* Loans player owes to NPCs */}
       {(npcLoans ?? []).filter(l => !l.repaid && l.direction !== 'player_lent').length > 0 && (
         <div className="card" style={{ padding: '14px 16px', marginBottom: 12, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.05)' }}>
-          <p style={{ fontSize: 11, fontWeight: 800, color: '#fca5a5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#fca5a5', marginBottom: 8 }}>
             💸 Prestiti da restituire
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -209,7 +209,7 @@ export function FinanceScreen() {
       {/* Loans NPCs owe to player */}
       {(npcLoans ?? []).filter(l => !l.repaid && l.direction === 'player_lent').length > 0 && (
         <div className="card" style={{ padding: '14px 16px', marginBottom: 12, border: '1px solid rgba(16,185,129,0.3)', background: 'rgba(16,185,129,0.05)' }}>
-          <p style={{ fontSize: 11, fontWeight: 800, color: '#6ee7b7', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#6ee7b7', marginBottom: 8 }}>
             💰 Crediti verso altri
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -279,7 +279,7 @@ export function FinanceScreen() {
             background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, var(--bg-card) 70%)',
             border: '1px solid rgba(16,185,129,0.22)',
           }}>
-            <p style={{ fontSize: 11, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 700, marginBottom: 6 }}>
+            <p style={{ fontSize: 11, color: 'var(--text-faint)', fontWeight: 500, marginBottom: 6 }}>
               Patrimonio netto
             </p>
             <p style={{ fontSize: 36, fontWeight: 900, color: '#18D39E', lineHeight: 1, letterSpacing: -1 }}>
@@ -467,7 +467,7 @@ export function FinanceScreen() {
 
           {finance.investments.length > 0 && (
             <div>
-              <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
                 Portafoglio attivo
               </p>
               {finance.investments.map(inv => {
@@ -496,7 +496,7 @@ export function FinanceScreen() {
           )}
 
           {/* New investment */}
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             Nuovi investimenti
           </p>
           {defs.map(def => (
@@ -554,7 +554,7 @@ export function FinanceScreen() {
             </div>
           </div>
 
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginTop: 4 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginTop: 4 }}>
             Asset posseduti
           </p>
           {finance.assets.length === 0 && (
@@ -613,7 +613,7 @@ export function FinanceScreen() {
             )
           })}
 
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginTop: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginTop: 8 }}>
             Catalogo acquisti
           </p>
           {assetDefs.map(def => {

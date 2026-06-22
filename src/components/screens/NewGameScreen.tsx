@@ -242,7 +242,7 @@ export function NewGameScreen() {
                   cursor: isUnlocked ? 'pointer' : 'default',
                   border: `2px solid ${active && isUnlocked ? s.color : 'rgba(255,255,255,0.08)'}`,
                   background: active && isUnlocked ? `${s.color}18` : 'rgba(255,255,255,0.03)',
-                  transition: 'all 0.15s ease',
+                  transition: 'border-color 0.15s ease, background 0.15s ease',
                   overflow: 'hidden',
                 }}
               >

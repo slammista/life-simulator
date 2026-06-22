@@ -273,7 +273,7 @@ export function SpecialCareerScreen() {
             <div key={label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 80, flexShrink: 0 }}>{label}</span>
               <div style={{ flex: 1, height: 6, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                <div style={{ height: '100%', width: `${val}%`, background: color, borderRadius: 4, transition: 'width 0.4s ease' }} />
+                <div style={{ height: '100%', width: '100%', background: color, borderRadius: 4, transform: `scaleX(${val / 100})`, transformOrigin: 'left', transition: 'transform 0.4s ease' }} />
               </div>
               <span style={{ fontSize: 11, width: 26, textAlign: 'right', color: 'var(--color-text-secondary)' }}>{Math.round(val)}</span>
             </div>
@@ -298,7 +298,7 @@ export function SpecialCareerScreen() {
           background: 'linear-gradient(135deg, rgba(34,197,94,0.10) 0%, var(--bg-card) 70%)',
           border: '1px solid rgba(34,197,94,0.30)',
         }}>
-          <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#86efac', textTransform: 'uppercase', marginBottom: 10 }}>
+          <p style={{ fontSize: 13, fontWeight: 700, color: '#86efac', marginBottom: 10 }}>
             📋 Contratto in Corso
           </p>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -369,7 +369,7 @@ export function SpecialCareerScreen() {
             background: 'linear-gradient(135deg, rgba(168,85,247,0.10) 0%, var(--bg-card) 70%)',
             border: '1px solid rgba(168,85,247,0.28)',
           }}>
-            <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: '#c4b5fd', textTransform: 'uppercase', marginBottom: 10 }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#c4b5fd', marginBottom: 10 }}>
               📊 Ultima Stagione ({last.year})
             </p>
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
@@ -423,7 +423,7 @@ export function SpecialCareerScreen() {
             {career.careerLegacy === 'leggenda_mondiale' ? '🌍' : career.careerLegacy === 'leggenda_nazionale' ? '🏅' : career.careerLegacy === 'professionista' ? '📋' : '💤'}
           </span>
           <div>
-            <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, textTransform: 'uppercase', color: LEGACY_COLORS[career.careerLegacy] }}>
+            <p style={{ fontSize: 11, fontWeight: 500, color: LEGACY_COLORS[career.careerLegacy] }}>
               Legacy
             </p>
             <p style={{ fontSize: 14, fontWeight: 700, color: 'var(--color-text)', textTransform: 'capitalize' }}>
@@ -436,7 +436,7 @@ export function SpecialCareerScreen() {
       {/* Actions */}
       {!isRetired && (
         <>
-          <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 8 }}>
+          <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-faint)', marginBottom: 8 }}>
             Azioni disponibili
           </p>
           {availableActions.length === 0 ? (

@@ -189,7 +189,7 @@ export function GameOverScreen() {
 
         {/* Life stats */}
         <div className="card" style={{ width: '100%', marginBottom: 16 }}>
-          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
             Statistiche di Vita
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
@@ -228,7 +228,7 @@ export function GameOverScreen() {
         {/* Life highlights */}
         {highlights.length > 0 && (
           <div className="card" style={{ width: '100%', marginBottom: 16 }}>
-            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
               Momenti Indimenticabili
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -254,7 +254,7 @@ export function GameOverScreen() {
 
         {/* Regrets */}
         <div className="card" style={{ width: '100%', marginBottom: 16 }}>
-          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
             💭 Rimpianti
           </p>
           {regrets.length === 0 ? (
@@ -286,7 +286,7 @@ export function GameOverScreen() {
 
         {/* Legacy */}
         <div className="card" style={{ width: '100%', marginBottom: 16 }}>
-          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1 }}>
+          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
             Eredità Lasciata
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>

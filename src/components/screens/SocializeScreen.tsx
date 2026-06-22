@@ -77,7 +77,7 @@ export function SocializeScreen() {
 
       {/* Skills mini-display */}
       <div className="card" style={{ padding: '10px 14px', marginBottom: 14 }}>
-        <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Le tue abilità sociali</p>
+        <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>Le tue abilità sociali</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {[
             { key: 'socialSkill', label: 'Socialità', color: '#a5b4fc' },
@@ -97,7 +97,7 @@ export function SocializeScreen() {
 
       {/* Community volunteering */}
       <div style={{ marginBottom: 14 }}>
-        <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Volontariato</p>
+        <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>Volontariato</p>
         <div
           className="card tap-scale"
           style={{ padding: '14px', background: 'linear-gradient(135deg, rgba(16,185,129,0.1) 0%, var(--bg-card) 70%)', border: '1px solid rgba(16,185,129,0.22)', cursor: 'pointer' }}

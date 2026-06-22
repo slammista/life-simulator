@@ -124,7 +124,7 @@ export function HobbyScreen() {
 
                 <div style={{ marginBottom: 10 }}>
                   <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${hobby.skillLevel}%`, background: skillColor, borderRadius: 4, transition: 'width 0.4s ease' }} />
+                    <div style={{ height: '100%', width: '100%', background: skillColor, borderRadius: 4, transform: `scaleX(${hobby.skillLevel / 100})`, transformOrigin: 'left', transition: 'transform 0.4s ease' }} />
                   </div>
                 </div>
 

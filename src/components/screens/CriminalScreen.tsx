@@ -103,7 +103,7 @@ export function CriminalScreen() {
           {/* Crime history */}
           {criminal.crimes.length > 0 && (
             <div>
-              <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8, marginTop: 4 }}>
+              <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8, marginTop: 4 }}>
                 Storico reati
               </p>
               {[...criminal.crimes].reverse().map((c, i) => (

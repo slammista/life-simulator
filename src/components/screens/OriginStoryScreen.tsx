@@ -58,7 +58,7 @@ export function OriginStoryScreen() {
             background: 'rgba(255,255,255,0.04)', borderRadius: 14, padding: '16px 18px',
             marginBottom: 24, border: '1px solid rgba(255,255,255,0.08)',
           }}>
-            <p style={{ fontSize: 11, fontWeight: 700, color: '#9ca3af', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 12 }}>
+            <p style={{ fontSize: 12, fontWeight: 600, color: '#9ca3af', marginBottom: 12 }}>
               ✨ Tratti della tua vita
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

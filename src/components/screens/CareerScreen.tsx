@@ -70,7 +70,7 @@ function formatSalary(n: number): string {
 function SectionLabel({ label }: { label: string }) {
   return (
     <div style={{ padding: '9px 0 7px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 2 }}>
-      <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: 'var(--text-faint)', textTransform: 'uppercase' }}>
+      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-faint)' }}>
         {label}
       </span>
     </div>

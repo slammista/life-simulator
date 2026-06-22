@@ -173,7 +173,7 @@ export function SportScreen() {
 
                 <div style={{ marginBottom: 10 }}>
                   <div style={{ height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${sport.skillLevel}%`, background: skillColor, borderRadius: 4, transition: 'width 0.4s ease' }} />
+                    <div style={{ height: '100%', width: '100%', background: skillColor, borderRadius: 4, transform: `scaleX(${sport.skillLevel / 100})`, transformOrigin: 'left', transition: 'transform 0.4s ease' }} />
                   </div>
                 </div>
 
@@ -241,7 +241,7 @@ export function SportScreen() {
           )}
           {CATEGORY_ORDER.filter(cat => grouped[cat]?.length).map(cat => (
             <div key={cat}>
-              <p style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1, color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 8 }}>
+              <p style={{ fontSize: 12, fontWeight: 600, color: 'var(--text-faint)', marginBottom: 8 }}>
                 {CATEGORY_LABELS[cat]}
               </p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

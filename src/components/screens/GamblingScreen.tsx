@@ -83,7 +83,7 @@ export default function GamblingScreen() {
               <p style={{ fontSize: 10, color: addictionColor }}>{gambling.addictionLevel.toFixed(0)}/100</p>
             </div>
             <div style={{ height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.1)', marginTop: 2 }}>
-              <div style={{ width: `${gambling.addictionLevel}%`, height: '100%', borderRadius: 2, background: addictionColor, transition: 'width 0.3s' }} />
+              <div style={{ width: '100%', height: '100%', borderRadius: 2, background: addictionColor, transform: `scaleX(${gambling.addictionLevel / 100})`, transformOrigin: 'left', transition: 'transform 0.3s' }} />
             </div>
           </div>
         )}
@@ -91,7 +91,7 @@ export default function GamblingScreen() {
       </div>
 
       {lastMsg && (
-        <div className="card" style={{ marginBottom: 12, borderLeft: '3px solid var(--color-cta)' }}>
+        <div className="card" style={{ marginBottom: 12, background: 'rgba(124,92,255,0.08)', border: '1px solid rgba(124,92,255,0.25)' }}>
           <p style={{ fontSize: 13 }}>{lastMsg}</p>
         </div>
       )}
@@ -100,7 +100,7 @@ export default function GamblingScreen() {
       {sub === 'casino' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {gambling.casinoBlacklisted && (
-            <div className="card" style={{ borderLeft: '3px solid #ef4444' }}>
+            <div className="card" style={{ background: 'rgba(239,68,68,0.10)', border: '1px solid rgba(239,68,68,0.3)' }}>
               <p style={{ fontSize: 13, color: '#ef4444' }}>🚫 Sei nella blacklist del casinò.</p>
             </div>
           )}

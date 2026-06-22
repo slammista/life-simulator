@@ -193,7 +193,7 @@ export function PoliticsScreen() {
           </div>
 
           {/* Role cards */}
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600 }}>
             Ruoli Politici
           </p>
           {ROLE_ORDER.map(roleId => {

@@ -55,7 +55,7 @@ const CLIQUES: { id: SchoolReputationStatus; emoji: string; desc: string }[] = [
 function SectionLabel({ label }: { label: string }) {
   return (
     <div style={{ padding: '9px 0 7px', borderBottom: '1px solid rgba(255,255,255,0.06)', marginBottom: 2 }}>
-      <span style={{ fontSize: 10, fontWeight: 800, letterSpacing: 1.5, color: 'var(--text-faint)', textTransform: 'uppercase' }}>
+      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-faint)' }}>
         {label}
       </span>
     </div>
@@ -320,7 +320,7 @@ export function EducationScreen() {
                 <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', width: 80, flexShrink: 0 }}>{label}</span>
                   <div style={{ flex: 1, height: 5, background: 'rgba(255,255,255,0.08)', borderRadius: 4, overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${val}%`, background: color, borderRadius: 4, transition: 'width 0.3s' }} />
+                    <div style={{ height: '100%', width: '100%', background: color, borderRadius: 4, transform: `scaleX(${val / 100})`, transformOrigin: 'left', transition: 'transform 0.3s' }} />
                   </div>
                   <span style={{ fontSize: 10, color, width: 24, textAlign: 'right', flexShrink: 0 }}>{val}</span>
                 </div>
@@ -340,7 +340,7 @@ export function EducationScreen() {
         </div>
         {education.completedLevels.length > 0 && (
           <div className="card" style={{ padding: '12px 14px', marginTop: 10 }}>
-            <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Titoli conseguiti</p>
+            <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>Titoli conseguiti</p>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {education.completedLevels.map(lvl => (
                 <span key={lvl} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 99, background: 'rgba(34,197,94,0.15)', color: '#86efac', border: '1px solid rgba(34,197,94,0.2)' }}>

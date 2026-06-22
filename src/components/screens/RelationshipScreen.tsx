@@ -93,7 +93,7 @@ export function RelationshipScreen() {
             <div className="card" style={{ padding: 12, marginBottom: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
                 <div>
-                  <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>
+                  <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 500 }}>
                     Albero familiare
                   </p>
                   <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)', marginTop: 2 }}>
@@ -139,11 +139,11 @@ export function RelationshipScreen() {
                     </p>
                     {parents.map(p => renderPerson(p, p.gender === 'female' ? '👩' : '👨', p.relationToPlayer === 'mother' ? 'Madre' : 'Padre'))}
                     {maternalGps.length > 0 && (
-                      <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', margin: '8px 0 4px', textTransform: 'uppercase', letterSpacing: 0.5 }}>Ramo materno</p>
+                      <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', margin: '8px 0 4px' }}>Ramo materno</p>
                     )}
                     {maternalGps.map(g => renderPerson(g, g.gender === 'female' ? '👵' : '👴', g.gender === 'female' ? 'Nonna' : 'Nonno'))}
                     {paternalGps.length > 0 && (
-                      <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', margin: '8px 0 4px', textTransform: 'uppercase', letterSpacing: 0.5 }}>Ramo paterno</p>
+                      <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', margin: '8px 0 4px' }}>Ramo paterno</p>
                     )}
                     {paternalGps.map(g => renderPerson(g, g.gender === 'female' ? '👵' : '👴', g.gender === 'female' ? 'Nonna' : 'Nonno'))}
                   </div>
@@ -169,7 +169,7 @@ export function RelationshipScreen() {
 
           {spouseOrPartner && playerAge >= 18 && (
             <div className="card" style={{ padding: '12px 14px', marginBottom: 12, border: '1px solid rgba(239,68,68,0.25)', background: 'rgba(239,68,68,0.06)' }}>
-              <p style={{ fontSize: 11, fontWeight: 700, color: '#fca5a5', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>
+              <p style={{ fontSize: 13, fontWeight: 700, color: '#fca5a5', marginBottom: 6 }}>
                 {spouseOrPartner.type === 'spouse' ? '💍' : '💑'} {spouseOrPartner.name.split(' ')[0]}
               </p>
               {spouseOrPartner.historyFlags.includes('cheated_secretly') && (

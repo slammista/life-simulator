@@ -50,7 +50,7 @@ export function BusinessScreen() {
             </div>
             {/* Reputation bar */}
             <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: 4, height: 6, marginBottom: 10 }}>
-              <div style={{ width: `${biz.reputation}%`, height: '100%', borderRadius: 4, background: biz.reputation > 60 ? '#4ade80' : biz.reputation > 30 ? '#f59e0b' : '#ef4444', transition: 'width 0.3s' }} />
+              <div style={{ width: '100%', height: '100%', borderRadius: 4, background: biz.reputation > 60 ? '#4ade80' : biz.reputation > 30 ? '#f59e0b' : '#ef4444', transform: `scaleX(${biz.reputation / 100})`, transformOrigin: 'left', transition: 'transform 0.3s' }} />
             </div>
             {/* Employee management */}
             <div style={{ display: 'flex', gap: 8 }}>

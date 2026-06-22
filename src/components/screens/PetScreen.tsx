@@ -230,7 +230,7 @@ export function PetScreen() {
       {/* Animali vivi */}
       {alivePets.length > 0 && (
         <div>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             I Miei Animali ({alivePets.length}/5)
           </p>
           {alivePets.map(pet => (
@@ -242,7 +242,7 @@ export function PetScreen() {
       {/* Adotta */}
       {alivePets.length < 5 && time.age >= MIN_AGE_PET && canAdopt && (
         <div>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             Adotta / Acquista{isMinor ? ' (con permesso dei genitori)' : ''}
           </p>
           <div className="card" style={{ padding: '12px 14px' }}>
@@ -320,7 +320,7 @@ export function PetScreen() {
       {/* In memoria */}
       {deadPets.length > 0 && (
         <div style={{ marginTop: 8 }}>
-          <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
             In memoria 🌈
           </p>
           {deadPets.map(pet => {

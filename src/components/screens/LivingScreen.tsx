@@ -279,7 +279,7 @@ export default function LivingScreen() {
 
           {rentalProperties.filter(p => p.isActive).length > 0 && (
             <>
-              <p style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Immobili in portafoglio</p>
+              <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, marginBottom: 8 }}>Immobili in portafoglio</p>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 14 }}>
                 {rentalProperties.filter(p => p.isActive).map(prop => (
                   <div key={prop.id} style={{ background: 'rgba(34,197,94,0.06)', border: '1px solid rgba(34,197,94,0.2)', borderRadius: 10, padding: 12 }}>
@@ -305,7 +305,7 @@ export default function LivingScreen() {
             </>
           )}
 
-          <p style={{ fontSize: 11, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Acquista immobile</p>
+          <p style={{ fontSize: 12, color: '#94a3b8', fontWeight: 600, marginBottom: 8 }}>Acquista immobile</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {RENTAL_TIERS.map(tier => {
               const canAfford = state.finance.money >= tier.price

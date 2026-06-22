@@ -28,7 +28,7 @@ function SectionLabel({ label }: { label: string }) {
       borderTop: '1px solid rgba(255,255,255,0.05)',
       borderBottom: '1px solid rgba(255,255,255,0.05)',
     }}>
-      <span style={{ fontSize: 10, fontWeight: 700, letterSpacing: 1.5, color: 'var(--text-faint)', textTransform: 'uppercase' }}>
+      <span style={{ fontSize: 11, fontWeight: 500, color: 'var(--text-faint)' }}>
         {label}
       </span>
     </div>
