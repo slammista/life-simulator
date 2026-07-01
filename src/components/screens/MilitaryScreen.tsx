@@ -175,7 +175,7 @@ export default function MilitaryScreen() {
               {([
                 { type: 'training' as MissionType, emoji: '🎯', title: 'Addestramento', desc: 'Migliora le tue abilità. Rischio zero.', risk: '0%' },
                 { type: 'peacekeeping' as MissionType, emoji: '🕊️', title: 'Peacekeeping', desc: 'Missione internazionale di pace. Rischio basso.', risk: '15%' },
-                { type: 'combat' as MissionType, emoji: '⚔️', title: 'Combattimento', desc: 'Zona di guerra. Alto rischio, alta ricompensa.', risk: `${Math.round((currentBranch?.combatRisk ?? 0.2) * 40 * 100)}%` },
+                { type: 'combat' as MissionType, emoji: '⚔️', title: 'Combattimento', desc: 'Zona di guerra. Alto rischio, alta ricompensa.', risk: `${Math.round((currentBranch?.combatRisk ?? 0.2) * 100)}%` },
               ]).map(m => (
                 <div key={m.type} className="card mission-card">
                   <div className="mission-header">
