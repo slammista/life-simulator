@@ -10,11 +10,14 @@ interface Props {
 export function FirstPlayHint({ hasEvent, age }: Props) {
   const [visible, setVisible] = useState(false)
 
+  // Delayed-hint visibility driven by the `age` prop (timer + localStorage
+  // read) — a genuine effect, not derivable synchronously at render.
   useEffect(() => {
     if (age === 0 && !localStorage.getItem(SEEN_KEY)) {
       const t = setTimeout(() => setVisible(true), 2000)
       return () => clearTimeout(t)
     } else if (age > 0) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(false)
     }
   }, [age])
@@ -23,6 +26,7 @@ export function FirstPlayHint({ hasEvent, age }: Props) {
   useEffect(() => {
     if (hasEvent && visible) {
       localStorage.setItem(SEEN_KEY, '1')
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setVisible(false)
     }
   }, [hasEvent, visible])

@@ -69,6 +69,9 @@ export const EventDisplay = memo(function EventDisplay() {
   const handleChoice = useGameStore(s => s.handleChoice)
   const [cinematic, setCinematic] = useState(false)
 
+  // Cinematic flash + SFX triggered by the incoming event's rarity — a
+  // genuine effect (plays audio, schedules a timed flash), not derivable
+  // synchronously at render.
   useEffect(() => {
     if (currentEvent) {
       AudioEngine.playSFX(
@@ -77,11 +80,16 @@ export const EventDisplay = memo(function EventDisplay() {
         : 'event'
       )
       if (currentEvent.rarity === 'epic' || currentEvent.rarity === 'legendary') {
+        // eslint-disable-next-line react-hooks/set-state-in-effect
         setCinematic(true)
         const t = setTimeout(() => setCinematic(false), 2200)
         return () => clearTimeout(t)
       }
     }
+    // currentEvent?.id (not the object) is intentional: it identifies which
+    // event is showing without re-triggering the SFX/cinematic flash if the
+    // store ever re-creates the same event object on an unrelated update.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentEvent?.id])
 
   if (!currentEvent) {

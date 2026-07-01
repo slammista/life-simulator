@@ -226,9 +226,10 @@ function App() {
   // Hide age-transition overlay whenever a new game starts
   useEffect(() => {
     if (isStarted && !isGameOver) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setAgeOverlay({ visible: false, age: 0, year: 0 })
     }
-  }, [isStarted])
+  }, [isStarted, isGameOver])
 
   const handleAge = useCallback(() => {
     setActiveTab('vita')

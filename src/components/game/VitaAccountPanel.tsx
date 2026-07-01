@@ -74,6 +74,8 @@ export function VitaAccountPanel({ onBack }: Props) {
     }
   }, [])
 
+  // Cloud data fetch/migration triggered by auth state (`user`) changing —
+  // a genuine effect, not derivable synchronously at render.
   useEffect(() => {
     if (!user) return
     // Auto-migrate local progress to the cloud on first login, then reconcile gems
@@ -81,6 +83,7 @@ export function VitaAccountPanel({ onBack }: Props) {
       CloudSaveService.getCloudSaveDate().then(setCloudDate)
     })
     useWalletStore.getState().syncWithServer()
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchPastLives(user.id)
   }, [user, fetchPastLives])
 

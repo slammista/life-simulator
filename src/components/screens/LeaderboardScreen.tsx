@@ -67,7 +67,10 @@ export function LeaderboardScreen() {
     setLoading(false)
   }, [])
 
+  // Remote leaderboard fetch triggered by the selected `category` — a
+  // genuine effect, not derivable synchronously at render.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     loadCategory(category)
     CloudSaveService.getCurrentUser().then(u => setCurrentUserId(u?.id ?? null))
   }, [category, loadCategory])

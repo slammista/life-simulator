@@ -21,7 +21,10 @@ const AGE_MSGS = [
 export function AgeTransitionOverlay({ age, year, visible, onDone }: Props) {
   const [phase, setPhase] = useState<'idle' | 'in' | 'hold' | 'out'>('idle')
 
+  // Timed animation state machine driven by the `visible` prop — a genuine
+  // effect (staggered setTimeout phase transitions), not derivable at render.
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (!visible) { setPhase('idle'); return }
     setPhase('in')
     const t1 = setTimeout(() => setPhase('hold'), 220)

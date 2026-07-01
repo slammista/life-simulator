@@ -130,6 +130,8 @@ export const HUD = memo(function HUD() {
   const [deltas, setDeltas] = useState<StatDelta[]>([])
   const deltaIdRef = useRef(0)
 
+  // Flash-on-change animation: needs to diff against the *previous* render's
+  // values (via a ref) to know what changed — genuinely requires an effect.
   useEffect(() => {
     const prev = prevStatsRef.current
     const changed: string[] = []
@@ -148,6 +150,7 @@ export const HUD = memo(function HUD() {
       prev[k] = rounded
     }
     if (changed.length === 0) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setFlashKeys(new Set(changed))
     setDeltas(d => [...d, ...newDeltas])
     const t = setTimeout(() => setFlashKeys(new Set()), 400)

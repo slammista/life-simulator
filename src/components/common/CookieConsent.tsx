@@ -5,19 +5,18 @@ const STORAGE_KEY = 'lifesim2d-cookie-consent'
 type ConsentChoice = 'accepted' | 'declined' | null
 
 export function CookieConsent() {
-  const [choice, setChoice] = useState<ConsentChoice>(null)
+  const [choice, setChoice] = useState<ConsentChoice>(() => localStorage.getItem(STORAGE_KEY) as ConsentChoice)
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as ConsentChoice
-    if (!stored) {
-      // Show banner after 1 second
-      const t = setTimeout(() => setVisible(true), 1000)
-      return () => clearTimeout(t)
+    if (choice) {
+      if (choice === 'accepted') enableAds()
+      return
     }
-    setChoice(stored)
-    if (stored === 'accepted') enableAds()
-  }, [])
+    // Show banner after 1 second
+    const t = setTimeout(() => setVisible(true), 1000)
+    return () => clearTimeout(t)
+  }, [choice])
 
   function accept() {
     localStorage.setItem(STORAGE_KEY, 'accepted')

@@ -135,6 +135,9 @@ export function ReactionGame({ onFinish }: MiniGameProps) {
     }, delay)
   }, [])
 
+  // New round setup (randomized-delay timer) triggered by `round` changing —
+  // a genuine effect, not derivable synchronously at render.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { arm(); return () => clearTimeout(timerRef.current) }, [arm, round])
 
   const finishRound = (s: number) => {
@@ -244,10 +247,21 @@ export function QuickTapGame({ onFinish }: MiniGameProps) {
     shownRef.current += 1
     setShown(shownRef.current)
     setTarget({ x: 10 + Math.random() * 78, y: 10 + Math.random() * 70 })
+    // Safe: this timeout fires long after the component body (and hitsRef's
+    // declaration below) has finished running — no actual TDZ violation.
+    // eslint-disable-next-line react-hooks/immutability
     timerRef.current = setTimeout(() => { setTarget(null); setTimeout(spawn, 250) }, 850)
+    // `onFinish` (MinigameChallengeModal's handleFinish) is a plain inline
+    // function, not memoized — adding it here would give `spawn` a new
+    // identity on every parent render, which would cascade into the
+    // useEffect below and restart the round's timer mid-game.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   const hitsRef = useRef(0)
+  // Standard "latest value in a ref" pattern so the stable `spawn` callback
+  // (deps: []) can read the current hit count without becoming unstable.
+  // eslint-disable-next-line react-hooks/immutability
   useEffect(() => { hitsRef.current = hits }, [hits])
 
   useEffect(() => { const t = setTimeout(spawn, 400); return () => { clearTimeout(t); clearTimeout(timerRef.current) } }, [spawn])

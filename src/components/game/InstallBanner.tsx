@@ -7,27 +7,18 @@ interface BeforeInstallPromptEvent extends Event {
 
 const DISMISSED_KEY = 'lifesim2d_install_dismissed'
 
+function detectIOS(): boolean {
+  return /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as unknown as Record<string, unknown>).MSStream
+}
+
 export function InstallBanner() {
   const [prompt, setPrompt] = useState<BeforeInstallPromptEvent | null>(null)
-  const [isIOS, setIsIOS] = useState(false)
-  const [showIOS, setShowIOS] = useState(false)
-  const [installed, setInstalled] = useState(false)
+  const [installed, setInstalled] = useState(() => window.matchMedia('(display-mode: standalone)').matches)
+  const [isIOS] = useState(detectIOS)
+  const [showIOS, setShowIOS] = useState(() => detectIOS() && !installed && !localStorage.getItem(DISMISSED_KEY))
 
   useEffect(() => {
-    // Already installed as standalone
-    if (window.matchMedia('(display-mode: standalone)').matches) {
-      setInstalled(true)
-      return
-    }
-    if (localStorage.getItem(DISMISSED_KEY)) return
-
-    // iOS detection (no beforeinstallprompt on Safari)
-    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent) && !(window as unknown as Record<string, unknown>).MSStream
-    if (ios) {
-      setIsIOS(true)
-      setShowIOS(true)
-      return
-    }
+    if (installed || isIOS || localStorage.getItem(DISMISSED_KEY)) return
 
     const handler = (e: Event) => {
       e.preventDefault()
@@ -35,7 +26,7 @@ export function InstallBanner() {
     }
     window.addEventListener('beforeinstallprompt', handler)
     return () => window.removeEventListener('beforeinstallprompt', handler)
-  }, [])
+  }, [installed, isIOS])
 
   function dismiss() {
     localStorage.setItem(DISMISSED_KEY, '1')
