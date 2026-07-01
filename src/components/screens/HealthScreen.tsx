@@ -168,7 +168,7 @@ export function HealthScreen() {
           <div>
             <p style={{ fontSize: 13, fontWeight: 600 }}>Resilienza</p>
             <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-              {therapySessions} sessioni terapia · {health.ptsd ? 'PTSD attivo' : 'Nessun PTSD'}
+              {therapySessions} {therapySessions === 1 ? 'sessione di terapia' : 'sessioni di terapia'} · {health.ptsd ? 'PTSD attivo' : 'Nessun PTSD'}
             </p>
           </div>
           <p style={{ fontSize: 16, fontWeight: 700, color: '#c4b5fd' }}>{resilience}/100</p>
