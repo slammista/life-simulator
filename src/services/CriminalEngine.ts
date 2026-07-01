@@ -78,7 +78,7 @@ export class CriminalEngine {
       return {
         success: false,
         arrested: true,
-        message: `Sei stato arrestato per ${def.name}! Sentenza: ${def.sentence} anni.`,
+        message: `Sei stato arrestato per ${def.name}! Sentenza: ${def.sentence} ${def.sentence === 1 ? 'anno' : 'anni'}.`,
         effects: {
           karma: def.karmaHit,
           reputation: def.reputationHit,
@@ -132,7 +132,7 @@ export class CriminalEngine {
 
     if (newServed >= criminal.prisonSentence) {
       freedThisYear = true
-      message = `Hai scontato la pena. Uscito/a di prigione dopo ${criminal.prisonSentence} anni.`
+      message = `Hai scontato la pena. Uscito/a di prigione dopo ${criminal.prisonSentence} ${criminal.prisonSentence === 1 ? 'anno' : 'anni'}.`
       const updatedCriminal: CriminalRecord = {
         ...criminal,
         inPrison: false,

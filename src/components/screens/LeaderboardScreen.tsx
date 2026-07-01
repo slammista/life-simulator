@@ -157,7 +157,7 @@ export function LeaderboardScreen() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-cta, #6366f1)' }}>
-              {category === 'longevity' && `${time.age} anni`}
+              {category === 'longevity' && `${time.age} ${time.age === 1 ? 'anno' : 'anni'}`}
               {category === 'wealth' && `€${Math.max(0, Math.round(finance.money)).toLocaleString('it-IT')}`}
               {category === 'happiness' && `${Math.round(stats.happiness)}/100`}
               {category === 'karma' && `${Math.round(stats.karma + 100)} pt`}

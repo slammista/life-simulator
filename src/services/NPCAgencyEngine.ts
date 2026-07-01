@@ -73,7 +73,7 @@ export class NPCAgencyEngine {
           type: 'death',
           year: state.time.year,
           age: state.time.age,
-          description: `${rel.name} è morto/a a ${rel.age} anni.`,
+          description: `${rel.name} è morto/a a ${rel.age} ${rel.age === 1 ? 'anno' : 'anni'}.`,
           effects: isClose ? { happiness: -10, mentalHealth: -8 } : {},
         })
         events.push(event)

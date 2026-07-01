@@ -130,7 +130,7 @@ export function GameOverScreen() {
   }
 
   async function handleShare() {
-    const text = `Ho vissuto ${time.age} anni su Life Simulator 2D! 🎮\n💰 €${finance.money.toLocaleString('it-IT')} | 😊 Felicità ${Math.round(stats.happiness)}/100 | 🎯 ${completedGoals.length} goals\nQuanto vivi tu? → life-simulator-2d.vercel.app`
+    const text = `Ho vissuto ${time.age} ${time.age === 1 ? 'anno' : 'anni'} su Life Simulator 2D! 🎮\n💰 €${finance.money.toLocaleString('it-IT')} | 😊 Felicità ${Math.round(stats.happiness)}/100 | 🎯 ${completedGoals.length} goals\nQuanto vivi tu? → life-simulator-2d.vercel.app`
     if (navigator.share) {
       try {
         await navigator.share({ title: 'Life Simulator 2D', text })
@@ -221,7 +221,7 @@ export function GameOverScreen() {
           </div>
           <p style={{ fontSize: 18, fontWeight: 800, color: lifeGrade.color, margin: '0 0 4px' }}>{lifeGrade.label}</p>
           <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            {identity.name} {identity.surname} · {time.age} anni · {time.year}
+            {identity.name} {identity.surname} · {time.age} {time.age === 1 ? 'anno' : 'anni'} · {time.year}
           </p>
         </div>
 

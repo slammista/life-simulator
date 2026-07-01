@@ -125,7 +125,7 @@ export class PetEngine {
       const lifespan = def?.lifespan ?? 10
       const deathChance = newAge > lifespan ? (newAge - lifespan) * 0.3 : 0.01
       if (Math.random() < deathChance) {
-        deathMessages.push(`💔 Il tuo ${pet.breed} ${pet.name} è morto a ${newAge} anni. Riposa in pace. 🌈`)
+        deathMessages.push(`💔 Il tuo ${pet.breed} ${pet.name} è morto a ${newAge} ${newAge === 1 ? 'anno' : 'anni'}. Riposa in pace. 🌈`)
         effects.happiness = (effects.happiness ?? 0) - 15
         effects.mentalHealth = (effects.mentalHealth ?? 0) - 10
         return { ...pet, isAlive: false, age: newAge }

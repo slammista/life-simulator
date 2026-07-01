@@ -14,7 +14,7 @@ function buildShareText(name: string, age: number, stats: Record<string, number>
     intel >= 80 ? '🧠' : intel >= 50 ? '📚' : '😶',
   ].join('')
 
-  return `🎮 Life Simulator 2D\n\n${name}, ${age} anni ${emojis}\n💼 ${job}\n❤️ Salute: ${h} · 😊 Felicità: ${hap} · 🧠 Intel: ${intel}\n\nSimula la tua vita su life-simulator-2d.vercel.app`
+  return `🎮 Life Simulator 2D\n\n${name}, ${age} ${age === 1 ? 'anno' : 'anni'} ${emojis}\n💼 ${job}\n❤️ Salute: ${h} · 😊 Felicità: ${hap} · 🧠 Intel: ${intel}\n\nSimula la tua vita su life-simulator-2d.vercel.app`
 }
 
 export function ShareLifeButton() {

@@ -1121,7 +1121,7 @@ export const useGameStore = create<FullStore>()(
         }
 
         // Build log entry
-        const eventText = picked ? `${picked.emoji} ${picked.title}` : `Hai compiuto ${newAge} anni.`
+        const eventText = picked ? `${picked.emoji} ${picked.title}` : `Hai compiuto ${newAge} ${newAge === 1 ? 'anno' : 'anni'}.`
         const allMessages = messages.filter(Boolean)
         const fullText = [eventText, ...allMessages].join(' · ')
 
@@ -3649,7 +3649,7 @@ export const useGameStore = create<FullStore>()(
             finance: { ...s.finance, money: s.finance.money - cost },
             children: [...s.children, newChild],
             stats: { ...s.stats, happiness: clamp(s.stats.happiness + 15, 0, 100), karma: clamp(s.stats.karma + 10, -100, 100) },
-            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `👶 Hai adottato ${childName}, ${resolvedAge === 0 ? 'neonato/a' : `${resolvedAge} anni`}. Una famiglia cresce.`, emoji: '👨‍👩‍👧', category: 'life' as const, statChanges: { money: -cost, happiness: 15 } }, ...s.eventLog].slice(0, 150),
+            eventLog: [{ id: uid(), year: state.time.year, age: state.time.age, text: `👶 Hai adottato ${childName}, ${resolvedAge === 0 ? 'neonato/a' : resolvedAge === 1 ? '1 anno' : `${resolvedAge} anni`}. Una famiglia cresce.`, emoji: '👨‍👩‍👧', category: 'life' as const, statChanges: { money: -cost, happiness: 15 } }, ...s.eventLog].slice(0, 150),
           }))
           get().checkGoals()
           return { success: true, message: `Hai adottato ${childName}! La vostra famiglia si allarga.`, effects: { money: -cost, happiness: 15, karma: 10 } }
@@ -3711,7 +3711,7 @@ export const useGameStore = create<FullStore>()(
         }
         const effects: Effect = { money: -cfg.cost, happiness: 18, karma: 15 }
         const partial = applyEffects(state, effects)
-        const memory = makeMemory(state.time, `Adozione di ${childName} ${cfg.flag}`, `Hai adottato ${childName}, ${childAge === 0 ? 'neonato/a' : `${childAge} anni`}, dalla ${country.charAt(0).toUpperCase() + country.slice(1)}. Un viaggio che cambierà due vite.`, '🌍', 'life', [childName], true)
+        const memory = makeMemory(state.time, `Adozione di ${childName} ${cfg.flag}`, `Hai adottato ${childName}, ${childAge === 0 ? 'neonato/a' : childAge === 1 ? '1 anno' : `${childAge} anni`}, dalla ${country.charAt(0).toUpperCase() + country.slice(1)}. Un viaggio che cambierà due vite.`, '🌍', 'life', [childName], true)
         set(s => ({
           ...partial,
           children: [...s.children, newChild],
