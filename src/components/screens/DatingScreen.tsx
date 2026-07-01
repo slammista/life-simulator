@@ -30,9 +30,9 @@ export function DatingScreen() {
   const [weddingBudget, setWeddingBudget] = useState(20000)
 
   const apps = DatingEngine.getApps()
-  const partners = relationships.filter(r => r.stage === 'partner' || r.historyFlags.includes('engaged'))
+  const partners = relationships.filter(r => r.type !== 'ex_partner' && (r.stage === 'partner' || r.historyFlags.includes('engaged')))
   const spouses = relationships.filter(r => r.type === 'spouse')
-  const engagedWith = relationships.find(r => r.historyFlags.includes('engaged') && r.type !== 'spouse')
+  const engagedWith = relationships.find(r => r.historyFlags.includes('engaged') && r.type !== 'spouse' && r.type !== 'ex_partner')
 
   const handleSwipe = () => {
     const r = swipe(selectedApp)
