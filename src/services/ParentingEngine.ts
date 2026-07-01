@@ -35,6 +35,22 @@ export const PARENTING_ACTIONS: ParentingActionDef[] = [
   { id: 'sport_activity', label: 'Attività sportiva',      emoji: '⚽', playerEffects: { health: 2, energy: -3 }, childEffects: { bondDelta: 6,  happinessDelta: 6,  intelligenceDelta: 0,  healthDelta: 5  }, annualLimit: 3 },
 ]
 
+// `label` is an imperative button prompt ("Gioca insieme") — it can't be
+// concatenated after "Hai" as a result message without producing broken
+// Italian ("Hai gioca insieme"). This gives each action its own past-tense
+// phrasing for the confirmation message instead.
+const PAST_TENSE_MESSAGE: Record<ParentingAction, (name: string) => string> = {
+  read_book:      name => `letto un libro insieme a ${name}`,
+  play:           name => `giocato insieme a ${name}`,
+  homework:       name => `aiutato ${name} con i compiti`,
+  punish:         name => `punito ${name} (timeout)`,
+  praise:         name => `lodato e incoraggiato ${name}`,
+  gift:           name => `fatto un regalo a ${name}`,
+  talk_emotions:  name => `parlato delle emozioni con ${name}`,
+  teach_values:   name => `insegnato dei valori a ${name}`,
+  sport_activity: name => `fatto attività sportiva con ${name}`,
+}
+
 const SCHOOL_LEVELS_BY_AGE: Array<{ minAge: number; maxAge: number; level: EducationLevel }> = [
   { minAge: 3,  maxAge: 5,  level: 'kindergarten' },
   { minAge: 6,  maxAge: 10, level: 'elementary'   },
@@ -143,7 +159,7 @@ export class ParentingEngine {
 
     return {
       success: true,
-      message: `${def.emoji} Hai ${def.label.toLowerCase()} con ${child.name}. Il vostro legame ${bondDelta > 0 ? 'si rafforza' : 'si indebolisce'}.`,
+      message: `${def.emoji} Hai ${PAST_TENSE_MESSAGE[def.id](child.name)}. Il vostro legame ${bondDelta > 0 ? 'si rafforza' : 'si indebolisce'}.`,
       effects: playerEffects,
       updatedChild: {
         bondWithPlayer: Math.min(100, Math.max(0, child.bondWithPlayer + Math.round(bondDelta))),

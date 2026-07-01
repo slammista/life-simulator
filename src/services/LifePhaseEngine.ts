@@ -104,7 +104,7 @@ export class LifePhaseEngine {
 
     let flavor: string
     if (n === tot)       flavor = 'Un capitolo perfetto: hai colto tutto ciò che questa fase poteva offrire.'
-    else if (n >= tot - 1) flavor = `Un ottimo capitolo, anche se ${missed[0]?.label.toLowerCase() ?? 'qualcosa'} è rimasto in sospeso.`
+    else if (n >= tot - 1) flavor = missed[0] ? `Un ottimo capitolo, anche se l'obiettivo "${missed[0].label}" è rimasto in sospeso.` : 'Un ottimo capitolo.'
     else if (n >= 2)     flavor = 'Luci e ombre, come ogni vita vera.'
     else if (n === 1)    flavor = 'Un capitolo difficile, ma non vuoto.'
     else                 flavor = 'Un capitolo duro. Ma ogni nuova fase è una seconda possibilità.'
