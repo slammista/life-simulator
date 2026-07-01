@@ -2896,7 +2896,7 @@ export const useGameStore = create<FullStore>()(
         if (rand < 0.25) {
           const effects = { happiness: -10 }
           const partial = applyEffects(state, effects)
-          set(s => ({ ...partial }))
+          set(() => ({ ...partial }))
           return { success: false, message: `⛔ Sei stato bannato temporaneamente da ${def?.name ?? platform} per trolling!`, effects }
         } else if (rand < 0.6) {
           const lost = Math.max(0, Math.floor(profile.followers * 0.05))
@@ -3138,7 +3138,7 @@ export const useGameStore = create<FullStore>()(
         const check = AdRewardEngine.canWatch(state.adRewards)
         if (!check.ok) return { reward: { id: '', label: '', emoji: '', description: '', effects: {} }, ok: false, reason: check.reason }
         const { reward, newState } = AdRewardEngine.claimReward(state.adRewards)
-        const effects = adRewardToEffect(reward, state)
+        const effects = adRewardToEffect(reward)
         const partial = applyEffects(state, effects)
         set(s => ({
           ...partial,

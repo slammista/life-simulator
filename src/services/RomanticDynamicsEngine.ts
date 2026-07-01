@@ -52,8 +52,6 @@ const ROMANTIC_TYPES = new Set(['partner', 'spouse'])
 const isRomantic = (rel: Relationship) =>
   ROMANTIC_TYPES.has(rel.type) || rel.stage === 'partner' || rel.stage === 'spouse'
 
-const FAMILY_BLOCK = new Set(['parent', 'sibling', 'child'])
-
 const firstName = (full: string) => full.split(' ')[0]
 
 // ─── public engine ──────────────────────────────────────────────────────────

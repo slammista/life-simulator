@@ -70,10 +70,10 @@ export class SportCompetitionEngine {
     const roll = Math.random()
 
     let outcome: CompetitionOutcome
-    let prizeMultiplier = 0
-    let fameMultiplier = 0
-    let skillGain = 1
-    let happinessGain = 0
+    let prizeMultiplier: number
+    let fameMultiplier: number
+    let skillGain: number
+    let happinessGain: number
 
     if (roll < winChance * 0.1) {
       outcome = 'eccezionale'; prizeMultiplier = 1.6; fameMultiplier = 2.2; skillGain = 6; happinessGain = 25

@@ -157,7 +157,7 @@ export function SocializeScreen() {
                   {loc.skillHint}
                 </span>
                 <button
-                  onClick={e => { e.stopPropagation(); !tooYoung && handle(loc.id) }}
+                  onClick={e => { e.stopPropagation(); if (!tooYoung) handle(loc.id) }}
                   disabled={tooYoung || !!loading}
                   style={{
                     padding: '7px 16px', borderRadius: 10, fontSize: 12, fontWeight: 600,

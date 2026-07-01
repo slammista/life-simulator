@@ -95,35 +95,6 @@ type AssetsSubTab    = 'home' | AssetsSubTabId
 type RelazioniSubTab = 'home' | RelazioniSubTabId
 type ActivitiesSubTab = ActivitiesSubTabBase | 'home'
 
-function SubTabBar<T extends string>({
-  tabs, active, onChange,
-}: { tabs: { id: T; label: string; emoji: string }[]; active: T; onChange: (t: T) => void }) {
-  return (
-    <div style={{
-      display: 'flex', gap: 2, padding: '6px 12px',
-      background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.06)',
-      overflowX: 'auto', flexShrink: 0,
-    }}>
-      {tabs.map(t => (
-        <button
-          key={t.id}
-          onClick={() => onChange(t.id)}
-          style={{
-            padding: '5px 11px', borderRadius: 14, fontSize: 12,
-            fontWeight: active === t.id ? 700 : 500,
-            whiteSpace: 'nowrap', border: 'none', cursor: 'pointer', flexShrink: 0,
-            background: active === t.id ? 'var(--primary)' : 'transparent',
-            color: active === t.id ? '#fff' : 'rgba(255,255,255,0.42)',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          {t.emoji} {t.label}
-        </button>
-      ))}
-    </div>
-  )
-}
-
 function ScreenFallback() {
   return <div className="screen-loading">Caricamento...</div>
 }

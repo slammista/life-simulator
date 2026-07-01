@@ -1,4 +1,4 @@
-import type { AvatarConfig, AvatarHairStyle, AvatarHairColor, AvatarClothesStyle, AvatarAccessory, SkinTone, EyeColor, EyeStyle, BrowStyle, BeardStyle, Gender } from '../store/types'
+import type { AvatarConfig, AvatarHairStyle, AvatarHairColor, AvatarClothesStyle, AvatarAccessory, SkinTone, EyeColor, BrowStyle, BeardStyle, Gender } from '../store/types'
 
 export const SKIN_TONES: Record<SkinTone, string> = {
   light:        '#FDDBB4',

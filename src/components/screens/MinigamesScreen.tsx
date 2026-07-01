@@ -344,11 +344,9 @@ function SkillChallenges() {
 // ─── Main MinigamesScreen ─────────────────────────────────────────
 
 export function MinigamesScreen() {
-  const { minigameStats, criminal, time, stats, finance, recordMinigameResult, cheatAddMoney } = useGameStore(useShallow(s => ({
+  const { minigameStats, time, finance, recordMinigameResult, cheatAddMoney } = useGameStore(useShallow(s => ({
     minigameStats: s.minigameStats,
-    criminal: s.criminal,
     time: s.time,
-    stats: s.stats,
     finance: s.finance,
     recordMinigameResult: s.recordMinigameResult,
     cheatAddMoney: s.cheatAddMoney,
@@ -367,7 +365,7 @@ export function MinigamesScreen() {
     recordMinigameResult(gameType, won)
     const freshState = useGameStore.getState()
 
-    let reward = { money: 0, happiness: 0 }
+    let reward: { money: number; happiness: number }
     if (gameType === 'hacking') {
       const attemptsUsed = freshState.minigameStats.hackingPlayed % 6 || 6
       reward = hackingReward(attemptsUsed, freshState)

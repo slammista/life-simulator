@@ -5,7 +5,6 @@ import { useWalletStore } from '../../store/walletStore'
 import { AvatarRenderer } from '../avatar/AvatarRenderer'
 import { TRAIT_DEFS } from '../../services/NarrativeEngine'
 
-
 function useHUDData() {
   const stats = useGameStore(useShallow(s => s.stats))
   const money = useGameStore(s => s.finance.money)

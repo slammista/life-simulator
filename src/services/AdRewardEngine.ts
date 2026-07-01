@@ -7,7 +7,6 @@ import {
   BannerAdPosition,
   BannerAdSize,
 } from '@capacitor-community/admob'
-import type { GameState } from '../store/types'
 
 export const ADMOB_IDS = {
   APP_ID: 'ca-app-pub-6813603804166976',
@@ -267,7 +266,7 @@ export const AdRewardEngine = {
 }
 
 // Utility: merge ad reward effects into a game effect delta
-export function adRewardToEffect(reward: AdReward, _state: GameState): Partial<{
+export function adRewardToEffect(reward: AdReward): Partial<{
   money: number; health: number; mentalHealth: number; happiness: number; energy: number; karma: number
 }> {
   return reward.effects
