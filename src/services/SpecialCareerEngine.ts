@@ -4,6 +4,17 @@ import { CareerLifecycleEngine } from './CareerLifecycleEngine'
 
 export type SpecialCareerType = 'actor' | 'musician' | 'pro_athlete' | 'politician' | 'criminal'
 
+// Single source of truth for the minimum age of each special career — read by
+// both the store's startSpecialCareer gate and the SpecialCareerScreen UI, so
+// the two never drift apart (musician starts younger, politician needs 25+).
+export const SPECIAL_CAREER_MIN_AGE: Record<SpecialCareerType, number> = {
+  actor: 16,
+  musician: 14,
+  pro_athlete: 16,
+  politician: 25,
+  criminal: 16,
+}
+
 export type SpecialCareerPhase = 
   | 'aspiring'      // just starting, no recognition
   | 'emerging'      // small successes, building reputation  

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import { SpecialCareerEngine, type SpecialCareerType } from '../../services/SpecialCareerEngine'
+import { SpecialCareerEngine, SPECIAL_CAREER_MIN_AGE, type SpecialCareerType } from '../../services/SpecialCareerEngine'
 import { CareerLifecycleEngine } from '../../services/CareerLifecycleEngine'
 import { useToastStore } from '../../store/toastStore'
 import { haptic } from '../../services/HapticEngine'
@@ -14,23 +14,23 @@ const CAREER_META: Record<SpecialCareerType, {
   minAge: number
 }> = {
   actor: {
-    emoji: '🎭', label: 'Attore', color: '#a855f7', minAge: 16,
+    emoji: '🎭', label: 'Attore', color: '#a855f7', minAge: SPECIAL_CAREER_MIN_AGE.actor,
     description: 'Provini, cortometraggi, serie TV e cinema. Costruisci la tua fama sul set, una scena alla volta.',
   },
   musician: {
-    emoji: '🎵', label: 'Musicista', color: '#06b6d4', minAge: 14,
+    emoji: '🎵', label: 'Musicista', color: '#06b6d4', minAge: SPECIAL_CAREER_MIN_AGE.musician,
     description: 'Demo, concerti, album e tour. Dal palco del locale di quartiere agli stadi del mondo.',
   },
   pro_athlete: {
-    emoji: '⚽', label: 'Atleta Pro', color: '#22c55e', minAge: 16,
+    emoji: '⚽', label: 'Atleta Pro', color: '#22c55e', minAge: SPECIAL_CAREER_MIN_AGE.pro_athlete,
     description: 'Provini, contratti e sponsorizzazioni. La carriera è breve: punta in alto finché il fisico regge.',
   },
   politician: {
-    emoji: '🏛️', label: 'Politico', color: '#60a5fa', minAge: 25,
+    emoji: '🏛️', label: 'Politico', color: '#60a5fa', minAge: SPECIAL_CAREER_MIN_AGE.politician,
     description: 'Campagne, comizi ed elezioni. Conquista consenso e scala le istituzioni fino al governo.',
   },
   criminal: {
-    emoji: '🕶️', label: 'Criminale', color: '#ef4444', minAge: 16,
+    emoji: '🕶️', label: 'Criminale', color: '#ef4444', minAge: SPECIAL_CAREER_MIN_AGE.criminal,
     description: 'Gang, racket e colpi grossi. Soldi facili e fama oscura, ma il karma presenta sempre il conto.',
   },
 }

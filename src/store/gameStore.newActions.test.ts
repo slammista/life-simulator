@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest'
 import { useGameStore } from './gameStore'
+import { SPECIAL_CAREER_MIN_AGE } from '../services/SpecialCareerEngine'
 import type { SocialMediaProfile } from './types'
 
 function makeProfile(overrides: Partial<SocialMediaProfile> = {}): SocialMediaProfile {
@@ -252,5 +253,45 @@ describe('deleteSocialProfile', () => {
     const platforms = useGameStore.getState().socialMedia.map(p => p.platform)
     expect(platforms).not.toContain('instagram')
     expect(platforms).toContain('tiktok')
+  })
+})
+
+describe('startSpecialCareer', () => {
+  // Regression test: the store used to enforce a blanket age>=16 gate for every
+  // career type, while the SpecialCareerScreen UI advertised musician at 14+ and
+  // politician at 25+ — musicians could never actually start at 14-15 despite the
+  // UI showing an enabled button. Both now read from SPECIAL_CAREER_MIN_AGE.
+  it('lets a 14-year-old start a musician career', () => {
+    useGameStore.setState({ time: { ...useGameStore.getState().time, age: 14 } })
+    const r = useGameStore.getState().startSpecialCareer('musician')
+    expect(r.success).toBe(true)
+    expect(useGameStore.getState().specialCareer?.type).toBe('musician')
+  })
+
+  it('rejects a musician career below the per-type minimum age', () => {
+    useGameStore.setState({ time: { ...useGameStore.getState().time, age: 13 } })
+    const r = useGameStore.getState().startSpecialCareer('musician')
+    expect(r.success).toBe(false)
+    expect(r.message).toMatch(/almeno 14 anni/)
+  })
+
+  it('requires 25+ for a politician career even though the generic floor is lower', () => {
+    useGameStore.setState({ time: { ...useGameStore.getState().time, age: 20 } })
+    const r = useGameStore.getState().startSpecialCareer('politician')
+    expect(r.success).toBe(false)
+    expect(r.message).toMatch(/almeno 25 anni/)
+  })
+
+  it.each(Object.entries(SPECIAL_CAREER_MIN_AGE))('mirrors the UI minimum age for %s (%i)', (type, minAge) => {
+    useGameStore.setState({
+      time: { ...useGameStore.getState().time, age: minAge - 1 },
+      sports: [{ id: 's1', name: 'Calcio', skillLevel: 90, isProfessional: false, yearsPracticed: 5, injuries: 0 } as never],
+    })
+    const rTooYoung = useGameStore.getState().startSpecialCareer(type as never)
+    expect(rTooYoung.success).toBe(false)
+
+    useGameStore.setState({ specialCareer: null, time: { ...useGameStore.getState().time, age: minAge } })
+    const rOldEnough = useGameStore.getState().startSpecialCareer(type as never)
+    expect(rOldEnough.success).toBe(true)
   })
 })

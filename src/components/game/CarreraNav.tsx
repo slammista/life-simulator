@@ -1,5 +1,5 @@
 import { useGameStore } from '../../store/gameStore'
-import { SpecialCareerEngine, type SpecialCareerType } from '../../services/SpecialCareerEngine'
+import { SpecialCareerEngine, SPECIAL_CAREER_MIN_AGE, type SpecialCareerType } from '../../services/SpecialCareerEngine'
 
 export type CarreraSubTab =
   | 'career' | 'education' | 'military' | 'pension' | 'business' | 'special_career'
@@ -70,7 +70,7 @@ export function CarreraNav({ onChange }: Props) {
   const age           = useGameStore(s => s.time.age)
 
   const bestSport = sports.length > 0 ? [...sports].sort((a, b) => b.skillLevel - a.skillLevel)[0] : null
-  const canBeAthlete = !!bestSport && bestSport.skillLevel >= 60 && !specialCareer && age >= 16
+  const canBeAthlete = !!bestSport && bestSport.skillLevel >= 60 && !specialCareer && age >= SPECIAL_CAREER_MIN_AGE.pro_athlete
 
   const hasCurrentWork = !!job || !!specialCareer
   const hasJustForYou = !!pendingOffer || canBeAthlete

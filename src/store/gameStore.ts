@@ -21,7 +21,7 @@ import { HealthEngine } from '../services/HealthEngine'
 import { HobbyEngine } from '../services/HobbyEngine'
 import { SportEngine } from '../services/SportEngine'
 import { SportCompetitionEngine } from '../services/SportCompetitionEngine'
-import { SpecialCareerEngine, initialSpecialCareer } from '../services/SpecialCareerEngine'
+import { SpecialCareerEngine, initialSpecialCareer, SPECIAL_CAREER_MIN_AGE } from '../services/SpecialCareerEngine'
 import type { SpecialCareerType } from '../services/SpecialCareerEngine'
 import { CareerLifecycleEngine } from '../services/CareerLifecycleEngine'
 import { MinorEconomyEngine } from '../services/MinorEconomyEngine'
@@ -2526,8 +2526,9 @@ export const useGameStore = create<FullStore>()(
         if (state.specialCareer) {
           return { success: false, message: 'Hai già una carriera speciale in corso.', effects: {} }
         }
-        if (state.time.age < 16) {
-          return { success: false, message: 'Devi avere almeno 16 anni per intraprendere questa carriera.', effects: {} }
+        const minAge = SPECIAL_CAREER_MIN_AGE[type]
+        if (state.time.age < minAge) {
+          return { success: false, message: `Devi avere almeno ${minAge} anni per intraprendere questa carriera.`, effects: {} }
         }
         const typeLabels: Record<SpecialCareerType, string> = {
           actor: 'Attore/Attrice',
