@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { useShallow } from 'zustand/react/shallow'
 import { LegacyEngine } from '../../services/LegacyEngine'
@@ -7,7 +7,18 @@ import { useWalletStore } from '../../store/walletStore'
 import { AdRewardEngine } from '../../services/AdRewardEngine'
 import { AdRewardButton } from '../game/AdRewardButton'
 import { RegretEngine } from '../../services/RegretEngine'
+import { CelebrationOverlay } from '../game/CelebrationOverlay'
 import type { LifeMemory } from '../../store/types'
+
+// Staged reveal — same "tell the story beat by beat" pacing as OriginStoryScreen,
+// instead of dumping the whole report card on screen at once.
+const STAGE_DEATH = 0
+const STAGE_STATS = 1
+const STAGE_GRADE = 2
+const STAGE_STORY = 3
+const STAGE_LEGACY = 4
+const STAGE_ACTIONS = 5
+const MAX_STAGE = STAGE_ACTIONS
 
 function getLifeGrade(score: number): { letter: string; color: string; label: string } {
   if (score >= 750) return { letter: 'A', color: '#10b981', label: 'Vita Straordinaria' }
@@ -63,6 +74,13 @@ export function GameOverScreen() {
   const [adError, setAdError] = useState('')
   const [shareDone, setShareDone] = useState(false)
   const [showNewLifeSplash, setShowNewLifeSplash] = useState(false)
+  const [stage, setStage] = useState(STAGE_DEATH)
+
+  useEffect(() => {
+    if (stage >= MAX_STAGE) return
+    const t = setTimeout(() => setStage(s => s + 1), stage === STAGE_DEATH ? 600 : 850)
+    return () => clearTimeout(t)
+  }, [stage])
 
   const handleNewLife = () => {
     setShowNewLifeSplash(true)
@@ -159,15 +177,33 @@ export function GameOverScreen() {
 
   return (
     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 24, overflowY: 'auto' }}>
+      {/* A ribbon/goal that unlocked in the same year as death would otherwise never
+          get its celebration moment, since App.tsx swaps the whole tree to this
+          screen before CelebrationOverlay (mounted only in the main app-shell) can
+          render it — mount it here too so pendingCelebrations still gets its due. */}
+      <CelebrationOverlay blocked={false} />
+
       <div className="screen-container">
         {/* Death */}
-        <div style={{ fontSize: 64, marginBottom: 12, textAlign: 'center' }}>{death.emoji}</div>
-        <h1 style={{ fontSize: 22, fontWeight: 700, marginBottom: 6, color: 'var(--color-text)', textAlign: 'center' }}>{death.title}</h1>
-        <p style={{ fontSize: 14, color: 'var(--color-text-secondary)', textAlign: 'center', marginBottom: 20 }}>{death.text}</p>
+        <div className="fade-in-up" style={{ fontSize: 64, marginBottom: 12, textAlign: 'center' }}>{death.emoji}</div>
+        <h1 className="fade-in-up" style={{ fontSize: 22, fontWeight: 700, marginBottom: 6, color: 'var(--color-text)', textAlign: 'center' }}>{death.title}</h1>
+        <p className="fade-in-up" style={{ fontSize: 14, color: 'var(--color-text-secondary)', textAlign: 'center', marginBottom: 12 }}>{death.text}</p>
+
+        {stage < MAX_STAGE && (
+          <button
+            onClick={() => setStage(MAX_STAGE)}
+            style={{
+              display: 'block', background: 'none', border: 'none', color: '#6b7280',
+              fontSize: 12, cursor: 'pointer', margin: '0 auto 20px', padding: 0,
+            }}
+          >
+            Salta al riepilogo
+          </button>
+        )}
 
         {/* Extra life via rewarded ad */}
-        {!extraLifeUsed && deathType !== 'natural' && (
-          <div className="card" style={{ width: '100%', marginBottom: 16, border: '1px solid rgba(99,102,241,0.4)' }}>
+        {stage >= STAGE_STATS && !extraLifeUsed && deathType !== 'natural' && (
+          <div className="card fade-in-up" style={{ width: '100%', marginBottom: 16, border: '1px solid rgba(99,102,241,0.4)' }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa', marginBottom: 4 }}>💊 Seconda Possibilità</p>
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
               Guarda un breve annuncio per tornare in vita con salute al 35%.
@@ -188,46 +224,52 @@ export function GameOverScreen() {
         )}
 
         {/* Life stats */}
-        <div className="card" style={{ width: '100%', marginBottom: 16 }}>
-          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
-            Statistiche di Vita
-          </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
-            {[
-              { label: 'Anni vissuti',     val: `${time.age}`,                               emoji: '🎂' },
-              { label: 'Anno morte',       val: `${time.year}`,                               emoji: '📅' },
-              { label: 'Denaro finale',    val: `€${finance.money.toLocaleString('it-IT')}`,  emoji: '💰' },
-              { label: 'Goals completati', val: `${goalsCount}/${totalGoals}`,                emoji: '🎯' },
-              { label: 'Salute finale',    val: `${Math.round(stats.health)}/100`,            emoji: '❤️' },
-              { label: 'Felicità finale',  val: `${Math.round(stats.happiness)}/100`,         emoji: '😊' },
-            ].map(({ label, val, emoji }) => (
-              <div key={label} style={{ padding: 8, background: 'var(--bg-secondary)', borderRadius: 8, minWidth: 0 }}>
-                <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>{emoji} {label}</p>
-                <p style={{ fontWeight: 700, fontSize: 15, overflowWrap: 'anywhere' }}>{val}</p>
-              </div>
-            ))}
+        {stage >= STAGE_STATS && (
+          <div className="card fade-in-up" style={{ width: '100%', marginBottom: 16 }}>
+            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
+              Statistiche di Vita
+            </p>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 10 }}>
+              {[
+                { label: 'Anni vissuti',     val: `${time.age}`,                               emoji: '🎂' },
+                { label: 'Anno morte',       val: `${time.year}`,                               emoji: '📅' },
+                { label: 'Denaro finale',    val: `€${finance.money.toLocaleString('it-IT')}`,  emoji: '💰' },
+                { label: 'Goals completati', val: `${goalsCount}/${totalGoals}`,                emoji: '🎯' },
+                { label: 'Salute finale',    val: `${Math.round(stats.health)}/100`,            emoji: '❤️' },
+                { label: 'Felicità finale',  val: `${Math.round(stats.happiness)}/100`,         emoji: '😊' },
+              ].map(({ label, val, emoji }) => (
+                <div key={label} style={{ padding: 8, background: 'var(--bg-secondary)', borderRadius: 8, minWidth: 0 }}>
+                  <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>{emoji} {label}</p>
+                  <p style={{ fontWeight: 700, fontSize: 15, overflowWrap: 'anywhere' }}>{val}</p>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
-        {/* Life grade */}
-        <div className="card" style={{ width: '100%', marginBottom: 16, textAlign: 'center', padding: '20px 16px' }}>
-          <div style={{
-            display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-            width: 72, height: 72, borderRadius: '50%',
-            background: `${lifeGrade.color}22`, border: `3px solid ${lifeGrade.color}`,
-            fontSize: 36, fontWeight: 900, color: lifeGrade.color, marginBottom: 8,
-          }}>
-            {lifeGrade.letter}
+        {/* Life grade — the dramatic centerpiece reveal, bouncier than the plain fades around it */}
+        {stage >= STAGE_GRADE && (
+          <div className="card" style={{ width: '100%', marginBottom: 16, textAlign: 'center', padding: '20px 16px' }}>
+            <div style={{
+              display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+              width: 72, height: 72, borderRadius: '50%',
+              background: `${lifeGrade.color}22`, border: `3px solid ${lifeGrade.color}`,
+              fontSize: 36, fontWeight: 900, color: lifeGrade.color, marginBottom: 8,
+              animation: 'popIn 0.5s cubic-bezier(0.34,1.56,0.64,1)',
+              filter: `drop-shadow(0 0 16px ${lifeGrade.color}66)`,
+            }}>
+              {lifeGrade.letter}
+            </div>
+            <p className="fade-in-up" style={{ fontSize: 18, fontWeight: 800, color: lifeGrade.color, margin: '0 0 4px' }}>{lifeGrade.label}</p>
+            <p className="fade-in-up" style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
+              {identity.name} {identity.surname} · {time.age} {time.age === 1 ? 'anno' : 'anni'} · {time.year}
+            </p>
           </div>
-          <p style={{ fontSize: 18, fontWeight: 800, color: lifeGrade.color, margin: '0 0 4px' }}>{lifeGrade.label}</p>
-          <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            {identity.name} {identity.surname} · {time.age} {time.age === 1 ? 'anno' : 'anni'} · {time.year}
-          </p>
-        </div>
+        )}
 
         {/* Life highlights */}
-        {highlights.length > 0 && (
-          <div className="card" style={{ width: '100%', marginBottom: 16 }}>
+        {stage >= STAGE_STORY && highlights.length > 0 && (
+          <div className="card fade-in-up" style={{ width: '100%', marginBottom: 16 }}>
             <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
               Momenti Indimenticabili
             </p>
@@ -248,44 +290,52 @@ export function GameOverScreen() {
         )}
 
         {/* Epitaph */}
-        <div style={{ textAlign: 'center', marginBottom: 16 }}>
-          <p style={{ fontSize: 13, fontStyle: 'italic', color: '#9ca3af', lineHeight: 1.6 }}>{epitaph}</p>
-        </div>
+        {stage >= STAGE_STORY && (
+          <div className="fade-in-up" style={{ textAlign: 'center', marginBottom: 16 }}>
+            <p style={{ fontSize: 13, fontStyle: 'italic', color: '#9ca3af', lineHeight: 1.6 }}>{epitaph}</p>
+          </div>
+        )}
 
         {/* Regrets */}
-        <div className="card" style={{ width: '100%', marginBottom: 16 }}>
-          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
-            💭 Rimpianti
-          </p>
-          {regrets.length === 0 ? (
-            <p style={{ fontSize: 13, color: '#10b981', fontStyle: 'italic' }}>Nessun rimpianto: hai vissuto pienamente.</p>
-          ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {regrets.map(r => (
-                <div key={r.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
-                  <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{r.emoji}</span>
-                  <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.5 }}>{r.text}</p>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
+        {stage >= STAGE_STORY && (
+          <div className="card fade-in-up" style={{ width: '100%', marginBottom: 16 }}>
+            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
+              💭 Rimpianti
+            </p>
+            {regrets.length === 0 ? (
+              <p style={{ fontSize: 13, color: '#10b981', fontStyle: 'italic' }}>Nessun rimpianto: hai vissuto pienamente.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {regrets.map(r => (
+                  <div key={r.id} style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                    <span style={{ fontSize: 20, lineHeight: 1, flexShrink: 0 }}>{r.emoji}</span>
+                    <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', margin: 0, lineHeight: 1.5 }}>{r.text}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Share */}
-        <button
-          onClick={handleShare}
-          style={{
-            width: '100%', padding: '10px 0', borderRadius: 10, fontSize: 13, fontWeight: 600,
-            border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', marginBottom: 16,
-            background: shareDone ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.1)',
-            color: shareDone ? '#10b981' : '#a78bfa',
-          }}
-        >
-          {shareDone ? '✅ Copiato negli appunti!' : '📤 Condividi il tuo risultato'}
-        </button>
+        {stage >= STAGE_LEGACY && (
+          <button
+            onClick={handleShare}
+            className="fade-in-up"
+            style={{
+              width: '100%', padding: '10px 0', borderRadius: 10, fontSize: 13, fontWeight: 600,
+              border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', marginBottom: 16,
+              background: shareDone ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.1)',
+              color: shareDone ? '#10b981' : '#a78bfa',
+            }}
+          >
+            {shareDone ? '✅ Copiato negli appunti!' : '📤 Condividi il tuo risultato'}
+          </button>
+        )}
 
         {/* Legacy */}
-        <div className="card" style={{ width: '100%', marginBottom: 16 }}>
+        {stage >= STAGE_LEGACY && (
+        <div className="card fade-in-up" style={{ width: '100%', marginBottom: 16 }}>
           <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', marginBottom: 10, fontWeight: 600 }}>
             Eredità Lasciata
           </p>
@@ -315,10 +365,11 @@ export function GameOverScreen() {
             )
           })}
         </div>
+        )}
 
         {/* Leaderboard submission */}
-        {CloudSaveService.isConfigured() && (
-          <div className="card" style={{ width: '100%', marginBottom: 16 }}>
+        {stage >= STAGE_ACTIONS && CloudSaveService.isConfigured() && (
+          <div className="card fade-in-up" style={{ width: '100%', marginBottom: 16 }}>
             <p style={{ fontSize: 12, fontWeight: 600, color: '#fbbf24', marginBottom: 8 }}>🏆 Pubblica in Classifica</p>
             {submitState === 'idle' && (
               <button
@@ -349,8 +400,8 @@ export function GameOverScreen() {
         )}
 
         {/* Continue as child */}
-        {bestChild && (
-          <div className="card" style={{ width: '100%', marginBottom: 16, border: `1px solid ${tierInfo.color}` }}>
+        {stage >= STAGE_ACTIONS && bestChild && (
+          <div className="card fade-in-up" style={{ width: '100%', marginBottom: 16, border: `1px solid ${tierInfo.color}` }}>
             <p style={{ fontSize: 12, color: tierInfo.color, marginBottom: 8, fontWeight: 700 }}>👶 CONTINUA LA STORIA</p>
             <p style={{ fontSize: 14, marginBottom: 4 }}>
               Vuoi continuare come <strong>{bestChild.name}</strong>?
@@ -370,13 +421,15 @@ export function GameOverScreen() {
         )}
 
         {/* New game */}
-        <button
-          className="btn-age"
-          onClick={handleNewLife}
-          style={{ width: '100%', opacity: 0.7 }}
-        >
-          🔄 Nuova Vita (Ricomincia)
-        </button>
+        {stage >= STAGE_ACTIONS && (
+          <button
+            className="btn-age fade-in-up"
+            onClick={handleNewLife}
+            style={{ width: '100%', opacity: 0.7 }}
+          >
+            🔄 Nuova Vita (Ricomincia)
+          </button>
+        )}
 
         {/* "Nuova Vita!" splash overlay */}
         {showNewLifeSplash && (
