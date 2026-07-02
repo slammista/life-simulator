@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react'
 
-const STORAGE_KEY = 'lifesim2d-cookie-consent'
+// Exported so other first-launch overlays (e.g. TutorialOverlay) can wait for consent
+// to be resolved before showing themselves, instead of racing it at the same z-index.
+export const STORAGE_KEY = 'lifesim2d-cookie-consent'
 
 type ConsentChoice = 'accepted' | 'declined' | null
 

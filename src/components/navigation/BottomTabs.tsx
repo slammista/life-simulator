@@ -44,6 +44,7 @@ export function BottomTabs({ active, onChange, onAge, ageDisabled, hasEvent, cur
       {/* Center Age / Vita button */}
       <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', paddingBottom: 4 }}>
         <button
+          data-coachmark="age-button"
           onClick={() => active !== 'vita' ? onChange('vita') : onAge()}
           disabled={active === 'vita' && ageDisabled && !hasEvent}
           className={active === 'vita' && ageReady ? 'pulse' : ''}

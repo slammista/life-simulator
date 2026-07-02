@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { STORAGE_KEY as COOKIE_CONSENT_KEY } from '../common/CookieConsent'
 
 const STORAGE_KEY = 'lifesim2d_tutorial_seen'
 
@@ -7,7 +8,9 @@ interface Step {
   title: string
   body: string
   tip?: string
-  highlight?: string
+  // CSS selector for the real UI element this step spotlights. Omitted on the intro
+  // step, which has nothing to point at yet.
+  target?: string
 }
 
 const STEPS: Step[] = [
@@ -20,34 +23,70 @@ const STEPS: Step[] = [
   {
     emoji: '⏩',
     title: 'Premi "+1 ETÀ" per iniziare',
-    body: 'Il grande pulsante centrale in basso avanza la tua vita di un anno. Ogni anno porta eventi, scelte e conseguenze delle decisioni passate.',
+    body: 'Questo pulsante avanza la tua vita di un anno. Ogni anno porta eventi, scelte e conseguenze delle decisioni passate.',
     tip: '💡 Tieni d\'occhio la barra in alto — salute, felicità ed energia cambiano ogni anno.',
-    highlight: 'Trova il pulsante "+1 ETÀ" in basso e cliccaci!',
+    target: '[data-coachmark="age-button"]',
   },
   {
     emoji: '🎭',
     title: 'Gli eventi cambiano tutto',
-    body: 'Quando appare un evento con scelte (pulsanti blu), leggi bene prima di scegliere. Ogni opzione ha effetti diversi sulla tua vita. I badge colorati indicano la categoria.',
+    body: 'Qui appariranno gli eventi della tua vita. Quando ne arriva uno con scelte (pulsanti blu), leggi bene prima di decidere — ogni opzione ha effetti diversi.',
     tip: '💡 Giallo = Carriera · Verde = Salute · Rosa = Amore · Blu = Istruzione',
+    target: '[data-coachmark="event-card"]',
   },
   {
     emoji: '🗂️',
     title: 'Esplora le 5 schede',
-    body: 'In basso trovi le schede: Vita (eventi), Lavoro, Assets, Persone, Attività. Da Attività puoi fare sport, hobby, viaggi, crimini e molto altro.',
+    body: 'Qui trovi le schede: Vita (eventi), Lavoro, Assets, Persone, Attività. Da Attività puoi fare sport, hobby, viaggi, crimini e molto altro.',
     tip: '💡 Puoi pinnare le attività preferite toccando "Modifica" nella sezione Preferiti.',
+    target: '.bottom-tabs',
   },
 ]
 
 export function TutorialOverlay() {
   const [visible, setVisible] = useState(false)
   const [step, setStep] = useState(0)
+  const [rect, setRect] = useState<DOMRect | null>(null)
 
+  // Both this overlay and the cookie banner render at the same z-index near the
+  // bottom of the screen — showing them at the same time lets the (later-mounted,
+  // so visually on top) cookie banner swallow clicks meant for the tutorial. Wait
+  // for consent to be resolved before starting the tutorial's own countdown.
   useEffect(() => {
-    if (!localStorage.getItem(STORAGE_KEY)) {
-      const t = setTimeout(() => setVisible(true), 800)
-      return () => clearTimeout(t)
+    if (localStorage.getItem(STORAGE_KEY)) return
+    let cancelled = false
+    let pollTimer: ReturnType<typeof setTimeout> | undefined
+    const tryShow = () => {
+      if (cancelled) return
+      if (!localStorage.getItem(COOKIE_CONSENT_KEY)) {
+        pollTimer = setTimeout(tryShow, 400)
+        return
+      }
+      setVisible(true)
     }
+    const initialTimer = setTimeout(tryShow, 800)
+    return () => { cancelled = true; clearTimeout(initialTimer); clearTimeout(pollTimer) }
   }, [])
+
+  // Real coachmark: measure the actual target element's position on the live page
+  // whenever the step changes, instead of describing it in text. Steps without a
+  // `target` (the intro) fall back to a plain centered modal.
+  useEffect(() => {
+    if (!visible) return
+    const target = STEPS[step].target
+    // Reading a live DOM rect (getBoundingClientRect) is exactly the "synchronize
+    // with an external system" case the rule's own docs carve out — there's no way
+    // to derive it at render.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!target) { setRect(null); return }
+    const measure = () => {
+      const el = document.querySelector(target)
+      setRect(el ? el.getBoundingClientRect() : null)
+    }
+    measure()
+    window.addEventListener('resize', measure)
+    return () => window.removeEventListener('resize', measure)
+  }, [visible, step])
 
   function dismiss() {
     localStorage.setItem(STORAGE_KEY, '1')
@@ -66,31 +105,54 @@ export function TutorialOverlay() {
 
   const current = STEPS[step]
   const isLast = step === STEPS.length - 1
+  const PAD = 10
+  // Anchor the callout on whichever side of the target has more room — comparing
+  // against the viewport midpoint isn't enough on its own since a tall target (like
+  // the idle event card) can have more room above it than below even while sitting
+  // in the upper half of the screen.
+  const calloutBelow = rect ? (window.innerHeight - rect.bottom) > rect.top : false
 
   return (
-    <div style={{
-      position: 'fixed', inset: 0, zIndex: 9999,
-      background: 'rgba(0,0,0,0.8)', display: 'flex',
-      alignItems: 'center', justifyContent: 'center',
-      padding: 24,
-    }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 9999 }}>
+      {/* Spotlight cutout around the live target, or a plain backdrop on the intro step */}
+      {rect ? (
+        <div style={{
+          position: 'fixed',
+          top: rect.top - PAD, left: rect.left - PAD,
+          width: rect.width + PAD * 2, height: rect.height + PAD * 2,
+          borderRadius: 18,
+          boxShadow: '0 0 0 9999px rgba(6,7,15,0.82)',
+          border: '2px solid rgba(124,92,255,0.6)',
+          pointerEvents: 'none',
+          transition: 'top 0.3s ease, left 0.3s ease, width 0.3s ease, height 0.3s ease',
+        }} />
+      ) : (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(6,7,15,0.85)' }} />
+      )}
+
+      {/* Callout card — positioned near the spotlighted element, or centered on the intro step */}
       <div style={{
+        position: 'fixed',
+        left: '50%',
+        ...(rect
+          ? calloutBelow
+            ? { top: rect.bottom + PAD + 14, transform: 'translateX(-50%)' }
+            : { bottom: window.innerHeight - rect.top + PAD + 14, transform: 'translateX(-50%)' }
+          : { top: '50%', transform: 'translate(-50%, -50%)' }),
+        width: 'calc(100% - 48px)', maxWidth: 360,
+        maxHeight: 'calc(100vh - 24px)', overflowY: 'auto',
         background: 'var(--color-surface, #1e1e2e)',
-        borderRadius: 20, padding: '28px 24px', maxWidth: 360, width: '100%',
+        borderRadius: 20, padding: '22px 22px 20px',
         border: '1px solid rgba(255,255,255,0.12)',
         boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
         animation: 'fadeInUp 0.25s ease',
       }}>
         {/* Step dots */}
-        <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 22 }}>
+        <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginBottom: 18 }}>
           {STEPS.map((_, i) => (
             <div key={i} style={{
               width: i === step ? 22 : 6, height: 6, borderRadius: 3,
-              background: i < step
-                ? 'var(--color-cta, #6366f1)'
-                : i === step
-                  ? 'var(--color-cta, #6366f1)'
-                  : 'rgba(255,255,255,0.18)',
+              background: i <= step ? 'var(--color-cta, #6366f1)' : 'rgba(255,255,255,0.18)',
               opacity: i < step ? 0.5 : 1,
               transition: 'background 0.25s ease, opacity 0.25s ease',
             }} />
@@ -98,26 +160,14 @@ export function TutorialOverlay() {
         </div>
 
         {/* Content */}
-        <div style={{ textAlign: 'center', marginBottom: 20 }}>
-          <div style={{ fontSize: 52, marginBottom: 12, lineHeight: 1 }}>{current.emoji}</div>
-          <p style={{ fontSize: 17, fontWeight: 700, marginBottom: 10, color: 'var(--color-text)', lineHeight: 1.35 }}>
+        <div style={{ textAlign: 'center', marginBottom: 16 }}>
+          <div style={{ fontSize: 44, marginBottom: 10, lineHeight: 1 }}>{current.emoji}</div>
+          <p style={{ fontSize: 16, fontWeight: 700, marginBottom: 8, color: 'var(--color-text)', lineHeight: 1.35 }}>
             {current.title}
           </p>
-          <p style={{ fontSize: 13.5, color: 'var(--color-text-secondary)', lineHeight: 1.65, marginBottom: current.highlight ? 12 : 0 }}>
+          <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
             {current.body}
           </p>
-          {current.highlight && (
-            <div style={{
-              background: 'rgba(99,102,241,0.15)',
-              border: '1px solid rgba(99,102,241,0.35)',
-              borderRadius: 10, padding: '9px 14px', marginTop: 10,
-              fontSize: 13, fontWeight: 600, color: '#a5b4fc',
-              display: 'flex', alignItems: 'center', gap: 8,
-            }}>
-              <span>👇</span>
-              <span>{current.highlight}</span>
-            </div>
-          )}
         </div>
 
         {/* Tip box */}
@@ -126,7 +176,7 @@ export function TutorialOverlay() {
             background: 'rgba(255,255,255,0.04)',
             borderRadius: 10, padding: '8px 12px',
             fontSize: 11.5, color: 'var(--color-text-secondary)',
-            lineHeight: 1.5, marginBottom: 18,
+            lineHeight: 1.5, marginBottom: 16,
             borderLeft: '2px solid rgba(99,102,241,0.4)',
           }}>
             {current.tip}

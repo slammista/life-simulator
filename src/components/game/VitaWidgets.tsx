@@ -3,10 +3,10 @@ import { Capacitor } from '@capacitor/core'
 import { useShallow } from 'zustand/react/shallow'
 import { useGameStore } from '../../store/gameStore'
 import { useWalletStore } from '../../store/walletStore'
-import { LifePhaseEngine } from '../../services/LifePhaseEngine'
 import { AdRewardEngine } from '../../services/AdRewardEngine'
 import { AdRewardButton } from './AdRewardButton'
 import { DailyQuestEngine } from '../../services/DailyQuestEngine'
+import { LifePhaseWidget } from './LifePhaseWidget'
 import type { Tab } from '../navigation/BottomTabs'
 import type { DailyQuest } from '../../store/types'
 
@@ -21,83 +21,6 @@ interface Props {
   setActivitiesSub: (sub: string) => void
   setLavoroSub: (sub: string) => void
   setRelazioniSub: (sub: string) => void
-}
-
-// ─── Life Chapter Strip ───────────────────────────────────────────────────────
-
-function LifeChapterStrip() {
-  const { time, narrative } = useGameStore(useShallow(s => ({
-    time: s.time,
-    narrative: s.narrative,
-  })))
-  const gameState = useGameStore()
-  const [recapOpen, setRecapOpen] = useState(false)
-
-  const { phase } = LifePhaseEngine.evaluate(gameState)
-  const lastRecap = narrative?.phaseRecaps?.slice(-1)[0] ?? null
-
-  return (
-    <div style={{ marginBottom: 16 }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
-        <span style={{ fontSize: 26, lineHeight: 1 }}>{phase.emoji}</span>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, flexWrap: 'wrap' }}>
-            <span style={{
-              fontSize: 17, fontWeight: 800, color: 'var(--color-text)',
-              letterSpacing: '-0.02em',
-            }}>
-              {phase.label}
-            </span>
-            <span style={{ fontSize: 13, color: 'var(--color-text-secondary)', fontWeight: 500 }}>
-              · {time.age} anni
-            </span>
-          </div>
-          <p style={{
-            fontSize: 12, color: 'var(--color-text-secondary)',
-            fontStyle: 'italic', margin: 0, lineHeight: 1.4,
-          }}>
-            {phase.tagline}
-          </p>
-        </div>
-      </div>
-
-      {lastRecap && (
-        <div style={{ marginTop: 8, paddingTop: 8, borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-          <button
-            onClick={() => setRecapOpen(v => !v)}
-            style={{
-              background: 'none', border: 'none', cursor: 'pointer', padding: 0,
-              display: 'flex', alignItems: 'center', gap: 5,
-              fontSize: 11, color: 'var(--text-faint)', fontWeight: 600,
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            📖 Capitolo precedente {recapOpen ? '▲' : '▼'}
-          </button>
-          {recapOpen && (
-            <div style={{ marginTop: 8 }}>
-              <p style={{
-                fontSize: 12, color: 'var(--color-text-secondary)',
-                lineHeight: 1.6, fontStyle: 'italic', margin: 0,
-              }}>
-                {lastRecap.summary}
-              </p>
-              {lastRecap.completedObjectives.length > 0 && (
-                <p style={{ fontSize: 10, color: '#10b981', margin: '6px 0 0', lineHeight: 1.4 }}>
-                  ✅ {lastRecap.completedObjectives.join(' · ')}
-                </p>
-              )}
-              {lastRecap.missedObjectives.length > 0 && (
-                <p style={{ fontSize: 10, color: '#f59e0b', margin: '4px 0 0', lineHeight: 1.4 }}>
-                  ⬜ {lastRecap.missedObjectives.join(' · ')}
-                </p>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
 }
 
 // ─── Economy Strip ────────────────────────────────────────────────────────────
@@ -259,7 +182,7 @@ function GodModePanel() {
 export function VitaWidgets({ setVitaSection }: Props) {
   return (
     <>
-      <LifeChapterStrip />
+      <LifePhaseWidget />
       <EconomyStrip setVitaSection={setVitaSection} />
       <RewardBanner />
       <GodModePanel />

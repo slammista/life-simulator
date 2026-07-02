@@ -94,7 +94,7 @@ export const EventDisplay = memo(function EventDisplay() {
 
   if (!currentEvent) {
     return (
-      <div style={{
+      <div data-coachmark="event-card" style={{
         margin: '4px 12px 16px',
         padding: '28px 20px 24px',
         borderRadius: 'var(--radius-lg)',

@@ -119,8 +119,20 @@ const HAIR_COLOR_OPTIONS: { val: AvatarHairColor; label: string }[] = [
   { val: 'pink',        label: 'Rosa' },
 ]
 
+// Wizard steps — grouped from the previous single long scrollable form so onboarding
+// reads as a guided path (BitLife-style) instead of a wall of fields, and visually
+// matches OriginStoryScreen's full-screen gradient + dot-progress language.
+const STEPS = [
+  { emoji: '🎭', title: 'Scegli la tua storia' },
+  { emoji: '🪪', title: 'Chi sei?' },
+  { emoji: '🎨', title: 'Il tuo aspetto' },
+  { emoji: '🌍', title: 'Le tue origini' },
+  { emoji: '⚙️', title: 'Preferenze di gioco' },
+] as const
+
 export function NewGameScreen() {
   const { newGame } = useGameStore()
+  const [step, setStep] = useState(0)
   const [name, setName] = useState('')
   const [surname, setSurname] = useState('')
   const [gender, setGender] = useState<Gender>('male')
@@ -196,420 +208,467 @@ export function NewGameScreen() {
   const skinTones = Object.entries(SKIN_TONES) as [SkinTone, string][]
   const hairColors = HAIR_COLOR_OPTIONS
 
+  const isLastStep = step === STEPS.length - 1
+  const nameMissing = step === 1 && !name.trim()
+
   return (
-    <div style={{ flex: 1, overflowY: 'auto', padding: 16 }}>
-      <div style={{ textAlign: 'center', marginBottom: 24 }}>
-        <div style={{ fontSize: 48, marginBottom: 8 }}>🌍</div>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--color-text)', marginBottom: 4 }}>
-          Life Simulator 2D
+    <div style={{
+      position: 'fixed', inset: 0,
+      background: 'linear-gradient(160deg, #0a0a1a 0%, #111827 50%, #0a0a1a 100%)',
+      display: 'flex', flexDirection: 'column', zIndex: 100,
+    }}>
+      {/* Header: progress dots + step title */}
+      <div style={{ flexShrink: 0, padding: '22px 20px 14px', textAlign: 'center' }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: 6, marginBottom: 16 }}>
+          {STEPS.map((_, i) => (
+            <div key={i} style={{
+              width: i === step ? 22 : 6, height: 6, borderRadius: 3,
+              background: i === step ? 'var(--color-cta)' : i < step ? 'rgba(233,69,96,0.5)' : 'rgba(255,255,255,0.18)',
+              transition: 'width 0.25s ease, background 0.25s ease',
+            }} />
+          ))}
+        </div>
+        <div style={{ fontSize: 40, marginBottom: 6 }}>{STEPS[step].emoji}</div>
+        <h1 style={{ fontSize: 20, fontWeight: 800, color: '#f9fafb', margin: 0, letterSpacing: -0.3 }}>
+          {STEPS[step].title}
         </h1>
-        <p style={{ fontSize: 14, color: 'var(--color-text-secondary)' }}>
-          Crea il tuo personaggio e inizia la tua vita
-        </p>
-      </div>
-
-      {/* ── Scenario Selector ── */}
-      <div style={{ marginBottom: 20 }}>
-        <label style={{ ...labelStyle, fontSize: 13, marginBottom: 10 }}>🎭 Scegli il tuo scenario di vita</label>
-        {lockedHint && (
-          <div style={{
-            marginBottom: 8, padding: '8px 12px', borderRadius: 10,
-            background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)',
-            fontSize: 12, color: '#c4b5fd', textAlign: 'center',
-          }}>
-            {lockedHint}
-          </div>
+        {step === 0 && (
+          <p style={{ fontSize: 13, color: '#9ca3af', marginTop: 4 }}>Life Simulator 2D</p>
         )}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          {SCENARIOS.map(s => {
-            const active = selectedScenario === s.id
-            const gemCost = SCENARIO_GEM_COST[s.id] ?? 0
-            const isPremium = gemCost > 0
-            const isUnlocked = !isPremium || owns(`scenario_${s.id}`)
-            return (
-              <button
-                key={s.id}
-                onClick={() => {
-                  if (!isUnlocked) {
-                    setLockedHint(`🔒 Acquista "${s.title}" nello Shop per ${gemCost} 💎`)
-                    return
-                  }
-                  setLockedHint(null)
-                  applyScenario(s)
-                }}
-                style={{
-                  padding: '10px 12px', borderRadius: 12, textAlign: 'left', position: 'relative',
-                  cursor: isUnlocked ? 'pointer' : 'default',
-                  border: `2px solid ${active && isUnlocked ? s.color : 'rgba(255,255,255,0.08)'}`,
-                  background: active && isUnlocked ? `${s.color}18` : 'rgba(255,255,255,0.03)',
-                  transition: 'border-color 0.15s ease, background 0.15s ease',
-                  overflow: 'hidden',
-                }}
-              >
-                {/* Lock overlay for premium unowned scenarios */}
-                {!isUnlocked && (
-                  <div style={{
-                    position: 'absolute', inset: 0, borderRadius: 10,
-                    background: 'rgba(8,6,20,0.86)',
-                    backdropFilter: 'grayscale(1) blur(1.5px)',
-                    WebkitBackdropFilter: 'grayscale(1) blur(1.5px)',
-                    display: 'flex', flexDirection: 'column',
-                    alignItems: 'center', justifyContent: 'center', gap: 4,
-                  }}>
-                    <span style={{ fontSize: 20, opacity: 0.9 }}>🔒</span>
-                    <span style={{
-                      fontSize: 10, color: '#c4b5fd', fontWeight: 800,
-                      padding: '2px 8px', borderRadius: 99,
-                      background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.35)',
-                    }}>
-                      {gemCost} 💎
-                    </span>
-                  </div>
-                )}
-                <div style={{ fontSize: 22, marginBottom: 4, opacity: isUnlocked ? 1 : 0.3, filter: isUnlocked ? 'none' : 'grayscale(1)' }}>{s.emoji}</div>
-                <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2, opacity: isUnlocked ? 1 : 0.35,
-                  color: active && isUnlocked ? s.color : 'var(--color-text)' }}>
-                  {s.title}
-                </div>
-                <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.35, opacity: isUnlocked ? 1 : 0.3 }}>
-                  {s.subtitle}
-                </div>
-                {active && isUnlocked && s.id !== 'normal' && (
-                  <div style={{ marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                    {Object.entries(s.bonus).filter(([, v]) => v !== 0).slice(0, 3).map(([k, v]) => (
-                      <span key={k} style={{
-                        fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 99,
-                        background: (v as number) > 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
-                        color: (v as number) > 0 ? '#6ee7b7' : '#fca5a5',
-                      }}>
-                        {k === 'money' ? `€${Math.abs(v as number).toLocaleString()}` : `${(v as number) > 0 ? '+' : ''}${v} ${k}`}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </button>
-            )
-          })}
-        </div>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <div>
-          <label style={labelStyle}>Nome *</label>
-          <input
-            style={inputStyle}
-            placeholder="es. Marco"
-            value={name}
-            onChange={e => setName(e.target.value)}
-            maxLength={20}
-          />
-        </div>
+      {/* Scrollable step content */}
+      <div style={{ flex: 1, overflowY: 'auto', padding: '4px 16px 16px' }}>
+        <div style={{ maxWidth: 480, margin: '0 auto', animation: 'fadeIn 0.3s ease' }} key={step}>
 
-        <div>
-          <label style={labelStyle}>Cognome</label>
-          <input
-            style={inputStyle}
-            placeholder="es. Rossi"
-            value={surname}
-            onChange={e => setSurname(e.target.value)}
-            maxLength={20}
-          />
-        </div>
-
-        <div>
-          <label style={labelStyle}>Genere</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-            {[
-              { val: 'male', label: '👨 Maschio' },
-              { val: 'female', label: '👩 Femmina' },
-              { val: 'non_binary', label: '🧑 Non-binary' },
-            ].map(({ val, label }) => (
-              <button
-                key={val}
-                style={{
-                  ...inputStyle,
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  borderColor: gender === val ? 'var(--color-cta)' : 'var(--color-border)',
-                  backgroundColor: gender === val ? 'rgba(233,69,96,0.1)' : 'var(--bg-secondary)',
-                }}
-                onClick={() => handleGenderChange(val as Gender)}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ── Avatar Customization ── */}
-        <div style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-          <div style={{ padding: '10px 12px', background: 'rgba(124,92,255,0.12)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-            <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>🎨 Personalizza il tuo avatar</span>
-          </div>
-          <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {/* Preview */}
-            <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <div style={{ borderRadius: 16, border: '2px solid rgba(124,92,255,0.4)', overflow: 'hidden', background: 'rgba(255,255,255,0.04)' }}>
-                <AvatarRenderer size="lg" config={avatar} age={0} gender={gender} />
-              </div>
-            </div>
-
-            {/* Skin tone */}
+          {/* ── Step 0: Scenario ── */}
+          {step === 0 && (
             <div>
-              <p style={labelStyle}>Carnagione</p>
-              <div style={{ display: 'flex', gap: 8 }}>
-                {skinTones.map(([key, hex]) => (
-                  <button
-                    key={key}
-                    onClick={() => updateAvatar({ skinTone: key })}
-                    style={{
-                      width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                      background: hex, flexShrink: 0,
-                      outline: avatar.skinTone === key ? `3px solid var(--primary)` : '2px solid rgba(255,255,255,0.15)',
-                      outlineOffset: 2,
-                    }}
-                    title={key}
-                  />
-                ))}
+              {lockedHint && (
+                <div style={{
+                  marginBottom: 8, padding: '8px 12px', borderRadius: 10,
+                  background: 'rgba(167,139,250,0.15)', border: '1px solid rgba(167,139,250,0.3)',
+                  fontSize: 12, color: '#c4b5fd', textAlign: 'center',
+                }}>
+                  {lockedHint}
+                </div>
+              )}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                {SCENARIOS.map(s => {
+                  const active = selectedScenario === s.id
+                  const gemCost = SCENARIO_GEM_COST[s.id] ?? 0
+                  const isPremium = gemCost > 0
+                  const isUnlocked = !isPremium || owns(`scenario_${s.id}`)
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => {
+                        if (!isUnlocked) {
+                          setLockedHint(`🔒 Acquista "${s.title}" nello Shop per ${gemCost} 💎`)
+                          return
+                        }
+                        setLockedHint(null)
+                        applyScenario(s)
+                      }}
+                      style={{
+                        padding: '10px 12px', borderRadius: 12, textAlign: 'left', position: 'relative',
+                        cursor: isUnlocked ? 'pointer' : 'default',
+                        border: `2px solid ${active && isUnlocked ? s.color : 'rgba(255,255,255,0.08)'}`,
+                        background: active && isUnlocked ? `${s.color}18` : 'rgba(255,255,255,0.03)',
+                        transition: 'border-color 0.15s ease, background 0.15s ease',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      {!isUnlocked && (
+                        <div style={{
+                          position: 'absolute', inset: 0, borderRadius: 10,
+                          background: 'rgba(8,6,20,0.86)',
+                          backdropFilter: 'grayscale(1) blur(1.5px)',
+                          WebkitBackdropFilter: 'grayscale(1) blur(1.5px)',
+                          display: 'flex', flexDirection: 'column',
+                          alignItems: 'center', justifyContent: 'center', gap: 4,
+                        }}>
+                          <span style={{ fontSize: 20, opacity: 0.9 }}>🔒</span>
+                          <span style={{
+                            fontSize: 10, color: '#c4b5fd', fontWeight: 800,
+                            padding: '2px 8px', borderRadius: 99,
+                            background: 'rgba(167,139,250,0.18)', border: '1px solid rgba(167,139,250,0.35)',
+                          }}>
+                            {gemCost} 💎
+                          </span>
+                        </div>
+                      )}
+                      <div style={{ fontSize: 22, marginBottom: 4, opacity: isUnlocked ? 1 : 0.3, filter: isUnlocked ? 'none' : 'grayscale(1)' }}>{s.emoji}</div>
+                      <div style={{ fontSize: 12, fontWeight: 700, lineHeight: 1.2, opacity: isUnlocked ? 1 : 0.35,
+                        color: active && isUnlocked ? s.color : 'var(--color-text)' }}>
+                        {s.title}
+                      </div>
+                      <div style={{ fontSize: 10, color: 'var(--color-text-secondary)', marginTop: 2, lineHeight: 1.35, opacity: isUnlocked ? 1 : 0.3 }}>
+                        {s.subtitle}
+                      </div>
+                      {active && isUnlocked && s.id !== 'normal' && (
+                        <div style={{ marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                          {Object.entries(s.bonus).filter(([, v]) => v !== 0).slice(0, 3).map(([k, v]) => (
+                            <span key={k} style={{
+                              fontSize: 9, fontWeight: 700, padding: '1px 5px', borderRadius: 99,
+                              background: (v as number) > 0 ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)',
+                              color: (v as number) > 0 ? '#6ee7b7' : '#fca5a5',
+                            }}>
+                              {k === 'money' ? `€${Math.abs(v as number).toLocaleString()}` : `${(v as number) > 0 ? '+' : ''}${v} ${k}`}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </button>
+                  )
+                })}
               </div>
             </div>
+          )}
 
-            {/* Hair style */}
-            <div>
-              <p style={labelStyle}>Capelli</p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
-                {HAIR_STYLE_OPTIONS.map(({ val, label }) => (
-                  <button
-                    key={val}
-                    onClick={() => updateAvatar({ hairStyle: val })}
-                    style={{
-                      padding: '4px 10px', borderRadius: 20, fontSize: 11, border: 'none', cursor: 'pointer',
-                      background: avatar.hairStyle === val ? 'rgba(124,92,255,0.3)' : 'rgba(255,255,255,0.07)',
-                      color: avatar.hairStyle === val ? 'var(--primary)' : 'var(--color-text-secondary)',
-                      outline: avatar.hairStyle === val ? '1px solid rgba(124,92,255,0.5)' : 'none',
-                    }}
-                  >
-                    {label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Hair color */}
-            {avatar.hairStyle !== 'bald' && (
+          {/* ── Step 1: Identità ── */}
+          {step === 1 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <p style={labelStyle}>Colore capelli</p>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
-                  {hairColors.map(({ val, label }) => (
+                <label style={labelStyle}>Nome *</label>
+                <input
+                  style={inputStyle}
+                  placeholder="es. Marco"
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  maxLength={20}
+                  autoFocus
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Cognome</label>
+                <input
+                  style={inputStyle}
+                  placeholder="es. Rossi"
+                  value={surname}
+                  onChange={e => setSurname(e.target.value)}
+                  maxLength={20}
+                />
+              </div>
+
+              <div>
+                <label style={labelStyle}>Genere</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
+                  {[
+                    { val: 'male', label: '👨 Maschio' },
+                    { val: 'female', label: '👩 Femmina' },
+                    { val: 'non_binary', label: '🧑 Non-binary' },
+                  ].map(({ val, label }) => (
                     <button
                       key={val}
-                      onClick={() => updateAvatar({ hairColor: val })}
-                      title={label}
                       style={{
-                        width: 26, height: 26, borderRadius: '50%', border: 'none', cursor: 'pointer',
-                        background: HAIR_COLORS[val], flexShrink: 0,
-                        outline: avatar.hairColor === val ? '3px solid var(--primary)' : '2px solid rgba(255,255,255,0.15)',
+                        ...inputStyle,
+                        textAlign: 'center',
+                        cursor: 'pointer',
+                        borderColor: gender === val ? 'var(--color-cta)' : 'var(--color-border)',
+                        backgroundColor: gender === val ? 'rgba(233,69,96,0.1)' : 'var(--bg-secondary)',
+                      }}
+                      onClick={() => handleGenderChange(val as Gender)}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 2: Aspetto (avatar) ── */}
+          {step === 2 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <div style={{ display: 'flex', justifyContent: 'center' }}>
+                <div style={{ borderRadius: 16, border: '2px solid rgba(124,92,255,0.4)', overflow: 'hidden', background: 'rgba(255,255,255,0.04)' }}>
+                  <AvatarRenderer size="lg" config={avatar} age={0} gender={gender} />
+                </div>
+              </div>
+
+              <div>
+                <p style={labelStyle}>Carnagione</p>
+                <div style={{ display: 'flex', gap: 8 }}>
+                  {skinTones.map(([key, hex]) => (
+                    <button
+                      key={key}
+                      onClick={() => updateAvatar({ skinTone: key })}
+                      style={{
+                        width: 32, height: 32, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                        background: hex, flexShrink: 0,
+                        outline: avatar.skinTone === key ? `3px solid var(--primary)` : '2px solid rgba(255,255,255,0.15)',
                         outlineOffset: 2,
                       }}
+                      title={key}
                     />
                   ))}
                 </div>
               </div>
-            )}
 
-            {/* Adult hair preview */}
-            {avatar.hairStyle !== 'bald' && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'rgba(124,92,255,0.08)', border: '1px solid rgba(124,92,255,0.18)' }}>
-                <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', flex: 1 }}>
-                  👤 Aspetto da adulto (anteprima)
-                </span>
-                <AvatarRenderer size="sm" config={avatar} age={25} gender={gender} />
+              <div>
+                <p style={labelStyle}>Capelli</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {HAIR_STYLE_OPTIONS.map(({ val, label }) => (
+                    <button
+                      key={val}
+                      onClick={() => updateAvatar({ hairStyle: val })}
+                      style={{
+                        padding: '4px 10px', borderRadius: 20, fontSize: 11, border: 'none', cursor: 'pointer',
+                        background: avatar.hairStyle === val ? 'rgba(124,92,255,0.3)' : 'rgba(255,255,255,0.07)',
+                        color: avatar.hairStyle === val ? 'var(--primary)' : 'var(--color-text-secondary)',
+                        outline: avatar.hairStyle === val ? '1px solid rgba(124,92,255,0.5)' : 'none',
+                      }}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
-          </div>
-        </div>
 
-        <div>
-          <label style={labelStyle}>Anno di nascita: {birthYear}</label>
-          <input
-            type="range"
-            min={1950}
-            max={2020}
-            value={birthYear}
-            onChange={e => setBirthYear(Number(e.target.value))}
-            style={{ width: '100%', accentColor: 'var(--color-cta)' }}
-          />
-          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-text-secondary)' }}>
-            <span>1950</span>
-            <span>2020</span>
-          </div>
-        </div>
+              {avatar.hairStyle !== 'bald' && (
+                <div>
+                  <p style={labelStyle}>Colore capelli</p>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 7 }}>
+                    {hairColors.map(({ val, label }) => (
+                      <button
+                        key={val}
+                        onClick={() => updateAvatar({ hairColor: val })}
+                        title={label}
+                        style={{
+                          width: 26, height: 26, borderRadius: '50%', border: 'none', cursor: 'pointer',
+                          background: HAIR_COLORS[val], flexShrink: 0,
+                          outline: avatar.hairColor === val ? '3px solid var(--primary)' : '2px solid rgba(255,255,255,0.15)',
+                          outlineOffset: 2,
+                        }}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )}
 
-        <div>
-          <label style={labelStyle}>Nazionalità</label>
-          <select
-            style={{ ...inputStyle, cursor: 'pointer' }}
-            value={nationId}
-            onChange={e => setNationId(e.target.value)}
-          >
-            {db.nations.map(n => (
-              <option key={n.id} value={n.id}>
-                {n.flag} {n.name}
-              </option>
-            ))}
-          </select>
-        </div>
+              {avatar.hairStyle !== 'bald' && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 10px', borderRadius: 10, background: 'rgba(124,92,255,0.08)', border: '1px solid rgba(124,92,255,0.18)' }}>
+                  <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', flex: 1 }}>
+                    👤 Aspetto da adulto (anteprima)
+                  </span>
+                  <AvatarRenderer size="sm" config={avatar} age={25} gender={gender} />
+                </div>
+              )}
+            </div>
+          )}
 
-        <div>
-          <label style={labelStyle}>Background familiare</label>
-          <select
-            style={{ ...inputStyle, cursor: 'pointer' }}
-            value={background}
-            onChange={e => setBackground(e.target.value as FamilyBackground)}
-          >
-            <option value="poor">💸 Povero (€200 iniziali)</option>
-            <option value="lower_middle">📉 Bassa classe media (€500)</option>
-            <option value="middle">🏠 Classe media (€1000)</option>
-            <option value="upper_middle">📈 Alta classe media (€3000)</option>
-            <option value="rich">💰 Ricco (€10000)</option>
-            <option value="elite">💎 Elite (€50000)</option>
-          </select>
-        </div>
+          {/* ── Step 3: Origini ── */}
+          {step === 3 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={labelStyle}>Anno di nascita: {birthYear}</label>
+                <input
+                  type="range"
+                  min={1950}
+                  max={2020}
+                  value={birthYear}
+                  onChange={e => setBirthYear(Number(e.target.value))}
+                  style={{ width: '100%', accentColor: 'var(--color-cta)' }}
+                />
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                  <span>1950</span>
+                  <span>2020</span>
+                </div>
+              </div>
 
-        <div>
-          <label style={labelStyle}>Religione</label>
-          <select
-            style={{ ...inputStyle, cursor: 'pointer' }}
-            value={religion}
-            onChange={e => setReligion(e.target.value as Religion)}
-          >
-            <option value="catholicism">✝️ Cattolicesimo</option>
-            <option value="islam">☪️ Islam</option>
-            <option value="buddhism">☸️ Buddismo</option>
-            <option value="hinduism">🕉️ Induismo</option>
-            <option value="judaism">✡️ Ebraismo</option>
-            <option value="protestantism">🙏 Protestantesimo</option>
-            <option value="orthodoxy">☦️ Ortodossia</option>
-            <option value="atheism">🔬 Ateismo</option>
-            <option value="agnosticism">🤔 Agnosticismo</option>
-          </select>
-        </div>
+              <div>
+                <label style={labelStyle}>Nazionalità</label>
+                <select
+                  style={{ ...inputStyle, cursor: 'pointer' }}
+                  value={nationId}
+                  onChange={e => setNationId(e.target.value)}
+                >
+                  {db.nations.map(n => (
+                    <option key={n.id} value={n.id}>
+                      {n.flag} {n.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-        <div>
-          <label style={labelStyle}>Orientamento sessuale</label>
-          <select
-            style={{ ...inputStyle, cursor: 'pointer' }}
-            value={orientation}
-            onChange={e => setOrientation(e.target.value as SexualOrientation)}
-          >
-            <option value="heterosexual">Eterosessuale</option>
-            <option value="homosexual">Omosessuale</option>
-            <option value="bisexual">Bisessuale</option>
-            <option value="pansexual">Pansessuale</option>
-            <option value="asexual">Asessuale</option>
-          </select>
-        </div>
+              <div>
+                <label style={labelStyle}>Background familiare</label>
+                <select
+                  style={{ ...inputStyle, cursor: 'pointer' }}
+                  value={background}
+                  onChange={e => setBackground(e.target.value as FamilyBackground)}
+                >
+                  <option value="poor">💸 Povero (€200 iniziali)</option>
+                  <option value="lower_middle">📉 Bassa classe media (€500)</option>
+                  <option value="middle">🏠 Classe media (€1000)</option>
+                  <option value="upper_middle">📈 Alta classe media (€3000)</option>
+                  <option value="rich">💰 Ricco (€10000)</option>
+                  <option value="elite">💎 Elite (€50000)</option>
+                </select>
+              </div>
 
-        {/* Game Mode */}
-        <div>
-          <label style={labelStyle}>Modalità di gioco</label>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            {[
-              { val: 'normal', label: '🎮 Normale', desc: 'Esperienza bilanciata' },
-              { val: 'hard',   label: '💀 Difficile', desc: 'Salario -30%, declino più rapido' },
-            ].map(({ val, label, desc }) => (
-              <button
-                key={val}
-                onClick={() => setGameMode(val as GameMode)}
+              <div>
+                <label style={labelStyle}>Religione</label>
+                <select
+                  style={{ ...inputStyle, cursor: 'pointer' }}
+                  value={religion}
+                  onChange={e => setReligion(e.target.value as Religion)}
+                >
+                  <option value="catholicism">✝️ Cattolicesimo</option>
+                  <option value="islam">☪️ Islam</option>
+                  <option value="buddhism">☸️ Buddismo</option>
+                  <option value="hinduism">🕉️ Induismo</option>
+                  <option value="judaism">✡️ Ebraismo</option>
+                  <option value="protestantism">🙏 Protestantesimo</option>
+                  <option value="orthodoxy">☦️ Ortodossia</option>
+                  <option value="atheism">🔬 Ateismo</option>
+                  <option value="agnosticism">🤔 Agnosticismo</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={labelStyle}>Orientamento sessuale</label>
+                <select
+                  style={{ ...inputStyle, cursor: 'pointer' }}
+                  value={orientation}
+                  onChange={e => setOrientation(e.target.value as SexualOrientation)}
+                >
+                  <option value="heterosexual">Eterosessuale</option>
+                  <option value="homosexual">Omosessuale</option>
+                  <option value="bisexual">Bisessuale</option>
+                  <option value="pansexual">Pansessuale</option>
+                  <option value="asexual">Asessuale</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {/* ── Step 4: Preferenze di gioco ── */}
+          {step === 4 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              <div>
+                <label style={labelStyle}>Modalità di gioco</label>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                  {[
+                    { val: 'normal', label: '🎮 Normale', desc: 'Esperienza bilanciata' },
+                    { val: 'hard',   label: '💀 Difficile', desc: 'Salario -30%, declino più rapido' },
+                  ].map(({ val, label, desc }) => (
+                    <button
+                      key={val}
+                      onClick={() => setGameMode(val as GameMode)}
+                      style={{
+                        ...inputStyle,
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        borderColor: gameMode === val ? (val === 'hard' ? '#f87171' : 'var(--color-cta)') : 'var(--color-border)',
+                        backgroundColor: gameMode === val ? (val === 'hard' ? 'rgba(248,113,113,0.1)' : 'rgba(233,69,96,0.1)') : 'var(--bg-secondary)',
+                        padding: '8px 12px',
+                      }}
+                    >
+                      <div style={{ fontWeight: 600, fontSize: 13 }}>{label}</div>
+                      <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>{desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div
                 style={{
-                  ...inputStyle,
-                  textAlign: 'left',
+                  padding: '12px',
+                  borderRadius: 10,
+                  border: `1px solid ${ironMan ? '#f87171' : 'rgba(255,255,255,0.08)'}`,
+                  background: ironMan ? 'rgba(248,113,113,0.08)' : 'rgba(255,255,255,0.03)',
                   cursor: 'pointer',
-                  borderColor: gameMode === val ? (val === 'hard' ? '#f87171' : 'var(--color-cta)') : 'var(--color-border)',
-                  backgroundColor: gameMode === val ? (val === 'hard' ? 'rgba(248,113,113,0.1)' : 'rgba(233,69,96,0.1)') : 'var(--bg-secondary)',
-                  padding: '8px 12px',
                 }}
+                onClick={() => setIronMan(v => !v)}
               >
-                <div style={{ fontWeight: 600, fontSize: 13 }}>{label}</div>
-                <div style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>{desc}</div>
-              </button>
-            ))}
-          </div>
-        </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <div>
+                    <div style={{ fontWeight: 700, color: ironMan ? '#f87171' : '#e2e8f0', fontSize: 14 }}>
+                      ☠️ Iron Man Mode
+                    </div>
+                    <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
+                      Morte permanente, niente continue, declino +30%. Ribbon esclusivo.
+                    </div>
+                  </div>
+                  <div style={{
+                    width: 40, height: 22, borderRadius: 11,
+                    background: ironMan ? '#f87171' : 'rgba(255,255,255,0.15)',
+                    transition: 'background 0.2s', position: 'relative', flexShrink: 0,
+                  }}>
+                    <div style={{
+                      position: 'absolute', top: 3, left: ironMan ? 21 : 3,
+                      width: 16, height: 16, borderRadius: '50%', background: '#fff',
+                      transition: 'left 0.2s',
+                    }} />
+                  </div>
+                </div>
+              </div>
 
-        {/* Iron Man Mode */}
-        <div
-          style={{
-            padding: '12px',
-            borderRadius: 10,
-            border: `1px solid ${ironMan ? '#f87171' : 'rgba(255,255,255,0.08)'}`,
-            background: ironMan ? 'rgba(248,113,113,0.08)' : 'rgba(255,255,255,0.03)',
-            cursor: 'pointer',
-          }}
-          onClick={() => setIronMan(v => !v)}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <div>
-              <div style={{ fontWeight: 700, color: ironMan ? '#f87171' : '#e2e8f0', fontSize: 14 }}>
-                ☠️ Iron Man Mode
-              </div>
-              <div style={{ fontSize: 11, color: '#94a3b8', marginTop: 2 }}>
-                Morte permanente, niente continue, declino +30%. Ribbon esclusivo.
-              </div>
+              {godModeUnlocked && (
+                <div className="card" style={{
+                  padding: '14px 16px',
+                  background: 'linear-gradient(160deg, rgba(124,58,237,0.25) 0%, rgba(27,23,51,0.6) 100%)',
+                  border: '1px solid rgba(167,139,250,0.4)',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                    <span style={{ fontSize: 22 }}>⚡</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ fontSize: 14, fontWeight: 700, color: '#c4b5fd' }}>God Mode</div>
+                      <div style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
+                        {godBonus ? 'Attributi personalizzati attivi' : 'Personalizza gli attributi iniziali'}
+                      </div>
+                    </div>
+                    {godBonus && (
+                      <span style={{ fontSize: 11, color: '#6ee7b7', fontWeight: 600 }}>✓ attivo</span>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowEditor(true)}
+                    className="btn-candy btn-candy--primary"
+                    style={{ width: '100%', fontSize: 14, padding: '10px 0' }}
+                  >
+                    ✏️ Modifica Personaggio
+                  </button>
+                </div>
+              )}
             </div>
-            <div style={{
-              width: 40, height: 22, borderRadius: 11,
-              background: ironMan ? '#f87171' : 'rgba(255,255,255,0.15)',
-              transition: 'background 0.2s', position: 'relative', flexShrink: 0,
-            }}>
-              <div style={{
-                position: 'absolute', top: 3, left: ironMan ? 21 : 3,
-                width: 16, height: 16, borderRadius: '50%', background: '#fff',
-                transition: 'left 0.2s',
-              }} />
-            </div>
-          </div>
+          )}
         </div>
       </div>
 
-      {/* God Mode: character editor */}
-      {godModeUnlocked && (
-        <div className="card" style={{
-          marginTop: 20, padding: '14px 16px',
-          background: 'linear-gradient(160deg, rgba(124,58,237,0.25) 0%, rgba(27,23,51,0.6) 100%)',
-          border: '1px solid rgba(167,139,250,0.4)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
-            <span style={{ fontSize: 22 }}>⚡</span>
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: '#c4b5fd' }}>God Mode</div>
-              <div style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>
-                {godBonus ? 'Attributi personalizzati attivi' : 'Personalizza gli attributi iniziali'}
-              </div>
-            </div>
-            {godBonus && (
-              <span style={{ fontSize: 11, color: '#6ee7b7', fontWeight: 600 }}>✓ attivo</span>
-            )}
-          </div>
+      {/* Fixed nav footer */}
+      <div style={{ flexShrink: 0, padding: '12px 16px', display: 'flex', gap: 10, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+        {step > 0 && (
           <button
-            onClick={() => setShowEditor(true)}
-            className="btn-candy btn-candy--primary"
-            style={{ width: '100%', fontSize: 14, padding: '10px 0' }}
+            onClick={() => setStep(s => s - 1)}
+            className="btn-candy btn-candy--neutral"
+            style={{ flex: '0 0 auto', padding: '13px 22px' }}
           >
-            ✏️ Modifica Personaggio
+            ‹
           </button>
-        </div>
-      )}
-
-      <div style={{ marginTop: 24 }}>
-        <button
-          className="btn-age"
-          onClick={handleStart}
-          disabled={!name.trim()}
-          style={{ opacity: !name.trim() ? 0.5 : 1 }}
-        >
-          🚀 Inizia la tua vita!
-        </button>
+        )}
+        {!isLastStep ? (
+          <button
+            onClick={() => setStep(s => s + 1)}
+            disabled={nameMissing}
+            className="btn-candy btn-candy--primary"
+            style={{ flex: 1, opacity: nameMissing ? 0.5 : 1 }}
+          >
+            Avanti →
+          </button>
+        ) : (
+          <button
+            className="btn-age"
+            onClick={handleStart}
+            disabled={!name.trim()}
+            style={{ flex: 1, opacity: !name.trim() ? 0.5 : 1 }}
+          >
+            🚀 Inizia la tua vita!
+          </button>
+        )}
       </div>
 
       {showEditor && (
@@ -621,6 +680,8 @@ export function NewGameScreen() {
           />
         </Suspense>
       )}
+
+      <style>{`@keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }`}</style>
     </div>
   )
 }
