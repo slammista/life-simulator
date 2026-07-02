@@ -132,12 +132,30 @@ function App() {
   const emotionalUI = useGameStore(useShallow(s => EmotionalUIEngine.derive(s)))
 
   // Tab badges — a genuine "you have something waiting" signal, not just a red dot
-  // for its own sake. Only Lavoro and Attività have one today (see plan Fase 1 §4).
+  // for its own sake.
   const hasPendingCareerOffer = useGameStore(s => !!s.pendingCareerOffer)
   const hasUnclaimedDailyQuest = useGameStore(s =>
     s.dailyQuests.quests.some(q => !q.claimed && DailyQuestEngine.progress(q, s).completed)
   )
-  const tabBadges = { lavoro: hasPendingCareerOffer, activities: hasUnclaimedDailyQuest }
+  // Patrimonio: an NPC loan gone overdue, or an owned asset badly neglected — both
+  // already have a dedicated fix-it action in FinanceScreen (Salda / Manutenzione),
+  // and both today only ever surface as one line buried in the yearly event log.
+  const hasFinancialAlert = useGameStore(s =>
+    s.npcLoans.some(l => !l.repaid && l.direction !== 'player_lent' && s.time.year > l.dueYear)
+    || s.finance.assets.some(a => (a.condition ?? 100) < 35)
+  )
+  // Relazioni: a partner/spouse relationship in active crisis (trust critically low).
+  // Self-clearing — resolves itself once the player apologizes or trust recovers,
+  // unlike a discovered-affair flag which never resets once true.
+  const hasRelationshipCrisis = useGameStore(s =>
+    s.relationships.some(r => r.isAlive && r.trust < 20 && (r.type === 'partner' || r.type === 'spouse'))
+  )
+  const tabBadges = {
+    lavoro: hasPendingCareerOffer,
+    activities: hasUnclaimedDailyQuest,
+    assets: hasFinancialAlert,
+    relazioni: hasRelationshipCrisis,
+  }
 
   const [ageConfirmed, setAgeConfirmed] = useState(() => !!localStorage.getItem('age_confirmed'))
   const [activeTab, _setActiveTab] = useState<Tab>('vita')
