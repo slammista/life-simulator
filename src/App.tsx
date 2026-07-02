@@ -335,7 +335,7 @@ function App() {
       )}
       {activeTab === 'assets' && assetsSub !== 'home' && (
         <SectionBackBar
-          label="Assets"
+          label="Patrimonio"
           itemLabel={ASSETS_ITEMS.find(i => i.id === assetsSub)?.emoji + ' ' + ASSETS_ITEMS.find(i => i.id === assetsSub)?.label}
           onBack={() => setAssetsSub('home')}
         />
@@ -475,7 +475,11 @@ function App() {
         onDone={() => setAgeOverlay(s => ({ ...s, visible: false }))}
       />
       <CelebrationOverlay blocked={ageOverlay.visible} />
-      <FirstPlayHint hasEvent={currentEvent !== null} age={time.age} />
+      {/* Points at the age button, so it only makes sense while looking at the Vita
+          home screen — elsewhere it just floats over unrelated content underneath. */}
+      {activeTab === 'vita' && vitaSection === 'home' && (
+        <FirstPlayHint hasEvent={currentEvent !== null} age={time.age} />
+      )}
       <AdBanner visible={activeTab === 'vita' && vitaSection === 'home'} />
       <NPCEventNotifications />
       <ActionResultPanel />
