@@ -3,6 +3,7 @@ import { CloudSaveService } from '../../services/CloudSaveService'
 import { useWalletStore } from '../../store/walletStore'
 import { useGameStore } from '../../store/gameStore'
 import { useToastStore } from '../../store/toastStore'
+import { AudioEngine } from '../../services/AudioEngine'
 
 interface Props {
   onBack: () => void
@@ -88,6 +89,7 @@ export function VitaShopPanel({ onBack }: Props) {
   function handleGemPurchase(id: string, cost: number) {
     const res = buyCosmetic(id, cost)
     if (res.ok) {
+      AudioEngine.playSFX('purchase')
       setMessage({ text: 'Oggetto sbloccato! Equipaggialo quando vuoi.', ok: true })
     } else {
       setMessage({ text: res.error ?? 'Acquisto non riuscito', ok: false })

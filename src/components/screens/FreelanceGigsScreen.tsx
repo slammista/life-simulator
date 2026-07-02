@@ -1,6 +1,6 @@
 import { useGameStore } from '../../store/gameStore'
 import { useToastStore } from '../../store/toastStore'
-import { haptic } from '../../services/HapticEngine'
+import { feedback } from '../../services/FeedbackEngine'
 
 interface GigDef {
   id: string
@@ -43,7 +43,7 @@ export function FreelanceGigsScreen() {
   const closePanel = useToastStore(s => s.closePanel)
 
   const flash = (msg: string, ok: boolean, emoji: string, effects: Record<string, number> = {}) => {
-    haptic(ok ? 'success' : 'error')
+    feedback(ok ? 'success' : 'error')
     showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
     setTimeout(() => closePanel(), 3000)
   }

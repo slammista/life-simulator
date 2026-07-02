@@ -3,7 +3,7 @@ import { useGameStore } from '../../store/gameStore'
 import { SocialMediaEngine, type SocialPlatform, type PostType } from '../../services/SocialMediaEngine'
 import { FameEngine } from '../../services/FameEngine'
 import { useToastStore } from '../../store/toastStore'
-import { haptic } from '../../services/HapticEngine'
+import { feedback } from '../../services/FeedbackEngine'
 
 const POST_TYPES: { id: PostType; label: string; emoji: string }[] = [
   { id: 'photo',         label: 'Foto',       emoji: '📸' },
@@ -89,7 +89,7 @@ export function SocialMediaScreen() {
   const fame      = FameEngine.ensure(rawFame)
 
   const flash = (msg: string, ok: boolean, emoji: string, effects: Record<string, number> = {}) => {
-    haptic(ok ? 'success' : 'error')
+    feedback(ok ? 'success' : 'error')
     showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
     setTimeout(() => closePanel(), 3000)
   }

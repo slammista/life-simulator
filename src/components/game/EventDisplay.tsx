@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
-import { haptic } from '../../services/HapticEngine'
+import { feedback } from '../../services/FeedbackEngine'
 import { AudioEngine } from '../../services/AudioEngine'
 
 // Category → header color mapping (BitLife-style)
@@ -314,7 +314,7 @@ export const EventDisplay = memo(function EventDisplay() {
                   <button
                     key={choice.id}
                     className="btn-candy btn-candy--primary"
-                    onClick={() => { haptic('tap'); handleChoice(choice.id) }}
+                    onClick={() => { feedback('tap'); handleChoice(choice.id) }}
                     style={{
                       fontSize: 13,
                       textAlign: 'left', lineHeight: 1.4,
@@ -328,7 +328,7 @@ export const EventDisplay = memo(function EventDisplay() {
               ) : (
                 <button
                   className="btn-candy btn-candy--primary"
-                  onClick={() => { haptic('tap'); handleChoice('') }}
+                  onClick={() => { feedback('tap'); handleChoice('') }}
                 >
                   OK
                 </button>
@@ -352,10 +352,6 @@ export const EventDisplay = memo(function EventDisplay() {
         @keyframes slideUpModal {
           0%   { transform: translateY(24px) scale(0.97); opacity: 0; }
           100% { transform: translateY(0) scale(1);       opacity: 1; }
-        }
-        @keyframes shimmer {
-          0%   { background-position: 200% 0; }
-          100% { background-position: -200% 0; }
         }
       `}</style>
     </>

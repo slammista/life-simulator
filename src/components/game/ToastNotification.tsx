@@ -24,6 +24,7 @@ export function ToastContainer() {
         <div
           key={t.id}
           onClick={() => remove(t.id)}
+          className={t.tier !== 'small' ? `toast-tier-${t.tier}` : undefined}
           style={{
             pointerEvents: 'auto',
             padding: '11px 16px',

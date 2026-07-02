@@ -3,7 +3,7 @@ import { useGameStore } from '../../store/gameStore'
 import { getAllSportDefs, getSportDef, type SportDef } from '../../services/SportEngine'
 import { MinorEconomyEngine } from '../../services/MinorEconomyEngine'
 import { useToastStore } from '../../store/toastStore'
-import { haptic } from '../../services/HapticEngine'
+import { feedback } from '../../services/FeedbackEngine'
 import type { SportCategory } from '../../store/types'
 import { SportCompetitionEngine } from '../../services/SportCompetitionEngine'
 
@@ -39,7 +39,7 @@ export function SportScreen() {
   const hasParents = relationships.some(r => r.type === 'parent' && r.isAlive)
 
   const flash = (msg: string, ok: boolean, emoji = '🏅', effects: Record<string, number> = {}) => {
-    haptic(ok ? 'success' : 'error')
+    feedback(ok ? 'success' : 'error')
     showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
     setTimeout(() => closePanel(), 3500)
   }

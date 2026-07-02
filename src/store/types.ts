@@ -925,6 +925,17 @@ export interface Ribbon {
   icon: string
 }
 
+// ---- Celebration moments (ribbon/goal unlock feedback queue) ----
+
+export interface CelebrationEvent {
+  id: string
+  kind: 'ribbon' | 'goal'
+  emoji: string
+  title: string
+  subtitle: string
+  tier?: RibbonTier
+}
+
 // ---- Challenges ----
 
 export interface Condition {
@@ -1438,6 +1449,7 @@ export interface GameState {
 
   // Ribbons
   ribbons: Ribbon[]
+  pendingCelebrations: CelebrationEvent[]
 
   // Challenges
   challenges: Challenge[]
@@ -1763,6 +1775,7 @@ export interface GameActions {
   // Validation
   checkGoals: () => void
   checkMorte: () => void
+  dismissCelebration: (id: string) => void
   checkEventRequirements: (event: GameEvent, state: GameState) => boolean
   applyNazioneEffect: () => void
 

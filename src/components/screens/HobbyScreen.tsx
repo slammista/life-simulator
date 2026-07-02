@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { getAllHobbyDefs, getHobbyDef } from '../../services/HobbyEngine'
 import { useToastStore } from '../../store/toastStore'
-import { haptic } from '../../services/HapticEngine'
+import { feedback } from '../../services/FeedbackEngine'
 
 const MIN_AGE_HOBBY = 6
 
@@ -27,7 +27,7 @@ export function HobbyScreen() {
   const [bandGenre, setBandGenre] = useState('rock')
 
   const flash = (msg: string, ok: boolean, emoji = '🎸', effects: Record<string, number> = {}) => {
-    haptic(ok ? 'success' : 'error')
+    feedback(ok ? 'success' : 'error')
     showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
     setTimeout(() => closePanel(), 3500)
   }

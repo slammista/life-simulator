@@ -604,6 +604,16 @@ body {
 .tab-btn span:first-child {
   font-size: 18px;
 }
+.tab-badge-dot {
+  position: absolute;
+  top: 4px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #FF4D6D;
+  box-shadow: 0 0 6px rgba(255,77,109,0.7), 0 0 0 2px var(--bg-primary, #0D0F1A);
+}
 
 /* Event log (base — overridden by the semantic classes below) */
 
@@ -724,6 +734,51 @@ body {
 }
 @media (prefers-reduced-motion: reduce) {
   .stat-value-flash { animation: none; }
+}
+
+/* ─── Reward tiers — proportional feedback on ActionResultPanel + toasts ─── */
+@keyframes tierPopMedium {
+  0%   { transform: scale(0.92); }
+  55%  { transform: scale(1.03); }
+  100% { transform: scale(1); }
+}
+@keyframes tierPopLarge {
+  0%   { transform: scale(0.85); }
+  50%  { transform: scale(1.06); }
+  100% { transform: scale(1); }
+}
+.effect-tier-medium {
+  box-shadow: 0 -4px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04), 0 0 24px rgba(255,176,32,0.18) !important;
+}
+.effect-tier-large {
+  box-shadow: 0 -4px 48px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06), 0 0 36px rgba(255,176,32,0.32) !important;
+}
+.toast-tier-medium {
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04), 0 0 16px rgba(255,176,32,0.2) !important;
+}
+.toast-tier-large {
+  box-shadow: 0 8px 36px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.06), 0 0 22px rgba(255,176,32,0.32) !important;
+  font-size: 14px !important;
+}
+
+/* ─── Screen loading skeleton ─── */
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+.skeleton-block {
+  border-radius: var(--radius-md);
+  background: linear-gradient(
+    100deg,
+    rgba(255,255,255,0.04) 30%,
+    rgba(255,255,255,0.09) 50%,
+    rgba(255,255,255,0.04) 70%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-block { animation: none; background: rgba(255,255,255,0.05); }
 }
 
 /* ─── Shared screen pattern (Military, BodyMod, Beauty, etc.) ─── */

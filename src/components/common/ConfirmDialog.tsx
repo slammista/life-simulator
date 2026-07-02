@@ -1,4 +1,4 @@
-import { haptic } from '../../services/HapticEngine'
+import { feedback } from '../../services/FeedbackEngine'
 
 interface Props {
   open: boolean
@@ -59,7 +59,7 @@ export function ConfirmDialog({
             <button
               className="icon-btn icon-btn--danger"
               style={{ width: 52, height: 52, fontSize: 22 }}
-              onClick={() => { haptic('tap'); onCancel() }}
+              onClick={() => { feedback('tap'); onCancel() }}
               aria-label={cancelLabel}
             >
               ✗
@@ -70,7 +70,7 @@ export function ConfirmDialog({
             <button
               className={`icon-btn ${danger ? 'icon-btn--danger' : 'icon-btn--positive'}`}
               style={{ width: 52, height: 52, fontSize: 22 }}
-              onClick={() => { haptic('tap'); onConfirm() }}
+              onClick={() => { feedback('tap'); onConfirm() }}
               aria-label={confirmLabel}
             >
               ✓

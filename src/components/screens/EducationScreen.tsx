@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { EducationEngine, getEducationLabel } from '../../services/EducationEngine'
 import { useToastStore } from '../../store/toastStore'
-import { haptic } from '../../services/HapticEngine'
+import { feedback } from '../../services/FeedbackEngine'
 import type { EducationLevel, SchoolAction, SchoolNPC, SchoolReputationStatus } from '../../store/types'
 
 const SchoolNpcDetailModal = lazy(() =>
@@ -130,7 +130,7 @@ export function EducationScreen() {
   const [detailNpcId, setDetailNpcId] = useState<string | null>(null)
 
   const flash = (msg: string, ok: boolean, emoji = '📚', effects: Record<string, number> = {}) => {
-    haptic(ok ? 'success' : 'error')
+    feedback(ok ? 'success' : 'error')
     showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
     setTimeout(() => closePanel(), 3500)
   }

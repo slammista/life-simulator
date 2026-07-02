@@ -429,6 +429,7 @@ function buildInitialState(): GameState {
     goals: db.goals.map(g => ({ ...g, reward: g.reward as unknown as Effect, completed: false, completedYear: null })),
     completedGoals: [],
     ribbons: [],
+    pendingCelebrations: [],
     challenges: [],
     inventory: [],
     eventLog: [],
@@ -1260,6 +1261,19 @@ export const useGameStore = create<FullStore>()(
                 ...newRibbons.map(def => AchievementsEngine.buildRibbonRecord(def, newYear)),
               ]
             : state.ribbons,
+          pendingCelebrations: newRibbons.length > 0
+            ? [
+                ...state.pendingCelebrations,
+                ...newRibbons.map(def => ({
+                  id: `ribbon_${def.id}_${newYear}`,
+                  kind: 'ribbon' as const,
+                  emoji: def.emoji,
+                  title: def.name,
+                  subtitle: def.tier.toUpperCase(),
+                  tier: def.tier,
+                })),
+              ]
+            : state.pendingCelebrations,
           lifeMemories: yearMemories.length > 0 ? [...state.lifeMemories, ...yearMemories].slice(-200) : state.lifeMemories,
           pendingConsequences: remainingConsequences,
           npcLoans: updatedNpcLoans,
@@ -4581,10 +4595,28 @@ export const useGameStore = create<FullStore>()(
           }
           return goal
         })
-        const newCompleted = updated
-          .filter(g => g.completed && !state.completedGoals.includes(g.id))
-          .map(g => g.id)
-        set(s => ({ goals: updated, completedGoals: [...s.completedGoals, ...newCompleted] }))
+        const newlyCompleted = updated.filter(g => g.completed && !state.completedGoals.includes(g.id))
+        const newCompleted = newlyCompleted.map(g => g.id)
+        const GOAL_CATEGORY_EMOJI: Record<string, string> = {
+          financial: '💰', social: '🎉', travel: '✈️', health: '❤️', education: '🎓',
+          family: '👨‍👩‍👧', relational: '💞', criminal: '🕶️', hobby: '🎨', character: '🌟', career: '💼',
+        }
+        set(s => ({
+          goals: updated,
+          completedGoals: [...s.completedGoals, ...newCompleted],
+          pendingCelebrations: newlyCompleted.length > 0
+            ? [
+                ...s.pendingCelebrations,
+                ...newlyCompleted.map(g => ({
+                  id: `goal_${g.id}_${state.time.year}`,
+                  kind: 'goal' as const,
+                  emoji: GOAL_CATEGORY_EMOJI[g.category] ?? '🎯',
+                  title: g.name,
+                  subtitle: 'OBIETTIVO COMPLETATO',
+                })),
+              ]
+            : s.pendingCelebrations,
+        }))
       },
 
       checkMorte: () => {
@@ -4669,6 +4701,9 @@ export const useGameStore = create<FullStore>()(
         const s = get()
         if (s.nation) get().aggiornaStats({ health: s.nation.healthRecoveryBonus * 0.1 })
       },
+
+      dismissCelebration: (id: string) =>
+        set(s => ({ pendingCelebrations: s.pendingCelebrations.filter(c => c.id !== id) })),
 
       // ==================== Setters ====================
       setCurrentEvent: (event) => set({ currentEvent: event }),

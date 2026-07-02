@@ -1,6 +1,9 @@
+import confetti from 'canvas-confetti'
+import { useEffect } from 'react'
 import { useToastStore } from '../../store/toastStore'
 import { haptic } from '../../services/HapticEngine'
 import { AudioEngine } from '../../services/AudioEngine'
+import { prefersReducedMotion } from '../../services/motionUtils'
 
 const STAT_LABELS: Record<string, string> = {
   health: 'Salute', happiness: 'Felicità', energy: 'Energia',
@@ -16,9 +19,44 @@ const STAT_EMOJI: Record<string, string> = {
   resilience: '🛡️', socialReputation: '👥',
 }
 
+// Pure classification of an action's magnitude — €10.000 and +1 felicità should not
+// look the same. 'money' is judged on its own scale; other stats (roughly -20..+20
+// per action) are summed by absolute value since several small effects together can
+// still be a big moment.
+function classifyTier(effects: Record<string, number>): 'small' | 'medium' | 'large' {
+  const money = Math.abs(effects.money ?? 0)
+  const statSum = Object.entries(effects)
+    .filter(([k]) => k !== 'money')
+    .reduce((sum, [, v]) => sum + Math.abs(v), 0)
+  if (money >= 5000 || statSum >= 30) return 'large'
+  if (money >= 500 || statSum >= 12) return 'medium'
+  return 'small'
+}
+
 export function ActionResultPanel() {
   const { panel } = useToastStore()
   const rawClose = useToastStore(s => s.closePanel)
+
+  const tier = panel ? classifyTier(panel.effects) : 'small'
+
+  // Confetti burst for a big positive outcome — fires once per panel, gated by
+  // prefers-reduced-motion like every other confetti call site in the app.
+  useEffect(() => {
+    if (panel && panel.ok && tier === 'large' && !prefersReducedMotion()) {
+      void confetti({
+        particleCount: 70,
+        spread: 65,
+        origin: { y: 0.72 },
+        colors: ['#FFD700', '#7C5CFF', '#18D39E'],
+        scalar: 0.9,
+        ticks: 160,
+        zIndex: 8600,
+      })
+    }
+    // Only the identity of the panel (via its title) should retrigger the burst,
+    // not every re-render while the same panel is open.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [panel?.title, panel?.ok, tier])
 
   const closePanel = () => {
     haptic(panel?.ok ? 'tap' : 'error')
@@ -45,6 +83,7 @@ export function ActionResultPanel() {
     >
       <div
         onClick={e => e.stopPropagation()}
+        className={tier !== 'small' ? `effect-tier-${tier}` : undefined}
         style={{
           width: '92%', maxWidth: 380,
           background: 'var(--color-surface, #1e1e2e)',
@@ -52,7 +91,12 @@ export function ActionResultPanel() {
           border: `1px solid ${panel.ok ? 'rgba(16,185,129,0.35)' : 'rgba(239,68,68,0.35)'}`,
           boxShadow: `0 -4px 40px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)`,
           overflow: 'hidden',
-          animation: 'slideUpPanel 0.28s cubic-bezier(0.34,1.2,0.64,1)',
+          // Entrance slide, then (for medium/large) a brief emphasis pop once it settles.
+          animation: tier === 'large'
+            ? 'slideUpPanel 0.28s cubic-bezier(0.34,1.2,0.64,1), tierPopLarge 0.4s cubic-bezier(0.34,1.5,0.64,1) 0.28s'
+            : tier === 'medium'
+            ? 'slideUpPanel 0.28s cubic-bezier(0.34,1.2,0.64,1), tierPopMedium 0.32s cubic-bezier(0.34,1.4,0.64,1) 0.28s'
+            : 'slideUpPanel 0.28s cubic-bezier(0.34,1.2,0.64,1)',
         }}
       >
         {/* Status bar */}

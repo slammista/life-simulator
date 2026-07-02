@@ -1,7 +1,7 @@
 import { useGameStore } from '../../store/gameStore'
 import { CareerEngine, getAllJobs, getCategorySkillBonus } from '../../services/CareerEngine'
 import { useToastStore } from '../../store/toastStore'
-import { haptic } from '../../services/HapticEngine'
+import { feedback } from '../../services/FeedbackEngine'
 
 const CATEGORY_EMOJI: Record<string, string> = {
   care: '🤝', retail: '🛒', food: '🍳', logistics: '🚚',
@@ -38,7 +38,7 @@ export function PartTimeJobsScreen() {
   const closePanel = useToastStore(s => s.closePanel)
 
   const flash = (msg: string, ok: boolean, emoji: string, effects: Record<string, number> = {}) => {
-    haptic(ok ? 'success' : 'error')
+    feedback(ok ? 'success' : 'error')
     showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
     setTimeout(() => closePanel(), 3000)
   }

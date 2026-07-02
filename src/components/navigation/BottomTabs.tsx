@@ -7,6 +7,7 @@ interface Props {
   ageDisabled: boolean
   hasEvent: boolean
   currentAge: number
+  badges?: Partial<Record<Tab, boolean>>
 }
 
 const SIDE_TABS: { id: Tab; emoji: string; label: string }[] = [
@@ -18,7 +19,7 @@ const SIDE_TABS_RIGHT: { id: Tab; emoji: string; label: string }[] = [
   { id: 'activities', emoji: '🎯', label: 'Attività' },
 ]
 
-export function BottomTabs({ active, onChange, onAge, ageDisabled, hasEvent, currentAge }: Props) {
+export function BottomTabs({ active, onChange, onAge, ageDisabled, hasEvent, currentAge, badges }: Props) {
   const ageReady = !ageDisabled && !hasEvent
 
   return (
@@ -36,6 +37,7 @@ export function BottomTabs({ active, onChange, onAge, ageDisabled, hasEvent, cur
         >
           <span>{tab.emoji}</span>
           <span>{tab.label}</span>
+          {badges?.[tab.id] && <span className="tab-badge-dot" />}
         </button>
       ))}
 
@@ -112,6 +114,7 @@ export function BottomTabs({ active, onChange, onAge, ageDisabled, hasEvent, cur
         >
           <span>{tab.emoji}</span>
           <span>{tab.label}</span>
+          {badges?.[tab.id] && <span className="tab-badge-dot" />}
         </button>
       ))}
     </div>

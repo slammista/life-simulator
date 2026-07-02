@@ -23,6 +23,7 @@ import { CenterAlert } from './components/common/CenterAlert'
 import { MinigameChallengeModal } from './components/minigames/MinigameChallengeModal'
 import { useChallengeStore } from './store/challengeStore'
 import { pickRandomChallenge } from './components/minigames/challengeRegistry'
+import { DailyQuestEngine } from './services/DailyQuestEngine'
 import { OriginStoryScreen } from './components/screens/OriginStoryScreen'
 import { ShareLifeButton } from './components/game/ShareLifeButton'
 import { FirstPlayHint } from './components/game/FirstPlayHint'
@@ -31,6 +32,10 @@ import { CarreraNav, CARRERA_ITEMS, type CarreraSubTab } from './components/game
 import { AssetsNav, ASSETS_ITEMS, type AssetsSubTabId } from './components/game/AssetsNav'
 import { RelazioniNav, RELAZIONI_ITEMS, type RelazioniSubTabId } from './components/game/RelazioniNav'
 import { AgeTransitionOverlay } from './components/game/AgeTransitionOverlay'
+import { CelebrationOverlay } from './components/game/CelebrationOverlay'
+import { PageTransition, type TransitionDirection } from './components/common/PageTransition'
+import { ScreenSkeleton } from './components/common/ScreenSkeleton'
+import { MotionConfig } from 'motion/react'
 import { useShallow } from 'zustand/react/shallow'
 import { CloudSaveService } from './services/CloudSaveService'
 import { useWalletStore } from './store/walletStore'
@@ -95,10 +100,6 @@ type AssetsSubTab    = 'home' | AssetsSubTabId
 type RelazioniSubTab = 'home' | RelazioniSubTabId
 type ActivitiesSubTab = ActivitiesSubTabBase | 'home'
 
-function ScreenFallback() {
-  return <div className="screen-loading">Caricamento...</div>
-}
-
 function SectionBackBar({ label, onBack }: { label: string; itemLabel?: string; onBack: () => void }) {
   return (
     <div style={{
@@ -130,6 +131,14 @@ function App() {
   )
   const emotionalUI = useGameStore(useShallow(s => EmotionalUIEngine.derive(s)))
 
+  // Tab badges — a genuine "you have something waiting" signal, not just a red dot
+  // for its own sake. Only Lavoro and Attività have one today (see plan Fase 1 §4).
+  const hasPendingCareerOffer = useGameStore(s => !!s.pendingCareerOffer)
+  const hasUnclaimedDailyQuest = useGameStore(s =>
+    s.dailyQuests.quests.some(q => !q.claimed && DailyQuestEngine.progress(q, s).completed)
+  )
+  const tabBadges = { lavoro: hasPendingCareerOffer, activities: hasUnclaimedDailyQuest }
+
   const [ageConfirmed, setAgeConfirmed] = useState(() => !!localStorage.getItem('age_confirmed'))
   const [activeTab, _setActiveTab] = useState<Tab>('vita')
   const [vitaSection, setVitaSection] = useState<VitaSection>('home')
@@ -142,6 +151,29 @@ function App() {
   const setLavoroSub    = (s: string) => setLavoroSubRaw(s as LavoroSubTab)
   const setRelazioniSub = (s: string) => setRelazioniSubRaw(s as RelazioniSubTab)
   const setActivitiesSub = (s: string) => setActivitiesSubRaw(s as ActivitiesSubTab)
+
+  // Which sub-tab (if any) is active for the current top-level tab — used below to
+  // key page transitions. 'home' means a nav-list screen, anything else a sub-screen.
+  const subKey =
+    activeTab === 'lavoro'     ? lavoroSub :
+    activeTab === 'assets'     ? assetsSub :
+    activeTab === 'relazioni'  ? relazioniSub :
+    activeTab === 'activities' ? activitiesSub :
+    vitaSection
+
+  // Direction for PageTransition: "adjusting state during render" pattern (React-
+  // sanctioned — see react.dev "storing info from previous renders") to track the
+  // previous {tab, sub} without an effect, since the value is needed for this same render.
+  const [prevScreen, setPrevScreen] = useState<{ tab: Tab; sub: string }>({ tab: activeTab, sub: subKey })
+  let transitionDirection: TransitionDirection = 'cross'
+  if (prevScreen.tab === activeTab) {
+    if (prevScreen.sub === 'home' && subKey !== 'home') transitionDirection = 'push'
+    else if (prevScreen.sub !== 'home' && subKey === 'home') transitionDirection = 'pop'
+  }
+  if (prevScreen.tab !== activeTab || prevScreen.sub !== subKey) {
+    setPrevScreen({ tab: activeTab, sub: subKey })
+  }
+  const screenKey = `${activeTab}:${subKey}`
 
   // Reset sub-tabs to home when switching top-level tabs
   const setActiveTab = (tab: Tab) => {
@@ -167,6 +199,7 @@ function App() {
         if (!AudioEngine.isBGMPlaying()) AudioEngine.playBGM()
       })
     } else if (isGameOver) {
+      AudioEngine.playSFX('death')
       AudioEngine.fadeBGM(0, 2.0)
       setTimeout(() => AudioEngine.stopBGM(), 2100)
     }
@@ -306,6 +339,8 @@ function App() {
 
       {/* Main content */}
       <div className="app-content">
+       <MotionConfig reducedMotion="user">
+       <PageTransition transitionKey={screenKey} direction={transitionDirection}>
         {/* Home nav screens — BitLife-style list */}
         {activeTab === 'activities' && activitiesSub === 'home' && (
           <ActivitiesNav onChange={sub => setActivitiesSubRaw(sub as ActivitiesSubTab)} />
@@ -346,7 +381,7 @@ function App() {
         )}
 
         <ErrorBoundary>
-          <Suspense fallback={<ScreenFallback />}>
+          <Suspense fallback={<ScreenSkeleton />}>
             {/* VITA HUB PANELS */}
             {activeTab === 'vita' && vitaSection === 'shop'    && <VitaShopPanel onBack={() => setVitaSection('home')} />}
             {activeTab === 'vita' && vitaSection === 'account' && <VitaAccountPanel onBack={() => setVitaSection('home')} />}
@@ -400,6 +435,8 @@ function App() {
             {activeTab === 'activities' && activitiesSub === 'socialize'   && <SocializeScreen />}
           </Suspense>
         </ErrorBoundary>
+       </PageTransition>
+       </MotionConfig>
       </div>
 
       {/* Bottom navigation — Age button at center */}
@@ -410,6 +447,7 @@ function App() {
         ageDisabled={ageDisabled}
         hasEvent={currentEvent !== null}
         currentAge={time.age}
+        badges={tabBadges}
       />
 
       <AgeTransitionOverlay
@@ -418,6 +456,7 @@ function App() {
         visible={ageOverlay.visible}
         onDone={() => setAgeOverlay(s => ({ ...s, visible: false }))}
       />
+      <CelebrationOverlay blocked={ageOverlay.visible} />
       <FirstPlayHint hasEvent={currentEvent !== null} age={time.age} />
       <AdBanner visible={activeTab === 'vita' && vitaSection === 'home'} />
       <NPCEventNotifications />

@@ -1,6 +1,6 @@
 // Web Audio API engine — SFX synthesis + BGM file playback
 
-type SFXType = 'ageUp' | 'success' | 'fail' | 'click' | 'event' | 'levelUp' | 'death'
+export type SFXType = 'ageUp' | 'success' | 'fail' | 'click' | 'event' | 'levelUp' | 'death' | 'achievement' | 'purchase'
 
 // ─── BGM loop config ──────────────────────────────────────────────────────────
 // After the first full playthrough the track loops back to this timestamp.
@@ -92,6 +92,15 @@ class AudioEngineClass {
         this.tone(220, 0.40, 'sine', 0.30, 0.00)
         this.tone(165, 0.50, 'sine', 0.22, 0.35)
         this.tone(110, 0.70, 'sine', 0.15, 0.75)
+        break
+      case 'achievement':
+        // 5-note ascending arpeggio — richer/longer than 'levelUp' so a ribbon/goal
+        // unlock never sounds identical to a legendary random event.
+        ;[523, 659, 784, 988, 1319].forEach((f, i) => this.tone(f, 0.18, 'sine', 0.32, i * 0.09))
+        break
+      case 'purchase':
+        this.tone(784, 0.08, 'sine', 0.22, 0.00)
+        this.tone(587, 0.14, 'sine', 0.20, 0.07)
         break
     }
   }

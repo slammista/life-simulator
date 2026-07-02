@@ -2,7 +2,7 @@ import { lazy, Suspense, useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { CareerEngine, getAllJobs, getContractLabel, getCategorySkillBonus } from '../../services/CareerEngine'
 import { useToastStore } from '../../store/toastStore'
-import { haptic } from '../../services/HapticEngine'
+import { feedback } from '../../services/FeedbackEngine'
 import type { WorkAction, WorkNPC, WorkReputationStatus, PlayerSkills } from '../../store/types'
 
 const WorkNpcDetailModal = lazy(() =>
@@ -151,7 +151,7 @@ export function CareerScreen() {
   const [detailColleagueId, setDetailColleagueId] = useState<string | null>(null)
 
   const flash = (msg: string, ok: boolean, emoji = '💼', effects: Record<string, number> = {}) => {
-    haptic(ok ? 'success' : 'error')
+    feedback(ok ? 'success' : 'error')
     showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
     setTimeout(() => closePanel(), 3500)
   }

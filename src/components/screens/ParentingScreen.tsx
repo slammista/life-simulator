@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { useToastStore } from '../../store/toastStore'
 import { PARENTING_ACTIONS } from '../../services/ParentingEngine'
-import { haptic } from '../../services/HapticEngine'
+import { feedback } from '../../services/FeedbackEngine'
 
 const INTL_OPTIONS = [
   { country: 'cina',     flag: '🇨🇳', label: 'Cina',     cost: 20000, desc: 'Processo ~18 mesi, bambino 0-3 anni' },
@@ -19,7 +19,7 @@ export default function ParentingScreen() {
 
   const act = (fn: () => { success: boolean; message: string; effects?: Record<string, number> }, emoji = '👶') => {
     const r = fn()
-    haptic(r.success ? 'success' : 'error')
+    feedback(r.success ? 'success' : 'error')
     showPanel({ title: r.message, emoji, ok: r.success, effects: r.effects ?? {} })
     setTimeout(() => closePanel(), 3500)
   }

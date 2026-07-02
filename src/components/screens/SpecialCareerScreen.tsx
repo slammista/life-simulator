@@ -3,7 +3,7 @@ import { useGameStore } from '../../store/gameStore'
 import { SpecialCareerEngine, SPECIAL_CAREER_MIN_AGE, type SpecialCareerType } from '../../services/SpecialCareerEngine'
 import { CareerLifecycleEngine } from '../../services/CareerLifecycleEngine'
 import { useToastStore } from '../../store/toastStore'
-import { haptic } from '../../services/HapticEngine'
+import { feedback } from '../../services/FeedbackEngine'
 import { ConfirmDialog } from '../common/ConfirmDialog'
 
 const CAREER_META: Record<SpecialCareerType, {
@@ -62,7 +62,7 @@ export function SpecialCareerScreen() {
   const closePanel = useToastStore(s => s.closePanel)
 
   const flash = (msg: string, ok: boolean, emoji = '🌟', effects: Record<string, number> = {}) => {
-    haptic(ok ? 'success' : 'error')
+    feedback(ok ? 'success' : 'error')
     showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
     setTimeout(() => closePanel(), 3500)
   }
