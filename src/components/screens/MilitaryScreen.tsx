@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { MILITARY_BRANCHES, MILITARY_RANKS } from '../../services/MilitaryEngine'
 import type { MilitaryBranch, MissionType } from '../../services/MilitaryEngine'
+import { feedback as fireFeedback } from '../../services/FeedbackEngine'
 
 const BRANCHES = Object.entries(MILITARY_BRANCHES) as [MilitaryBranch, (typeof MILITARY_BRANCHES)[MilitaryBranch]][]
 
@@ -12,6 +13,7 @@ export default function MilitaryScreen() {
 
   const act = (fn: () => { success: boolean; message: string }) => {
     const r = fn()
+    fireFeedback(r.success ? 'success' : 'error')
     setFeedback({ msg: r.message, ok: r.success })
     setTimeout(() => setFeedback(null), 4000)
   }

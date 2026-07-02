@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { DatingEngine, type DatingApp } from '../../services/DatingEngine'
 import { ConfirmDialog } from '../common/ConfirmDialog'
+import { feedback as fireFeedback } from '../../services/FeedbackEngine'
 
 function CompatChip({ value }: { value: number }) {
   const color = value >= 75 ? '#f472b6' : value >= 55 ? '#f59e0b' : '#94a3b8'
@@ -36,14 +37,17 @@ export function DatingScreen() {
 
   const handleSwipe = () => {
     const r = swipe(selectedApp)
+    fireFeedback(r.success ? 'success' : 'error')
     setFeedback(r.message)
   }
   const handlePropose = (npcId: string) => {
     const r = proposeToPartner(npcId, ringValue)
+    fireFeedback(r.success ? 'success' : 'error')
     setFeedback(r.message)
   }
   const handleMarry = (npcId: string) => {
     const r = getMarried(npcId, weddingBudget)
+    fireFeedback(r.success ? 'success' : 'error')
     setFeedback(r.message)
   }
   const [divorceId, setDivorceId] = useState<string | null>(null)
@@ -51,6 +55,7 @@ export function DatingScreen() {
   const confirmDivorce = () => {
     if (!divorceId) return
     const r = getDivorced(divorceId)
+    fireFeedback(r.success ? 'success' : 'error')
     setDivorceId(null)
     setFeedback(r.message)
   }

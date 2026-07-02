@@ -7,6 +7,7 @@ import { ensureNpcAvatar } from '../../services/NpcAvatarEngine'
 import {
   MOOD_LABELS, REL_TYPE_LABELS,
 } from '../relationships/relationshipActions'
+import { feedback as fireFeedback } from '../../services/FeedbackEngine'
 
 const PersonDetailModal = lazy(() =>
   import('../relationships/PersonDetailModal').then(m => ({ default: m.PersonDetailModal })))
@@ -26,6 +27,7 @@ export function RelationshipScreen() {
   const pushToast = useToastStore(s => s.push)
 
   const flash = (msg: string, ok: boolean) => {
+    fireFeedback(ok ? 'success' : 'error')
     setFeedback({ msg, ok })
     pushToast(msg, ok ? '💚' : '❌', ok)
     setTimeout(() => setFeedback(null), 3500)

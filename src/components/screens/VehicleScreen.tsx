@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { VEHICLE_DEFS, type VehicleCategory } from '../../services/VehicleEngine'
+import { feedback as fireFeedback } from '../../services/FeedbackEngine'
 
 const CAT_LABELS: Record<VehicleCategory, string> = {
   economy: '🚗 Economy',
@@ -29,6 +30,7 @@ export function VehicleScreen() {
 
   const act = (fn: () => { success: boolean; message: string }) => {
     const r = fn()
+    fireFeedback(r.success ? 'success' : 'error')
     setFeedback(r.message)
   }
 

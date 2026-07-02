@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import type { ContraceptionMethod, STIType } from '../../services/SexualHealthEngine'
+import { feedback } from '../../services/FeedbackEngine'
 
 const CONTRACEPTION_OPTIONS: { id: ContraceptionMethod; name: string; emoji: string; efficacy: string; cost: string; note: string }[] = [
   { id: 'none',          name: 'Nessuno',                   emoji: '❌', efficacy: '0%',    cost: '€0',     note: 'Massimo rischio' },
@@ -25,6 +26,11 @@ export default function SexualHealthScreen() {
   const { sexualHealth, finance, time, setContraception, haveSex, takePregnancyTest, getAbortion, getSTDTest, treatSTI, doIVF, terminatePregnancy, adoptOutPregnancy } = store
   const [lastMsg, setLastMsg] = useState('')
 
+  const flash = (r: { success: boolean; message: string }) => {
+    feedback(r.success ? 'success' : 'error')
+    setLastMsg(r.message)
+  }
+
   const trimesterLabel = ['', '1° Trimestre', '2° Trimestre', '3° Trimestre'][sexualHealth.pregnancyTrimester]
 
   return (
@@ -42,17 +48,17 @@ export default function SexualHealthScreen() {
         <div className="card" style={{ marginBottom: 12, background: 'rgba(245,158,11,0.10)', border: '1px solid rgba(245,158,11,0.35)' }}>
           <p style={{ fontSize: 14, fontWeight: 600 }}>🤰 Sei incinta — {trimesterLabel}</p>
           <div style={{ display: 'flex', gap: 8, marginTop: 8, flexWrap: 'wrap' }}>
-            <button onClick={() => { const r = getAbortion(); setLastMsg(r.message) }}
+            <button onClick={() => { const r = getAbortion(); flash(r) }}
               disabled={sexualHealth.pregnancyTrimester > 2}
               style={{ flex: 1, minWidth: 100, padding: '6px 0', borderRadius: 8, fontSize: 12, border: 'none', cursor: 'pointer', background: '#ef4444', color: '#fff' }}>
               IVG (Aborto)
             </button>
-            <button onClick={() => { const r = terminatePregnancy(); setLastMsg(r.message) }}
+            <button onClick={() => { const r = terminatePregnancy(); flash(r) }}
               disabled={sexualHealth.pregnancyTrimester > 2 || finance.money < 500}
               style={{ flex: 1, minWidth: 100, padding: '6px 0', borderRadius: 8, fontSize: 12, border: 'none', cursor: 'pointer', background: '#f97316', color: '#fff', opacity: sexualHealth.pregnancyTrimester > 2 || finance.money < 500 ? 0.5 : 1 }}>
               Interrompi (€500)
             </button>
-            <button onClick={() => { const r = adoptOutPregnancy(); setLastMsg(r.message) }}
+            <button onClick={() => { const r = adoptOutPregnancy(); flash(r) }}
               style={{ flex: 1, minWidth: 100, padding: '6px 0', borderRadius: 8, fontSize: 12, border: 'none', cursor: 'pointer', background: '#8b5cf6', color: '#fff' }}>
               Dai in adozione
             </button>
@@ -73,7 +79,7 @@ export default function SexualHealthScreen() {
                 </p>
               </div>
               {sti.isCurable && (
-                <button onClick={() => { const r = treatSTI(sti.type as STIType); setLastMsg(r.message) }}
+                <button onClick={() => { const r = treatSTI(sti.type as STIType); flash(r) }}
                   style={{ padding: '4px 12px', borderRadius: 8, fontSize: 11, border: 'none', cursor: 'pointer', background: '#10b981', color: '#fff' }}>
                   Cura
                 </button>
@@ -106,7 +112,7 @@ export default function SexualHealthScreen() {
         <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8, fontWeight: 600 }}>Azioni</p>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           {time.age >= 18 ? (
-            <button onClick={() => { const r = haveSex(Math.random() < 0.1); setLastMsg(r.message) }}
+            <button onClick={() => { const r = haveSex(Math.random() < 0.1); flash(r) }}
               style={{ padding: '8px 0', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#ec4899', color: '#fff' }}>
               💕 Rapporto Sessuale
             </button>
@@ -119,18 +125,18 @@ export default function SexualHealthScreen() {
               🔞 Sezione non disponibile alla tua età.
             </div>
           )}
-          <button onClick={() => { const r = takePregnancyTest(); setLastMsg(r.message) }}
+          <button onClick={() => { const r = takePregnancyTest(); flash(r) }}
             disabled={finance.money < 10}
             style={{ padding: '8px 0', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', color: 'var(--color-text)', opacity: finance.money < 10 ? 0.5 : 1 }}>
             🤰 Test di Gravidanza — €10
           </button>
-          <button onClick={() => { const r = getSTDTest(); setLastMsg(r.message) }}
+          <button onClick={() => { const r = getSTDTest(); flash(r) }}
             disabled={finance.money < 80}
             style={{ padding: '8px 0', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: 'rgba(255,255,255,0.1)', color: 'var(--color-text)', opacity: finance.money < 80 ? 0.5 : 1 }}>
             🔬 Test MST — €80
           </button>
           {sexualHealth.isInfertile && (
-            <button onClick={() => { const r = doIVF(); setLastMsg(r.message) }}
+            <button onClick={() => { const r = doIVF(); flash(r) }}
               disabled={finance.money < 4500 || sexualHealth.isPregnant}
               style={{ padding: '8px 0', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#7c3aed', color: '#fff', opacity: finance.money < 4500 ? 0.5 : 1 }}>
               🌸 FIV (Fecondazione in Vitro) — €4.500
@@ -146,7 +152,7 @@ export default function SexualHealthScreen() {
           {CONTRACEPTION_OPTIONS.map(opt => {
             const isActive = sexualHealth.contraceptionMethod === opt.id
             return (
-              <button key={opt.id} onClick={() => { const r = setContraception(opt.id); setLastMsg(r.message) }}
+              <button key={opt.id} onClick={() => { const r = setContraception(opt.id); flash(r) }}
                 style={{
                   padding: '8px 12px', borderRadius: 8, fontSize: 12, border: '1px solid',
                   borderColor: isActive ? 'var(--color-cta)' : 'rgba(255,255,255,0.1)',

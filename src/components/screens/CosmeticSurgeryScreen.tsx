@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { CosmeticSurgeryEngine } from '../../services/CosmeticSurgeryEngine'
 import type { CosmeticProcedure } from '../../services/CosmeticSurgeryEngine'
+import { feedback } from '../../services/FeedbackEngine'
 
 type FilterCategory = 'all' | 'face' | 'body' | 'filler' | 'non_invasive'
 
@@ -29,6 +30,7 @@ export default function CosmeticSurgeryScreen() {
 
   function handleSurgery(proc: CosmeticProcedure) {
     const result = performSurgery(proc.id)
+    feedback(result.success ? 'success' : 'error')
     setLastMsg(result.message)
     setLastSuccess(result.success)
   }

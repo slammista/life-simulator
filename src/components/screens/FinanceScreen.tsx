@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { getAllAssetDefs, getAllInvestmentDefs, FinanceEngine } from '../../services/FinanceEngine'
 import { ContextualHint } from '../game/ContextualHint'
+import { useToastStore } from '../../store/toastStore'
+import { feedback } from '../../services/FeedbackEngine'
 
 export function FinanceScreen() {
   const finance = useGameStore(s => s.finance)
@@ -23,7 +25,6 @@ export function FinanceScreen() {
   const age = useGameStore(s => s.time.age)
   const year = useGameStore(s => s.time.year)
 
-  const [feedback, setFeedback] = useState<{ msg: string; ok: boolean } | null>(null)
   const [parentAmount, setParentAmount] = useState('50')
   const [parentReason, setParentReason] = useState('')
   const [tab, setTab] = useState<'overview' | 'invest' | 'assets'>('overview')
@@ -31,9 +32,16 @@ export function FinanceScreen() {
   const [selectedDef, setSelectedDef] = useState<string | null>(null)
   const [loanAmount, setLoanAmount] = useState('')
 
-  const flash = (msg: string, ok: boolean) => {
-    setFeedback({ msg, ok })
-    setTimeout(() => setFeedback(null), 3500)
+  const showPanel = useToastStore(s => s.showPanel)
+  const closePanel = useToastStore(s => s.closePanel)
+
+  // Routes every money action through the shared reward panel (not a local banner)
+  // so its tier — and therefore its visual/audio weight — scales with `effects.money`,
+  // same pattern as CareerScreen/EducationScreen.
+  const flash = (msg: string, ok: boolean, emoji = '💰', effects: Record<string, number> = {}) => {
+    feedback(ok ? 'success' : 'error')
+    showPanel({ title: msg, emoji: ok ? emoji : '❌', ok, effects })
+    setTimeout(() => closePanel(), 3500)
   }
 
   const handleInvest = () => {
@@ -41,36 +49,36 @@ export function FinanceScreen() {
     const amt = parseInt(investAmount)
     if (isNaN(amt) || amt <= 0) { flash('Inserisci un importo valido.', false); return }
     const r = investMoney(selectedDef, amt)
-    flash(r.message, r.success)
+    flash(r.message, r.success, '📈', r.effects)
     if (r.success) { setInvestAmount(''); setSelectedDef(null) }
   }
 
   const handleSell = (id: string) => {
     const r = sellInvestment(id)
-    flash(r.message, r.success)
+    flash(r.message, r.success, '📉', r.effects)
   }
 
   const handleLoan = () => {
     const amt = parseInt(loanAmount)
     if (isNaN(amt) || amt <= 0) { flash('Inserisci un importo valido.', false); return }
     const r = takeLoan(amt)
-    flash(r.message, r.success)
+    flash(r.message, r.success, '💳', r.effects)
     if (r.success) setLoanAmount('')
   }
 
   const handleBuyAsset = (id: string) => {
     const r = buyAsset(id)
-    flash(r.message, r.success)
+    flash(r.message, r.success, '🏠', r.effects)
   }
 
   const handleInsureAsset = (id: string) => {
     const r = insureAsset(id)
-    flash(r.message, r.success)
+    flash(r.message, r.success, '🛡️', r.effects)
   }
 
   const handleMaintainAsset = (id: string) => {
     const r = maintainAsset(id)
-    flash(r.message, r.success)
+    flash(r.message, r.success, '🔧', r.effects)
   }
 
   const creditScore = FinanceEngine.calculateCreditScore(state)
@@ -108,17 +116,6 @@ export function FinanceScreen() {
         color="#10b981"
         message="Investi i risparmi in azioni o ETF per costruire ricchezza a lungo termine. Attenzione al debito: se supera il 50% del patrimonio, la salute mentale ne risente."
       />
-
-      {feedback && (
-        <div style={{
-          borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
-        }}>
-          {feedback.msg}
-        </div>
-      )}
 
       {/* Tabs */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 14 }}>
@@ -164,7 +161,7 @@ export function FinanceScreen() {
             onClick={() => {
               const amt = parseInt(parentAmount) || 50
               const r = requestMoneyFromParents(amt, parentReason || 'spese personali')
-              flash(r.message, r.success)
+              flash(r.message, r.success, '🙏', r.effects)
             }}
             style={{ width: '100%', padding: '9px 0', borderRadius: 10, background: 'rgba(245,158,11,0.18)', border: '1px solid rgba(245,158,11,0.4)', color: '#fbbf24', fontWeight: 700, fontSize: 13, cursor: 'pointer' }}
           >
@@ -188,7 +185,7 @@ export function FinanceScreen() {
                     {loan.npcName.split(' ')[0]} · €{loan.amount.toLocaleString('it-IT')} · entro {loan.dueYear}{overdue ? ' ⚠️ SCADUTO' : ''}
                   </span>
                   <button
-                    onClick={() => { const r = repayNpcLoan(loan.id); flash(r.message, r.success) }}
+                    onClick={() => { const r = repayNpcLoan(loan.id); flash(r.message, r.success, '💸', r.effects) }}
                     disabled={finance.money < loan.amount}
                     style={{
                       padding: '4px 10px', borderRadius: 8, fontSize: 11, fontWeight: 700, cursor: 'pointer',
@@ -241,7 +238,7 @@ export function FinanceScreen() {
                 <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', margin: 0 }}>€5-10 a biglietto. La fortuna è cieca.</p>
               </div>
               <button
-                onClick={() => { const r = buyScratchCard(); flash(r.message, r.success) }}
+                onClick={() => { const r = buyScratchCard(); flash(r.message, r.success, '🎫', r.effects) }}
                 disabled={finance.money < 10}
                 style={{
                   padding: '8px 14px', borderRadius: 10, fontSize: 12, fontWeight: 700, cursor: 'pointer', flexShrink: 0,
@@ -265,7 +262,7 @@ export function FinanceScreen() {
               <button
                 className="btn-primary"
                 style={{ width: '100%', padding: '7px 0', fontSize: 12 }}
-                onClick={() => { const r = playLottery(); flash(r.message, r.success) }}
+                onClick={() => { const r = playLottery(); flash(r.message, r.success, '🎟️', r.effects) }}
                 disabled={finance.money < 5}
               >
                 Gioca (€5)
@@ -396,14 +393,14 @@ export function FinanceScreen() {
               </div>
               {finance.healthInsurance ? (
                 <button
-                  onClick={() => { const r = cancelHealthInsurance(); flash(r.message, r.success) }}
+                  onClick={() => { const r = cancelHealthInsurance(); flash(r.message, r.success, '🏥', r.effects) }}
                   style={{ width: '100%', padding: '8px 0', borderRadius: 10, background: 'rgba(239,68,68,0.1)', color: '#fca5a5', fontSize: 12, fontWeight: 600, border: '1px solid rgba(239,68,68,0.2)', cursor: 'pointer' }}
                 >
                   Cancella assicurazione
                 </button>
               ) : (
                 <button
-                  onClick={() => { const r = buyHealthInsurance(); flash(r.message, r.success) }}
+                  onClick={() => { const r = buyHealthInsurance(); flash(r.message, r.success, '🏥', r.effects) }}
                   disabled={finance.money < 1440}
                   style={{ width: '100%', padding: '8px 0', borderRadius: 10, background: finance.money >= 1440 ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)', color: finance.money >= 1440 ? '#6ee7b7' : 'var(--color-text-secondary)', fontSize: 12, fontWeight: 600, border: '1px solid rgba(16,185,129,0.2)', cursor: finance.money >= 1440 ? 'pointer' : 'default' }}
                 >

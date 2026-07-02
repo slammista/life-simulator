@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { useToastStore } from '../../store/toastStore'
 import { CriminalEngine } from '../../services/CriminalEngine'
+import { feedback } from '../../services/FeedbackEngine'
 
 const MIN_AGE_CRIME = 14
 
@@ -28,7 +29,10 @@ export function CriminalScreen() {
 
   const [tab, setTab] = useState<'status' | 'crimes'>('status')
 
-  const flash = (msg: string, ok: boolean) => showAlert(msg, ok, ok ? '🚔' : '🚨')
+  const flash = (msg: string, ok: boolean) => {
+    feedback(ok ? 'success' : 'error')
+    showAlert(msg, ok, ok ? '🚔' : '🚨')
+  }
 
   const handleCrime = (id: string) => {
     const r = commitCrime(id)

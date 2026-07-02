@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import type { GamblingGame, SportBetType } from '../../services/GamblingEngine'
+import { feedback } from '../../services/FeedbackEngine'
 
 type GamblingSubTab = 'casino' | 'lotteria' | 'scommesse'
 
@@ -127,6 +128,7 @@ export default function GamblingScreen() {
                     className="tap-scale"
                     onClick={() => {
                       const r = playCasinoGame(game.id, bet)
+                      feedback(r.success ? 'success' : 'error')
                       setLastMsg(r.message)
                     }}
                     disabled={finance.money < game.minBet || gambling.casinoBlacklisted}
@@ -149,7 +151,7 @@ export default function GamblingScreen() {
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
               Costo: €5 · Jackpot: €10M–€100M · Probabilità: 1:14.000.000
             </p>
-            <button onClick={() => { const r = buyLotteryTicket(); setLastMsg(r.message) }}
+            <button onClick={() => { const r = buyLotteryTicket(); feedback(r.success ? 'success' : 'error'); setLastMsg(r.message) }}
               disabled={finance.money < 5}
               style={{ width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 14, border: 'none', cursor: 'pointer', background: 'var(--color-cta)', color: '#fff' }}>
               Compra Biglietto €5
@@ -161,7 +163,7 @@ export default function GamblingScreen() {
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
               Costo: €5 o €10 · Vincita immediata · 25% di probabilità
             </p>
-            <button onClick={() => { const r = buyScratchCard(); setLastMsg(r.message) }}
+            <button onClick={() => { const r = buyScratchCard(); feedback(r.success ? 'success' : 'error'); setLastMsg(r.message) }}
               disabled={finance.money < 5}
               style={{ width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 14, border: 'none', cursor: 'pointer', background: '#7c3aed', color: '#fff' }}>
               Compra Gratta e Vinci
@@ -190,7 +192,7 @@ export default function GamblingScreen() {
                   />
                   <button
                     className="tap-scale"
-                    onClick={() => { const r = placeSportsBet(sport.id, bet); setLastMsg(r.message) }}
+                    onClick={() => { const r = placeSportsBet(sport.id, bet); feedback(r.success ? 'success' : 'error'); setLastMsg(r.message) }}
                     disabled={finance.money < 5}
                     style={{ padding: '6px 16px', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#059669', color: '#fff', opacity: finance.money < 5 ? 0.5 : 1 }}>
                     Scommetti

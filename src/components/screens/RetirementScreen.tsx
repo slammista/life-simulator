@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import type { SeniorLiving, RetirementType } from '../../services/RetirementEngine'
 import { calculatePension } from '../../services/RetirementEngine'
+import { feedback as fireFeedback } from '../../services/FeedbackEngine'
 
 const LIVING_OPTIONS: Array<{ id: SeniorLiving; name: string; emoji: string; cost: number; desc: string }> = [
   { id: 'own_home',             name: 'Casa propria',        emoji: '🏠', cost: 200,  desc: 'Totale autonomia' },
@@ -34,6 +35,7 @@ export default function RetirementScreen() {
 
   const act = (fn: () => { success: boolean; message: string }) => {
     const r = fn()
+    fireFeedback(r.success ? 'success' : 'error')
     setFeedback({ msg: r.message, ok: r.success })
     setTimeout(() => setFeedback(null), 4000)
   }

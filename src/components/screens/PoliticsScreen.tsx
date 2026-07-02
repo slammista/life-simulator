@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { POLITICAL_PARTIES, POLITICAL_ROLES, type PoliticalRole } from '../../services/PoliticsEngine'
+import { feedback as fireFeedback } from '../../services/FeedbackEngine'
 
 const ROLE_ORDER: PoliticalRole[] = ['consigliere_comunale', 'sindaco', 'deputato', 'senatore', 'premier']
 
@@ -16,6 +17,7 @@ export function PoliticsScreen() {
 
   const act = (fn: () => { success: boolean; message: string }) => {
     const r = fn()
+    fireFeedback(r.success ? 'success' : 'error')
     setFeedback(r.message)
   }
 

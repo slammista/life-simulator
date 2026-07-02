@@ -3,6 +3,7 @@ import { useGameStore } from '../../store/gameStore'
 import { ChallengeEngine, CHALLENGE_DEFINITIONS } from '../../services/ChallengeEngine'
 import { DailyQuestEngine } from '../../services/DailyQuestEngine'
 import type { ChallengeDifficulty } from '../../services/ChallengeEngine'
+import { feedback } from '../../services/FeedbackEngine'
 
 type TabId = 'daily' | 'available' | 'active' | 'completed'
 
@@ -39,18 +40,21 @@ export default function ChallengeScreen() {
 
   function handleAccept(defId: string) {
     const result = acceptChallenge(defId)
+    feedback(result.success ? 'success' : 'error')
     setLastMsg(result.message)
     setLastSuccess(result.success)
   }
 
   function handleAbandon(defId: string) {
     abandonChallenge(defId)
+    feedback('tap')
     setLastMsg('Challenge abbandonata.')
     setLastSuccess(false)
   }
 
   function handleDailyClaim(questId: string) {
     const result = claimDailyQuest(questId)
+    feedback(result.success ? 'success' : 'error')
     setLastMsg(result.message)
     setLastSuccess(result.success)
   }

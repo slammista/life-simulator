@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { SECTOR_DEFS } from '../../services/BusinessEngine'
 import type { BusinessSector } from '../../store/types'
+import { feedback as fireFeedback } from '../../services/FeedbackEngine'
 
 export function BusinessScreen() {
   const { career, time, finance, foundBusiness, hireBizEmployee, fireBizEmployee, sellBusiness } = useGameStore()
@@ -13,6 +14,7 @@ export function BusinessScreen() {
 
   const fb = (fn: () => import('../../store/types').ActionResult) => {
     const r = fn()
+    fireFeedback(r.success ? 'success' : 'error')
     setFeedback(r.message)
   }
 

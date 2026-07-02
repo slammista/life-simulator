@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { LivingEngine, LIVING_OPTIONS, HOUSE_PRICES } from '../../services/LivingEngine'
 import type { LivingType } from '../../store/types'
+import { feedback as fireFeedback } from '../../services/FeedbackEngine'
 
 const LIVING_ORDER: LivingType[] = ['parents', 'dormitory', 'roommate', 'renting', 'owning']
 
@@ -24,6 +25,7 @@ export default function LivingScreen() {
   const [selectedHouse, setSelectedHouse] = useState<string | null>(null)
 
   const flash = (msg: string, ok: boolean) => {
+    fireFeedback(ok ? 'success' : 'error')
     setFeedback({ msg, ok })
     setTimeout(() => setFeedback(null), 4000)
   }

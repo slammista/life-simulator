@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useGameStore } from '../../store/gameStore'
 import { type SocialLocation } from '../../services/WorkSchoolEngine'
 import { useToastStore } from '../../store/toastStore'
+import { feedback as fireFeedback } from '../../services/FeedbackEngine'
 
 const LOCATION_CONFIG: Array<{
   id: SocialLocation
@@ -33,6 +34,7 @@ export function SocializeScreen() {
   const pushToast = useToastStore(s => s.push)
 
   const flash = (msg: string, ok: boolean) => {
+    fireFeedback(ok ? 'success' : 'error')
     setFeedback({ msg, ok })
     pushToast(msg, ok ? '🎉' : '😐', ok)
     setTimeout(() => setFeedback(null), 3500)
