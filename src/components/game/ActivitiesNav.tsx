@@ -59,13 +59,22 @@ const ALL_ITEMS: ActivityDef[] = [
 const ITEM_MAP = Object.fromEntries(ALL_ITEMS.map(i => [i.id, i])) as Record<ActivitiesSubTab, ActivityDef>
 export { ITEM_MAP as ACTIVITIES_ITEM_MAP }
 
-const CATEGORIES: { label: string; ids: ActivitiesSubTab[] }[] = [
-  { label: 'Corpo & Salute',  ids: ['health', 'hobby', 'sport', 'beauty', 'barber', 'cosmetic', 'body', 'sex_health'] },
-  { label: 'Rischio',         ids: ['criminal', 'substances', 'gambling'] },
-  { label: 'Socialità',       ids: ['socialize', 'religion', 'politics', 'travel'] },
-  { label: 'Svago & Goals',   ids: ['goals', 'challenges', 'ribbons', 'minigames'] },
-  { label: 'Profilo',         ids: ['timeline', 'leaderboard', 'settings', 'privacy'] },
+// Two macro-groups so the list reads as "things I do" vs "things about my game" at a
+// glance while scrolling, instead of five same-weight category labels in a row —
+// `group` only drives the extra header rendered in ActivitiesNav, ids/order unchanged.
+const CATEGORIES: { label: string; group: 'azioni' | 'profilo'; ids: ActivitiesSubTab[] }[] = [
+  { label: 'Corpo & Salute',  group: 'azioni',  ids: ['health', 'hobby', 'sport', 'beauty', 'barber', 'cosmetic', 'body', 'sex_health'] },
+  { label: 'Rischio',         group: 'azioni',  ids: ['criminal', 'substances', 'gambling'] },
+  { label: 'Socialità',       group: 'azioni',  ids: ['socialize', 'religion', 'politics', 'travel'] },
+  { label: 'Passatempi',      group: 'azioni',  ids: ['minigames'] },
+  { label: 'Traguardi',       group: 'profilo', ids: ['goals', 'challenges', 'ribbons'] },
+  { label: 'Il tuo profilo',  group: 'profilo', ids: ['timeline', 'leaderboard', 'settings', 'privacy'] },
 ]
+
+const GROUP_TITLES: Record<'azioni' | 'profilo', string> = {
+  azioni: '🎮 Azioni',
+  profilo: '👤 Il tuo profilo',
+}
 
 interface RowProps {
   item: ActivityDef
@@ -125,6 +134,20 @@ function ActivityRow({ item, pinned, editMode, onClick, onTogglePin }: RowProps)
         <span style={{ color: 'rgba(255,255,255,0.22)', fontSize: 18, flexShrink: 0, lineHeight: 1 }}>›</span>
       )}
     </button>
+  )
+}
+
+function GroupHeader({ label }: { label: string }) {
+  return (
+    <div style={{
+      padding: '22px 16px 6px',
+      marginTop: 6,
+      borderTop: '2px solid rgba(255,255,255,0.09)',
+    }}>
+      <span style={{ fontSize: 13, fontWeight: 800, color: 'var(--color-text)', letterSpacing: 0.2 }}>
+        {label}
+      </span>
+    </div>
   )
 }
 
@@ -197,22 +220,26 @@ export function ActivitiesNav({ onChange }: Props) {
           pinned={true} editMode={editMode} onTogglePin={togglePin} />
       ))}
 
-      {/* All categories */}
-      {CATEGORIES.map(cat => (
-        <div key={cat.label}>
-          <SectionLabel label={cat.label} />
-          {cat.ids.map(id => {
-            const item = ITEM_MAP[id]
-            if (!item) return null
-            const isPinned = pins.includes(id)
-            if (!editMode && isPinned) return null  // already shown in Preferiti when not editing
-            return (
-              <ActivityRow key={id} item={item} onClick={() => onChange(id)}
-                pinned={isPinned} editMode={editMode} onTogglePin={togglePin} />
-            )
-          })}
-        </div>
-      ))}
+      {/* All categories, grouped under a bold "Azioni" / "Il tuo profilo" divider */}
+      {CATEGORIES.map((cat, i) => {
+        const isNewGroup = i === 0 || CATEGORIES[i - 1].group !== cat.group
+        return (
+          <div key={cat.label}>
+            {isNewGroup && <GroupHeader label={GROUP_TITLES[cat.group]} />}
+            <SectionLabel label={cat.label} />
+            {cat.ids.map(id => {
+              const item = ITEM_MAP[id]
+              if (!item) return null
+              const isPinned = pins.includes(id)
+              if (!editMode && isPinned) return null  // already shown in Preferiti when not editing
+              return (
+                <ActivityRow key={id} item={item} onClick={() => onChange(id)}
+                  pinned={isPinned} editMode={editMode} onTogglePin={togglePin} />
+              )
+            })}
+          </div>
+        )
+      })}
     </div>
   )
 }
