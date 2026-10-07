@@ -36,9 +36,9 @@ export function BarberScreen() {
       {feedback && (
         <div style={{
           borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          background: feedback.ok ? 'rgba(156,199,122,0.15)' : 'rgba(239,68,68,0.15)',
+          color: feedback.ok ? '#BFDDA6' : '#fca5a5',
+          border: `1px solid ${feedback.ok ? 'rgba(156,199,122,0.3)' : 'rgba(239,68,68,0.3)'}`,
         }}>
           {feedback.msg}
         </div>
@@ -66,7 +66,7 @@ export function BarberScreen() {
                     <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>{svc.description}</p>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 8 }}>
-                    <p style={{ fontSize: 13, fontWeight: 700, color: canAfford ? '#4ade80' : '#ef4444' }}>€{svc.cost}</p>
+                    <p style={{ fontSize: 13, fontWeight: 700, color: canAfford ? '#A9D18A' : '#ef4444' }}>€{svc.cost}</p>
                     <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>+{svc.looksBonus} 😍</p>
                   </div>
                 </div>
@@ -76,9 +76,9 @@ export function BarberScreen() {
                   disabled={!canAfford}
                   style={{
                     width: '100%', padding: '8px 0', borderRadius: 10,
-                    background: canAfford ? 'rgba(124,92,255,0.18)' : 'rgba(255,255,255,0.05)',
-                    color: canAfford ? '#a78bfa' : 'var(--color-text-secondary)',
-                    border: `1px solid ${canAfford ? 'rgba(124,92,255,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                    background: canAfford ? 'rgba(52,137,125,0.18)' : 'rgba(255,255,255,0.05)',
+                    color: canAfford ? '#8CCFC4' : 'var(--color-text-secondary)',
+                    border: `1px solid ${canAfford ? 'rgba(52,137,125,0.4)' : 'rgba(255,255,255,0.1)'}`,
                     fontSize: 13, fontWeight: 500, cursor: canAfford ? 'pointer' : 'not-allowed',
                   }}
                 >

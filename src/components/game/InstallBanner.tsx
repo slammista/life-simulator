@@ -59,7 +59,7 @@ export function InstallBanner() {
       left: '50%', transform: 'translateX(-50%)',
       width: 'calc(100% - 24px)', maxWidth: 406,
       background: 'linear-gradient(135deg, #1e1e3f, #16213e)',
-      border: '1px solid rgba(99,102,241,0.4)',
+      border: '1px solid rgba(52,137,125,0.4)',
       borderRadius: 14, padding: '12px 14px',
       display: 'flex', alignItems: 'center', gap: 12,
       zIndex: 8000,
@@ -84,7 +84,7 @@ export function InstallBanner() {
           style={{
             padding: '6px 14px', borderRadius: 20, fontSize: 12, fontWeight: 600,
             border: 'none', cursor: 'pointer',
-            background: 'var(--color-cta, #6366f1)', color: '#fff', flexShrink: 0,
+            background: 'var(--color-cta, #34897D)', color: '#fff', flexShrink: 0,
           }}
         >
           Installa

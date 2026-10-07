@@ -139,7 +139,7 @@ export function LeaderboardScreen() {
               style={{
                 padding: '6px 12px', borderRadius: 20, fontSize: 12, fontWeight: 500,
                 whiteSpace: 'nowrap', border: 'none', cursor: 'pointer', flexShrink: 0,
-                background: category === cat ? 'var(--color-cta, #6366f1)' : 'rgba(255,255,255,0.07)',
+                background: category === cat ? 'var(--color-cta, #34897D)' : 'rgba(255,255,255,0.07)',
                 color: category === cat ? '#fff' : 'var(--color-text-secondary)',
               }}
             >
@@ -156,7 +156,7 @@ export function LeaderboardScreen() {
         </p>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-cta, #6366f1)' }}>
+            <p style={{ fontSize: 20, fontWeight: 700, color: 'var(--color-cta, #34897D)' }}>
               {category === 'longevity' && `${time.age} anni`}
               {category === 'wealth' && `€${Math.max(0, Math.round(finance.money)).toLocaleString('it-IT')}`}
               {category === 'happiness' && `${Math.round(stats.happiness)}/100`}
@@ -175,7 +175,7 @@ export function LeaderboardScreen() {
             style={{
               padding: '8px 16px', borderRadius: 10, fontSize: 12, fontWeight: 600,
               border: 'none', cursor: isConfigured ? 'pointer' : 'not-allowed',
-              background: isConfigured ? 'var(--color-cta, #6366f1)' : 'rgba(255,255,255,0.08)',
+              background: isConfigured ? 'var(--color-cta, #34897D)' : 'rgba(255,255,255,0.08)',
               color: isConfigured ? '#fff' : 'var(--color-text-secondary)',
               opacity: submitting ? 0.6 : 1,
             }}
@@ -186,7 +186,7 @@ export function LeaderboardScreen() {
         {submitMsg && (
           <p style={{
             fontSize: 12, marginTop: 8,
-            color: submitMsg.startsWith('✅') ? '#10b981' : '#f59e0b',
+            color: submitMsg.startsWith('✅') ? '#9CC77A' : '#f59e0b',
           }}>
             {submitMsg}
           </p>
@@ -222,7 +222,7 @@ export function LeaderboardScreen() {
                 display: 'flex', alignItems: 'center', gap: 12,
                 padding: '10px 14px',
                 borderBottom: i < entries.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none',
-                background: isMe ? 'rgba(99,102,241,0.08)' : 'transparent',
+                background: isMe ? 'rgba(52,137,125,0.08)' : 'transparent',
               }}
             >
               <div style={{
@@ -234,7 +234,7 @@ export function LeaderboardScreen() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{
                   fontSize: 13, fontWeight: isMe ? 700 : 500,
-                  color: isMe ? 'var(--color-cta, #6366f1)' : 'var(--color-text)',
+                  color: isMe ? 'var(--color-cta, #34897D)' : 'var(--color-text)',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                   {entry.username} {isMe && '(Tu)'}

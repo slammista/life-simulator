@@ -69,7 +69,7 @@ export function PoliticsScreen() {
               </p>
             )}
             {currentRoleDef && (
-              <p style={{ fontSize: 12, color: '#4ade80', marginTop: 4 }}>
+              <p style={{ fontSize: 12, color: '#A9D18A', marginTop: 4 }}>
                 Stipendio: €{currentRoleDef.salary.toLocaleString()}/mese
               </p>
             )}
@@ -101,7 +101,7 @@ export function PoliticsScreen() {
               Influenza Politica: {Math.round(politics.politicalInfluence)}/100
             </p>
             <div style={{ background: 'rgba(255,255,255,0.1)', borderRadius: 4, height: 6, overflow: 'hidden' }}>
-              <div style={{ width: `${politics.politicalInfluence}%`, height: '100%', background: '#a78bfa', borderRadius: 4 }} />
+              <div style={{ width: `${politics.politicalInfluence}%`, height: '100%', background: '#8CCFC4', borderRadius: 4 }} />
             </div>
           </div>
 
@@ -131,7 +131,7 @@ export function PoliticsScreen() {
                   <div>
                     <span style={{ fontSize: 20 }}>{party.emoji}</span>
                     <span style={{ fontSize: 13, fontWeight: 600, marginLeft: 8 }}>{party.name}</span>
-                    {isMember && <span style={{ fontSize: 10, marginLeft: 8, color: '#a78bfa' }}>● Membro</span>}
+                    {isMember && <span style={{ fontSize: 10, marginLeft: 8, color: '#8CCFC4' }}>● Membro</span>}
                   </div>
                   <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', color: 'var(--color-text-secondary)' }}>
                     {party.ideology}
@@ -215,7 +215,7 @@ export function PoliticsScreen() {
                     <span style={{ fontSize: 13, fontWeight: 600, marginLeft: 8 }}>{def.name}</span>
                     {isCurrentRole && <span style={{ fontSize: 10, marginLeft: 6, color: '#fbbf24' }}>★ Attuale</span>}
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: '#4ade80' }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: '#A9D18A' }}>
                     €{def.salary.toLocaleString()}/mese
                   </span>
                 </div>
@@ -230,7 +230,7 @@ export function PoliticsScreen() {
                     <span key={String(label)} style={{
                       fontSize: 10, padding: '2px 8px', borderRadius: 10,
                       background: met ? 'rgba(15,155,88,0.15)' : 'rgba(239,68,68,0.12)',
-                      color: met ? '#4ade80' : '#ef4444',
+                      color: met ? '#A9D18A' : '#ef4444',
                     }}>
                       {met ? '✓' : '✗'} {String(label)}
                     </span>

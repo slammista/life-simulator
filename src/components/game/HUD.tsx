@@ -25,15 +25,15 @@ const JOB_CATEGORY_OUTFIT: Record<string, { emoji: string; color: string }> = {
   legal:     { emoji: '⚖️', color: '#94a3b8' },
   tech:      { emoji: '💻', color: '#60a5fa' },
   education: { emoji: '📖', color: '#60a5fa' },
-  finance:   { emoji: '📊', color: '#10b981' },
-  media:     { emoji: '📸', color: '#a78bfa' },
+  finance:   { emoji: '📊', color: '#9CC77A' },
+  media:     { emoji: '📸', color: '#8CCFC4' },
   creative:  { emoji: '🎨', color: '#ec4899' },
   public:    { emoji: '🏛️', color: '#60a5fa' },
   business:  { emoji: '💼', color: '#f59e0b' },
   care:      { emoji: '🤝', color: '#f472b6' },
   food:      { emoji: '🍳', color: '#f97316' },
   logistics: { emoji: '🚚', color: '#fbbf24' },
-  technical: { emoji: '🔧', color: '#6366f1' },
+  technical: { emoji: '🔧', color: '#34897D' },
   retail:    { emoji: '🛒', color: '#fbbf24' },
   criminal:  { emoji: '🕵️', color: '#6b7280' },
 }
@@ -41,31 +41,31 @@ const JOB_CATEGORY_OUTFIT: Record<string, { emoji: string; color: string }> = {
 function getStatusBadge(data: ReturnType<typeof useHUDData>) {
   const { fame, currentJob, eduLevel, inPrison, isRetired, age } = data
   if (inPrison)  return { label: '🔒 In Carcere', color: '#FF4D6D' }
-  if (isRetired) return { label: '🎗️ Pensionato',  color: '#a78bfa' }
+  if (isRetired) return { label: '🎗️ Pensionato',  color: '#8CCFC4' }
   if (fame >= 55) return { label: '⭐ Famoso',       color: '#FFB020' }
   if (fame >= 30) return { label: '📈 In ascesa',    color: '#f97316' }
-  if (currentJob) return { label: `💼 ${currentJob.title}`, color: '#18D39E' }
+  if (currentJob) return { label: `💼 ${currentJob.title}`, color: '#9CC77A' }
   if (eduLevel && eduLevel !== 'none') return { label: '📚 Studente', color: '#60a5fa' }
   if (age < 6)   return { label: '👶 Bambino',       color: '#f472b6' }
-  return { label: '🔍 Disoccupato', color: '#687087' }
+  return { label: '🔍 Disoccupato', color: '#6B7773' }
 }
 
 function getJobOutfitBadge(data: ReturnType<typeof useHUDData>): { emoji: string; color: string } | null {
   const { currentJob, inPrison, isRetired } = data
   if (inPrison)  return { emoji: '🔒', color: '#FF4D6D' }
-  if (isRetired) return { emoji: '🎗️', color: '#a78bfa' }
+  if (isRetired) return { emoji: '🎗️', color: '#8CCFC4' }
   if (currentJob) {
     const cat = (currentJob as unknown as { category?: string }).category
-    return JOB_CATEGORY_OUTFIT[cat ?? ''] ?? { emoji: '💼', color: '#18D39E' }
+    return JOB_CATEGORY_OUTFIT[cat ?? ''] ?? { emoji: '💼', color: '#9CC77A' }
   }
   return null
 }
 
 const BASE_STATS = [
-  { key: 'happiness',    label: 'Felicità',    emoji: '😊', color: '#FFB020' },
-  { key: 'health',       label: 'Salute',       emoji: '❤️', color: '#FF4D6D' },
-  { key: 'intelligence', label: 'Intel.',        emoji: '🧠', color: '#7C5CFF' },
-  { key: 'looks',        label: 'Look',          emoji: '✨', color: '#ec4899' },
+  { key: 'happiness',    label: 'Felicità',    emoji: '😊', color: '#D9A94E' },
+  { key: 'health',       label: 'Salute',       emoji: '❤️', color: '#D9695F' },
+  { key: 'intelligence', label: 'Intel.',        emoji: '🧠', color: '#34897D' },
+  { key: 'looks',        label: 'Look',          emoji: '✨', color: '#B98CA8' },
 ]
 
 function formatMoney(n: number): string {
@@ -91,12 +91,12 @@ function usePlayerTraits() {
 
   const traits: { emoji: string; label: string; color: string }[] = []
   if (skills.academicSkill >= 40 && stats.intelligence >= 55) traits.push({ emoji: '📚', label: 'Studioso', color: '#60a5fa' })
-  if (skills.athleticism >= 40 && stats.health >= 65) traits.push({ emoji: '💪', label: 'Atletico', color: '#4ade80' })
+  if (skills.athleticism >= 40 && stats.health >= 65) traits.push({ emoji: '💪', label: 'Atletico', color: '#A9D18A' })
   if (skills.creativity >= 40) traits.push({ emoji: '🎨', label: 'Creativo', color: '#fbbf24' })
   if (skills.leadership >= 40 && skills.charisma >= 35 && career.promotions >= 2) traits.push({ emoji: '👑', label: 'Leader', color: '#f59e0b' })
   if (skills.socialSkill >= 40 && relationships.length >= 5) traits.push({ emoji: '🤝', label: 'Sociale', color: '#f472b6' })
   if (stats.karma < -30 || criminal.hasRecord) traits.push({ emoji: '😈', label: 'Ribelle', color: '#f97316' })
-  if (children.length >= 2) traits.push({ emoji: '👨‍👩‍👧', label: 'Genitore', color: '#a78bfa' })
+  if (children.length >= 2) traits.push({ emoji: '👨‍👩‍👧', label: 'Genitore', color: '#8CCFC4' })
   if (skills.music >= 35 || (skills.creativity >= 45 && skills.acting >= 20)) traits.push({ emoji: '🎭', label: 'Artista', color: '#ec4899' })
   if (career.promotions >= 3 && skills.charisma >= 40) traits.push({ emoji: '🏆', label: 'Ambizioso', color: '#f59e0b' })
 
@@ -159,7 +159,7 @@ export const HUD = memo(function HUD() {
 
   // Avatar ring color based on overall wellbeing
   const wellbeing = (stats.health + stats.happiness) / 2
-  const ringColor = wellbeing >= 70 ? '#18D39E'
+  const ringColor = wellbeing >= 70 ? '#9CC77A'
     : wellbeing >= 40 ? '#FFB020'
     : '#FF4D6D'
 
@@ -168,9 +168,9 @@ export const HUD = memo(function HUD() {
       {/* Row 1: avatar + identity + wallet */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
         {/* Avatar with ring + job outfit badge */}
-        <div style={{ position: 'relative', flexShrink: 0, width: 40, height: 40 }}>
+        <div style={{ position: 'relative', flexShrink: 0, width: 52, height: 52 }}>
           <div style={{
-            width: 40, height: 40, borderRadius: '50%',
+            width: 52, height: 52, borderRadius: '50%',
             overflow: 'hidden',
             border: `2px solid ${outfitBadge ? outfitBadge.color + '88' : ringColor + '77'}`,
             boxShadow: `0 0 14px ${outfitBadge ? outfitBadge.color + '44' : ringColor + '55'}`,
@@ -194,10 +194,10 @@ export const HUD = memo(function HUD() {
         {/* Name + age + status */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ display: 'flex', alignItems: 'baseline', gap: 5 }}>
-            <span style={{ fontSize: 14, fontWeight: 800, color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <span style={{ fontSize: 16, fontWeight: 700, letterSpacing: '-0.01em', color: 'var(--color-text)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {name} {surname}
             </span>
-            <span style={{ fontSize: 11, color: 'var(--text-faint)', flexShrink: 0 }}>
+            <span style={{ fontSize: 12, color: 'var(--color-text-secondary)', flexShrink: 0, fontVariantNumeric: 'tabular-nums' }}>
               {age}a · {year}
             </span>
           </div>
@@ -226,19 +226,19 @@ export const HUD = memo(function HUD() {
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'flex-end', flexShrink: 0,
           padding: '5px 11px', borderRadius: 'var(--radius-pill)',
-          background: 'rgba(24,211,158,0.1)', border: '1px solid rgba(24,211,158,0.25)',
-          boxShadow: moneyFlash ? '0 0 12px rgba(24,211,158,0.4)' : 'none',
+          background: 'rgba(156,199,122,0.1)', border: '1px solid rgba(156,199,122,0.25)',
+          boxShadow: moneyFlash ? '0 0 12px rgba(156,199,122,0.4)' : 'none',
           transition: 'box-shadow 0.3s ease',
         }}>
           <span
             key={money}
             className={moneyFlash ? 'money-flash' : undefined}
-            style={{ fontSize: 13, fontWeight: 800, color: '#18D39E', lineHeight: 1 }}
+            style={{ fontSize: 14, fontWeight: 700, color: '#9CC77A', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}
           >
             {formatMoney(money)}
           </span>
           {bankBalance > 0 && (
-            <span style={{ fontSize: 9, color: '#687087', marginTop: 1 }}>
+            <span style={{ fontSize: 9, color: '#6B7773', marginTop: 1 }}>
               🏦 {formatMoney(bankBalance)}
             </span>
           )}
@@ -255,7 +255,7 @@ export const HUD = memo(function HUD() {
           const myDeltas = deltas.filter(d => d.key === key)
           return (
             <div key={key} style={{ display: 'flex', flexDirection: 'column', gap: 3, position: 'relative' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 9, color: 'var(--color-text-secondary)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', gap: 4, fontSize: 11, color: 'var(--color-text-secondary)', fontVariantNumeric: 'tabular-nums' }}>
                 <span>{statEmoji} {label}</span>
                 <span
                   key={`${key}-${displayVal}`}

@@ -84,7 +84,7 @@ export function TutorialOverlay() {
           {STEPS.map((_, i) => (
             <div key={i} style={{
               width: i === step ? 20 : 6, height: 6, borderRadius: 3,
-              background: i === step ? 'var(--color-cta, #6366f1)' : 'rgba(255,255,255,0.2)',
+              background: i === step ? 'var(--color-cta, #34897D)' : 'rgba(255,255,255,0.2)',
               transition: 'all 0.25s ease',
             }} />
           ))}
@@ -118,7 +118,7 @@ export function TutorialOverlay() {
             style={{
               flex: 2, padding: '10px 0', borderRadius: 12, fontSize: 14, fontWeight: 600,
               border: 'none', cursor: 'pointer',
-              background: 'var(--color-cta, #6366f1)', color: '#fff',
+              background: 'var(--color-cta, #34897D)', color: '#fff',
             }}
           >
             {step < STEPS.length - 1 ? 'Avanti →' : 'Inizia la vita! 🎮'}

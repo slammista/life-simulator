@@ -36,9 +36,9 @@ export function ToastContainer() {
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             background: t.ok
-              ? 'rgba(24,211,158,0.13)'
+              ? 'rgba(156,199,122,0.13)'
               : 'rgba(255,77,109,0.13)',
-            border: `1px solid ${t.ok ? 'rgba(24,211,158,0.32)' : 'rgba(255,77,109,0.32)'}`,
+            border: `1px solid ${t.ok ? 'rgba(156,199,122,0.32)' : 'rgba(255,77,109,0.32)'}`,
             color: t.ok ? '#6ee7b7' : '#fca5a5',
             boxShadow: `0 8px 32px rgba(0,0,0,0.5), 0 0 0 1px rgba(255,255,255,0.04)`,
             animation: 'slideUp 0.2s ease-out',

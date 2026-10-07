@@ -152,13 +152,13 @@ export function NewGameScreen() {
 
         {/* ── Avatar Customization ── */}
         <div style={{ borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
-          <div style={{ padding: '10px 12px', background: 'rgba(124,92,255,0.12)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ padding: '10px 12px', background: 'rgba(52,137,125,0.12)', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
             <span style={{ fontSize: 13, fontWeight: 700, color: 'var(--primary)' }}>🎨 Personalizza il tuo avatar</span>
           </div>
           <div style={{ padding: 12, display: 'flex', flexDirection: 'column', gap: 10 }}>
             {/* Preview */}
             <div style={{ display: 'flex', justifyContent: 'center' }}>
-              <div style={{ borderRadius: 16, border: '2px solid rgba(124,92,255,0.4)', overflow: 'hidden', background: 'rgba(255,255,255,0.04)' }}>
+              <div style={{ borderRadius: 16, border: '2px solid rgba(52,137,125,0.4)', overflow: 'hidden', background: 'rgba(255,255,255,0.04)' }}>
                 <AvatarRenderer size="lg" config={avatar} age={0} gender={gender} />
               </div>
             </div>
@@ -193,9 +193,9 @@ export function NewGameScreen() {
                     onClick={() => updateAvatar({ hairStyle: val })}
                     style={{
                       padding: '4px 10px', borderRadius: 20, fontSize: 11, border: 'none', cursor: 'pointer',
-                      background: avatar.hairStyle === val ? 'rgba(124,92,255,0.3)' : 'rgba(255,255,255,0.07)',
+                      background: avatar.hairStyle === val ? 'rgba(52,137,125,0.3)' : 'rgba(255,255,255,0.07)',
                       color: avatar.hairStyle === val ? 'var(--primary)' : 'var(--color-text-secondary)',
-                      outline: avatar.hairStyle === val ? '1px solid rgba(124,92,255,0.5)' : 'none',
+                      outline: avatar.hairStyle === val ? '1px solid rgba(52,137,125,0.5)' : 'none',
                     }}
                   >
                     {label}

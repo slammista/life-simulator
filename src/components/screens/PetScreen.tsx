@@ -10,7 +10,7 @@ const SPECIES_LABELS: Record<PetSpecies, string> = {
 }
 
 const RARITY_COLORS: Record<string, string> = {
-  common: '#9ca3af', uncommon: '#10b981', rare: '#3b82f6', legendary: '#f59e0b',
+  common: '#9ca3af', uncommon: '#9CC77A', rare: '#3b82f6', legendary: '#f59e0b',
 }
 const RARITY_LABELS: Record<string, string> = {
   common: '⭐ Comune', uncommon: '⭐⭐ Non comune', rare: '⭐⭐⭐ Raro', legendary: '⭐⭐⭐⭐ Leggendario',
@@ -59,7 +59,7 @@ function PetCard({ pet, onFeedback }: { pet: Pet; onFeedback: (msg: string) => v
       {/* Stat bars */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6, marginBottom: 10 }}>
         {[
-          { label: 'Salute',   value: pet.health,    color: pet.health > 60 ? '#22c55e' : '#ef4444' },
+          { label: 'Salute',   value: pet.health,    color: pet.health > 60 ? '#9CC77A' : '#ef4444' },
           { label: 'Felicità', value: pet.happiness,  color: '#60a5fa' },
           { label: 'Legame',   value: pet.bondLevel,  color: '#f472b6' },
         ].map(s => (
@@ -107,7 +107,7 @@ function PetCard({ pet, onFeedback }: { pet: Pet; onFeedback: (msg: string) => v
             {[
               { label: 'ATK', val: bStats.attack, color: '#ef4444' },
               { label: 'DEF', val: bStats.defense, color: '#3b82f6' },
-              { label: 'SPD', val: bStats.speed,   color: '#10b981' },
+              { label: 'SPD', val: bStats.speed,   color: '#9CC77A' },
               { label: 'HP',  val: bStats.hp,      color: '#f59e0b' },
             ].map(s => (
               <div key={s.label} style={{ textAlign: 'center', background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '6px 4px' }}>
@@ -118,7 +118,7 @@ function PetCard({ pet, onFeedback }: { pet: Pet; onFeedback: (msg: string) => v
           </div>
 
           <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
-            Record: <span style={{ color: '#10b981' }}>{wins}V</span> / <span style={{ color: '#ef4444' }}>{losses}S</span>
+            Record: <span style={{ color: '#9CC77A' }}>{wins}V</span> / <span style={{ color: '#ef4444' }}>{losses}S</span>
           </p>
 
           {battleCheck.ok
@@ -196,7 +196,7 @@ export function PetScreen() {
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 12 }}>
       {feedback && (
-        <div className="card" style={{ padding: 10, background: 'rgba(34,197,94,0.1)', borderColor: 'rgba(34,197,94,0.3)', fontSize: 13, marginBottom: 10 }}>
+        <div className="card" style={{ padding: 10, background: 'rgba(156,199,122,0.1)', borderColor: 'rgba(156,199,122,0.3)', fontSize: 13, marginBottom: 10 }}>
           {feedback}
         </div>
       )}

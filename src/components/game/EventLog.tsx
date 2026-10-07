@@ -5,11 +5,11 @@ const CATEGORY_CONFIG: Record<string, { emoji: string; color: string; label: str
   career:    { emoji: '💼', color: '#f59e0b', label: 'Carriera' },
   social:    { emoji: '👥', color: '#f472b6', label: 'Sociale' },
   health:    { emoji: '❤️', color: '#ef4444', label: 'Salute' },
-  finance:   { emoji: '💰', color: '#10b981', label: 'Finanze' },
+  finance:   { emoji: '💰', color: '#9CC77A', label: 'Finanze' },
   criminal:  { emoji: '🚔', color: '#f97316', label: 'Crimini' },
-  life:      { emoji: '✨', color: '#a78bfa', label: 'Vita' },
+  life:      { emoji: '✨', color: '#8CCFC4', label: 'Vita' },
   education: { emoji: '📚', color: '#60a5fa', label: 'Istruzione' },
-  choice:    { emoji: '🎯', color: '#22c55e', label: 'Scelta' },
+  choice:    { emoji: '🎯', color: '#9CC77A', label: 'Scelta' },
   year:      { emoji: '📅', color: '#94a3b8', label: 'Anno' },
 }
 
@@ -101,7 +101,7 @@ export function EventLog() {
                   {statChanges.map(({ key, val }) => (
                     <span key={key} style={{
                       fontSize: 9, fontWeight: 600,
-                      color: val > 0 ? '#4ade80' : '#f87171',
+                      color: val > 0 ? '#A9D18A' : '#f87171',
                     }}>
                       {STAT_EMOJI[key]}{val > 0 ? '+' : ''}{key === 'money' ? `€${val}` : val}
                     </span>

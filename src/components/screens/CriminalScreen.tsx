@@ -38,9 +38,9 @@ export function CriminalScreen() {
       {feedback && (
         <div style={{
           borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          background: feedback.ok ? 'rgba(156,199,122,0.15)' : 'rgba(239,68,68,0.15)',
+          color: feedback.ok ? '#BFDDA6' : '#fca5a5',
+          border: `1px solid ${feedback.ok ? 'rgba(156,199,122,0.3)' : 'rgba(239,68,68,0.3)'}`,
         }}>
           {feedback.msg}
         </div>
@@ -77,8 +77,8 @@ export function CriminalScreen() {
           {/* Status badges */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[
-              { label: 'Fedina penale', val: criminal.hasRecord ? 'Sporca ❌' : 'Pulita ✅', color: criminal.hasRecord ? '#fca5a5' : '#86efac' },
-              { label: 'Stato', val: criminal.inPrison ? 'In prigione' : criminal.parole ? 'Libertà vigilata' : 'Libero/a', color: criminal.inPrison ? '#fca5a5' : '#86efac' },
+              { label: 'Fedina penale', val: criminal.hasRecord ? 'Sporca ❌' : 'Pulita ✅', color: criminal.hasRecord ? '#fca5a5' : '#BFDDA6' },
+              { label: 'Stato', val: criminal.inPrison ? 'In prigione' : criminal.parole ? 'Libertà vigilata' : 'Libero/a', color: criminal.inPrison ? '#fca5a5' : '#BFDDA6' },
               { label: 'Crimini totali', val: criminal.crimes.length, color: 'var(--color-text)' },
               { label: 'Condanne', val: criminal.crimes.filter(c => c.convicted).length, color: 'var(--color-text)' },
             ].map(({ label, val, color }) => (
@@ -101,7 +101,7 @@ export function CriminalScreen() {
                     <p style={{ fontSize: 13, fontWeight: 500, textTransform: 'capitalize' }}>{c.type.replace('_', ' ')}</p>
                     <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{c.year}</p>
                   </div>
-                  <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: c.convicted ? 'rgba(239,68,68,0.15)' : 'rgba(34,197,94,0.15)', color: c.convicted ? '#fca5a5' : '#86efac' }}>
+                  <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: c.convicted ? 'rgba(239,68,68,0.15)' : 'rgba(156,199,122,0.15)', color: c.convicted ? '#fca5a5' : '#BFDDA6' }}>
                     {c.convicted ? `Condannato ${c.sentence}y` : 'Non condannato'}
                   </span>
                 </div>
@@ -147,7 +147,7 @@ export function CriminalScreen() {
                       </p>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      {def.baseMoneyGain > 0 && <p style={{ fontSize: 12, color: '#86efac' }}>+€{def.baseMoneyGain.toLocaleString('it-IT')}</p>}
+                      {def.baseMoneyGain > 0 && <p style={{ fontSize: 12, color: '#BFDDA6' }}>+€{def.baseMoneyGain.toLocaleString('it-IT')}</p>}
                       <p style={{ fontSize: 11, color: '#fca5a5' }}>Arresto {Math.round(def.baseArrestChance * 100)}%</p>
                     </div>
                   </div>

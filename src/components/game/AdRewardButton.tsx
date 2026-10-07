@@ -65,8 +65,8 @@ export function AdRewardButton({ adState, onClaim, compact = false }: Props) {
     return (
       <div style={{
         padding: compact ? '10px 14px' : '14px 18px',
-        borderRadius: 12, background: 'rgba(99,102,241,0.15)',
-        border: '1px solid rgba(99,102,241,0.3)',
+        borderRadius: 12, background: 'rgba(52,137,125,0.15)',
+        border: '1px solid rgba(52,137,125,0.3)',
         textAlign: 'center',
       }}>
         <div style={{ fontSize: compact ? 20 : 28, marginBottom: 6 }}>📺</div>
@@ -75,7 +75,7 @@ export function AdRewardButton({ adState, onClaim, compact = false }: Props) {
         </p>
         <div style={{
           fontSize: compact ? 22 : 32, fontWeight: 700,
-          color: 'var(--color-cta, #6366f1)',
+          color: 'var(--color-cta, #34897D)',
         }}>{countdown}</div>
         <div style={{
           height: 4, borderRadius: 2, background: 'rgba(255,255,255,0.1)',
@@ -83,7 +83,7 @@ export function AdRewardButton({ adState, onClaim, compact = false }: Props) {
         }}>
           <div style={{
             height: '100%', borderRadius: 2,
-            background: 'var(--color-cta, #6366f1)',
+            background: 'var(--color-cta, #34897D)',
             width: `${((5 - countdown) / 5) * 100}%`,
             transition: 'width 0.9s linear',
           }} />
@@ -102,7 +102,7 @@ export function AdRewardButton({ adState, onClaim, compact = false }: Props) {
         textAlign: 'center',
       }}>
         <div style={{ fontSize: compact ? 24 : 36, marginBottom: 6 }}>{result.emoji}</div>
-        <p style={{ fontSize: compact ? 13 : 15, fontWeight: 700, color: '#10b981', marginBottom: 4 }}>
+        <p style={{ fontSize: compact ? 13 : 15, fontWeight: 700, color: '#9CC77A', marginBottom: 4 }}>
           {result.label}
         </p>
         <p style={{ fontSize: compact ? 11 : 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
@@ -111,7 +111,7 @@ export function AdRewardButton({ adState, onClaim, compact = false }: Props) {
         <button onClick={reset} style={{
           padding: '6px 20px', borderRadius: 20, fontSize: 12,
           border: 'none', cursor: 'pointer',
-          background: 'rgba(16,185,129,0.2)', color: '#10b981',
+          background: 'rgba(16,185,129,0.2)', color: '#9CC77A',
         }}>
           OK
         </button>
@@ -136,7 +136,7 @@ export function AdRewardButton({ adState, onClaim, compact = false }: Props) {
           border: 'none',
           cursor: check.ok ? 'pointer' : 'not-allowed',
           background: check.ok
-            ? 'linear-gradient(135deg, #6366f1, #8b5cf6)'
+            ? 'linear-gradient(135deg, #34897D, #34897D)'
             : 'rgba(255,255,255,0.06)',
           color: check.ok ? '#fff' : 'var(--color-text-secondary)',
           opacity: check.ok ? 1 : 0.7,

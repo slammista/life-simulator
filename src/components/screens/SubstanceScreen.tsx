@@ -154,8 +154,8 @@ export function SubstanceScreen() {
         <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 6 }}>Stato di salute</p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
           {[
-            { label: 'Salute', value: stats.health, color: stats.health > 60 ? '#22c55e' : stats.health > 30 ? '#f97316' : '#ef4444' },
-            { label: 'Sal. Mentale', value: stats.mentalHealth, color: stats.mentalHealth > 60 ? '#22c55e' : '#f97316' },
+            { label: 'Salute', value: stats.health, color: stats.health > 60 ? '#9CC77A' : stats.health > 30 ? '#f97316' : '#ef4444' },
+            { label: 'Sal. Mentale', value: stats.mentalHealth, color: stats.mentalHealth > 60 ? '#9CC77A' : '#f97316' },
           ].map(s => (
             <div key={s.label}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>

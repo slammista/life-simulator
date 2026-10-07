@@ -19,7 +19,7 @@ export function GoalsScreen() {
           className="stat-bar-fill"
           style={{
             width: `${goals.length > 0 ? (completed.length / goals.length) * 100 : 0}%`,
-            backgroundColor: '#10b981',
+            backgroundColor: '#9CC77A',
           }}
         />
       </div>

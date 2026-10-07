@@ -90,7 +90,7 @@ function CloudSavePanel() {
       {msg && (
         <div style={{ padding: '6px 10px', borderRadius: 8, marginBottom: 8, fontSize: 12,
           background: msgType === 'ok' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)',
-          color: msgType === 'ok' ? '#10b981' : '#ef4444',
+          color: msgType === 'ok' ? '#9CC77A' : '#ef4444',
         }}>
           {msg}
         </div>
@@ -116,7 +116,7 @@ function CloudSavePanel() {
           <button onClick={handleUpload} style={btnStyle('#3b82f6')} disabled={loading}>
             ⬆️ Carica salvataggio nel cloud
           </button>
-          <button onClick={handleDownload} style={btnStyle('#6366f1')} disabled={loading}>
+          <button onClick={handleDownload} style={btnStyle('#34897D')} disabled={loading}>
             ⬇️ Scarica salvataggio dal cloud
           </button>
           <button onClick={handleSignOut} style={{ ...btnStyle('rgba(255,255,255,0.08)'), color: 'var(--color-text-secondary)' }}>
@@ -181,7 +181,7 @@ function BackupPanel() {
       </p>
       {msg && (
         <div style={{ padding: '6px 10px', borderRadius: 8, marginBottom: 8, fontSize: 12,
-          background: 'rgba(16,185,129,0.15)', color: '#10b981',
+          background: 'rgba(16,185,129,0.15)', color: '#9CC77A',
         }}>
           {msg}
         </div>
@@ -189,7 +189,7 @@ function BackupPanel() {
       <div style={{ display: 'flex', gap: 8 }}>
         <button onClick={handleExport} style={{
           flex: 1, padding: '7px 0', borderRadius: 8, fontSize: 12, border: 'none',
-          cursor: 'pointer', background: '#10b981', color: '#fff',
+          cursor: 'pointer', background: '#9CC77A', color: '#fff',
         }}>
           ⬇️ Esporta JSON
         </button>
@@ -248,7 +248,7 @@ export function SettingsScreen() {
 
       {/* Rewarded Ads */}
       <div className="card" style={{ marginBottom: 12 }}>
-        <p style={{ fontSize: 12, color: '#a78bfa', fontWeight: 600, marginBottom: 4 }}>📺 Premi Gratuiti</p>
+        <p style={{ fontSize: 12, color: '#8CCFC4', fontWeight: 600, marginBottom: 4 }}>📺 Premi Gratuiti</p>
         <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
           Guarda un breve annuncio per ricevere un premio a sorpresa. {adRewards.totalWatched > 0 && `(${adRewards.totalWatched} totali guardati)`}
         </p>
@@ -266,7 +266,7 @@ export function SettingsScreen() {
             </div>
             <div style={{ textAlign: 'right' }}>
               <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Salario medio</p>
-              <p style={{ fontSize: 14, color: '#10b981', fontWeight: 600 }}>€{nation.avgSalary.toLocaleString('it-IT')}/m</p>
+              <p style={{ fontSize: 14, color: '#9CC77A', fontWeight: 600 }}>€{nation.avgSalary.toLocaleString('it-IT')}/m</p>
             </div>
           </div>
         )}
@@ -327,7 +327,7 @@ export function SettingsScreen() {
             </div>
 
             {cheatMsg && (
-              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(99,102,241,0.15)', marginBottom: 12 }}>
+              <div style={{ padding: '8px 12px', borderRadius: 8, background: 'rgba(52,137,125,0.15)', marginBottom: 12 }}>
                 <p style={{ fontSize: 12, color: '#818cf8' }}>{cheatMsg}</p>
               </div>
             )}
@@ -339,7 +339,7 @@ export function SettingsScreen() {
                   onChange={e => setCheatMoneyAmt(Number(e.target.value))}
                   style={{ flex: 1, padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.15)', color: 'var(--color-text)', fontSize: 13 }} />
                 <button onClick={() => runCheat(() => cheatAddMoney(cheatMoneyAmt), `💰 +€${cheatMoneyAmt.toLocaleString()} aggiunti!`)}
-                  style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#10b981', color: '#fff' }}>
+                  style={{ padding: '6px 14px', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#9CC77A', color: '#fff' }}>
                   +€
                 </button>
               </div>
@@ -348,14 +348,14 @@ export function SettingsScreen() {
             <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
               {[10000, 100000, 1000000].map(amt => (
                 <button key={amt} onClick={() => runCheat(() => cheatAddMoney(amt), `💰 +€${amt.toLocaleString()} aggiunti!`)}
-                  style={{ padding: '4px 10px', borderRadius: 12, fontSize: 11, border: 'none', cursor: 'pointer', background: 'rgba(16,185,129,0.2)', color: '#10b981' }}>
+                  style={{ padding: '4px 10px', borderRadius: 12, fontSize: 11, border: 'none', cursor: 'pointer', background: 'rgba(16,185,129,0.2)', color: '#9CC77A' }}>
                   +€{amt.toLocaleString()}
                 </button>
               ))}
             </div>
 
             <button onClick={() => runCheat(cheatSetMaxStats, '⚡ Tutte le statistiche al massimo!')}
-              style={{ width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#6366f1', color: '#fff', marginBottom: 8 }}>
+              style={{ width: '100%', padding: '8px 0', borderRadius: 8, fontSize: 13, border: 'none', cursor: 'pointer', background: '#34897D', color: '#fff', marginBottom: 8 }}>
               ⚡ Max Statistiche
             </button>
 

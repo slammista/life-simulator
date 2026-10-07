@@ -41,9 +41,9 @@ export default function LivingScreen() {
       {feedback && (
         <div style={{
           borderRadius: 10, padding: '10px 14px', marginBottom: 12, fontSize: 13,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          background: feedback.ok ? 'rgba(156,199,122,0.15)' : 'rgba(239,68,68,0.15)',
+          color: feedback.ok ? '#BFDDA6' : '#fca5a5',
+          border: `1px solid ${feedback.ok ? 'rgba(156,199,122,0.3)' : 'rgba(239,68,68,0.3)'}`,
         }}>
           {feedback.msg}
         </div>
@@ -231,7 +231,7 @@ export default function LivingScreen() {
                             <span style={{ fontSize: 11, color: '#94a3b8' }}>Anticipo: €{downPayment.toLocaleString()}</span>
                           </div>
                           {canBuy ? (
-                            <div style={{ fontSize: 11, color: '#4ade80', marginTop: 4 }}>
+                            <div style={{ fontSize: 11, color: '#A9D18A', marginTop: 4 }}>
                               Rata: €{monthlyPayment.toLocaleString()}/mese · Tasso {(interestRate * 100).toFixed(1)}%
                             </div>
                           ) : (

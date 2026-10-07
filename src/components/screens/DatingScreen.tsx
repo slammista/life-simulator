@@ -121,7 +121,7 @@ export function DatingScreen() {
               <span style={{ fontSize: 22 }}>{engagedWith.emoji}</span>
               <div>
                 <div style={{ fontSize: 14, fontWeight: 600 }}>{engagedWith.name}</div>
-                <div style={{ fontSize: 11, color: '#a78bfa' }}>💍 Fidanzati</div>
+                <div style={{ fontSize: 11, color: '#8CCFC4' }}>💍 Fidanzati</div>
               </div>
             </div>
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>Budget matrimonio</p>
@@ -179,7 +179,7 @@ export function DatingScreen() {
                   onClick={() => setRingValue(v)}
                   style={{
                     flex: 1, padding: '5px 0', borderRadius: 8, fontSize: 10, border: 'none', cursor: 'pointer',
-                    background: ringValue === v ? '#a855f7' : 'rgba(255,255,255,0.07)',
+                    background: ringValue === v ? '#3F9B8D' : 'rgba(255,255,255,0.07)',
                     color: ringValue === v ? '#fff' : 'var(--color-text-secondary)',
                   }}
                 >
@@ -189,7 +189,7 @@ export function DatingScreen() {
             </div>
             <button
               className="btn-primary"
-              style={{ width: '100%', padding: '8px 0', fontSize: 13, background: '#a855f7' }}
+              style={{ width: '100%', padding: '8px 0', fontSize: 13, background: '#3F9B8D' }}
               onClick={() => handlePropose(partner.id)}
               disabled={finance.money < ringValue}
             >

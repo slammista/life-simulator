@@ -41,7 +41,7 @@ export function AgeTransitionOverlay({ age, year, visible, onDone }: Props) {
         position: 'fixed', inset: 0, zIndex: 9500,
         display: 'flex', flexDirection: 'column',
         alignItems: 'center', justifyContent: 'center',
-        background: 'rgba(9, 11, 22, 0.88)',
+        background: 'rgba(10, 14, 13, 0.88)',
         backdropFilter: 'blur(10px)',
         WebkitBackdropFilter: 'blur(10px)',
         userSelect: 'none',

@@ -38,9 +38,9 @@ export function HobbyScreen() {
       {feedback && (
         <div style={{
           borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          background: feedback.ok ? 'rgba(156,199,122,0.15)' : 'rgba(239,68,68,0.15)',
+          color: feedback.ok ? '#BFDDA6' : '#fca5a5',
+          border: `1px solid ${feedback.ok ? 'rgba(156,199,122,0.3)' : 'rgba(239,68,68,0.3)'}`,
         }}>
           {feedback.msg}
         </div>
@@ -75,7 +75,7 @@ export function HobbyScreen() {
           )}
           {hobbies.map(hobby => {
             const def = getHobbyDef(hobby.id)
-            const skillColor = hobby.skillLevel >= 70 ? '#10b981' : hobby.skillLevel >= 40 ? '#f59e0b' : '#6366f1'
+            const skillColor = hobby.skillLevel >= 70 ? '#9CC77A' : hobby.skillLevel >= 40 ? '#f59e0b' : '#34897D'
             const skillLabel = hobby.skillLevel >= 80 ? 'Esperto' : hobby.skillLevel >= 55 ? 'Avanzato' : hobby.skillLevel >= 30 ? 'Intermedio' : 'Principiante'
             return (
               <div key={hobby.id} className="card" style={{
@@ -110,7 +110,7 @@ export function HobbyScreen() {
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   {hobby.monetizable && hobby.monthlyIncome > 0 ? (
-                    <span style={{ fontSize: 12, color: '#86efac', fontWeight: 600 }}>💰 +€{hobby.monthlyIncome}/mese</span>
+                    <span style={{ fontSize: 12, color: '#BFDDA6', fontWeight: 600 }}>💰 +€{hobby.monthlyIncome}/mese</span>
                   ) : (
                     <span style={{ fontSize: 11, color: 'var(--text-faint)' }}>+Felicità · +Skill</span>
                   )}
@@ -121,7 +121,7 @@ export function HobbyScreen() {
                       padding: '8px 20px', borderRadius: 12,
                       background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%)',
                       color: '#fff', fontSize: 13, fontWeight: 700, border: 'none', cursor: 'pointer',
-                      boxShadow: '0 3px 12px rgba(124,92,255,0.3)',
+                      boxShadow: '0 3px 12px rgba(52,137,125,0.3)',
                     }}
                   >
                     Pratica
@@ -166,17 +166,17 @@ export function HobbyScreen() {
                     {def.costToStart > 0 ? (
                       <span style={{
                         fontSize: 12, fontWeight: 700, padding: '3px 8px', borderRadius: 99,
-                        background: canAfford ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)',
-                        color: canAfford ? '#86efac' : '#fca5a5',
-                        border: `1px solid ${canAfford ? 'rgba(34,197,94,0.25)' : 'rgba(239,68,68,0.25)'}`,
+                        background: canAfford ? 'rgba(156,199,122,0.12)' : 'rgba(239,68,68,0.12)',
+                        color: canAfford ? '#BFDDA6' : '#fca5a5',
+                        border: `1px solid ${canAfford ? 'rgba(156,199,122,0.25)' : 'rgba(239,68,68,0.25)'}`,
                       }}>
                         {canAfford ? '' : '🔒 '}€{def.costToStart.toLocaleString('it-IT')}
                       </span>
                     ) : (
-                      <span style={{ fontSize: 11, color: '#86efac', fontWeight: 600 }}>Gratis</span>
+                      <span style={{ fontSize: 11, color: '#BFDDA6', fontWeight: 600 }}>Gratis</span>
                     )}
                     {def.monetizable && (
-                      <p style={{ fontSize: 10, color: '#86efac', marginTop: 2 }}>💰 Monetizzabile</p>
+                      <p style={{ fontSize: 10, color: '#BFDDA6', marginTop: 2 }}>💰 Monetizzabile</p>
                     )}
                   </div>
                 </div>
@@ -184,7 +184,7 @@ export function HobbyScreen() {
                 {benefits.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 10 }}>
                     {benefits.map(([k, v]) => (
-                      <span key={k} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, fontWeight: 600, background: (v as number) > 0 ? 'rgba(34,197,94,0.12)' : 'rgba(239,68,68,0.12)', color: (v as number) > 0 ? '#86efac' : '#fca5a5' }}>
+                      <span key={k} style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, fontWeight: 600, background: (v as number) > 0 ? 'rgba(156,199,122,0.12)' : 'rgba(239,68,68,0.12)', color: (v as number) > 0 ? '#BFDDA6' : '#fca5a5' }}>
                         {(v as number) > 0 ? '+' : ''}{v} {k}
                       </span>
                     ))}
@@ -202,7 +202,7 @@ export function HobbyScreen() {
                       ? 'linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%)'
                       : 'rgba(255,255,255,0.05)',
                     color: canAfford ? '#fff' : 'var(--color-text-secondary)',
-                    boxShadow: canAfford ? '0 4px 16px rgba(124,92,255,0.3)' : 'none',
+                    boxShadow: canAfford ? '0 4px 16px rgba(52,137,125,0.3)' : 'none',
                   }}
                 >
                   {canAfford ? 'Inizia' : `Servono €${def.costToStart.toLocaleString('it-IT')}`}

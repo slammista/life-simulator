@@ -173,7 +173,7 @@ function Hat({ type }: { type: 'cap' | 'beanie' | 'fedora' }) {
         {/* Ribbed band */}
         <path d="M 22 40 Q 50 46 78 40 Q 76 47 50 50 Q 24 47 22 40 Z" fill="#6D28D9" />
         {/* Pom-pom */}
-        <circle cx="50" cy="6" r="5" fill="#A78BFA" />
+        <circle cx="50" cy="6" r="5" fill="#8CCFC4" />
       </>
     )
   }

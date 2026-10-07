@@ -38,9 +38,9 @@ function RewardBanner() {
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
       {/* Ad reward */}
       {canAd.ok && (
-        <div className="card" style={{ padding: '10px 14px', border: '1px solid rgba(99,102,241,0.35)', background: 'rgba(99,102,241,0.08)' }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: '#a78bfa', marginBottom: 6 }}>
-            🎁 Ricompensa disponibile
+        <div className="card" style={{ padding: '10px 14px', border: '1px solid rgba(52,137,125,0.35)', background: 'rgba(52,137,125,0.08)' }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: '#8CCFC4', marginBottom: 6 }}>
+            Ricompensa disponibile
           </p>
           <AdRewardButton
             adState={adRewards}
@@ -161,8 +161,8 @@ function SuggestedActions(props: Props) {
 
   return (
     <div style={{ marginBottom: 12 }}>
-      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-        💡 Cosa fare adesso
+      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontWeight: 600, marginBottom: 8 }}>
+        Cosa fare adesso
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         {hints.map((h, i) => (
@@ -191,58 +191,19 @@ function SuggestedActions(props: Props) {
 
 // ─── Vita Hub Navigation ────────────────────────────────────────────────────
 
-function VitaHubNav(props: Props) {
-  const { setVitaSection } = props
+const HUB_LINKS: { id: 'shop' | 'account' | 'rewards'; label: string }[] = [
+  { id: 'shop', label: 'Negozio' },
+  { id: 'account', label: 'Account' },
+  { id: 'rewards', label: 'Premi' },
+]
+
+function VitaHubNav({ setVitaSection }: Props) {
   return (
-    <div style={{ marginBottom: 12 }}>
-      <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
-        🎮 Hub Principale
-      </p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
-        <button
-          onClick={() => setVitaSection('shop')}
-          style={{
-            padding: '12px 8px', borderRadius: 12, border: '1px solid rgba(168,85,247,0.2)',
-            background: 'rgba(168,85,247,0.05)', cursor: 'pointer', textAlign: 'center',
-            fontSize: 13, fontWeight: 600, color: '#a78bfa', display: 'flex',
-            flexDirection: 'column', alignItems: 'center', gap: 4, transition: 'all 0.2s',
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(168,85,247,0.1)')}
-          onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(168,85,247,0.05)')}
-        >
-          <span style={{ fontSize: 20 }}>🛒</span>
-          Shop
-        </button>
-        <button
-          onClick={() => setVitaSection('account')}
-          style={{
-            padding: '12px 8px', borderRadius: 12, border: '1px solid rgba(59,130,246,0.2)',
-            background: 'rgba(59,130,246,0.05)', cursor: 'pointer', textAlign: 'center',
-            fontSize: 13, fontWeight: 600, color: '#60a5fa', display: 'flex',
-            flexDirection: 'column', alignItems: 'center', gap: 4, transition: 'all 0.2s',
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(59,130,246,0.1)')}
-          onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(59,130,246,0.05)')}
-        >
-          <span style={{ fontSize: 20 }}>👤</span>
-          Account
-        </button>
-        <button
-          onClick={() => setVitaSection('rewards')}
-          style={{
-            padding: '12px 8px', borderRadius: 12, border: '1px solid rgba(34,197,94,0.2)',
-            background: 'rgba(34,197,94,0.05)', cursor: 'pointer', textAlign: 'center',
-            fontSize: 13, fontWeight: 600, color: '#4ade80', display: 'flex',
-            flexDirection: 'column', alignItems: 'center', gap: 4, transition: 'all 0.2s',
-          }}
-          onMouseOver={(e) => (e.currentTarget.style.background = 'rgba(34,197,94,0.1)')}
-          onMouseOut={(e) => (e.currentTarget.style.background = 'rgba(34,197,94,0.05)')}
-        >
-          <span style={{ fontSize: 20 }}>🎁</span>
-          Rewards
-        </button>
-      </div>
-    </div>
+    <nav className="hub-links" aria-label="Menu secondario">
+      {HUB_LINKS.map(l => (
+        <button key={l.id} onClick={() => setVitaSection(l.id)}>{l.label}</button>
+      ))}
+    </nav>
   )
 }
 
@@ -251,9 +212,9 @@ function VitaHubNav(props: Props) {
 export function VitaWidgets(props: Props) {
   return (
     <>
-      <VitaHubNav {...props} />
-      <RewardBanner />
       <SuggestedActions {...props} />
+      <RewardBanner />
+      <VitaHubNav {...props} />
     </>
   )
 }

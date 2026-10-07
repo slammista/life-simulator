@@ -16,12 +16,12 @@ const CATEGORY_LABELS: Record<CausalityCategory | 'all', string> = {
 
 const CATEGORY_COLORS: Record<CausalityCategory, string> = {
   life: '#94a3b8',
-  finance: '#10b981',
+  finance: '#9CC77A',
   relationship: '#f472b6',
   health: '#ef4444',
   career: '#60a5fa',
   chaos: '#f97316',
-  legacy: '#a78bfa',
+  legacy: '#8CCFC4',
 }
 
 const MEMORY_CATEGORY_COLORS: Record<LifeMemoryCategory, string> = {
@@ -31,8 +31,8 @@ const MEMORY_CATEGORY_COLORS: Record<LifeMemoryCategory, string> = {
   relationship: '#f472b6',
   health:       '#ef4444',
   crime:        '#f97316',
-  finance:      '#10b981',
-  achievement:  '#a78bfa',
+  finance:      '#9CC77A',
+  achievement:  '#8CCFC4',
 }
 
 const MEMORY_CATEGORY_LABELS: Record<LifeMemoryCategory, string> = {

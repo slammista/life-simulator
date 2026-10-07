@@ -47,7 +47,7 @@ export function ReligionScreen() {
         {/* Effects preview */}
         <div style={{ display: 'flex', justifyContent: 'center', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
           {Object.entries(currentInfo.effects).map(([k, v]) => (
-            <span key={k} style={{ fontSize: 11, padding: '2px 10px', borderRadius: 10, background: 'rgba(15,155,88,0.15)', color: '#4ade80' }}>
+            <span key={k} style={{ fontSize: 11, padding: '2px 10px', borderRadius: 10, background: 'rgba(15,155,88,0.15)', color: '#A9D18A' }}>
               +{v} {k === 'happiness' ? '😊' : k === 'mentalHealth' ? '🧠' : k === 'karma' ? '⚡' : k === 'health' ? '❤️' : k === 'intelligence' ? '🎓' : k}
             </span>
           ))}
@@ -106,7 +106,7 @@ export function ReligionScreen() {
                     </div>
                   </div>
                   {isCurrent ? (
-                    <span style={{ fontSize: 11, color: '#4ade80', padding: '3px 10px', background: 'rgba(15,155,88,0.15)', borderRadius: 10 }}>
+                    <span style={{ fontSize: 11, color: '#A9D18A', padding: '3px 10px', background: 'rgba(15,155,88,0.15)', borderRadius: 10 }}>
                       Attuale
                     </span>
                   ) : (

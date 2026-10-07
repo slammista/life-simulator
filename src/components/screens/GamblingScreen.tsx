@@ -27,7 +27,7 @@ export default function GamblingScreen() {
   const [betAmount, setBetAmount] = useState<Record<string, number>>({})
   const [sportBet, setSportBet] = useState<Record<SportBetType, number>>({} as Record<SportBetType, number>)
 
-  const addictionColor = gambling.addictionLevel >= 70 ? '#ef4444' : gambling.addictionLevel >= 40 ? '#f59e0b' : '#10b981'
+  const addictionColor = gambling.addictionLevel >= 70 ? '#ef4444' : gambling.addictionLevel >= 40 ? '#f59e0b' : '#9CC77A'
   const netBalance = gambling.totalWon - gambling.totalLost
 
   return (
@@ -51,7 +51,7 @@ export default function GamblingScreen() {
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
           <div>
             <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>Vinto</p>
-            <p style={{ fontSize: 13, color: '#10b981', fontWeight: 600 }}>+€{gambling.totalWon.toLocaleString()}</p>
+            <p style={{ fontSize: 13, color: '#9CC77A', fontWeight: 600 }}>+€{gambling.totalWon.toLocaleString()}</p>
           </div>
           <div>
             <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>Perso</p>
@@ -59,7 +59,7 @@ export default function GamblingScreen() {
           </div>
           <div>
             <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>Bilancio</p>
-            <p style={{ fontSize: 13, color: netBalance >= 0 ? '#10b981' : '#ef4444', fontWeight: 600 }}>
+            <p style={{ fontSize: 13, color: netBalance >= 0 ? '#9CC77A' : '#ef4444', fontWeight: 600 }}>
               {netBalance >= 0 ? '+' : ''}€{netBalance.toLocaleString()}
             </p>
           </div>

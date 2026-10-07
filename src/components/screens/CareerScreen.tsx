@@ -31,10 +31,10 @@ const CATEGORY_EMOJI: Record<string, string> = {
 const CATEGORY_ACCENT: Record<string, string> = {
   care:      'rgba(244,114,182,0.12)', retail:    'rgba(251,191,36,0.1)',
   food:      'rgba(249,115,22,0.12)',  logistics: 'rgba(234,179,8,0.1)',
-  technical: 'rgba(99,102,241,0.12)', medical:   'rgba(239,68,68,0.1)',
-  finance:   'rgba(16,185,129,0.12)', media:     'rgba(168,85,247,0.12)',
+  technical: 'rgba(52,137,125,0.12)', medical:   'rgba(239,68,68,0.1)',
+  finance:   'rgba(16,185,129,0.12)', media:     'rgba(52,137,125,0.12)',
   creative:  'rgba(236,72,153,0.12)', public:    'rgba(59,130,246,0.12)',
-  education: 'rgba(96,165,250,0.1)',  tech:      'rgba(124,92,255,0.12)',
+  education: 'rgba(96,165,250,0.1)',  tech:      'rgba(52,137,125,0.12)',
   business:  'rgba(245,158,11,0.12)', legal:     'rgba(148,163,184,0.1)',
 }
 
@@ -82,10 +82,10 @@ const JOB_TAGLINE: Record<string, string> = {
 const TRAIT_CONFIG: Record<string, { emoji: string; color: string }> = {
   introverso:  { emoji: '🤫', color: '#94a3b8' },
   ambizioso:   { emoji: '🔥', color: '#f59e0b' },
-  geloso:      { emoji: '💚', color: '#22c55e' },
+  geloso:      { emoji: '💚', color: '#9CC77A' },
   generoso:    { emoji: '🤝', color: '#f472b6' },
   sensibile:   { emoji: '💙', color: '#60a5fa' },
-  sicuro:      { emoji: '😎', color: '#a78bfa' },
+  sicuro:      { emoji: '😎', color: '#8CCFC4' },
   avido:       { emoji: '💰', color: '#fbbf24' },
   leale:       { emoji: '🛡️', color: '#38bdf8' },
   empatico:    { emoji: '💫', color: '#ec4899' },
@@ -94,11 +94,11 @@ const TRAIT_CONFIG: Record<string, { emoji: string; color: string }> = {
 
 const WORK_REP_CONFIG: Record<WorkReputationStatus, { label: string; color: string; bg: string }> = {
   nuovo:       { label: 'Nuovo',        color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' },
-  affidabile:  { label: 'Affidabile',   color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
+  affidabile:  { label: 'Affidabile',   color: '#9CC77A', bg: 'rgba(156,199,122,0.12)' },
   ambizioso:   { label: 'Ambizioso',    color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
   lecchino:    { label: 'Lecchino',     color: '#f472b6', bg: 'rgba(244,114,182,0.12)' },
   tossico:     { label: 'Tossico',      color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
-  genio:       { label: 'Genio',        color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
+  genio:       { label: 'Genio',        color: '#8CCFC4', bg: 'rgba(167,139,250,0.12)' },
   pigro:       { label: 'Pigro',        color: '#64748b', bg: 'rgba(100,116,139,0.12)' },
   leader:      { label: 'Leader',       color: '#38bdf8', bg: 'rgba(56,189,248,0.12)' },
   problematico:{ label: 'Problematico', color: '#f87171', bg: 'rgba(248,113,113,0.12)' },
@@ -115,7 +115,7 @@ const WORK_ACTIONS: Array<{ action: WorkAction; label: string; emoji: string }> 
 
 const STATUS_CONFIG: Record<WorkNPC['status'], { color: string; label: string }> = {
   neutral:  { color: '#94a3b8', label: 'Neutrale' },
-  friendly: { color: '#22c55e', label: 'Amichevole' },
+  friendly: { color: '#9CC77A', label: 'Amichevole' },
   tense:    { color: '#f59e0b', label: 'Teso' },
   hostile:  { color: '#ef4444', label: 'Ostile' },
 }
@@ -123,7 +123,7 @@ const STATUS_CONFIG: Record<WorkNPC['status'], { color: string; label: string }>
 function stressConfig(level: number) {
   if (level >= 70) return { label: 'Stress alto',   color: '#ef4444', bg: 'rgba(239,68,68,0.12)' }
   if (level >= 45) return { label: 'Stress medio',  color: '#f97316', bg: 'rgba(249,115,22,0.12)' }
-  return               { label: 'Stress basso',   color: '#22c55e', bg: 'rgba(34,197,94,0.1)' }
+  return               { label: 'Stress basso',   color: '#9CC77A', bg: 'rgba(156,199,122,0.1)' }
 }
 
 function formatSalary(n: number): string {
@@ -191,7 +191,7 @@ export function CareerScreen() {
   const burnoutColor =
     career.burnoutLevel >= 80 ? '#ef4444'
     : career.burnoutLevel >= 50 ? '#eab308'
-    : '#22c55e'
+    : '#9CC77A'
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
@@ -212,9 +212,9 @@ export function CareerScreen() {
       {feedback && (
         <div style={{
           borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          background: feedback.ok ? 'rgba(156,199,122,0.15)' : 'rgba(239,68,68,0.15)',
+          color: feedback.ok ? '#BFDDA6' : '#fca5a5',
+          border: `1px solid ${feedback.ok ? 'rgba(156,199,122,0.3)' : 'rgba(239,68,68,0.3)'}`,
         }}>
           {feedback.msg}
         </div>
@@ -233,7 +233,7 @@ export function CareerScreen() {
                 <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>{career.currentJob.company}</p>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <p style={{ color: '#10b981', fontWeight: 700 }}>€{career.currentJob.salary.toLocaleString('it-IT')}</p>
+                <p style={{ color: '#9CC77A', fontWeight: 700 }}>€{career.currentJob.salary.toLocaleString('it-IT')}</p>
                 <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>/mese</p>
               </div>
             </div>
@@ -262,7 +262,7 @@ export function CareerScreen() {
               <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(59,130,246,0.2)', color: '#93c5fd' }}>
                 {getContractLabel(career.currentJob.contractType)}
               </span>
-              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(168,85,247,0.2)', color: '#d8b4fe' }}>
+              <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(52,137,125,0.2)', color: '#d8b4fe' }}>
                 Dal {career.currentJob.startYear}
               </span>
             </div>
@@ -370,7 +370,7 @@ export function CareerScreen() {
           {availableJobs.map(job => {
             const isCurrent = career.currentJob?.id === job.id
             const catEmoji = CATEGORY_EMOJI[job.category] ?? '💼'
-            const catAccent = CATEGORY_ACCENT[job.category] ?? 'rgba(124,92,255,0.08)'
+            const catAccent = CATEGORY_ACCENT[job.category] ?? 'rgba(52,137,125,0.08)'
             const tagline = JOB_TAGLINE[job.id] ?? ''
             const stress = stressConfig(job.stressLevel)
             return (
@@ -380,9 +380,9 @@ export function CareerScreen() {
                 style={{
                   padding: '14px 14px 12px',
                   background: isCurrent
-                    ? 'linear-gradient(135deg, rgba(34,197,94,0.08) 0%, var(--bg-card) 70%)'
+                    ? 'linear-gradient(135deg, rgba(156,199,122,0.08) 0%, var(--bg-card) 70%)'
                     : `linear-gradient(135deg, ${catAccent} 0%, var(--bg-card) 70%)`,
-                  border: isCurrent ? '1px solid rgba(34,197,94,0.35)' : '1px solid var(--border-soft)',
+                  border: isCurrent ? '1px solid rgba(156,199,122,0.35)' : '1px solid var(--border-soft)',
                 }}
               >
                 {/* Row 1: icon + title + salary */}
@@ -398,14 +398,14 @@ export function CareerScreen() {
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{ fontWeight: 700, fontSize: 15, color: 'var(--color-text)', marginBottom: 1 }}>{job.title}</p>
                     {isCurrent && (
-                      <span style={{ fontSize: 10, fontWeight: 700, color: '#4ade80', background: 'rgba(34,197,94,0.12)', padding: '1px 7px', borderRadius: 99, border: '1px solid rgba(34,197,94,0.25)' }}>
+                      <span style={{ fontSize: 10, fontWeight: 700, color: '#A9D18A', background: 'rgba(156,199,122,0.12)', padding: '1px 7px', borderRadius: 99, border: '1px solid rgba(156,199,122,0.25)' }}>
                         ✅ Lavoro attuale
                       </span>
                     )}
                   </div>
                   {/* Salary chip */}
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <p style={{ color: '#18D39E', fontSize: 15, fontWeight: 800, lineHeight: 1 }}>
+                    <p style={{ color: '#9CC77A', fontSize: 15, fontWeight: 800, lineHeight: 1 }}>
                       {formatSalary(job.salaryMin)}
                     </p>
                     <p style={{ fontSize: 10, color: 'var(--text-faint)', marginTop: 2 }}>
@@ -452,8 +452,8 @@ export function CareerScreen() {
                         <span key={key} style={{
                           fontSize: 10, padding: '2px 8px', borderRadius: 99,
                           background: isStrong ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.05)',
-                          color: isStrong ? '#4ade80' : 'var(--color-text-secondary)',
-                          border: `1px solid ${isStrong ? 'rgba(34,197,94,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                          color: isStrong ? '#A9D18A' : 'var(--color-text-secondary)',
+                          border: `1px solid ${isStrong ? 'rgba(156,199,122,0.3)' : 'rgba(255,255,255,0.08)'}`,
                           fontWeight: isStrong ? 600 : 400,
                         }}>
                           {emoji} {label}{val > 0 ? ` ${val}` : ''}
@@ -463,8 +463,8 @@ export function CareerScreen() {
                     {getCategorySkillBonus(job.category, state.skills) >= 0.06 && (
                       <span style={{
                         fontSize: 10, padding: '2px 8px', borderRadius: 99,
-                        background: 'rgba(124,92,255,0.15)', color: '#a78bfa',
-                        border: '1px solid rgba(124,92,255,0.3)', fontWeight: 700,
+                        background: 'rgba(52,137,125,0.15)', color: '#8CCFC4',
+                        border: '1px solid rgba(52,137,125,0.3)', fontWeight: 700,
                       }}>
                         ⚡ Skill boost attivo
                       </span>
@@ -481,7 +481,7 @@ export function CareerScreen() {
                       width: '100%', padding: '10px 0', borderRadius: 12,
                       background: 'linear-gradient(135deg, var(--primary) 0%, var(--primary-strong) 100%)',
                       color: '#fff', fontSize: 14, fontWeight: 700, border: 'none', cursor: 'pointer',
-                      boxShadow: '0 4px 16px rgba(124,92,255,0.3)',
+                      boxShadow: '0 4px 16px rgba(52,137,125,0.3)',
                       letterSpacing: 0.3,
                     }}
                   >
@@ -571,12 +571,12 @@ export function CareerScreen() {
                           <span>Affinità</span><span>{colleague.affection}/100</span>
                         </div>
                         <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${colleague.affection}%`, background: '#22c55e', borderRadius: 4, transition: 'width 0.3s' }} />
+                          <div style={{ height: '100%', width: `${colleague.affection}%`, background: '#9CC77A', borderRadius: 4, transition: 'width 0.3s' }} />
                         </div>
                       </div>
 
                       {isPromoted ? (
-                        <p style={{ fontSize: 12, color: '#4ade80', marginBottom: 8 }}>
+                        <p style={{ fontSize: 12, color: '#A9D18A', marginBottom: 8 }}>
                           ✅ {colleague.name} è diventato/a tuo amico/a!
                         </p>
                       ) : (

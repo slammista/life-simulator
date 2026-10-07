@@ -24,7 +24,7 @@ export function HealthScreen() {
   const handleTreat = (id: string) => { const r = treatDisease(id); flash(r.message, r.success) }
 
   const severityColor = (s: number) =>
-    s >= 4 ? '#ef4444' : s >= 3 ? '#f97316' : s >= 2 ? '#eab308' : '#10b981'
+    s >= 4 ? '#ef4444' : s >= 3 ? '#f97316' : s >= 2 ? '#eab308' : '#9CC77A'
 
   const fitnessLabel = health.fitnessLevel >= 80 ? 'Atleta' : health.fitnessLevel >= 60 ? 'In forma' : health.fitnessLevel >= 40 ? 'Sedentario' : health.fitnessLevel >= 20 ? 'Scarsa' : 'Pessima'
   const traumas = health.traumas ?? []
@@ -38,9 +38,9 @@ export function HealthScreen() {
       {feedback && (
         <div style={{
           borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          background: feedback.ok ? 'rgba(156,199,122,0.15)' : 'rgba(239,68,68,0.15)',
+          color: feedback.ok ? '#BFDDA6' : '#fca5a5',
+          border: `1px solid ${feedback.ok ? 'rgba(156,199,122,0.3)' : 'rgba(239,68,68,0.3)'}`,
         }}>
           {feedback.msg}
         </div>
@@ -50,8 +50,8 @@ export function HealthScreen() {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
         {[
           { label: 'Salute', val: stats.health, color: '#e94560', emoji: '❤️' },
-          { label: 'Mente', val: stats.mentalHealth, color: '#8b5cf6', emoji: '🧠' },
-          { label: 'Energia', val: stats.energy, color: '#10b981', emoji: '⚡' },
+          { label: 'Mente', val: stats.mentalHealth, color: '#34897D', emoji: '🧠' },
+          { label: 'Energia', val: stats.energy, color: '#9CC77A', emoji: '⚡' },
           { label: 'Fitness', val: health.fitnessLevel, color: '#f59e0b', emoji: '💪', label2: fitnessLabel },
         ].map(({ label, val, color, emoji, label2 }) => (
           <div key={label} className="card" style={{ padding: 12 }}>
@@ -104,12 +104,12 @@ export function HealthScreen() {
           className="tap-scale"
           style={{
             width: '100%', padding: '14px', borderRadius: 14, cursor: 'pointer', textAlign: 'left',
-            background: 'linear-gradient(135deg, rgba(99,102,241,0.1) 0%, var(--bg-card) 70%)',
-            border: '1px solid rgba(99,102,241,0.22)',
+            background: 'linear-gradient(135deg, rgba(52,137,125,0.1) 0%, var(--bg-card) 70%)',
+            border: '1px solid rgba(52,137,125,0.22)',
             display: 'flex', gap: 12, alignItems: 'center',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(99,102,241,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(52,137,125,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
             🏥
           </div>
           <div style={{ flex: 1 }}>
@@ -119,8 +119,8 @@ export function HealthScreen() {
             </p>
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#a5b4fc' }}>Diagnosi</p>
-            <p style={{ fontSize: 10, color: nation?.healthcarePublic ? '#86efac' : 'var(--text-faint)' }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#8CCFC4' }}>Diagnosi</p>
+            <p style={{ fontSize: 10, color: nation?.healthcarePublic ? '#BFDDA6' : 'var(--text-faint)' }}>
               {nation?.healthcarePublic ? 'Gratis' : '€120'}
             </p>
           </div>
@@ -148,7 +148,7 @@ export function HealthScreen() {
           </div>
           <div style={{ textAlign: 'right', flexShrink: 0 }}>
             <p style={{ fontSize: 13, fontWeight: 700, color: '#c4b5fd' }}>+Mente</p>
-            <p style={{ fontSize: 10, color: nation?.healthcarePublic ? '#86efac' : 'var(--text-faint)' }}>
+            <p style={{ fontSize: 10, color: nation?.healthcarePublic ? '#BFDDA6' : 'var(--text-faint)' }}>
               {nation?.healthcarePublic ? '€40' : '€180'}
             </p>
           </div>
@@ -170,7 +170,7 @@ export function HealthScreen() {
           <p style={{ fontSize: 16, fontWeight: 700, color: '#c4b5fd' }}>{resilience}/100</p>
         </div>
         <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
-          <div style={{ height: '100%', width: `${resilience}%`, background: '#8b5cf6', borderRadius: 4 }} />
+          <div style={{ height: '100%', width: `${resilience}%`, background: '#34897D', borderRadius: 4 }} />
         </div>
         {traumas.length > 0 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 12 }}>
@@ -178,12 +178,12 @@ export function HealthScreen() {
               <div key={trauma.id} style={{
                 padding: '8px 10px',
                 borderRadius: 10,
-                background: trauma.resolved ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)',
-                border: `1px solid ${trauma.resolved ? 'rgba(34,197,94,0.18)' : 'rgba(239,68,68,0.18)'}`,
+                background: trauma.resolved ? 'rgba(156,199,122,0.08)' : 'rgba(239,68,68,0.08)',
+                border: `1px solid ${trauma.resolved ? 'rgba(156,199,122,0.18)' : 'rgba(239,68,68,0.18)'}`,
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
                   <p style={{ fontSize: 12, fontWeight: 600 }}>{trauma.description}</p>
-                  <span style={{ fontSize: 11, color: trauma.resolved ? '#86efac' : '#fca5a5', flexShrink: 0 }}>
+                  <span style={{ fontSize: 11, color: trauma.resolved ? '#BFDDA6' : '#fca5a5', flexShrink: 0 }}>
                     {trauma.resolved ? 'Risolto' : `${trauma.intensity}%`}
                   </span>
                 </div>
@@ -226,7 +226,7 @@ export function HealthScreen() {
                     Livello {disease.severity}/5
                   </span>
                   {disease.isTreated && (
-                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(34,197,94,0.15)', color: '#86efac' }}>In trattamento</span>
+                    <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(156,199,122,0.15)', color: '#BFDDA6' }}>In trattamento</span>
                   )}
                 </div>
               </div>

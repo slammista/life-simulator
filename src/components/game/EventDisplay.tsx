@@ -16,18 +16,20 @@ export function EventDisplay() {
   if (!currentEvent) {
     return (
       <div style={{ margin: '12px', textAlign: 'center', padding: '20px 16px' }}>
-        <div style={{ fontSize: 32, marginBottom: 8 }}>🎮</div>
+        <p style={{ color: 'var(--color-text)', fontSize: 18, fontWeight: 600, letterSpacing: '-0.01em', marginBottom: 6 }}>
+          Un altro anno ti aspetta.
+        </p>
         <p style={{ color: 'var(--color-text-secondary)', fontSize: 13, lineHeight: 1.6 }}>
-          Premi <strong style={{ color: 'var(--primary)', fontWeight: 700 }}>+1 ETÀ</strong> per avanzare di un anno e far succedere qualcosa.
+          Tocca <strong style={{ color: 'var(--color-text)', fontWeight: 600 }}>+1 ETÀ</strong> quando sei pronto.
         </p>
       </div>
     )
   }
 
   const rarityConfig = {
-    common:    { label: 'COMUNE',      bg: 'rgba(255,255,255,0.06)',   color: '#9DA6BA', glow: 'none' },
-    uncommon:  { label: 'NON COMUNE',  bg: 'rgba(24,211,158,0.12)',    color: '#18D39E', glow: '0 0 20px rgba(24,211,158,0.2)' },
-    rare:      { label: 'RARO',        bg: 'rgba(124,92,255,0.14)',    color: '#7C5CFF', glow: '0 0 24px rgba(124,92,255,0.25)' },
+    common:    { label: 'COMUNE',      bg: 'rgba(255,255,255,0.06)',   color: '#9AA6A1', glow: 'none' },
+    uncommon:  { label: 'NON COMUNE',  bg: 'rgba(156,199,122,0.12)',    color: '#9CC77A', glow: '0 0 20px rgba(156,199,122,0.2)' },
+    rare:      { label: 'RARO',        bg: 'rgba(52,137,125,0.14)',    color: '#34897D', glow: '0 0 24px rgba(52,137,125,0.25)' },
     epic:      { label: 'EPICO',       bg: 'rgba(236,72,153,0.14)',    color: '#ec4899', glow: '0 0 32px rgba(236,72,153,0.3)' },
     legendary: { label: 'LEGGENDARIO', bg: 'rgba(255,176,32,0.14)',    color: '#FFB020', glow: '0 0 40px rgba(255,176,32,0.35)' },
   }
@@ -89,7 +91,7 @@ export function EventDisplay() {
             height: 3, borderRadius: '8px 8px 0 0', marginBottom: 12,
             background: currentEvent.rarity === 'legendary'
               ? 'linear-gradient(90deg, #FFB020, #ff6b6b, #FFB020)'
-              : 'linear-gradient(90deg, #ec4899, #a855f7, #ec4899)',
+              : 'linear-gradient(90deg, #ec4899, #3F9B8D, #ec4899)',
             backgroundSize: '200% 100%',
             animation: 'shimmer 2s linear infinite',
           }} />
@@ -140,7 +142,7 @@ export function EventDisplay() {
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 padding: '12px 14px', borderRadius: 'var(--radius-md)',
                 background: i === 0 ? 'var(--primary-soft)' : 'rgba(255,255,255,0.05)',
-                border: `1px solid ${i === 0 ? 'rgba(124,92,255,0.3)' : 'var(--border-soft)'}`,
+                border: `1px solid ${i === 0 ? 'rgba(52,137,125,0.3)' : 'var(--border-soft)'}`,
                 color: 'var(--color-text)', fontSize: 13, fontWeight: 500,
                 cursor: 'pointer', textAlign: 'left', width: '100%',
                 transition: 'background var(--transition-fast), border-color var(--transition-fast)',

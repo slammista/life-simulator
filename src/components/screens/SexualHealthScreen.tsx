@@ -65,7 +65,7 @@ export default function SexualHealthScreen() {
               </div>
               {sti.isCurable && (
                 <button onClick={() => { const r = treatSTI(sti.type as STIType); setLastMsg(r.message) }}
-                  style={{ padding: '4px 12px', borderRadius: 8, fontSize: 11, border: 'none', cursor: 'pointer', background: '#10b981', color: '#fff' }}>
+                  style={{ padding: '4px 12px', borderRadius: 8, fontSize: 11, border: 'none', cursor: 'pointer', background: '#9CC77A', color: '#fff' }}>
                   Cura
                 </button>
               )}
@@ -133,7 +133,7 @@ export default function SexualHealthScreen() {
                 style={{
                   padding: '8px 12px', borderRadius: 8, fontSize: 12, border: '1px solid',
                   borderColor: isActive ? 'var(--color-cta)' : 'rgba(255,255,255,0.1)',
-                  background: isActive ? 'rgba(99,102,241,0.2)' : 'rgba(255,255,255,0.04)',
+                  background: isActive ? 'rgba(52,137,125,0.2)' : 'rgba(255,255,255,0.04)',
                   color: 'var(--color-text)', cursor: 'pointer', textAlign: 'left',
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
                 }}>

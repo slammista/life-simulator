@@ -12,13 +12,13 @@ const LOCATION_CONFIG: Array<{
   color: string
 }> = [
   { id: 'bar',          label: 'Bar',          emoji: '🍺', description: 'Una birra in compagnia. Facile per fare conoscenze casuali.', skillHint: 'Socialità +1',      color: 'rgba(251,191,36,0.12)' },
-  { id: 'quartiere',    label: 'Quartiere',    emoji: '🏘️', description: 'Una passeggiata nel vicinato. Incontri casuali nel quotidiano.', skillHint: 'Socialità +1',   color: 'rgba(34,197,94,0.1)' },
+  { id: 'quartiere',    label: 'Quartiere',    emoji: '🏘️', description: 'Una passeggiata nel vicinato. Incontri casuali nel quotidiano.', skillHint: 'Socialità +1',   color: 'rgba(156,199,122,0.1)' },
   { id: 'palestra',     label: 'Palestra',     emoji: '💪', description: 'Workout e socialità. Chi si allena insieme si conosce meglio.', skillHint: 'Atletica +2',     color: 'rgba(239,68,68,0.1)' },
-  { id: 'festa',        label: 'Festa',        emoji: '🎉', description: 'Musica, gente nuova e flirt possibili. Alta energia.', skillHint: 'Socialità +2',              color: 'rgba(168,85,247,0.12)' },
+  { id: 'festa',        label: 'Festa',        emoji: '🎉', description: 'Musica, gente nuova e flirt possibili. Alta energia.', skillHint: 'Socialità +2',              color: 'rgba(52,137,125,0.12)' },
   { id: 'app_dating',   label: 'App Dating',   emoji: '📱', description: 'Match digitali. Più probabilità di incontri romantici.', skillHint: 'Carisma +1',            color: 'rgba(244,114,182,0.12)' },
   { id: 'evento',       label: 'Evento',       emoji: '🎭', description: 'Festival, concerti, mercati. Persone con interessi simili.', skillHint: 'Creatività +1',      color: 'rgba(96,165,250,0.12)' },
   { id: 'volontariato', label: 'Volontariato', emoji: '🤝', description: 'Aiutare gli altri. Incontri persone genuine e con valori.', skillHint: 'Karma +2 · Carisma +1', color: 'rgba(16,185,129,0.12)' },
-  { id: 'club',         label: 'Club / Hobby', emoji: '🎸', description: 'Un club, gruppo o hobby condiviso. Legami duraturi.', skillHint: 'Creatività +1 · Musica +1', color: 'rgba(99,102,241,0.12)' },
+  { id: 'club',         label: 'Club / Hobby', emoji: '🎸', description: 'Un club, gruppo o hobby condiviso. Legami duraturi.', skillHint: 'Creatività +1 · Musica +1', color: 'rgba(52,137,125,0.12)' },
 ]
 
 export function SocializeScreen() {
@@ -59,9 +59,9 @@ export function SocializeScreen() {
       {feedback && (
         <div style={{
           borderRadius: 12, padding: '10px 14px', marginBottom: 14, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(148,163,184,0.1)',
-          color: feedback.ok ? '#86efac' : '#94a3b8',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(148,163,184,0.2)'}`,
+          background: feedback.ok ? 'rgba(156,199,122,0.15)' : 'rgba(148,163,184,0.1)',
+          color: feedback.ok ? '#BFDDA6' : '#94a3b8',
+          border: `1px solid ${feedback.ok ? 'rgba(156,199,122,0.3)' : 'rgba(148,163,184,0.2)'}`,
         }}>
           {feedback.msg}
         </div>
@@ -79,9 +79,9 @@ export function SocializeScreen() {
         <p style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Le tue abilità sociali</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {[
-            { key: 'socialSkill', label: 'Socialità', color: '#a5b4fc' },
+            { key: 'socialSkill', label: 'Socialità', color: '#8CCFC4' },
             { key: 'charisma', label: 'Carisma', color: '#f472b6' },
-            { key: 'athleticism', label: 'Atletica', color: '#4ade80' },
+            { key: 'athleticism', label: 'Atletica', color: '#A9D18A' },
             { key: 'creativity', label: 'Creatività', color: '#fbbf24' },
           ].map(({ key, label, color }) => (
             <div key={key} style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 11 }}>
@@ -151,7 +151,7 @@ export function SocializeScreen() {
         })}
       </div>
 
-      <div style={{ marginTop: 16, borderRadius: 12, padding: '10px 14px', fontSize: 11, background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', color: '#a5b4fc' }}>
+      <div style={{ marginTop: 16, borderRadius: 12, padding: '10px 14px', fontSize: 11, background: 'rgba(52,137,125,0.06)', border: '1px solid rgba(52,137,125,0.15)', color: '#8CCFC4' }}>
         💡 Le persone incontrate qui appaiono nelle Relazioni. Colleghi e compagni di scuola si trovano nei tab Carriera e Istruzione.
       </div>
     </div>

@@ -27,7 +27,7 @@ function ResultBadge({ won }: { won: boolean }) {
     <div style={{
       padding: '10px 16px', borderRadius: 10, textAlign: 'center', marginTop: 10, fontSize: 15, fontWeight: 700,
       background: won ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.1)',
-      color: won ? '#10b981' : '#ef4444',
+      color: won ? '#9CC77A' : '#ef4444',
     }}>
       {won ? '🏆 HAI VINTO!' : '💀 HAI PERSO!'}
     </div>
@@ -86,7 +86,7 @@ function HackingMinigame({ onFinish }: { onFinish: (won: boolean) => void }) {
             <div style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>
               {'🟩'.repeat(g.bulls)}{'🟨'.repeat(g.cows)}{'⬜'.repeat(4 - g.bulls - g.cows)}
             </div>
-            {g.bulls === 4 && <span style={{ color: '#10b981' }}>✅</span>}
+            {g.bulls === 4 && <span style={{ color: '#9CC77A' }}>✅</span>}
           </div>
         ))}
       </div>
@@ -98,9 +98,9 @@ function HackingMinigame({ onFinish }: { onFinish: (won: boolean) => void }) {
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} style={{
                 width: 36, height: 36, borderRadius: 8, border: '2px solid',
-                borderColor: i < current.length ? '#6366f1' : 'rgba(255,255,255,0.2)',
+                borderColor: i < current.length ? '#34897D' : 'rgba(255,255,255,0.2)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: 18,
-                background: i < current.length ? 'rgba(99,102,241,0.15)' : 'transparent',
+                background: i < current.length ? 'rgba(52,137,125,0.15)' : 'transparent',
               }}>
                 {current[i] ?? ''}
               </div>
@@ -117,7 +117,7 @@ function HackingMinigame({ onFinish }: { onFinish: (won: boolean) => void }) {
 
           <div style={{ display: 'flex', gap: 8 }}>
             <button onClick={removeDigit} style={{ ...btn('rgba(239,68,68,0.3)'), flex: 1 }}>← Cancella</button>
-            <button onClick={submitGuess} disabled={current.length < 4} style={{ ...btn('#6366f1', current.length < 4), flex: 2 }}>
+            <button onClick={submitGuess} disabled={current.length < 4} style={{ ...btn('#34897D', current.length < 4), flex: 2 }}>
               Verifica ({MAX_ATTEMPTS - guesses.length} rimasti)
             </button>
           </div>
@@ -179,7 +179,7 @@ function DrivingMinigame({ onFinish }: { onFinish: (won: boolean) => void }) {
 
   useEffect(() => () => cancelAnimationFrame(rafRef.current), [])
 
-  const zoneColor = progress >= 78 && progress <= 92 ? '#10b981' : progress >= 60 ? '#f59e0b' : '#ef4444'
+  const zoneColor = progress >= 78 && progress <= 92 ? '#9CC77A' : progress >= 60 ? '#f59e0b' : '#ef4444'
 
   return (
     <div>
@@ -204,15 +204,15 @@ function DrivingMinigame({ onFinish }: { onFinish: (won: boolean) => void }) {
       <div style={{ display: 'flex', gap: 6, fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 16 }}>
         <span style={{ color: '#ef4444' }}>■ Bocciato (0-59)</span>
         <span style={{ color: '#f59e0b' }}>■ Sufficiente (60-77)</span>
-        <span style={{ color: '#10b981' }}>■ Perfetto (78-92)</span>
+        <span style={{ color: '#9CC77A' }}>■ Perfetto (78-92)</span>
       </div>
 
       {!result && (
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={startTest} disabled={running} style={btn('#6366f1', running)}>
+          <button onClick={startTest} disabled={running} style={btn('#34897D', running)}>
             {running ? 'In corso...' : '▶ Avvia test'}
           </button>
-          <button onClick={stop} disabled={!running} style={{ ...btn('#10b981', !running), flex: 1, fontSize: 16 }}>
+          <button onClick={stop} disabled={!running} style={{ ...btn('#9CC77A', !running), flex: 1, fontSize: 16 }}>
             🛑 STOP
           </button>
         </div>
@@ -271,7 +271,7 @@ function PrisonMinigame({ onFinish }: { onFinish: (won: boolean) => void }) {
       {/* Progress */}
       <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
         {PRISON_NODES.map((_, i) => (
-          <div key={i} style={{ flex: 1, height: 6, borderRadius: 3, background: i < step ? '#10b981' : i === step && !done ? '#6366f1' : 'rgba(255,255,255,0.1)' }} />
+          <div key={i} style={{ flex: 1, height: 6, borderRadius: 3, background: i < step ? '#9CC77A' : i === step && !done ? '#34897D' : 'rgba(255,255,255,0.1)' }} />
         ))}
       </div>
 
@@ -286,7 +286,7 @@ function PrisonMinigame({ onFinish }: { onFinish: (won: boolean) => void }) {
 
       {!done && (
         <div>
-          <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(99,102,241,0.08)', marginBottom: 12 }}>
+          <div style={{ padding: '12px 14px', borderRadius: 10, background: 'rgba(52,137,125,0.08)', marginBottom: 12 }}>
             <p style={{ fontSize: 13, fontWeight: 600, marginBottom: 4 }}>Fase {step + 1} / {PRISON_NODES.length}</p>
             <p style={{ fontSize: 13, color: 'var(--color-text-secondary)' }}>{node.description}</p>
           </div>
@@ -294,7 +294,7 @@ function PrisonMinigame({ onFinish }: { onFinish: (won: boolean) => void }) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {node.options.map((opt, i) => (
               <button key={i} onClick={() => choose(opt.outcome, opt.label)} style={{
-                ...btn(i === 0 ? '#6366f1' : i === 1 ? '#7c3aed' : '#374151'),
+                ...btn(i === 0 ? '#34897D' : i === 1 ? '#7c3aed' : '#374151'),
                 textAlign: 'left', padding: '10px 14px',
               }}>
                 {opt.label}
@@ -370,7 +370,7 @@ export function MinigamesScreen() {
       check: hackCheck,
       stats: `${minigameStats.hackingWins}V/${minigameStats.hackingPlayed}G`,
       prize: '€200–€2000',
-      color: '#6366f1',
+      color: '#34897D',
     },
     {
       id: 'driving' as const,
@@ -415,7 +415,7 @@ export function MinigamesScreen() {
               </div>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontSize: 12, color: '#10b981' }}>💰 Premio: {g.prize}</span>
+                <span style={{ fontSize: 12, color: '#9CC77A' }}>💰 Premio: {g.prize}</span>
                 {g.check.ok
                   ? <button onClick={() => setActiveGame(g.id)} style={btn(g.color)}>Gioca</button>
                   : <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', fontStyle: 'italic' }}>{g.check.reason}</span>
@@ -441,7 +441,7 @@ export function MinigamesScreen() {
               ].map(s => (
                 <div key={s.label} style={{ textAlign: 'center' }}>
                   <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>{s.label}</p>
-                  <p style={{ fontSize: 16, fontWeight: 700, color: '#6366f1' }}>{s.w}</p>
+                  <p style={{ fontSize: 16, fontWeight: 700, color: '#34897D' }}>{s.w}</p>
                   <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>/ {s.p} giocate</p>
                 </div>
               ))}
@@ -476,7 +476,7 @@ export function MinigamesScreen() {
       {result && (
         <div style={{ ...cardStyle, textAlign: 'center', padding: 24 }}>
           <p style={{ fontSize: 48, marginBottom: 8 }}>{result.won ? '🏆' : '💀'}</p>
-          <p style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, color: result.won ? '#10b981' : '#ef4444' }}>
+          <p style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, color: result.won ? '#9CC77A' : '#ef4444' }}>
             {result.msg}
           </p>
           {result.won && result.money > 0 && (
@@ -484,7 +484,7 @@ export function MinigamesScreen() {
               +€{result.money.toLocaleString()} aggiunti al tuo saldo
             </p>
           )}
-          <button onClick={resetGame} style={{ ...btn('#6366f1'), marginTop: 8 }}>← Torna ai minigiochi</button>
+          <button onClick={resetGame} style={{ ...btn('#34897D'), marginTop: 8 }}>← Torna ai minigiochi</button>
         </div>
       )}
     </div>

@@ -60,7 +60,7 @@ export default function RibbonsScreen() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{
             fontSize: 32, fontWeight: 800,
-            color: creditReport.score >= 740 ? '#4ade80' : creditReport.score >= 670 ? '#fbbf24' : '#f87171',
+            color: creditReport.score >= 740 ? '#A9D18A' : creditReport.score >= 670 ? '#fbbf24' : '#f87171',
           }}>
             {creditReport.score}
           </div>
@@ -81,7 +81,7 @@ export default function RibbonsScreen() {
               <div style={{
                 height: '100%', borderRadius: 4,
                 width: `${((creditReport.score - 300) / 550) * 100}%`,
-                background: creditReport.score >= 740 ? '#4ade80' : creditReport.score >= 670 ? '#fbbf24' : '#f87171',
+                background: creditReport.score >= 740 ? '#A9D18A' : creditReport.score >= 670 ? '#fbbf24' : '#f87171',
               }} />
             </div>
             <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 10, color: '#64748b', marginTop: 2 }}>
@@ -96,7 +96,7 @@ export default function RibbonsScreen() {
         <StatBadge label="Modalità" value={state.settings.mode.toUpperCase()} color={state.settings.mode === 'hard' ? '#f87171' : '#60a5fa'} />
         {state.settings.ironMan && <StatBadge label="Iron Man" value="☠️ ON" color="#f87171" />}
         <StatBadge label="Medaglie" value={`${totalUnlocked}/${totalRibbons}`} color="#fbbf24" />
-        <StatBadge label="Challenge pts" value={state.challengeEngine.totalPoints.toLocaleString()} color="#a855f7" />
+        <StatBadge label="Challenge pts" value={state.challengeEngine.totalPoints.toLocaleString()} color="#3F9B8D" />
       </div>
 
       {/* Tier breakdown */}
@@ -131,7 +131,7 @@ export default function RibbonsScreen() {
           onClick={() => setShowOnlyUnlocked(v => !v)}
           style={{
             padding: '3px 9px', borderRadius: 20, border: 'none', cursor: 'pointer',
-            background: showOnlyUnlocked ? '#4ade80' : 'rgba(255,255,255,0.08)',
+            background: showOnlyUnlocked ? '#A9D18A' : 'rgba(255,255,255,0.08)',
             color: showOnlyUnlocked ? '#000' : '#e2e8f0', fontSize: 11,
           }}
         >
@@ -169,7 +169,7 @@ export default function RibbonsScreen() {
                 {isUnlocked ? def.description : '???'}
               </div>
               {isUnlocked && ribbonData?.unlockedYear && (
-                <div style={{ fontSize: 9, color: '#4ade80', marginTop: 4 }}>
+                <div style={{ fontSize: 9, color: '#A9D18A', marginTop: 4 }}>
                   ✅ Anno {ribbonData.unlockedYear}
                 </div>
               )}

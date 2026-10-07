@@ -94,10 +94,10 @@ export function TravelScreen() {
                   <span style={{ fontSize: 14, fontWeight: 600, marginLeft: 6 }}>{dest.name}</span>
                   <span style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginLeft: 6 }}>{dest.country}</span>
                   {alreadyVisited && (
-                    <span style={{ fontSize: 10, color: '#4ade80', marginLeft: 6 }}>✓ Visitata</span>
+                    <span style={{ fontSize: 10, color: '#A9D18A', marginLeft: 6 }}>✓ Visitata</span>
                   )}
                 </div>
-                <span style={{ fontSize: 13, fontWeight: 700, color: canAfford ? '#4ade80' : '#ef4444' }}>
+                <span style={{ fontSize: 13, fontWeight: 700, color: canAfford ? '#A9D18A' : '#ef4444' }}>
                   €{cost.toLocaleString()}
                 </span>
               </div>

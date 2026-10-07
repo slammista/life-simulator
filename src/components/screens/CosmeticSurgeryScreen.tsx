@@ -34,7 +34,7 @@ export default function CosmeticSurgeryScreen() {
   }
 
   const tierColor = (canDo: boolean) =>
-    canDo ? '#4ade80' : '#6b7280'
+    canDo ? '#A9D18A' : '#6b7280'
 
   return (
     <div style={{ padding: '12px', maxWidth: 600, margin: '0 auto' }}>
@@ -50,7 +50,7 @@ export default function CosmeticSurgeryScreen() {
         <StatBox
           label="Complicazione"
           value={surgeryState.hasActiveComplication ? '⚠️ Sì' : '✅ No'}
-          valueColor={surgeryState.hasActiveComplication ? '#f87171' : '#4ade80'}
+          valueColor={surgeryState.hasActiveComplication ? '#f87171' : '#A9D18A'}
         />
       </div>
 
@@ -59,8 +59,8 @@ export default function CosmeticSurgeryScreen() {
         <div style={{
           padding: '8px 12px', borderRadius: 8, marginBottom: 12,
           background: lastSuccess ? 'rgba(74,222,128,0.1)' : 'rgba(248,113,113,0.1)',
-          border: `1px solid ${lastSuccess ? '#4ade80' : '#f87171'}`,
-          color: lastSuccess ? '#4ade80' : '#f87171',
+          border: `1px solid ${lastSuccess ? '#A9D18A' : '#f87171'}`,
+          color: lastSuccess ? '#A9D18A' : '#f87171',
           fontSize: 13,
         }}>
           {lastMsg}
@@ -75,7 +75,7 @@ export default function CosmeticSurgeryScreen() {
             onClick={() => setFilter(cat)}
             style={{
               padding: '4px 10px', borderRadius: 20, border: 'none', cursor: 'pointer',
-              background: filter === cat ? '#a855f7' : 'rgba(255,255,255,0.08)',
+              background: filter === cat ? '#3F9B8D' : 'rgba(255,255,255,0.08)',
               color: '#e2e8f0', fontSize: 12,
             }}
           >
@@ -91,7 +91,7 @@ export default function CosmeticSurgeryScreen() {
             key={proc.id}
             style={{
               background: 'rgba(255,255,255,0.05)',
-              border: `1px solid ${canDo ? 'rgba(168,85,247,0.4)' : 'rgba(255,255,255,0.08)'}`,
+              border: `1px solid ${canDo ? 'rgba(52,137,125,0.4)' : 'rgba(255,255,255,0.08)'}`,
               borderRadius: 10, padding: '12px',
               opacity: canDo ? 1 : 0.65,
             }}
@@ -119,7 +119,7 @@ export default function CosmeticSurgeryScreen() {
                 disabled={!canDo}
                 style={{
                   padding: '6px 14px', borderRadius: 8, border: 'none',
-                  background: canDo ? '#a855f7' : 'rgba(255,255,255,0.08)',
+                  background: canDo ? '#3F9B8D' : 'rgba(255,255,255,0.08)',
                   color: tierColor(canDo), cursor: canDo ? 'pointer' : 'not-allowed',
                   fontSize: 12, fontWeight: 600, marginLeft: 8, whiteSpace: 'nowrap', flexShrink: 0,
                 }}

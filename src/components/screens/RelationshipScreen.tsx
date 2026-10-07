@@ -16,7 +16,7 @@ const STAGE_EMOJI: Record<string, string> = {
 
 const MOOD_LABELS: Record<NPCMood, { label: string; emoji: string; color: string }> = {
   neutrale: { label: 'Neutrale', emoji: '😐', color: '#94a3b8' },
-  felice: { label: 'Felice', emoji: '😊', color: '#86efac' },
+  felice: { label: 'Felice', emoji: '😊', color: '#BFDDA6' },
   triste: { label: 'Triste', emoji: '😢', color: '#93c5fd' },
   geloso: { label: 'Geloso', emoji: '😒', color: '#fbbf24' },
   arrabbiato: { label: 'Arrabbiato', emoji: '😠', color: '#fca5a5' },
@@ -54,7 +54,7 @@ const REL_TYPE_LABELS: Record<string, string> = {
 }
 
 const CHAIN_LABELS: Record<string, { label: string; color: string }> = {
-  chain_warmth: { label: 'Legame caldo', color: '#86efac' },
+  chain_warmth: { label: 'Legame caldo', color: '#BFDDA6' },
   chain_gratitude: { label: 'Gratitudine', color: '#facc15' },
   chain_repairing: { label: 'Riparazione', color: '#93c5fd' },
   chain_trust_decay: { label: 'Ferita aperta', color: '#fca5a5' },
@@ -232,15 +232,15 @@ export function RelationshipScreen() {
           {feedback && (
             <div style={{
               borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-              background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-              color: feedback.ok ? '#86efac' : '#fca5a5',
-              border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+              background: feedback.ok ? 'rgba(156,199,122,0.15)' : 'rgba(239,68,68,0.15)',
+              color: feedback.ok ? '#BFDDA6' : '#fca5a5',
+              border: `1px solid ${feedback.ok ? 'rgba(156,199,122,0.3)' : 'rgba(239,68,68,0.3)'}`,
             }}>
               {feedback.msg}
             </div>
           )}
 
-          <div style={{ borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 12, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.2)', color: '#a5b4fc' }}>
+          <div style={{ borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 12, background: 'rgba(52,137,125,0.08)', border: '1px solid rgba(52,137,125,0.2)', color: '#8CCFC4' }}>
             💡 Per incontrare nuove persone vai su <strong>Attività → Socializza</strong>. Colleghi e compagni emergono automaticamente da Lavoro e Scuola.
           </div>
 
@@ -355,7 +355,7 @@ function HistoricRelCard({ rel }: { rel: Relationship }) {
         <div style={{ marginTop: 10 }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 4, marginBottom: 8 }}>
             {[
-              { label: 'Fiducia', val: rel.trust, color: '#10b981' },
+              { label: 'Fiducia', val: rel.trust, color: '#9CC77A' },
               { label: 'Amore', val: rel.love, color: '#f43f5e' },
             ].map(({ label, val, color }) => (
               <div key={label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -376,8 +376,8 @@ function HistoricRelCard({ rel }: { rel: Relationship }) {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {rel.memoryLog.slice(0, 5).map(mem => {
                   const catColors: Record<string, string> = {
-                    romantic: '#f43f5e', family: '#f59e0b', friendship: '#10b981',
-                    professional: '#60a5fa', financial: '#a855f7', criminal: '#ef4444',
+                    romantic: '#f43f5e', family: '#f59e0b', friendship: '#9CC77A',
+                    professional: '#60a5fa', financial: '#3F9B8D', criminal: '#ef4444',
                   }
                   const color = catColors[mem.category] ?? '#94a3b8'
                   return (
@@ -416,7 +416,7 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
 
   // Determine dominant affection value for the always-visible bar
   const affection = Math.round((rel.trust * 0.5 + rel.love * 0.35 + rel.respect * 0.15))
-  const affectionColor = affection >= 70 ? '#10b981' : affection >= 40 ? '#f59e0b' : '#f43f5e'
+  const affectionColor = affection >= 70 ? '#9CC77A' : affection >= 40 ? '#f59e0b' : '#f43f5e'
 
   const isRomantic = ['partner', 'spouse'].includes(rel.type)
   const isFamilyType = ['parent', 'sibling', 'child'].includes(rel.type)
@@ -427,8 +427,8 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
       <div className="rel-card-header" onClick={onToggle}>
         {/* NPC avatar circle */}
         <div className="rel-card-avatar" style={{
-          borderColor: isRomantic ? 'rgba(244,63,94,0.4)' : isFamilyType ? 'rgba(251,191,36,0.4)' : 'rgba(124,92,255,0.25)',
-          background: isRomantic ? 'rgba(244,63,94,0.12)' : isFamilyType ? 'rgba(251,191,36,0.1)' : 'rgba(124,92,255,0.1)',
+          borderColor: isRomantic ? 'rgba(244,63,94,0.4)' : isFamilyType ? 'rgba(251,191,36,0.4)' : 'rgba(52,137,125,0.25)',
+          background: isRomantic ? 'rgba(244,63,94,0.12)' : isFamilyType ? 'rgba(251,191,36,0.1)' : 'rgba(52,137,125,0.1)',
         }}>
           {rel.emoji}
         </div>
@@ -490,10 +490,10 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
           {/* Detailed stat bars */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 5, marginBottom: 12 }}>
             {[
-              { label: 'Fiducia', val: rel.trust, color: '#10b981' },
+              { label: 'Fiducia', val: rel.trust, color: '#9CC77A' },
               { label: 'Amore', val: rel.love, color: '#f43f5e' },
               { label: 'Attrazione', val: rel.attraction, color: '#f59e0b' },
-              { label: 'Rispetto', val: rel.respect, color: '#8b5cf6' },
+              { label: 'Rispetto', val: rel.respect, color: '#34897D' },
               { label: 'Gelosia', val: rel.jealousy, color: '#ef4444' },
             ].map(({ label, val, color }) => (
               <div key={label} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -518,8 +518,8 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
                   className="tap-scale"
                   style={{
                     padding: '6px 11px', borderRadius: 10, fontSize: 12, fontWeight: 600, cursor: 'pointer',
-                    border: `1px solid ${isDanger ? 'rgba(239,68,68,0.25)' : isDark ? 'rgba(168,85,247,0.25)' : 'rgba(255,255,255,0.1)'}`,
-                    background: isDanger ? 'rgba(239,68,68,0.12)' : isDark ? 'rgba(168,85,247,0.12)' : 'rgba(255,255,255,0.07)',
+                    border: `1px solid ${isDanger ? 'rgba(239,68,68,0.25)' : isDark ? 'rgba(52,137,125,0.25)' : 'rgba(255,255,255,0.1)'}`,
+                    background: isDanger ? 'rgba(239,68,68,0.12)' : isDark ? 'rgba(52,137,125,0.12)' : 'rgba(255,255,255,0.07)',
                     color: isDanger ? '#fca5a5' : isDark ? '#d8b4fe' : 'var(--color-text)',
                   }}
                 >
@@ -538,8 +538,8 @@ function RelCard({ rel, expanded, onToggle, onAction, playerAge }: {
               <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                 {rel.memoryLog.slice(0, 4).map(mem => {
                   const catColors: Record<string, string> = {
-                    romantic: '#f43f5e', family: '#f59e0b', friendship: '#10b981',
-                    professional: '#60a5fa', financial: '#a855f7', criminal: '#ef4444',
+                    romantic: '#f43f5e', family: '#f59e0b', friendship: '#9CC77A',
+                    professional: '#60a5fa', financial: '#3F9B8D', criminal: '#ef4444',
                   }
                   const color = catColors[mem.category] ?? '#94a3b8'
                   return (

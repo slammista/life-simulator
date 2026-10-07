@@ -196,6 +196,7 @@ function App() {
         {activeTab === 'vita' && vitaSection === 'home' && (
           <div className="main-dashboard">
             <div className="event-panel">
+              <EventDisplay />
               <div style={{ padding: '8px 12px 0' }}>
                 <VitaWidgets
                   setActiveTab={setActiveTab}
@@ -205,7 +206,6 @@ function App() {
                   setRelazioniSub={setRelazioniSub}
                 />
               </div>
-              <EventDisplay />
             </div>
             <div className="event-log-panel"><EventLog /></div>
           </div>

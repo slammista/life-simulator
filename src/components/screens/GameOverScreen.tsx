@@ -121,8 +121,8 @@ export function GameOverScreen() {
 
         {/* Extra life via rewarded ad */}
         {!extraLifeUsed && deathType !== 'natural' && (
-          <div className="card" style={{ width: '100%', marginBottom: 16, border: '1px solid rgba(99,102,241,0.4)' }}>
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#a78bfa', marginBottom: 4 }}>💊 Seconda Possibilità</p>
+          <div className="card" style={{ width: '100%', marginBottom: 16, border: '1px solid rgba(52,137,125,0.4)' }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: '#8CCFC4', marginBottom: 4 }}>💊 Seconda Possibilità</p>
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 10 }}>
               Guarda un breve annuncio per tornare in vita con salute al 35%.
             </p>
@@ -168,9 +168,9 @@ export function GameOverScreen() {
           onClick={handleShare}
           style={{
             width: '100%', padding: '10px 0', borderRadius: 10, fontSize: 13, fontWeight: 600,
-            border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', marginBottom: 16,
-            background: shareDone ? 'rgba(16,185,129,0.15)' : 'rgba(99,102,241,0.1)',
-            color: shareDone ? '#10b981' : '#a78bfa',
+            border: '1px solid rgba(52,137,125,0.3)', cursor: 'pointer', marginBottom: 16,
+            background: shareDone ? 'rgba(16,185,129,0.15)' : 'rgba(52,137,125,0.1)',
+            color: shareDone ? '#9CC77A' : '#8CCFC4',
           }}
         >
           {shareDone ? '✅ Copiato negli appunti!' : '📤 Condividi il tuo risultato'}
@@ -227,7 +227,7 @@ export function GameOverScreen() {
               <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', textAlign: 'center' }}>Invio in corso...</p>
             )}
             {submitState === 'done' && (
-              <p style={{ fontSize: 13, color: '#10b981', textAlign: 'center' }}>✅ Punteggio pubblicato in classifica!</p>
+              <p style={{ fontSize: 13, color: '#9CC77A', textAlign: 'center' }}>✅ Punteggio pubblicato in classifica!</p>
             )}
             {submitState === 'error' && (
               <p style={{ fontSize: 12, color: '#ef4444' }}>❌ Errore. Vai in Profilo → Classifica per riprovare.</p>

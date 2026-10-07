@@ -6,10 +6,10 @@ import type { EducationLevel, SchoolAction, SchoolNPC, SchoolReputationStatus, N
 const TRAIT_CONFIG: Record<NPCPersonalityTrait, { emoji: string; color: string }> = {
   introverso:  { emoji: '🤫', color: '#94a3b8' },
   ambizioso:   { emoji: '🔥', color: '#f59e0b' },
-  geloso:      { emoji: '💚', color: '#22c55e' },
+  geloso:      { emoji: '💚', color: '#9CC77A' },
   generoso:    { emoji: '🤝', color: '#f472b6' },
   sensibile:   { emoji: '💙', color: '#60a5fa' },
-  sicuro:      { emoji: '😎', color: '#a78bfa' },
+  sicuro:      { emoji: '😎', color: '#8CCFC4' },
   avido:       { emoji: '💰', color: '#fbbf24' },
   leale:       { emoji: '🛡️', color: '#38bdf8' },
   empatico:    { emoji: '💫', color: '#ec4899' },
@@ -35,11 +35,11 @@ const SCHOOL_REP_CONFIG: Record<SchoolReputationStatus, { label: string; color: 
   invisibile:   { label: 'Invisibile',   color: '#94a3b8', bg: 'rgba(148,163,184,0.12)' },
   popolare:     { label: 'Popolare',     color: '#f472b6', bg: 'rgba(244,114,182,0.12)' },
   nerd:         { label: 'Nerd',         color: '#60a5fa', bg: 'rgba(96,165,250,0.12)' },
-  atleta:       { label: 'Atleta',       color: '#22c55e', bg: 'rgba(34,197,94,0.12)' },
+  atleta:       { label: 'Atleta',       color: '#9CC77A', bg: 'rgba(156,199,122,0.12)' },
   ribelle:      { label: 'Ribelle',      color: '#f97316', bg: 'rgba(249,115,22,0.12)' },
   problematico: { label: 'Problematico', color: '#ef4444', bg: 'rgba(239,68,68,0.12)' },
   leader:       { label: 'Leader',       color: '#f59e0b', bg: 'rgba(245,158,11,0.12)' },
-  artista:      { label: 'Artista',      color: '#a78bfa', bg: 'rgba(167,139,250,0.12)' },
+  artista:      { label: 'Artista',      color: '#8CCFC4', bg: 'rgba(167,139,250,0.12)' },
 }
 
 const SCHOOL_ACTIONS: Array<{ action: SchoolAction; label: string; emoji: string; profOnly?: boolean; studentOnly?: boolean }> = [
@@ -53,7 +53,7 @@ const SCHOOL_ACTIONS: Array<{ action: SchoolAction; label: string; emoji: string
 
 const STATUS_LABELS: Record<SchoolNPC['status'], { color: string; label: string }> = {
   neutral:  { color: '#94a3b8', label: 'Neutrale' },
-  friendly: { color: '#22c55e', label: 'Amichevole' },
+  friendly: { color: '#9CC77A', label: 'Amichevole' },
   tense:    { color: '#f59e0b', label: 'Teso' },
   hostile:  { color: '#ef4444', label: 'Ostile' },
 }
@@ -106,7 +106,7 @@ export function EducationScreen() {
     flash(r.message, r.success)
   }
 
-  const gpaColor = education.gpa >= 3.0 ? '#10b981' : education.gpa >= 2.0 ? '#f59e0b' : '#ef4444'
+  const gpaColor = education.gpa >= 3.0 ? '#9CC77A' : education.gpa >= 2.0 ? '#f59e0b' : '#ef4444'
 
   return (
     <div style={{ flex: 1, overflowY: 'auto', padding: 16, paddingBottom: 96 }}>
@@ -117,9 +117,9 @@ export function EducationScreen() {
       {feedback && (
         <div style={{
           borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          background: feedback.ok ? 'rgba(156,199,122,0.15)' : 'rgba(239,68,68,0.15)',
+          color: feedback.ok ? '#BFDDA6' : '#fca5a5',
+          border: `1px solid ${feedback.ok ? 'rgba(156,199,122,0.3)' : 'rgba(239,68,68,0.3)'}`,
         }}>
           {feedback.msg}
         </div>
@@ -156,7 +156,7 @@ export function EducationScreen() {
 
             <button
               onClick={handleStudy}
-              style={{ width: '100%', padding: '10px 0', borderRadius: 12, background: 'rgba(99,102,241,0.2)', color: '#a5b4fc', fontSize: 14, fontWeight: 600, border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer' }}
+              style={{ width: '100%', padding: '10px 0', borderRadius: 12, background: 'rgba(52,137,125,0.2)', color: '#8CCFC4', fontSize: 14, fontWeight: 600, border: '1px solid rgba(52,137,125,0.3)', cursor: 'pointer' }}
             >
               📖 Studia (+GPA & intelligenza)
             </button>
@@ -176,7 +176,7 @@ export function EducationScreen() {
           <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>Titoli conseguiti</p>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
             {education.completedLevels.map(lvl => (
-              <span key={lvl} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 99, background: 'rgba(34,197,94,0.15)', color: '#86efac', border: '1px solid rgba(34,197,94,0.2)' }}>
+              <span key={lvl} style={{ fontSize: 12, padding: '4px 10px', borderRadius: 99, background: 'rgba(156,199,122,0.15)', color: '#BFDDA6', border: '1px solid rgba(156,199,122,0.2)' }}>
                 {LEVEL_EMOJI[lvl]} {getEducationLabel(lvl)}
               </span>
             ))}
@@ -191,7 +191,7 @@ export function EducationScreen() {
 
       {/* Auto-school notice */}
       {['elementary', 'middle', 'highschool'].includes(education.currentLevel) && (
-        <div style={{ borderRadius: 10, padding: '8px 12px', marginBottom: 12, fontSize: 12, background: 'rgba(99,102,241,0.08)', border: '1px solid rgba(99,102,241,0.25)', color: '#a5b4fc' }}>
+        <div style={{ borderRadius: 10, padding: '8px 12px', marginBottom: 12, fontSize: 12, background: 'rgba(52,137,125,0.08)', border: '1px solid rgba(52,137,125,0.25)', color: '#8CCFC4' }}>
           📌 Sei automaticamente iscritto/a. La scuola obbligatoria non richiede iscrizione manuale.
         </div>
       )}
@@ -303,12 +303,12 @@ export function EducationScreen() {
                           <span>Affinità</span><span>{npc.affection}/100</span>
                         </div>
                         <div style={{ height: 4, background: 'rgba(255,255,255,0.1)', borderRadius: 4, overflow: 'hidden' }}>
-                          <div style={{ height: '100%', width: `${npc.affection}%`, background: '#22c55e', borderRadius: 4, transition: 'width 0.3s' }} />
+                          <div style={{ height: '100%', width: `${npc.affection}%`, background: '#9CC77A', borderRadius: 4, transition: 'width 0.3s' }} />
                         </div>
                       </div>
 
                       {isPromoted ? (
-                        <p style={{ fontSize: 12, color: '#4ade80', marginBottom: 8 }}>
+                        <p style={{ fontSize: 12, color: '#A9D18A', marginBottom: 8 }}>
                           ✅ {npc.name} è diventato/a tuo amico/a!
                         </p>
                       ) : npc.role === 'student' ? (
@@ -358,14 +358,14 @@ export function EducationScreen() {
               <div key={level} className="card" style={{
                 padding: 12,
                 opacity: (!check.ok && !isCurrent && !isCompleted) ? 0.6 : 1,
-                border: isCurrent ? '1px solid rgba(99,102,241,0.4)' : isCompleted ? '1px solid rgba(34,197,94,0.3)' : undefined,
+                border: isCurrent ? '1px solid rgba(52,137,125,0.4)' : isCompleted ? '1px solid rgba(156,199,122,0.3)' : undefined,
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <div>
                     <p style={{ fontWeight: 600, fontSize: 14 }}>{LEVEL_EMOJI[level]} {getEducationLabel(level)}</p>
                   </div>
-                  {isCompleted && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(34,197,94,0.15)', color: '#86efac' }}>✅ Completato</span>}
-                  {isCurrent && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(99,102,241,0.2)', color: '#a5b4fc' }}>📖 In corso</span>}
+                  {isCompleted && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(156,199,122,0.15)', color: '#BFDDA6' }}>✅ Completato</span>}
+                  {isCurrent && <span style={{ fontSize: 11, padding: '2px 8px', borderRadius: 99, background: 'rgba(52,137,125,0.2)', color: '#8CCFC4' }}>📖 In corso</span>}
                 </div>
                 {!check.ok && !isCurrent && !isCompleted && (
                   <p style={{ fontSize: 11, color: '#f97316', marginBottom: 6 }}>⛔ {check.reason}</p>
@@ -405,10 +405,10 @@ export function EducationScreen() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
               {[
                 { key: 'academicSkill', label: 'Accademico',  color: '#60a5fa' },
-                { key: 'discipline',    label: 'Disciplina',  color: '#a78bfa' },
+                { key: 'discipline',    label: 'Disciplina',  color: '#8CCFC4' },
                 { key: 'creativity',    label: 'Creatività',  color: '#fbbf24' },
                 { key: 'music',         label: 'Musica',      color: '#f472b6' },
-                { key: 'athleticism',   label: 'Atletica',    color: '#4ade80' },
+                { key: 'athleticism',   label: 'Atletica',    color: '#A9D18A' },
                 { key: 'charisma',      label: 'Carisma',     color: '#fb923c' },
                 { key: 'leadership',    label: 'Leadership',  color: '#e879f9' },
                 { key: 'socialSkill',   label: 'Socialità',   color: '#38bdf8' },
@@ -440,22 +440,22 @@ export function EducationScreen() {
                     <div key={club.id} style={{
                       display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10,
                       padding: '8px 10px', borderRadius: 10,
-                      background: joined ? 'rgba(99,102,241,0.1)' : 'rgba(255,255,255,0.04)',
-                      border: `1px solid ${joined ? 'rgba(99,102,241,0.3)' : 'rgba(255,255,255,0.06)'}`,
+                      background: joined ? 'rgba(52,137,125,0.1)' : 'rgba(255,255,255,0.04)',
+                      border: `1px solid ${joined ? 'rgba(52,137,125,0.3)' : 'rgba(255,255,255,0.06)'}`,
                     }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                         <span style={{ fontSize: 18 }}>{club.emoji}</span>
                         <div>
-                          <p style={{ fontSize: 12, fontWeight: 600, color: joined ? '#a5b4fc' : 'var(--color-text)' }}>{club.label}</p>
+                          <p style={{ fontSize: 12, fontWeight: 600, color: joined ? '#8CCFC4' : 'var(--color-text)' }}>{club.label}</p>
                           <p style={{ fontSize: 10, color: 'var(--color-text-secondary)' }}>{club.hint}</p>
                         </div>
                       </div>
                       {joined ? (
-                        <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: 'rgba(99,102,241,0.2)', color: '#a5b4fc' }}>✓ Membro</span>
+                        <span style={{ fontSize: 10, padding: '3px 8px', borderRadius: 99, background: 'rgba(52,137,125,0.2)', color: '#8CCFC4' }}>✓ Membro</span>
                       ) : (
                         <button
                           onClick={() => { const r = joinClub(club.id); flash(r.message, r.success) }}
-                          style={{ fontSize: 11, padding: '5px 12px', borderRadius: 8, background: 'rgba(99,102,241,0.15)', color: '#a5b4fc', border: '1px solid rgba(99,102,241,0.3)', cursor: 'pointer', fontWeight: 600 }}
+                          style={{ fontSize: 11, padding: '5px 12px', borderRadius: 8, background: 'rgba(52,137,125,0.15)', color: '#8CCFC4', border: '1px solid rgba(52,137,125,0.3)', cursor: 'pointer', fontWeight: 600 }}
                         >
                           Entra
                         </button>

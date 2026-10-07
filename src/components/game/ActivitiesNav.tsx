@@ -35,7 +35,7 @@ const ITEM_MAP = Object.fromEntries(ITEMS.map(i => [i.id, i]))
 const CATEGORIES: { label: string; color: string; ids: ActivitiesSubTab[] }[] = [
   {
     label: 'Corpo & Salute',
-    color: '#10b981',
+    color: '#9CC77A',
     ids: ['health', 'hobby', 'beauty', 'barber', 'cosmetic', 'body', 'sex_health'],
   },
   {
@@ -45,7 +45,7 @@ const CATEGORIES: { label: string; color: string; ids: ActivitiesSubTab[] }[] = 
   },
   {
     label: 'Socialità',
-    color: '#6366f1',
+    color: '#34897D',
     ids: ['socialize', 'religion', 'politics', 'travel'],
   },
   {

@@ -67,9 +67,9 @@ export default function BeautyScreen() {
   const btnStyle = (active: boolean, disabled = false) => ({
     flex: 1, padding: '8px 0', borderRadius: 10, fontSize: 12, fontWeight: 500,
     border: 'none', cursor: disabled ? 'not-allowed' : 'pointer',
-    background: active ? 'rgba(124,92,255,0.25)' : disabled ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
-    color: active ? '#a78bfa' : disabled ? 'var(--color-text-secondary)' : 'var(--color-text)',
-    outline: active ? '1px solid rgba(124,92,255,0.5)' : 'none',
+    background: active ? 'rgba(52,137,125,0.25)' : disabled ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.08)',
+    color: active ? '#8CCFC4' : disabled ? 'var(--color-text-secondary)' : 'var(--color-text)',
+    outline: active ? '1px solid rgba(52,137,125,0.5)' : 'none',
     opacity: disabled ? 0.6 : 1,
   })
 
@@ -79,7 +79,7 @@ export default function BeautyScreen() {
 
       {/* Avatar preview strip */}
       <div style={{ display: 'flex', alignItems: 'center', gap: 14, ...cardStyle, marginBottom: 12 }}>
-        <div style={{ borderRadius: 12, overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(124,92,255,0.3)' }}>
+        <div style={{ borderRadius: 12, overflow: 'hidden', flexShrink: 0, border: '2px solid rgba(52,137,125,0.3)' }}>
           <AvatarRenderer size="md" />
         </div>
         <div style={{ flex: 1 }}>
@@ -91,7 +91,7 @@ export default function BeautyScreen() {
             👗 Guardaroba: <strong>{beauty.wardrobeTier === 'none' ? '—' : beauty.wardrobeTier}</strong>
           </p>
           {currentAccessory !== 'none' && (
-            <p style={{ fontSize: 11, color: '#a78bfa' }}>
+            <p style={{ fontSize: 11, color: '#8CCFC4' }}>
               🕶️ {accessories.find(a => a.id === currentAccessory)?.name ?? currentAccessory}
             </p>
           )}
@@ -101,9 +101,9 @@ export default function BeautyScreen() {
       {feedback && (
         <div style={{
           borderRadius: 12, padding: '10px 14px', marginBottom: 10, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          background: feedback.ok ? 'rgba(156,199,122,0.15)' : 'rgba(239,68,68,0.15)',
+          color: feedback.ok ? '#BFDDA6' : '#fca5a5',
+          border: `1px solid ${feedback.ok ? 'rgba(156,199,122,0.3)' : 'rgba(239,68,68,0.3)'}`,
         }}>
           {feedback.msg}
         </div>
@@ -141,10 +141,10 @@ export default function BeautyScreen() {
               <div key={h.id} style={{ ...cardStyle, opacity: canAfford || isCurrent ? 1 : 0.65 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <p style={{ fontWeight: 600, fontSize: 13 }}>{h.emoji} {h.name}</p>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: canAfford ? '#4ade80' : '#ef4444' }}>€{h.cost}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: canAfford ? '#A9D18A' : '#ef4444' }}>€{h.cost}</span>
                 </div>
                 {isCurrent
-                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#86efac' }}>✅ Stile attuale</div>
+                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#BFDDA6' }}>✅ Stile attuale</div>
                   : <button className="tap-scale" style={btnStyle(false, !canAfford)} disabled={!canAfford} onClick={() => act(() => getHaircut(h.id))}>
                       {canAfford ? 'Scegli' : `Servono €${h.cost}`}
                     </button>
@@ -156,7 +156,7 @@ export default function BeautyScreen() {
             <p style={{ fontWeight: 600, fontSize: 13, marginBottom: 4 }}>⚡ Depilazione Laser (Permanente)</p>
             <p style={{ fontSize: 12, color: 'var(--color-text-secondary)', marginBottom: 8 }}>Costo: €2.500 · ciclo completo</p>
             {beauty.hasLaserHairRemoval
-              ? <div style={{ textAlign: 'center', fontSize: 12, color: '#86efac' }}>✅ Già effettuata</div>
+              ? <div style={{ textAlign: 'center', fontSize: 12, color: '#BFDDA6' }}>✅ Già effettuata</div>
               : <button className="tap-scale" style={btnStyle(false, finance.money < 2500)} disabled={finance.money < 2500} onClick={() => act(getLaserHairRemoval)}>Prenota</button>
             }
           </div>
@@ -176,10 +176,10 @@ export default function BeautyScreen() {
               <div key={n.id} style={{ ...cardStyle, opacity: canAfford || isCurrent ? 1 : 0.65 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <p style={{ fontWeight: 600, fontSize: 13 }}>{n.emoji} {n.name}</p>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: canAfford ? '#4ade80' : '#ef4444' }}>€{n.cost}</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: canAfford ? '#A9D18A' : '#ef4444' }}>€{n.cost}</span>
                 </div>
                 {isCurrent
-                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#86efac' }}>✅ Stile attuale</div>
+                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#BFDDA6' }}>✅ Stile attuale</div>
                   : <button className="tap-scale" style={btnStyle(false, !canAfford)} disabled={!canAfford} onClick={() => act(() => doNails(n.id))}>
                       {canAfford ? 'Scegli' : `Servono €${n.cost}`}
                     </button>
@@ -205,7 +205,7 @@ export default function BeautyScreen() {
               <div key={w.id} style={{ ...cardStyle, opacity: isOwned || canAfford ? 1 : 0.65 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                   <p style={{ fontWeight: 600, fontSize: 13 }}>{w.emoji} {w.name}</p>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: canAfford || isOwned ? '#4ade80' : '#ef4444' }}>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: canAfford || isOwned ? '#A9D18A' : '#ef4444' }}>
                     €{w.cost.toLocaleString()}
                   </span>
                 </div>
@@ -213,7 +213,7 @@ export default function BeautyScreen() {
                   👁️ +{w.looks} aspetto · +{w.rep} reputazione
                 </p>
                 {isOwned
-                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#86efac' }}>✅ Posseduto</div>
+                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#BFDDA6' }}>✅ Posseduto</div>
                   : <button className="tap-scale" style={btnStyle(false, !canAfford)} disabled={!canAfford} onClick={() => act(() => upgradeWardrobe(w.id))}>
                       {canAfford ? 'Acquista' : `Servono €${w.cost.toLocaleString()}`}
                     </button>
@@ -237,10 +237,10 @@ export default function BeautyScreen() {
               <div key={s.id} style={{ ...cardStyle, opacity: canAfford || isCurrent ? 1 : 0.65 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                   <p style={{ fontWeight: 600, fontSize: 13 }}>{s.emoji} {s.name}</p>
-                  <span style={{ fontSize: 12, fontWeight: 700, color: canAfford ? '#4ade80' : '#ef4444' }}>€{s.cost.toLocaleString()}/anno</span>
+                  <span style={{ fontSize: 12, fontWeight: 700, color: canAfford ? '#A9D18A' : '#ef4444' }}>€{s.cost.toLocaleString()}/anno</span>
                 </div>
                 {isCurrent
-                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#86efac' }}>✅ Attiva</div>
+                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#BFDDA6' }}>✅ Attiva</div>
                   : <button className="tap-scale" style={btnStyle(false, !canAfford)} disabled={!canAfford} onClick={() => act(() => doSkincare(s.id))}>
                       {canAfford ? 'Attiva' : `Servono €${s.cost.toLocaleString()}`}
                     </button>
@@ -269,7 +269,7 @@ export default function BeautyScreen() {
       {tab === 'accessori' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ ...cardStyle, fontSize: 12, color: 'var(--color-text-secondary)' }}>
-            Accessorio attivo: <strong style={{ color: currentAccessory !== 'none' ? '#a78bfa' : 'var(--color-text)' }}>
+            Accessorio attivo: <strong style={{ color: currentAccessory !== 'none' ? '#8CCFC4' : 'var(--color-text)' }}>
               {currentAccessory !== 'none' ? (accessories.find(a => a.id === currentAccessory)?.name ?? currentAccessory) : 'Nessuno'}
             </strong>
           </div>
@@ -297,12 +297,12 @@ export default function BeautyScreen() {
                     <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginTop: 2 }}>{item.description}</p>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 8 }}>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: canAfford || isActive ? '#4ade80' : '#ef4444' }}>€{item.cost}</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: canAfford || isActive ? '#A9D18A' : '#ef4444' }}>€{item.cost}</p>
                     <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>+{item.looksBonus} 😍</p>
                   </div>
                 </div>
                 {isActive
-                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#86efac' }}>✅ Indossato</div>
+                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#BFDDA6' }}>✅ Indossato</div>
                   : <button className="tap-scale" style={btnStyle(false, !canAfford)} disabled={!canAfford} onClick={() => act(() => buyAccessory(item.id))}>
                       {canAfford ? `Acquista e indossa (€${item.cost})` : `Servono €${item.cost}`}
                     </button>
@@ -327,17 +327,17 @@ export default function BeautyScreen() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6 }}>
                   <div style={{ flex: 1 }}>
                     <p style={{ fontWeight: 600, fontSize: 13 }}>{item.emoji} {item.name}</p>
-                    <p style={{ fontSize: 11, color: '#a78bfa', marginTop: 1 }}>{item.brand}</p>
+                    <p style={{ fontSize: 11, color: '#8CCFC4', marginTop: 1 }}>{item.brand}</p>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0, marginLeft: 8 }}>
-                    <p style={{ fontSize: 12, fontWeight: 700, color: canAfford || owned ? '#4ade80' : '#ef4444' }}>€{item.value.toLocaleString()}</p>
+                    <p style={{ fontSize: 12, fontWeight: 700, color: canAfford || owned ? '#A9D18A' : '#ef4444' }}>€{item.value.toLocaleString()}</p>
                   </div>
                 </div>
                 <p style={{ fontSize: 11, color: 'var(--color-text-secondary)', marginBottom: 8 }}>
                   👁️ +{item.looksBonus} aspetto · 🌟 +{item.reputationBonus} rep
                 </p>
                 {owned
-                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#86efac' }}>✅ Posseduto</div>
+                  ? <div style={{ textAlign: 'center', fontSize: 12, color: '#BFDDA6' }}>✅ Posseduto</div>
                   : <button className="tap-scale" style={btnStyle(false, !canAfford)} disabled={!canAfford} onClick={() => act(() => buyLuxuryItem(item.id))}>
                       {canAfford ? 'Acquista' : `Servono €${item.value.toLocaleString()}`}
                     </button>

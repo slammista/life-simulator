@@ -105,8 +105,8 @@ export function SocialMediaScreen() {
                     <span style={{
                       fontSize: 10, padding: '2px 8px', borderRadius: 20,
                       background: profile.stage === 'mega' ? 'rgba(250,204,21,0.2)' :
-                        profile.stage === 'influencer' ? 'rgba(168,85,247,0.2)' : 'rgba(255,255,255,0.07)',
-                      color: profile.stage === 'mega' ? '#fbbf24' : profile.stage === 'influencer' ? '#a855f7' : 'var(--color-text-secondary)',
+                        profile.stage === 'influencer' ? 'rgba(52,137,125,0.2)' : 'rgba(255,255,255,0.07)',
+                      color: profile.stage === 'mega' ? '#fbbf24' : profile.stage === 'influencer' ? '#3F9B8D' : 'var(--color-text-secondary)',
                     }}>
                       {STAGE_LABELS[profile.stage] ?? profile.stage}
                     </span>

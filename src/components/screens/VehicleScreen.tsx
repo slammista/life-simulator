@@ -12,7 +12,7 @@ const CAT_LABELS: Record<VehicleCategory, string> = {
 
 const CAT_COLORS: Record<VehicleCategory, string> = {
   economy:  '#60a5fa',
-  medium:   '#a78bfa',
+  medium:   '#8CCFC4',
   luxury:   '#fbbf24',
   supercar: '#ef4444',
   moto:     '#34d399',
@@ -114,7 +114,7 @@ export function VehicleScreen() {
           {vehicle.hasLicenseB && (
             <div className="card" style={{ padding: 12, background: 'rgba(15,155,88,0.1)', borderColor: 'rgba(15,155,88,0.3)', textAlign: 'center' }}>
               <p style={{ fontSize: 20 }}>🪪</p>
-              <p style={{ fontSize: 14, fontWeight: 700, color: '#4ade80' }}>Patente B Ottenuta!</p>
+              <p style={{ fontSize: 14, fontWeight: 700, color: '#A9D18A' }}>Patente B Ottenuta!</p>
               <p style={{ fontSize: 12, color: 'var(--color-text-secondary)' }}>Punti: {vehicle.licensePoints}/20</p>
             </div>
           )}
@@ -160,7 +160,7 @@ export function VehicleScreen() {
                       {CAT_LABELS[def.category]}
                     </span>
                   </div>
-                  <span style={{ fontSize: 13, fontWeight: 700, color: canAfford ? '#4ade80' : '#ef4444' }}>
+                  <span style={{ fontSize: 13, fontWeight: 700, color: canAfford ? '#A9D18A' : '#ef4444' }}>
                     €{def.price.toLocaleString()}
                   </span>
                 </div>
@@ -210,7 +210,7 @@ export function VehicleScreen() {
                       <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Acquistato nel {v.purchaseYear}</p>
                     </div>
                     <div style={{ textAlign: 'right' }}>
-                      <p style={{ fontSize: 13, fontWeight: 700, color: '#4ade80' }}>€{v.currentValue.toLocaleString()}</p>
+                      <p style={{ fontSize: 13, fontWeight: 700, color: '#A9D18A' }}>€{v.currentValue.toLocaleString()}</p>
                       <p style={{ fontSize: 10, color: '#ef4444' }}>-{depreciation}% valore</p>
                     </div>
                   </div>

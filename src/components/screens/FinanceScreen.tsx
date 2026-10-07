@@ -63,7 +63,7 @@ export function FinanceScreen() {
 
   const creditScore = FinanceEngine.calculateCreditScore(state)
   const creditLabel = creditScore >= 800 ? 'Eccellente' : creditScore >= 740 ? 'Molto buono' : creditScore >= 670 ? 'Buono' : creditScore >= 580 ? 'Discreto' : 'Scarso'
-  const creditColor = creditScore >= 740 ? '#10b981' : creditScore >= 670 ? '#f59e0b' : creditScore >= 580 ? '#f97316' : '#ef4444'
+  const creditColor = creditScore >= 740 ? '#9CC77A' : creditScore >= 670 ? '#f59e0b' : creditScore >= 580 ? '#f97316' : '#ef4444'
 
   const totalInvested = finance.investments.reduce((s, i) => s + i.amount, 0)
   const totalValue = finance.investments.reduce((s, i) => s + i.currentValue, 0)
@@ -83,7 +83,7 @@ export function FinanceScreen() {
   const sentimentColor = marketState.sentiment === 'crash' || marketState.sentiment === 'bear'
     ? '#ef4444'
     : marketState.sentiment === 'bull' || marketState.sentiment === 'mania'
-      ? '#10b981'
+      ? '#9CC77A'
       : '#f59e0b'
 
   return (
@@ -93,9 +93,9 @@ export function FinanceScreen() {
       {feedback && (
         <div style={{
           borderRadius: 12, padding: '10px 14px', marginBottom: 12, fontSize: 13, fontWeight: 500,
-          background: feedback.ok ? 'rgba(34,197,94,0.15)' : 'rgba(239,68,68,0.15)',
-          color: feedback.ok ? '#86efac' : '#fca5a5',
-          border: `1px solid ${feedback.ok ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)'}`,
+          background: feedback.ok ? 'rgba(156,199,122,0.15)' : 'rgba(239,68,68,0.15)',
+          color: feedback.ok ? '#BFDDA6' : '#fca5a5',
+          border: `1px solid ${feedback.ok ? 'rgba(156,199,122,0.3)' : 'rgba(239,68,68,0.3)'}`,
         }}>
           {feedback.msg}
         </div>
@@ -126,11 +126,11 @@ export function FinanceScreen() {
             <p style={{ fontSize: 11, color: 'var(--text-faint)', textTransform: 'uppercase', letterSpacing: 1.2, fontWeight: 700, marginBottom: 6 }}>
               Patrimonio netto
             </p>
-            <p style={{ fontSize: 36, fontWeight: 900, color: '#18D39E', lineHeight: 1, letterSpacing: -1 }}>
+            <p style={{ fontSize: 36, fontWeight: 900, color: '#9CC77A', lineHeight: 1, letterSpacing: -1 }}>
               €{(finance.money + finance.bankBalance + totalValue + totalAssets - finance.debt).toLocaleString('it-IT')}
             </p>
             {totalGain !== 0 && (
-              <p style={{ fontSize: 12, color: totalGain > 0 ? '#86efac' : '#fca5a5', marginTop: 4, fontWeight: 600 }}>
+              <p style={{ fontSize: 12, color: totalGain > 0 ? '#BFDDA6' : '#fca5a5', marginTop: 4, fontWeight: 600 }}>
                 {totalGain > 0 ? '▲' : '▼'} €{Math.abs(Math.round(totalGain)).toLocaleString('it-IT')} da investimenti
               </p>
             )}
@@ -139,10 +139,10 @@ export function FinanceScreen() {
           {/* Stats grid */}
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             {[
-              { label: 'Liquidità', val: finance.money, emoji: '💵', color: '#10b981' },
-              { label: 'Banca', val: finance.bankBalance, emoji: '🏦', color: '#6366f1' },
-              { label: 'Investimenti', val: totalValue, emoji: '📈', color: totalGain >= 0 ? '#10b981' : '#ef4444' },
-              { label: 'Debiti', val: finance.debt, emoji: '💳', color: finance.debt > 0 ? '#ef4444' : '#687087' },
+              { label: 'Liquidità', val: finance.money, emoji: '💵', color: '#9CC77A' },
+              { label: 'Banca', val: finance.bankBalance, emoji: '🏦', color: '#34897D' },
+              { label: 'Investimenti', val: totalValue, emoji: '📈', color: totalGain >= 0 ? '#9CC77A' : '#ef4444' },
+              { label: 'Debiti', val: finance.debt, emoji: '💳', color: finance.debt > 0 ? '#ef4444' : '#6B7773' },
             ].map(({ label, val, emoji, color }) => {
               const display = val >= 1_000_000 ? `€${(val/1_000_000).toFixed(1)}M`
                 : val >= 1_000 ? `€${(val/1_000).toFixed(0)}k`
@@ -182,7 +182,7 @@ export function FinanceScreen() {
                 emoji: '🛡️',
                 current: finance.bankBalance,
                 target: 10000,
-                color: '#6366f1',
+                color: '#34897D',
                 hint: '3 mesi di spese',
               },
               {
@@ -190,7 +190,7 @@ export function FinanceScreen() {
                 emoji: '🏠',
                 current: finance.money + finance.bankBalance,
                 target: 50000,
-                color: '#10b981',
+                color: '#9CC77A',
                 hint: 'Acconto 20% su €250k',
               },
               {
@@ -207,7 +207,7 @@ export function FinanceScreen() {
                 <div key={label} style={{ marginBottom: 12 }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
                     <span style={{ fontSize: 12, fontWeight: 600 }}>{emoji} {label}</span>
-                    <span style={{ fontSize: 11, color: pct >= 100 ? '#86efac' : 'var(--color-text-secondary)' }}>
+                    <span style={{ fontSize: 11, color: pct >= 100 ? '#BFDDA6' : 'var(--color-text-secondary)' }}>
                       {pct >= 100 ? '✅ Raggiunto!' : `${pct}%`}
                     </span>
                   </div>
@@ -266,7 +266,7 @@ export function FinanceScreen() {
                   <div key={asset.symbol} style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: '7px 8px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, gap: 6 }}>
                       <span>{asset.emoji} {asset.symbol}</span>
-                      <span style={{ color: move >= 0 ? '#86efac' : '#fca5a5' }}>{move >= 0 ? '+' : ''}{move.toFixed(1)}%</span>
+                      <span style={{ color: move >= 0 ? '#BFDDA6' : '#fca5a5' }}>{move >= 0 ? '+' : ''}{move.toFixed(1)}%</span>
                     </div>
                     <p style={{ fontSize: 12, fontWeight: 700, marginTop: 2 }}>€{asset.price.toFixed(2)}</p>
                   </div>
@@ -291,8 +291,8 @@ export function FinanceScreen() {
                         <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Investito: €{inv.amount.toLocaleString('it-IT')}</p>
                       </div>
                       <div style={{ textAlign: 'right' }}>
-                        <p style={{ fontWeight: 700, fontSize: 14, color: gain >= 0 ? '#10b981' : '#ef4444' }}>€{inv.currentValue.toLocaleString('it-IT')}</p>
-                        <p style={{ fontSize: 11, color: gain >= 0 ? '#86efac' : '#fca5a5' }}>{gain >= 0 ? '+' : ''}{pct}%</p>
+                        <p style={{ fontWeight: 700, fontSize: 14, color: gain >= 0 ? '#9CC77A' : '#ef4444' }}>€{inv.currentValue.toLocaleString('it-IT')}</p>
+                        <p style={{ fontSize: 11, color: gain >= 0 ? '#BFDDA6' : '#fca5a5' }}>{gain >= 0 ? '+' : ''}{pct}%</p>
                       </div>
                     </div>
                     <button onClick={() => handleSell(inv.id)}
@@ -318,7 +318,7 @@ export function FinanceScreen() {
                     Min €{def.minAmount.toLocaleString('it-IT')} · Rischio {def.risk} · Prezzo €{(marketState.assets.find(a => a.symbol === def.id)?.price ?? 100).toFixed(2)}
                   </p>
                 </div>
-                <p style={{ fontWeight: 700, fontSize: 13, color: '#10b981' }}>~{(def.expectedReturn * 100).toFixed(0)}%/anno</p>
+                <p style={{ fontWeight: 700, fontSize: 13, color: '#9CC77A' }}>~{(def.expectedReturn * 100).toFixed(0)}%/anno</p>
               </div>
               <button onClick={() => setSelectedDef(selectedDef === def.id ? null : def.id)}
                 style={{ width: '100%', padding: '7px 0', borderRadius: 10, background: selectedDef === def.id ? 'var(--color-cta)' : 'rgba(255,255,255,0.07)', color: selectedDef === def.id ? '#fff' : 'var(--color-text)', fontSize: 12, fontWeight: 500, border: 'none', cursor: 'pointer' }}>
@@ -353,7 +353,7 @@ export function FinanceScreen() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 8 }}>
                 <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Valore asset</p>
-                <p style={{ fontSize: 15, fontWeight: 800, color: '#10b981' }}>€{totalAssets.toLocaleString('it-IT')}</p>
+                <p style={{ fontSize: 15, fontWeight: 800, color: '#9CC77A' }}>€{totalAssets.toLocaleString('it-IT')}</p>
               </div>
               <div style={{ background: 'rgba(255,255,255,0.04)', borderRadius: 8, padding: 8 }}>
                 <p style={{ fontSize: 11, color: 'var(--color-text-secondary)' }}>Costo annuo</p>
@@ -380,7 +380,7 @@ export function FinanceScreen() {
           )}
           {finance.assets.map(asset => {
             const condition = asset.condition ?? 100
-            const conditionColor = condition >= 70 ? '#86efac' : condition >= 40 ? '#fbbf24' : '#fca5a5'
+            const conditionColor = condition >= 70 ? '#BFDDA6' : condition >= 40 ? '#fbbf24' : '#fca5a5'
             return (
               <div key={asset.id} className="card" style={{ padding: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
@@ -391,8 +391,8 @@ export function FinanceScreen() {
                     </p>
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                    <p style={{ fontWeight: 700, fontSize: 14, color: '#10b981' }}>€{asset.value.toLocaleString('it-IT')}</p>
-                    <p style={{ fontSize: 11, color: asset.value >= asset.purchaseValue ? '#86efac' : '#fca5a5' }}>
+                    <p style={{ fontWeight: 700, fontSize: 14, color: '#9CC77A' }}>€{asset.value.toLocaleString('it-IT')}</p>
+                    <p style={{ fontSize: 11, color: asset.value >= asset.purchaseValue ? '#BFDDA6' : '#fca5a5' }}>
                       {asset.value >= asset.purchaseValue ? '+' : ''}{(((asset.value / asset.purchaseValue) - 1) * 100).toFixed(1)}%
                     </p>
                   </div>
@@ -411,7 +411,7 @@ export function FinanceScreen() {
                 </p>
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
                   <button onClick={() => handleInsureAsset(asset.id)} disabled={asset.insured}
-                    style={{ padding: '8px 0', borderRadius: 10, background: asset.insured ? 'rgba(255,255,255,0.04)' : 'rgba(99,102,241,0.18)', color: asset.insured ? 'var(--color-text-secondary)' : '#c4b5fd', fontSize: 12, fontWeight: 600, border: '1px solid rgba(99,102,241,0.22)', cursor: asset.insured ? 'default' : 'pointer' }}>
+                    style={{ padding: '8px 0', borderRadius: 10, background: asset.insured ? 'rgba(255,255,255,0.04)' : 'rgba(52,137,125,0.18)', color: asset.insured ? 'var(--color-text-secondary)' : '#c4b5fd', fontSize: 12, fontWeight: 600, border: '1px solid rgba(52,137,125,0.22)', cursor: asset.insured ? 'default' : 'pointer' }}>
                     {asset.insured ? 'Assicurato' : 'Assicura'}
                   </button>
                   <button onClick={() => handleMaintainAsset(asset.id)} disabled={condition >= 95}
@@ -440,7 +440,7 @@ export function FinanceScreen() {
                   </div>
                   <div style={{ textAlign: 'right', flexShrink: 0 }}>
                     <p style={{ fontWeight: 800, fontSize: 13 }}>€{def.price.toLocaleString('it-IT')}</p>
-                    <p style={{ fontSize: 11, color: def.appreciationRate >= 0 ? '#86efac' : '#fca5a5' }}>
+                    <p style={{ fontSize: 11, color: def.appreciationRate >= 0 ? '#BFDDA6' : '#fca5a5' }}>
                       {def.appreciationRate >= 0 ? '+' : ''}{(def.appreciationRate * 100).toFixed(0)}%/anno
                     </p>
                   </div>
@@ -449,7 +449,7 @@ export function FinanceScreen() {
                   Status +{def.statusBonus} · Furto {(def.theftRisk * 100).toFixed(1)}% · Assicurazione €{def.insurancePerYear.toLocaleString('it-IT')}/anno
                 </p>
                 <button onClick={() => handleBuyAsset(def.id)} disabled={!canBuy}
-                  style={{ width: '100%', marginTop: 8, padding: '8px 0', borderRadius: 10, background: canBuy ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.04)', color: canBuy ? '#86efac' : 'var(--color-text-secondary)', fontSize: 12, fontWeight: 600, border: '1px solid rgba(16,185,129,0.22)', cursor: canBuy ? 'pointer' : 'default' }}>
+                  style={{ width: '100%', marginTop: 8, padding: '8px 0', borderRadius: 10, background: canBuy ? 'rgba(16,185,129,0.18)' : 'rgba(255,255,255,0.04)', color: canBuy ? '#BFDDA6' : 'var(--color-text-secondary)', fontSize: 12, fontWeight: 600, border: '1px solid rgba(16,185,129,0.22)', cursor: canBuy ? 'pointer' : 'default' }}>
                   {canBuy ? 'Compra con acconto 20%' : def.minAge && state.time.age < def.minAge ? `Età minima ${def.minAge}` : 'Fondi insufficienti'}
                 </button>
               </div>
