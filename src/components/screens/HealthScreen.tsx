@@ -132,12 +132,12 @@ export function HealthScreen() {
           className="tap-scale"
           style={{
             width: '100%', padding: '14px', borderRadius: 14, cursor: 'pointer', textAlign: 'left',
-            background: 'linear-gradient(135deg, rgba(139,92,246,0.1) 0%, var(--bg-card) 70%)',
-            border: '1px solid rgba(139,92,246,0.22)',
+            background: 'linear-gradient(135deg, rgba(52,137,125,0.1) 0%, var(--bg-card) 70%)',
+            border: '1px solid rgba(52,137,125,0.22)',
             display: 'flex', gap: 12, alignItems: 'center',
           }}
         >
-          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(139,92,246,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
+          <div style={{ width: 44, height: 44, borderRadius: 12, background: 'rgba(52,137,125,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, flexShrink: 0 }}>
             🧠
           </div>
           <div style={{ flex: 1 }}>

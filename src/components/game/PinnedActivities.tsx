@@ -73,17 +73,17 @@ export function PinnedActivities({ activeSub, onChange }: Props) {
     <div style={{ padding: '8px 12px 0', flexShrink: 0 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
         <span style={{ fontSize: 10, color: 'var(--color-text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>
-          ⭐ Preferiti
+          Preferiti
         </span>
         <button
           onClick={() => setEditing(e => !e)}
           style={{
             fontSize: 10, color: editing ? '#34897D' : 'var(--color-text-secondary)',
             border: 'none', cursor: 'pointer', padding: '2px 6px',
-            borderRadius: 6, background: editing ? 'rgba(139,92,246,0.12)' : 'transparent',
+            borderRadius: 6, background: editing ? 'rgba(52,137,125,0.12)' : 'transparent',
           }}
         >
-          {editing ? '✓ Fatto' : '✏️ Modifica'}
+          {editing ? 'Fatto' : 'Modifica'}
         </button>
       </div>
 
@@ -99,12 +99,12 @@ export function PinnedActivities({ activeSub, onChange }: Props) {
                 whiteSpace: 'nowrap', border: 'none', cursor: 'pointer', flexShrink: 0,
                 background: activeSub === item.id
                   ? 'linear-gradient(135deg, #34897D, #34897D)'
-                  : 'rgba(139,92,246,0.12)',
+                  : 'rgba(52,137,125,0.12)',
                 color: activeSub === item.id ? '#fff' : '#8CCFC4',
                 boxShadow: activeSub === item.id ? '0 2px 8px rgba(52,137,125,0.3)' : 'none',
               }}
             >
-              {item.emoji} {item.label}
+              {item.label}
             </button>
           ))}
         </div>
@@ -125,7 +125,7 @@ export function PinnedActivities({ activeSub, onChange }: Props) {
                   padding: '5px 10px', borderRadius: 20, fontSize: 11, fontWeight: 500,
                   whiteSpace: 'nowrap', cursor: atMax ? 'default' : 'pointer', border: 'none',
                   background: isPinned
-                    ? 'rgba(139,92,246,0.25)'
+                    ? 'rgba(52,137,125,0.25)'
                     : 'rgba(255,255,255,0.05)',
                   color: isPinned ? '#8CCFC4'
                     : atMax ? 'rgba(255,255,255,0.2)'
@@ -133,7 +133,7 @@ export function PinnedActivities({ activeSub, onChange }: Props) {
                   opacity: atMax ? 0.5 : 1,
                 }}
               >
-                {isPinned ? '⭐' : '☆'} {item.emoji} {item.label}
+                {isPinned ? '⭐' : '☆'} {item.label}
               </button>
             )
           })}

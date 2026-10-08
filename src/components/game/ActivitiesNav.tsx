@@ -1,3 +1,5 @@
+import { useState } from 'react'
+
 type ActivitiesSubTab =
   | 'health' | 'hobby' | 'criminal' | 'substances' | 'religion'
   | 'body' | 'beauty' | 'barber' | 'gambling' | 'sex_health' | 'cosmetic'
@@ -8,11 +10,11 @@ type ActivitiesSubTab =
 const ITEMS: { id: ActivitiesSubTab; emoji: string; label: string }[] = [
   { id: 'health',      emoji: '💊', label: 'Salute' },
   { id: 'hobby',       emoji: '🎸', label: 'Hobby' },
-  { id: 'beauty',      emoji: '💄', label: 'Beauty' },
+  { id: 'beauty',      emoji: '💄', label: 'Bellezza' },
   { id: 'barber',      emoji: '💈', label: 'Barbiere' },
   { id: 'cosmetic',    emoji: '💉', label: 'Estetica' },
-  { id: 'body',        emoji: '🎨', label: 'Body Mod' },
-  { id: 'sex_health',  emoji: '❤️‍🔥', label: 'Sess.' },
+  { id: 'body',        emoji: '🎨', label: 'Modifiche corporee' },
+  { id: 'sex_health',  emoji: '❤️‍🔥', label: 'Salute sessuale' },
   { id: 'criminal',    emoji: '🚔', label: 'Crimini' },
   { id: 'substances',  emoji: '🍺', label: 'Sostanze' },
   { id: 'gambling',    emoji: '🎲', label: 'Azzardo' },
@@ -20,13 +22,13 @@ const ITEMS: { id: ActivitiesSubTab; emoji: string; label: string }[] = [
   { id: 'religion',    emoji: '🙏', label: 'Fede' },
   { id: 'politics',    emoji: '🏛️', label: 'Politica' },
   { id: 'travel',      emoji: '✈️', label: 'Viaggi' },
-  { id: 'goals',       emoji: '🎯', label: 'Goals' },
+  { id: 'goals',       emoji: '🎯', label: 'Obiettivi' },
   { id: 'challenges',  emoji: '🏆', label: 'Sfide' },
   { id: 'ribbons',     emoji: '🏅', label: 'Medaglie' },
-  { id: 'minigames',   emoji: '🧩', label: 'Giochi' },
+  { id: 'minigames',   emoji: '🧩', label: 'Minigiochi' },
   { id: 'timeline',    emoji: '🧠', label: 'Timeline' },
   { id: 'leaderboard', emoji: '🥇', label: 'Classifica' },
-  { id: 'settings',    emoji: '⚙️', label: 'Impost.' },
+  { id: 'settings',    emoji: '⚙️', label: 'Impostazioni' },
   { id: 'privacy',     emoji: '🔒', label: 'Privacy' },
 ]
 
@@ -66,46 +68,40 @@ interface Props {
 }
 
 export function ActivitiesNav({ active, onChange }: Props) {
+  const activeCat = CATEGORIES.find(c => c.ids.includes(active)) ?? CATEGORIES[0]
+  const [openLabel, setOpenLabel] = useState(activeCat.label)
+  const open = CATEGORIES.find(c => c.label === openLabel) ?? activeCat
+
   return (
-    <div style={{
-      background: 'rgba(0,0,0,0.2)',
-      borderBottom: '1px solid rgba(255,255,255,0.06)',
-      overflowY: 'auto',
-      maxHeight: 200,
-      flexShrink: 0,
-    }}>
-      {CATEGORIES.map(cat => (
-        <div key={cat.label} style={{ padding: '6px 12px 2px' }}>
-          <div style={{
-            fontSize: 9, color: cat.color, textTransform: 'uppercase',
-            letterSpacing: 1, marginBottom: 5, fontWeight: 700,
-          }}>
+    <div className="subnav">
+      <div className="subnav-cats" role="tablist">
+        {CATEGORIES.map(cat => (
+          <button
+            key={cat.label}
+            role="tab"
+            aria-selected={cat.label === open.label}
+            className={cat.label === open.label ? 'on' : ''}
+            onClick={() => setOpenLabel(cat.label)}
+          >
             {cat.label}
-          </div>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5, marginBottom: 6 }}>
-            {cat.ids.map(id => {
-              const item = ITEM_MAP[id]
-              if (!item) return null
-              const isActive = active === id
-              return (
-                <button
-                  key={id}
-                  onClick={() => onChange(id)}
-                  style={{
-                    padding: '4px 10px', borderRadius: 20, fontSize: 11, fontWeight: 500,
-                    whiteSpace: 'nowrap', border: 'none', cursor: 'pointer', flexShrink: 0,
-                    background: isActive ? `${cat.color}33` : 'rgba(255,255,255,0.07)',
-                    color: isActive ? cat.color : 'var(--color-text-secondary)',
-                    outline: isActive ? `1px solid ${cat.color}55` : 'none',
-                  }}
-                >
-                  {item.emoji} {item.label}
-                </button>
-              )
-            })}
-          </div>
-        </div>
-      ))}
+          </button>
+        ))}
+      </div>
+      <div className="subnav-items">
+        {open.ids.map(id => {
+          const item = ITEM_MAP[id]
+          if (!item) return null
+          return (
+            <button
+              key={id}
+              className={active === id ? 'on' : ''}
+              onClick={() => onChange(id)}
+            >
+              {item.label}
+            </button>
+          )
+        })}
+      </div>
     </div>
   )
 }

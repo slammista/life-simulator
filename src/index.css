@@ -875,3 +875,57 @@ body {
 .hub-links button:hover { background: var(--surface-soft); color: var(--color-text); }
 .hub-links button:active { transform: scale(0.97); }
 .hub-links button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+
+/* ── Two-level sub navigation (Attività) ── */
+.subnav {
+  flex-shrink: 0;
+  border-bottom: 1px solid var(--border-soft);
+  background: rgba(0, 0, 0, 0.18);
+}
+.subnav-cats {
+  display: flex;
+  gap: 18px;
+  padding: 10px 16px 0;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.subnav-cats::-webkit-scrollbar, .subnav-items::-webkit-scrollbar { display: none; }
+.subnav-cats button {
+  flex-shrink: 0;
+  padding: 4px 0 8px;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-faint);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+.subnav-cats button.on { color: var(--color-text); border-bottom-color: var(--primary); }
+.subnav-items {
+  display: flex;
+  gap: 6px;
+  padding: 8px 12px 10px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.subnav-items button {
+  flex-shrink: 0;
+  padding: 6px 12px;
+  border: none;
+  border-radius: var(--radius-sm);
+  background: var(--surface-soft);
+  color: var(--color-text-secondary);
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+}
+.subnav-items button:hover { color: var(--color-text); }
+.subnav-items button:active { transform: scale(0.97); }
+.subnav-items button.on { background: var(--primary); color: #fff; }
+.subnav button:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }

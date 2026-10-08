@@ -156,6 +156,8 @@ export function FinanceScreen() {
             })}
           </div>
 
+          {state.time.age >= 16 ? (
+            <>
           {/* Credit score */}
           <div className="card" style={{ padding: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
@@ -222,6 +224,13 @@ export function FinanceScreen() {
               )
             })}
           </div>
+
+            </>
+          ) : (
+            <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', textAlign: 'center', padding: '8px 0' }}>
+              Credit score e obiettivi finanziari si sbloccano a 16 anni.
+            </p>
+          )}
 
           {/* Loan section */}
           <div className="card" style={{ padding: 14 }}>

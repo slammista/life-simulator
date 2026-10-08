@@ -73,7 +73,7 @@ type ActivitiesSubTab =
 
 function SubTabBar<T extends string>({
   tabs, active, onChange,
-}: { tabs: { id: T; label: string; emoji: string }[]; active: T; onChange: (t: T) => void }) {
+}: { tabs: { id: T; label: string }[]; active: T; onChange: (t: T) => void }) {
   return (
     <div style={{
       display: 'flex', gap: 6, padding: '8px 12px',
@@ -91,7 +91,7 @@ function SubTabBar<T extends string>({
             color: active === t.id ? '#fff' : 'var(--color-text-secondary)',
           }}
         >
-          {t.emoji} {t.label}
+          {t.label}
         </button>
       ))}
     </div>
@@ -104,6 +104,7 @@ function ScreenFallback() {
 
 function App() {
   const isStarted  = useGameStore(s => s.isStarted)
+  const isRetired = useGameStore(s => s.retirement.isRetired)
   const isGameOver = useGameStore(s => s.isGameOver)
   const { handleInvecchia, currentEvent, time } = useGameStore(
     useShallow(s => ({ handleInvecchia: s.handleInvecchia, currentEvent: s.currentEvent, time: s.time }))
@@ -151,10 +152,10 @@ function App() {
       {activeTab === 'lavoro' && (
         <SubTabBar<LavoroSubTab>
           tabs={[
-            { id: 'career',    label: 'Carriera',  emoji: '💼' },
-            { id: 'education', label: 'Istruzione', emoji: '📚' },
-            { id: 'military',  label: 'Militare',   emoji: '🪖' },
-            { id: 'pension',   label: 'Pensione',   emoji: '🎗️' },
+            { id: 'career',    label: 'Carriera' },
+            { id: 'education', label: 'Istruzione' },
+            ...(time.age >= 17 || lavoroSub === 'military' ? [{ id: 'military' as const, label: 'Militare' }] : []),
+            ...(time.age >= 50 || isRetired || lavoroSub === 'pension' ? [{ id: 'pension' as const, label: 'Pensione' }] : []),
           ]}
           active={lavoroSub}
           onChange={setLavoroSubRaw}
@@ -163,10 +164,10 @@ function App() {
       {activeTab === 'assets' && (
         <SubTabBar<AssetsSubTab>
           tabs={[
-            { id: 'finance', label: 'Finanze',    emoji: '💰' },
-            { id: 'vehicle', label: 'Veicoli',    emoji: '🚗' },
-            { id: 'living',  label: 'Abitazione', emoji: '🏠' },
-            { id: 'social',  label: 'Social',     emoji: '📱' },
+            { id: 'finance', label: 'Finanze' },
+            { id: 'vehicle', label: 'Veicoli' },
+            { id: 'living',  label: 'Abitazione' },
+            { id: 'social',  label: 'Social' },
           ]}
           active={assetsSub}
           onChange={setAssetsSub}
@@ -175,10 +176,10 @@ function App() {
       {activeTab === 'relazioni' && (
         <SubTabBar<RelazioniSubTab>
           tabs={[
-            { id: 'relationships', label: 'Relazioni', emoji: '👥' },
-            { id: 'dating',        label: 'Amore',     emoji: '💘' },
-            { id: 'famiglia',      label: 'Famiglia',  emoji: '👨‍👩‍👧‍👦' },
-            { id: 'pets',          label: 'Animali',   emoji: '🐾' },
+            { id: 'relationships', label: 'Relazioni' },
+            { id: 'dating',        label: 'Amore' },
+            { id: 'famiglia',      label: 'Famiglia' },
+            { id: 'pets',          label: 'Animali' },
           ]}
           active={relazioniSub}
           onChange={setRelazioniSubRaw}

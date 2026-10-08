@@ -354,10 +354,9 @@ export function CareerScreen() {
             </p>
           )}
           {availableJobs.length === 0 && (
-            <div className="card" style={{ padding: '28px 20px', textAlign: 'center' }}>
-              <div style={{ fontSize: 40, marginBottom: 10 }}>🔍</div>
-              <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--color-text)', marginBottom: 6 }}>
-                Mercato silenzioso
+            <div style={{ padding: '20px 4px', textAlign: 'left' }}>
+              <p style={{ fontSize: 15, fontWeight: 600, color: 'var(--color-text)', marginBottom: 6 }}>
+                Nessuna offerta per ora
               </p>
               <p style={{ fontSize: 13, color: 'var(--color-text-secondary)', lineHeight: 1.6 }}>
                 {isMinor
